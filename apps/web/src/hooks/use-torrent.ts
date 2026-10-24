@@ -71,6 +71,9 @@ export default function useTorrent() {
       // Extract infohash for torrent file lookup
       const infoHashMatch = updatedMagnetURI.match(/btih:([a-zA-Z0-9]+)/);
       const infoHash = infoHashMatch ? infoHashMatch[1].toLowerCase() : '';
+      // Extract web seed base URL (ws=) from magnet for HTTP streaming
+      const wsMatch = updatedMagnetURI.match(/[?&]ws=([^&]+)/);
+      const webSeedBase = wsMatch ? decodeURIComponent(wsMatch[1]) : '';
       // Try torrent file URL (provides metadata without WebRTC)
       const torrentFileUrl = infoHash ? '/torrents/' + infoHash + '.torrent' : '';
 
@@ -89,7 +92,9 @@ export default function useTorrent() {
           try {
             const resp = await fetch(torrentFileUrl, { method: 'HEAD' });
             if (resp.ok) {
-              torrent = localClient.add(torrentFileUrl, { announce: TRACKERS }) as any;
+              const opts: any = { announce: TRACKERS };
+              if (webSeedBase) opts.urlList = [webSeedBase];
+              torrent = localClient.add(torrentFileUrl, opts) as any;
               added = true;
             }
           } catch (e) {
@@ -101,9 +106,6 @@ export default function useTorrent() {
         }
       }
 
-      // Extract web seed base URL
-      const wsMatch = updatedMagnetURI.match(/[?&]ws=([^&]+)/);
-      const webSeedBase = wsMatch ? decodeURIComponent(wsMatch[1]) : '';
 
       const mp3Files = () =>
         (torrent.files || []).filter((file: TorrentFile) =>
