@@ -40,7 +40,22 @@ if (!fs.existsSync(DOWNLOAD_PATH)) {
   log.warning('📂 Downloads folder already exists');
 }
 
-const client = new WebTorrent({ maxConns: MAX_CONNS, dht: true, ut_pex: true });
+const rtcConfig = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    {
+      urls: 'turn:host.docker.internal:3478?transport=udp',
+      username: process.env.TURN_USERNAME || 'openquran',
+      credential: process.env.TURN_PASSWORD || 'change-me-in-prod',
+    },
+    {
+      urls: 'turn:host.docker.internal:3478?transport=tcp',
+      username: process.env.TURN_USERNAME || 'openquran',
+      credential: process.env.TURN_PASSWORD || 'change-me-in-prod',
+    },
+  ],
+};
+const client = new WebTorrent({ maxConns: MAX_CONNS, dht: true, ut_pex: true, tracker: { rtcConfig } });
 
 const semaphore = new Semaphore(MAX_CONCURRENT_DOWNLOADS);
 
