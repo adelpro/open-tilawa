@@ -12,7 +12,19 @@ services:
     depends_on:
       tracker:
         condition: service_healthy
+      web:
+        condition: service_started
     restart: unless-stopped
+    networks: [open-tilawa]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: open-tilawa-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
     networks: [open-tilawa]
 
   tracker:
@@ -22,9 +34,6 @@ services:
     container_name: open-tilawa-tracker
     environment:
       PORT: ${TRACKER_PORT:-8083}
-    # Published on loopback so the already-running cloudflared-trackerf tunnel
-    # (which points trackerf.quran.us.kg -> 127.0.0.1:8083) keeps working
-    # without a tunnel restart. Edge (8084) is the unified entrypoint.
     ports:
       - "127.0.0.1:${TRACKER_PORT:-8083}:${TRACKER_PORT:-8083}"
     healthcheck:
