@@ -54,7 +54,7 @@ export default function TorrentPlayer() {
         <></>
       ) : (
         <Script
-          src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"
+          src="https://cdn.jsdelivr.net/npm/webtorrent@3.0.21/dist/webtorrent.min.js"
           strategy="lazyOnload"
           onLoad={() => {
             setWebTorrentReady(true);

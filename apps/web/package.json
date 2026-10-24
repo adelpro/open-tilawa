@@ -18,7 +18,7 @@
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.28.0",
     "tailwind-merge": "^2.6.0",
-    "webtorrent": "^2.5.14"
+    "webtorrent": "^3.0.21"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.11",
