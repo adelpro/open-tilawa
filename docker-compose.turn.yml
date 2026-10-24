@@ -1,0 +1,20 @@
+# Coturn TURN server for WebRTC (UDP/TCP).
+# Run separately: docker compose -f docker-compose.turn.yml up -d
+# Requires TURN_USERNAME, TURN_PASSWORD, TURN_EXTERNAL_IP in .env
+services:
+  turn:
+    image: coturn/coturn:latest
+    container_name: open-tilawa-turn
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TURN_REALM: ${TURN_REALM:-turn.quran.us.kg}
+      TURN_USERNAME: ${TURN_USERNAME:-}
+      TURN_PASSWORD: ${TURN_PASSWORD:-}
+      TURN_EXTERNAL_IP: ${TURN_EXTERNAL_IP:-}
+    volumes:
+      - ./apps/turn/entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
