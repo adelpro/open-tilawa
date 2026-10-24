@@ -49,6 +49,10 @@ export default function useTorrent() {
     const localClient = clientRef.current;
     const updatedMagnetURI = updateMagnetURI(magnetURI);
 
+    // Extract web seed base URL (ws=) from magnet for HTTP streaming
+    const wsMatch = updatedMagnetURI.match(/[?&]ws=([^&]+)/);
+    const webSeedBase = wsMatch ? decodeURIComponent(wsMatch[1]) : '';
+
     // Clean up any other torrents
     for (const t of localClient.torrents) {
       if (t.magnetURI !== updatedMagnetURI) {
@@ -61,25 +65,19 @@ export default function useTorrent() {
       torrent = localClient.add(updatedMagnetURI, { announce: TRACKERS }) as any;
     }
 
-    const updateTorrentInfoState = async () => {
-      const mp3Files = torrent.files.filter((file: TorrentFile) =>
+    const mp3Files = () =>
+      (torrent.files || []).filter((file: TorrentFile) =>
         file.name.endsWith('.mp3')
       );
 
-      const playlist: TrackType[] = await Promise.all(
-        mp3Files.map(async (file: TorrentFile) => {
-          const surahId = Number(file.name.split('.')[0]);
-          try {
-            const blob = await (file as any).blob();
-            const blobURL = URL.createObjectURL(blob);
-            return { surahId, link: blobURL };
-          } catch (error) {
-            const errorMessage = getErrorMessage(error);
-            return { surahId, link: '', error: errorMessage };
-          }
-        })
-      );
-
+    // Show playlist immediately on metadata ready (don't wait for all blobs)
+    const showPlaylist = () => {
+      const files: TrackType[] = mp3Files().map((file: TorrentFile) => {
+        const surahId = Number(file.name.split('.')[0]);
+        // Use web seed HTTP URL for streaming if available
+        const link = webSeedBase ? webSeedBase + file.name : '';
+        return { surahId, link };
+      });
       setTorrentInfo({
         magnetURI: torrent.magnetURI,
         downloaded: torrent.downloaded,
@@ -87,12 +85,40 @@ export default function useTorrent() {
         uploadSpeed: torrent.uploadSpeed,
         progress: torrent.progress,
         peers: torrent.numPeers,
-        files: playlist,
-        ready: torrent.ready,
+        files,
+        ready: true,
       });
     };
 
-    updateTorrentInfoState();
+    // Load blob URLs in the background, updating state incrementally
+    const loadBlobUrls = async () => {
+      const files = mp3Files();
+      for (const file of files) {
+        const surahId = Number(file.name.split('.')[0]);
+        // Skip if already has a web seed URL (streaming from HTTP)
+        if (webSeedBase) continue;
+        try {
+          const blob = await (file as any).blob();
+          const blobURL = URL.createObjectURL(blob);
+          setTorrentInfo((prev) => {
+            if (!prev) return prev;
+            const updated = prev.files.map((t) =>
+              t.surahId === surahId ? { ...t, link: blobURL } : t
+            );
+            return { ...prev, files: updated };
+          });
+        } catch (error) {
+          const errorMessage = getErrorMessage(error);
+          setTorrentInfo((prev) => {
+            if (!prev) return prev;
+            const updated = prev.files.map((t) =>
+              t.surahId === surahId ? { ...t, error: errorMessage } : t
+            );
+            return { ...prev, files: updated };
+          });
+        }
+      }
+    };
 
     const readyTimeout = setTimeout(() => {
       if (!torrent.ready) {
@@ -105,7 +131,8 @@ export default function useTorrent() {
     const onReady = () => {
       clearTimeout(readyTimeout);
       setError(undefined);
-      updateTorrentInfoState();
+      showPlaylist();
+      loadBlobUrls();
     };
 
     const onNoPeers = (announceType: string) => {
@@ -118,17 +145,39 @@ export default function useTorrent() {
       setError(getErrorMessage(torrentError));
     };
 
+    if (torrent.ready) {
+      showPlaylist();
+      loadBlobUrls();
+    }
+
     torrent.on('ready', onReady);
-    torrent.on('download', updateTorrentInfoState);
-    torrent.on('wire', updateTorrentInfoState);
+    torrent.on('download', () => {
+      setTorrentInfo((prev) =>
+        prev
+          ? {
+              ...prev,
+              downloaded: torrent.downloaded,
+              downloadSpeed: torrent.downloadSpeed,
+              uploadSpeed: torrent.uploadSpeed,
+              progress: torrent.progress,
+              peers: torrent.numPeers,
+            }
+          : prev
+      );
+    });
+    torrent.on('wire', () => {
+      setTorrentInfo((prev) =>
+        prev ? { ...prev, peers: torrent.numPeers } : prev
+      );
+    });
     torrent.on('noPeers', onNoPeers);
     //torrent.on('error', onError);
 
     return () => {
       clearTimeout(readyTimeout);
       torrent.removeListener('ready', onReady);
-      torrent.removeListener('download', updateTorrentInfoState);
-      torrent.removeListener('wire', updateTorrentInfoState);
+      torrent.removeListener('download', () => {});
+      torrent.removeListener('wire', () => {});
       torrent.removeListener('noPeers', onNoPeers);
       torrent.removeListener('error', onError);
     };
