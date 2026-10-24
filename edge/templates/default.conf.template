@@ -1,8 +1,8 @@
+# Web frontend (default) — serves the React/Vite SPA
 server {
-  listen 80;
-  server_name _;
+  listen 80 default_server;
+  server_name _ tilawa.quran.us.kg;
 
-  # Web frontend (React/Vite SPA)
   location / {
     proxy_pass http://web:80;
     proxy_set_header Host $host;
@@ -11,9 +11,19 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 
-  # WebTorrent tracker (ws + http)
-  location /tracker/ {
-    proxy_pass http://tracker:${TRACKER_PORT}/;
+  location /health {
+    return 200 'ok';
+    add_header Content-Type text/plain;
+  }
+}
+
+# WebTorrent tracker — WebSocket + HTTP
+server {
+  listen 80;
+  server_name trackerf.quran.us.kg;
+
+  location / {
+    proxy_pass http://tracker:${TRACKER_PORT};
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
@@ -31,10 +41,5 @@ server {
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
-  }
-
-  location /health {
-    return 200 'ok';
-    add_header Content-Type text/plain;
   }
 }

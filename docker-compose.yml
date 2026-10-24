@@ -23,8 +23,6 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: open-tilawa-web
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:3000:80"
     networks: [open-tilawa]
 
   tracker:
