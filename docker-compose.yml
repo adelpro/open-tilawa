@@ -1,7 +1,7 @@
 services:
   edge:
     image: nginx:alpine
-    container_name: openquran-edge
+    container_name: open-tilawa-edge
     ports:
       - "127.0.0.1:${EDGE_PORT:-8084}:80"
     volumes:
@@ -13,13 +13,13 @@ services:
       tracker:
         condition: service_healthy
     restart: unless-stopped
-    networks: [openquran]
+    networks: [open-tilawa]
 
   tracker:
     build:
       context: .
       dockerfile: apps/tracker/Dockerfile
-    container_name: openquran-tracker-infra
+    container_name: open-tilawa-tracker
     environment:
       PORT: ${TRACKER_PORT:-8083}
     healthcheck:
@@ -29,13 +29,13 @@ services:
       start_period: 10s
       retries: 5
     restart: unless-stopped
-    networks: [openquran]
+    networks: [open-tilawa]
 
   seeder:
     build:
       context: .
       dockerfile: apps/seeder/Dockerfile
-    container_name: openquran-seeder-infra
+    container_name: open-tilawa-seeder
     env_file:
       - path: .env
         required: false
@@ -49,11 +49,11 @@ services:
       tracker:
         condition: service_healthy
     restart: unless-stopped
-    networks: [openquran]
+    networks: [open-tilawa]
 
 volumes:
   seed_downloads:
 
 networks:
-  openquran:
+  open-tilawa:
     driver: bridge

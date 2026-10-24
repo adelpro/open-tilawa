@@ -1,4 +1,4 @@
-# open-quran-infra
+# open-tilawa
 
 Uslub-style self-hostable infrastructure for the Open Quran WebTorrent stack.
 
