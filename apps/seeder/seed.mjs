@@ -161,19 +161,17 @@ async function processMagnetLinks() {
     }
   }
 
-  // Seed from a local torrent file if present (used for reciters whose
-  // magnet has no peer metadata, e.g. Wadih Al Yamani). The data must
-  // already exist under DOWNLOAD_PATH/<name>/.
-  const TORRENT_FILE = process.env.TORRENT_FILE || '/app/wadee.torrent';
-  if (fs.existsSync(TORRENT_FILE)) {
+  // Seed Wadih Al Yamani from local files (creates a new torrent, no verification needed).
+  // The data must already exist under DOWNLOAD_PATH/Wadih_Al_Yamani/.
+  const WADIH_DIR = DOWNLOAD_PATH + '/Wadih_Al_Yamani';
+  if (fs.existsSync(WADIH_DIR)) {
     await semaphore.acquire();
-    client.add(TORRENT_FILE, { path: DOWNLOAD_PATH }, function (torrent) {
-      log.peer(`Torrent added from file: ${torrent.infoHash} (${torrent.name})`);
+    client.seed(WADIH_DIR, { name: 'Wadih_Al_Yamani', pieceLength: 2097152 }, function (torrent) {
+      log.peer(`Seeding from files: ${torrent.infoHash} (${torrent.name})`);
       const cleanup = () => { semaphore.release(); clearInterval(speedInterval); };
       const speedInterval = setInterval(() => {
-        log.stats(`[${torrent.name}] ↑ ${formatSpeed(torrent.uploadSpeed)}/s | Progress: ${(torrent.progress * 100).toFixed(1)}%`);
+        log.stats(`[${torrent.name}] ↑ ${formatSpeed(torrent.uploadSpeed)}/s`);
       }, 10000);
-      torrent.on('done', () => { log.peer(`Verified: ${torrent.name}`); cleanup(); });
       torrent.on('error', (err) => { log.error(`Error: ${err.message}`); cleanup(); });
     });
   }

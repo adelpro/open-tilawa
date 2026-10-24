@@ -95,7 +95,7 @@ export const RECITERS: Reciter[] = [
     name: 'وديع اليمني',
     riwaya: Riwaya.Hafs,
     magnet:
-      'magnet:?xt=urn:btih:6933143973516e771c4f2c756e095176bebc7c58&dn=Wadih_Al_Yamani&tr=http://bt1.archive.org:6969/announce&tr=http://bt2.archive.org:6969/announce&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&ws=https://archive.org/download/wadee/',
+      'magnet:?xt=urn:btih:e63e2267f739b5f8a14a05c8501df17856e33166&dn=Wadih_Al_Yamani&tr=http://bt1.archive.org:6969/announce&tr=http://bt2.archive.org:6969/announce&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&ws=https://archive.org/download/wadee/',
     complet: true,
     source: MagnetlinkSource.INTERNETARCHIVE,
   },
