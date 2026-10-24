@@ -16,6 +16,6 @@
   "type": "module",
   "dependencies": {
     "chalk": "^5.4.1",
-    "webtorrent": "^2.5.19"
+    "webtorrent": "^3.0.21"
   }
 }
