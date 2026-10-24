@@ -20,11 +20,24 @@ export default function useTorrent() {
 
   // Initialize WebTorrent client once on mount
   useEffect(() => {
-    if (webtorrentReady && !clientRef.current && window.WebTorrent) {
-      clientRef.current = new window.WebTorrent({
-        tracker: { rtcConfig },
-      });
-    }
+    if (!webtorrentReady) return;
+    if (clientRef.current) return;
+    const tryInit = () => {
+      if (clientRef.current) return;
+      if ((window as any).WebTorrent) {
+        try {
+          clientRef.current = new (window as any).WebTorrent({
+            tracker: { rtcConfig },
+          });
+          setError(undefined);
+        } catch (e) {
+          setError('Failed to init WebTorrent: ' + (e as Error).message);
+        }
+      } else {
+        setTimeout(tryInit, 200);
+      }
+    };
+    tryInit();
   }, [webtorrentReady]);
 
   // Add torrent when client is ready and a valid magnet URI exists
@@ -32,154 +45,153 @@ export default function useTorrent() {
     setTorrentInfo(undefined);
     setError(undefined);
 
-    if (!magnetURI) {
-      return;
-    }
+    if (!magnetURI) return;
+    if (!webtorrentReady) return;
 
-    if (!webtorrentReady || !clientRef.current) {
-      setError('WebTorrent client is not ready.');
-      return;
-    }
+    let cancelled = false;
+    let torrent: any = null;
+    let readyTimeout: ReturnType<typeof setTimeout>;
 
-    if (!isValidMagnetUri(magnetURI)) {
-      setError('Invalid Magnet-URI provided.');
-      return;
-    }
-
-    const localClient = clientRef.current;
-    const updatedMagnetURI = updateMagnetURI(magnetURI);
-
-    // Extract web seed base URL (ws=) from magnet for HTTP streaming
-    const wsMatch = updatedMagnetURI.match(/[?&]ws=([^&]+)/);
-    const webSeedBase = wsMatch ? decodeURIComponent(wsMatch[1]) : '';
-
-    // Clean up any other torrents
-    for (const t of localClient.torrents) {
-      if (t.magnetURI !== updatedMagnetURI) {
-        t.destroy();
+    const run = () => {
+      if (cancelled) return;
+      if (!clientRef.current) {
+        setTimeout(run, 200);
+        return;
       }
-    }
 
-    let torrent: any = localClient.get(updatedMagnetURI);
-    if (!torrent) {
-      torrent = localClient.add(updatedMagnetURI, { announce: TRACKERS }) as any;
-    }
+      const localClient = clientRef.current;
 
-    const mp3Files = () =>
-      (torrent.files || []).filter((file: TorrentFile) =>
-        file.name.endsWith('.mp3')
-      );
+      if (!isValidMagnetUri(magnetURI)) {
+        setError('Invalid Magnet-URI provided.');
+        return;
+      }
 
-    // Show playlist immediately on metadata ready (don't wait for all blobs)
-    const showPlaylist = () => {
-      const files: TrackType[] = mp3Files().map((file: TorrentFile) => {
-        const surahId = Number(file.name.split('.')[0]);
-        // Use web seed HTTP URL for streaming if available
-        const link = webSeedBase ? webSeedBase + file.name : '';
-        return { surahId, link };
-      });
-      setTorrentInfo({
-        magnetURI: torrent.magnetURI,
-        downloaded: torrent.downloaded,
-        downloadSpeed: torrent.downloadSpeed,
-        uploadSpeed: torrent.uploadSpeed,
-        progress: torrent.progress,
-        peers: torrent.numPeers,
-        files,
-        ready: true,
-      });
-    };
+      const updatedMagnetURI = updateMagnetURI(magnetURI);
 
-    // Load blob URLs in the background, updating state incrementally
-    const loadBlobUrls = async () => {
-      const files = mp3Files();
-      for (const file of files) {
-        const surahId = Number(file.name.split('.')[0]);
-        // Skip if already has a web seed URL (streaming from HTTP)
-        if (webSeedBase) continue;
-        try {
-          const blob = await (file as any).blob();
-          const blobURL = URL.createObjectURL(blob);
-          setTorrentInfo((prev) => {
-            if (!prev) return prev;
-            const updated = prev.files.map((t) =>
-              t.surahId === surahId ? { ...t, link: blobURL } : t
-            );
-            return { ...prev, files: updated };
-          });
-        } catch (error) {
-          const errorMessage = getErrorMessage(error);
-          setTorrentInfo((prev) => {
-            if (!prev) return prev;
-            const updated = prev.files.map((t) =>
-              t.surahId === surahId ? { ...t, error: errorMessage } : t
-            );
-            return { ...prev, files: updated };
-          });
+      // Clean up any other torrents
+      for (const t of localClient.torrents) {
+        if (t.magnetURI !== updatedMagnetURI) {
+          t.destroy();
         }
       }
-    };
 
-    const readyTimeout = setTimeout(() => {
-      if (!torrent.ready) {
-        setError(
-          'Timeout: Could not fetch torrent metadata. Please try again later.'
-        );
+      torrent = localClient.get(updatedMagnetURI);
+      if (!torrent) {
+        torrent = localClient.add(updatedMagnetURI, { announce: TRACKERS }) as any;
       }
-    }, TORRENT_READY_TIMEOUT);
 
-    const onReady = () => {
-      clearTimeout(readyTimeout);
-      setError(undefined);
-      showPlaylist();
-      loadBlobUrls();
+      // Extract web seed base URL
+      const wsMatch = updatedMagnetURI.match(/[?&]ws=([^&]+)/);
+      const webSeedBase = wsMatch ? decodeURIComponent(wsMatch[1]) : '';
+
+      const mp3Files = () =>
+        (torrent.files || []).filter((file: TorrentFile) =>
+          file.name.endsWith('.mp3')
+        );
+
+      const showPlaylist = () => {
+        const files: TrackType[] = mp3Files().map((file: TorrentFile) => {
+          const surahId = Number(file.name.split('.')[0]);
+          const link = webSeedBase ? webSeedBase + file.name : '';
+          return { surahId, link };
+        });
+        setTorrentInfo({
+          magnetURI: torrent.magnetURI,
+          downloaded: torrent.downloaded,
+          downloadSpeed: torrent.downloadSpeed,
+          uploadSpeed: torrent.uploadSpeed,
+          progress: torrent.progress,
+          peers: torrent.numPeers,
+          files,
+          ready: true,
+        });
+      };
+
+      const loadBlobUrls = async () => {
+        if (webSeedBase) return; // already streaming from HTTP
+        const files = mp3Files();
+        for (const file of files) {
+          if (cancelled) return;
+          const surahId = Number(file.name.split('.')[0]);
+          try {
+            const blob = await (file as any).blob();
+            if (cancelled) return;
+            const blobURL = URL.createObjectURL(blob);
+            setTorrentInfo((prev) => {
+              if (!prev) return prev;
+              const updated = prev.files.map((t) =>
+                t.surahId === surahId ? { ...t, link: blobURL } : t
+              );
+              return { ...prev, files: updated };
+            });
+          } catch (error) {
+            const errorMessage = getErrorMessage(error);
+            setTorrentInfo((prev) => {
+              if (!prev) return prev;
+              const updated = prev.files.map((t) =>
+                t.surahId === surahId ? { ...t, error: errorMessage } : t
+              );
+              return { ...prev, files: updated };
+            });
+          }
+        }
+      };
+
+      readyTimeout = setTimeout(() => {
+        if (!torrent.ready && !cancelled) {
+          setError('Timeout: Could not fetch torrent metadata. Please try again later.');
+        }
+      }, TORRENT_READY_TIMEOUT);
+
+      const onReady = () => {
+        clearTimeout(readyTimeout);
+        setError(undefined);
+        showPlaylist();
+        loadBlobUrls();
+      };
+
+      const onNoPeers = (announceType: string) => {
+        const message = `No peers found for ${announceType} trackers. Please check your internet connection or try again later.`;
+        setError(message);
+      };
+
+      if (torrent.ready) {
+        clearTimeout(readyTimeout);
+        setError(undefined);
+        showPlaylist();
+        loadBlobUrls();
+      }
+
+      torrent.on('ready', onReady);
+      torrent.on('download', () => {
+        if (cancelled) return;
+        setTorrentInfo((prev) =>
+          prev
+            ? {
+                ...prev,
+                downloaded: torrent.downloaded,
+                downloadSpeed: torrent.downloadSpeed,
+                uploadSpeed: torrent.uploadSpeed,
+                progress: torrent.progress,
+                peers: torrent.numPeers,
+              }
+            : prev
+        );
+      });
+      torrent.on('wire', () => {
+        if (cancelled) return;
+        setTorrentInfo((prev) =>
+          prev ? { ...prev, peers: torrent.numPeers } : prev
+        );
+      });
+      torrent.on('noPeers', onNoPeers);
     };
 
-    const onNoPeers = (announceType: string) => {
-      const message = `No peers found for ${announceType} trackers. Please check your internet connection or try again later.`;
-      setError(message);
-    };
-
-    const onError = (torrentError: Error) => {
-      clearTimeout(readyTimeout);
-      setError(getErrorMessage(torrentError));
-    };
-
-    if (torrent.ready) {
-      showPlaylist();
-      loadBlobUrls();
-    }
-
-    torrent.on('ready', onReady);
-    torrent.on('download', () => {
-      setTorrentInfo((prev) =>
-        prev
-          ? {
-              ...prev,
-              downloaded: torrent.downloaded,
-              downloadSpeed: torrent.downloadSpeed,
-              uploadSpeed: torrent.uploadSpeed,
-              progress: torrent.progress,
-              peers: torrent.numPeers,
-            }
-          : prev
-      );
-    });
-    torrent.on('wire', () => {
-      setTorrentInfo((prev) =>
-        prev ? { ...prev, peers: torrent.numPeers } : prev
-      );
-    });
-    torrent.on('noPeers', onNoPeers);
-    //torrent.on('error', onError);
+    run();
 
     return () => {
-      clearTimeout(readyTimeout);
-      torrent.removeListener('ready', onReady);
-      torrent.removeListener('download', () => {});
-      torrent.removeListener('wire', () => {});
-      torrent.removeListener('noPeers', onNoPeers);
-      torrent.removeListener('error', onError);
+      cancelled = true;
+      if (readyTimeout) clearTimeout(readyTimeout);
     };
   }, [magnetURI, webtorrentReady]);
 
