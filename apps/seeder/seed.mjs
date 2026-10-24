@@ -69,6 +69,11 @@ async function processMagnetLinks() {
       log.warning('Skipping placeholder magnet for Maher_Al_Fadl');
       continue;
     }
+    // Skip Wadih Al Yamani magnet - seeded from local torrent file (wadee.torrent)
+    if (magnet && magnet.includes('Wadih_Al_Yamani')) {
+      log.info('Skipping Wadih_Al_Yamani magnet - seeded from /app/wadee.torrent');
+      continue;
+    }
     // Extract the info hash from the magnet link
     const infoHash = getInfoHashFromMagnetLink(magnet);
 
@@ -139,6 +144,23 @@ async function processMagnetLinks() {
         semaphore.release();
       }
     }
+  }
+
+  // Seed from a local torrent file if present (used for reciters whose
+  // magnet has no peer metadata, e.g. Wadih Al Yamani). The data must
+  // already exist under DOWNLOAD_PATH/<name>/.
+  const TORRENT_FILE = process.env.TORRENT_FILE || '/app/wadee.torrent';
+  if (fs.existsSync(TORRENT_FILE)) {
+    await semaphore.acquire();
+    client.add(TORRENT_FILE, { path: DOWNLOAD_PATH }, function (torrent) {
+      log.peer(`Torrent added from file: ${torrent.infoHash} (${torrent.name})`);
+      const cleanup = () => { semaphore.release(); clearInterval(speedInterval); };
+      const speedInterval = setInterval(() => {
+        log.stats(`[${torrent.name}] ↑ ${formatSpeed(torrent.uploadSpeed)}/s | Progress: ${(torrent.progress * 100).toFixed(1)}%`);
+      }, 10000);
+      torrent.on('done', () => { log.peer(`Verified: ${torrent.name}`); cleanup(); });
+      torrent.on('error', (err) => { log.error(`Error: ${err.message}`); cleanup(); });
+    });
   }
 }
 
