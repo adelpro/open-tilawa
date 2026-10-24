@@ -1,0 +1,59 @@
+services:
+  edge:
+    image: nginx:alpine
+    container_name: openquran-edge
+    ports:
+      - "127.0.0.1:${EDGE_PORT:-8084}:80"
+    volumes:
+      - ./edge/templates:/etc/nginx/templates:ro
+    environment:
+      TRACKER_PORT: ${TRACKER_PORT:-8083}
+      TRACKER_PATH: ${TRACKER_PATH:-/}
+    depends_on:
+      tracker:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [openquran]
+
+  tracker:
+    build:
+      context: .
+      dockerfile: apps/tracker/Dockerfile
+    container_name: openquran-tracker-infra
+    environment:
+      PORT: ${TRACKER_PORT:-8083}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$${PORT:-8083}/stats >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    restart: unless-stopped
+    networks: [openquran]
+
+  seeder:
+    build:
+      context: .
+      dockerfile: apps/seeder/Dockerfile
+    container_name: openquran-seeder-infra
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      MAX_CONCURRENT_DOWNLOADS: ${MAX_CONCURRENT_DOWNLOADS:-3}
+      MAGNETS_URL: ${MAGNETS_URL:-https://tilawa.quran.us.kg/api/magnet-uris}
+      DOWNLOAD_PATH: /data/downloads
+    volumes:
+      - seed_downloads:/data/downloads
+    depends_on:
+      tracker:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [openquran]
+
+volumes:
+  seed_downloads:
+
+networks:
+  openquran:
+    driver: bridge

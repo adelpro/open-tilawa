@@ -1,0 +1,21 @@
+{
+  "name": "webtorrent-seeder",
+  "version": "1.2.0",
+  "main": "seed.mjs",
+  "description": "A Node.js backend for open-quran application for seeding torrents using WebTorrent.",
+  "scripts": {
+    "start": "node seed.mjs"
+  },
+  "keywords": [
+    "webtorrent",
+    "torrent",
+    "seeder"
+  ],
+  "author": "Adel Benyahia <contact@adelpro.us.kg>",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "webtorrent": "^2.5.19"
+  }
+}
