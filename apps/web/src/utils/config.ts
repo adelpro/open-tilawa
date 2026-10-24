@@ -1,23 +1,12 @@
 export const clientConfig = {
-  APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'App',
-  APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  APP_NAME: (import.meta as any).env?.VITE_APP_NAME || 'Open Quran',
+  APP_URL: (import.meta as any).env?.VITE_APP_URL || 'https://tilawa.quran.us.kg',
   TRACKER_ONE_URL:
-    process.env.NEXT_PUBLIC_TRACKER_ONE_URL || 'http://localhost:3001',
+    (import.meta as any).env?.VITE_TRACKER_ONE_URL || 'https://trackerf.quran.us.kg/stats',
   TRACKER_TWO_URL:
-    process.env.NEXT_PUBLIC_TRACKER_TWO_URL || 'http://localhost:3002',
+    (import.meta as any).env?.VITE_TRACKER_TWO_URL || '',
 
-  DEBUG: process.env.NEXT_PUBLIC_DEBUG || false,
+  DEBUG: (import.meta as any).env?.VITE_DEBUG || false,
 };
 
-export const serverConfig = {
-  PORT: process.env.PORT || 3000,
-  EXPRESSTURN_USERNAME: process.env.EXPRESSTURN_USERNAME,
-  EXPRESSTURN_CREDENTIAL: process.env.EXPRESSTURN_CREDENTIAL,
-  METERED_USERNAME: process.env.METERED_USERNAME,
-  METERED_CREDENTIAL: process.env.METERED_CREDENTIAL,
-  FEED_BACK_EMAIL: process.env.FEED_BACK_EMAIL,
-  FEED_BACK_PASSWORD: process.env.FEED_BACK_PASSWORD,
-  FEED_BACK_SERVICE: process.env.FEED_BACK_SERVICE,
-  FEED_BACK_HOST: process.env.FEED_BACK_HOST,
-  FEED_BACK_PORT: process.env.FEED_BACK_PORT,
-};
+export const serverConfig = {};
