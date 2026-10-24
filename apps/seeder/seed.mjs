@@ -123,6 +123,13 @@ async function processMagnetLinks() {
 
       client.add(magnet, options, function (torrent) {
         log.peer(`Torrent added: ${torrent.infoHash}`);
+        // Save .torrent file for frontend (metadata without WebRTC)
+        try {
+          const torrentDir = '/data/torrents';
+          if (!fs.existsSync(torrentDir)) fs.mkdirSync(torrentDir, { recursive: true });
+          fs.writeFileSync(torrentDir + '/' + torrent.infoHash + '.torrent', torrent.torrentFile);
+          log.info(`Saved torrent file: ${torrent.infoHash}.torrent`);
+        } catch (e) { log.error('Failed to save torrent file: ' + e.message); }
 
         // Add speed tracking interval
         const speedInterval = setInterval(() => {
@@ -168,6 +175,12 @@ async function processMagnetLinks() {
     await semaphore.acquire();
     client.seed(WADIH_DIR, { name: 'Wadih_Al_Yamani', pieceLength: 2097152 }, function (torrent) {
       log.peer(`Seeding from files: ${torrent.infoHash} (${torrent.name})`);
+      try {
+        const torrentDir = '/data/torrents';
+        if (!fs.existsSync(torrentDir)) fs.mkdirSync(torrentDir, { recursive: true });
+        fs.writeFileSync(torrentDir + '/' + torrent.infoHash + '.torrent', torrent.torrentFile);
+        log.info(`Saved torrent file: ${torrent.infoHash}.torrent`);
+      } catch (e) { log.error('Failed to save torrent file: ' + e.message); }
       const cleanup = () => { semaphore.release(); clearInterval(speedInterval); };
       const speedInterval = setInterval(() => {
         log.stats(`[${torrent.name}] ↑ ${formatSpeed(torrent.uploadSpeed)}/s`);

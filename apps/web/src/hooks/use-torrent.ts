@@ -52,7 +52,7 @@ export default function useTorrent() {
     let torrent: any = null;
     let readyTimeout: ReturnType<typeof setTimeout>;
 
-    const run = () => {
+    const run = async () => {
       if (cancelled) return;
       if (!clientRef.current) {
         setTimeout(run, 200);
@@ -68,6 +68,12 @@ export default function useTorrent() {
 
       const updatedMagnetURI = updateMagnetURI(magnetURI);
 
+      // Extract infohash for torrent file lookup
+      const infoHashMatch = updatedMagnetURI.match(/btih:([a-zA-Z0-9]+)/);
+      const infoHash = infoHashMatch ? infoHashMatch[1].toLowerCase() : '';
+      // Try torrent file URL (provides metadata without WebRTC)
+      const torrentFileUrl = infoHash ? '/torrents/' + infoHash + '.torrent' : '';
+
       // Clean up any other torrents
       for (const t of localClient.torrents) {
         if (t.magnetURI !== updatedMagnetURI) {
@@ -77,7 +83,22 @@ export default function useTorrent() {
 
       torrent = localClient.get(updatedMagnetURI);
       if (!torrent) {
-        torrent = localClient.add(updatedMagnetURI, { announce: TRACKERS }) as any;
+        // Try torrent file first (provides metadata without WebRTC)
+        let added = false;
+        if (torrentFileUrl) {
+          try {
+            const resp = await fetch(torrentFileUrl, { method: 'HEAD' });
+            if (resp.ok) {
+              torrent = localClient.add(torrentFileUrl, { announce: TRACKERS }) as any;
+              added = true;
+            }
+          } catch (e) {
+            // Fall through to magnet
+          }
+        }
+        if (!added) {
+          torrent = localClient.add(updatedMagnetURI, { announce: TRACKERS }) as any;
+        }
       }
 
       // Extract web seed base URL

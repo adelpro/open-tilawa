@@ -23,6 +23,8 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: open-tilawa-web
     restart: unless-stopped
+    volumes:
+      - seed_torrents:/usr/share/nginx/html/torrents:ro
     networks: [open-tilawa]
 
   tracker:
@@ -57,6 +59,7 @@ services:
       DOWNLOAD_PATH: /data/downloads
     volumes:
       - seed_downloads:/data/downloads
+      - seed_torrents:/data/torrents
     depends_on:
       tracker:
         condition: service_healthy
@@ -67,6 +70,7 @@ services:
 
 volumes:
   seed_downloads:
+  seed_torrents:
 
 networks:
   open-tilawa:
