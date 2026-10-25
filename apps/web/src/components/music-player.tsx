@@ -97,20 +97,48 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     } else if (track.link && seedIndex === 0) {
       audio.src = track.link;
       audio.load();
-    } else if (track.file && typeof track.file.streamTo === 'function') {
-      try {
-        track.file.streamTo(audio);
-      } catch (e) {
-        console.error('streamTo failed, falling back to blob:', e);
-        if (typeof track.file.getBlob === 'function') {
-          track.file.getBlob((err: any, blob: Blob) => {
-            if (err || !blob) return;
-            const url = URL.createObjectURL(blob);
-            audio.src = url;
-            audio.load();
-            if (isPlaying) audio.play().catch(() => {});
-          });
-        }
+    } else if (track.file && typeof track.file.createReadStream === 'function') {
+      // Stream P2P content incrementally via MediaSource instead of loading
+      // the whole file. streamTo() needs a WebTorrent server (ServiceWorker)
+      // which we do not register, so it always throws "No server created".
+      const file = track.file as any;
+      if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg')) {
+        const ms = new MediaSource();
+        const url = URL.createObjectURL(ms);
+        audio.src = url;
+        ms.addEventListener('sourceopen', async () => {
+          const sb = ms.addSourceBuffer('audio/mpeg');
+          const reader = file.createReadStream();
+          const pump = async () => {
+            for await (const chunk of reader) {
+              if (audio.paused && !isPlaying) break;
+              await new Promise<void>((resolve) => {
+                if (sb.updating) {
+                  sb.addEventListener('updateend', () => resolve(), { once: true });
+                } else {
+                  resolve();
+                }
+              });
+              try { sb.appendBuffer(chunk as unknown as ArrayBuffer); } catch { /* ignore */ }
+            }
+            try { if (!sb.updating) ms.endOfStream(); } catch { /* ignore */ }
+          };
+          pump().catch((e) => console.error('MediaSource pump failed:', e));
+        }, { once: true });
+        audio.load();
+        if (isPlaying) audio.play().catch(() => {});
+      } else {
+        // Fallback: load whole file (old behaviour)
+        const chunks: Uint8Array[] = [];
+        const reader = file.createReadStream();
+        (async () => {
+          for await (const c of reader) chunks.push(c);
+          const blob = new Blob(chunks as BlobPart[], { type: file.type || 'audio/mpeg' });
+          const u = URL.createObjectURL(blob);
+          audio.src = u;
+          audio.load();
+          if (isPlaying) audio.play().catch(() => {});
+        })().catch((e) => console.error('P2P load failed:', e));
       }
     }
 
