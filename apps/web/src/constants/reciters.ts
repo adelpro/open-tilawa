@@ -1,5 +1,6 @@
 import { MagnetlinkSource, Reciter } from "@/types";
 import badrAlturkiPlaylist from "./itqan-badr-alturki.json";
+import majidAlzamilPlaylist from "./itqan-majid-alzamil.json";
 
 const RAW_RECITERS: Reciter[] = [
   {
@@ -64,6 +65,14 @@ const RAW_RECITERS: Reciter[] = [
     complet: false,
     source: MagnetlinkSource.ITQAN,
     itqanPlaylist: badrAlturkiPlaylist,
+  },
+  {
+    id: 12,
+    name: 'ماجد الزميل',
+    magnet: '',
+    complet: false,
+    source: MagnetlinkSource.ITQAN,
+    itqanPlaylist: majidAlzamilPlaylist,
   },
 ];
 

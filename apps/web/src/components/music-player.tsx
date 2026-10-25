@@ -333,7 +333,20 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       </div>
 
       {/* Fixed status slot */}
-      <div className="min-h-[52px] w-full max-w-xl" />
+      <div className="min-h-[52px] w-full max-w-xl">
+        {playlist[currentTrack] && (
+          typeof (playlist[currentTrack] as any).file?.createReadStream === 'function' ? (
+            <p className="text-center text-xs text-gray-400">P2P</p>
+          ) : (
+            <p
+              className="text-center text-xs text-gray-400"
+              title="يتم التشغيل من المصدر الاحتياطي (HTTP)"
+            >
+              بديل HTTP
+            </p>
+          )
+        )}
+      </div>
 
       <PlaylistDialog isOpen={isOpen} setIsOpen={setIsOpen} setCurrentTrack={setCurrentTrack} />
     </div>
