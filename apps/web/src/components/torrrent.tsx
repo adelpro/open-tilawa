@@ -28,24 +28,28 @@ export default function TorrentPlayer() {
   }, [torrentInfo?.ready, error, selectedReciterValue?.magnet]);
 
   useEffect(() => {
-    if (webtorrentReady || window.WebTorrent) {
-      if (window.WebTorrent && !webtorrentReady) setWebTorrentReady(true);
+    if (webtorrentReady) return;
+    if ((window as any).WebTorrent) {
+      setWebTorrentReady(true);
       return;
     }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/webtorrent@3.0.21/dist/webtorrent.min.js';
-    script.async = true;
-    script.onload = () => {
-      setWebTorrentReady(true);
-      setError(undefined);
-    };
-    script.onerror = () => {
-      setError('Failed to load WebTorrent');
-      setWebTorrentReady(false);
-    };
-    document.head.appendChild(script);
+    let cancelled = false;
+    (async () => {
+      try {
+        const mod: any = await new Function('return import("/webtorrent.min.js")')();
+        const WT = mod?.default || mod;
+        if (cancelled) return;
+        (window as any).WebTorrent = WT;
+        setWebTorrentReady(true);
+        setError(undefined);
+      } catch (e) {
+        if (cancelled) return;
+        setError('Failed to load WebTorrent: ' + (e as Error).message);
+        setWebTorrentReady(false);
+      }
+    })();
     return () => {
-      // cleanup not needed
+      cancelled = true;
     };
   }, [webtorrentReady, setWebTorrentReady, setError]);
 
