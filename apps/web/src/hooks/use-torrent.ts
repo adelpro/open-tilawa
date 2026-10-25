@@ -75,7 +75,7 @@ export default function useTorrent() {
       const wsMatch = updatedMagnetURI.match(/[?&]ws=([^&]+)/);
       const webSeedBase = wsMatch ? decodeURIComponent(wsMatch[1]) : '';
       // Try torrent file URL (provides metadata without WebRTC)
-      const torrentFileUrl = infoHash ? '/torrents/' + infoHash + '.torrent' : '';
+      const torrentFileUrl = infoHash ? '/torrents/' + infoHash + '.torrent?v=' + Date.now() : '';
 
       // Clean up any other torrents
       for (const t of localClient.torrents) {
@@ -91,14 +91,18 @@ export default function useTorrent() {
         if (torrentFileUrl) {
           try {
             const resp = await fetch(torrentFileUrl, { method: 'HEAD' });
+            console.log('Torrent file HEAD:', torrentFileUrl, resp.status);
             if (resp.ok) {
               const opts: any = { announce: TRACKERS };
               if (webSeedBase) opts.urlList = [webSeedBase];
               torrent = localClient.add(torrentFileUrl, opts) as any;
               added = true;
+              console.log('Torrent added from file:', torrent?.infoHash);
+            } else {
+              console.log('Torrent file not found, using magnet');
             }
           } catch (e) {
-            // Fall through to magnet
+            console.error('Torrent file fetch error:', e);
           }
         }
         if (!added) {
@@ -185,6 +189,10 @@ export default function useTorrent() {
         loadBlobUrls();
       }
 
+      torrent.on('error', (err: any) => {
+        console.error('Torrent error:', err?.message || err);
+        setError('Torrent error: ' + (err?.message || err));
+      });
       torrent.on('ready', onReady);
       torrent.on('download', () => {
         if (cancelled) return;
@@ -220,4 +228,3 @@ export default function useTorrent() {
 
   return { torrentInfo, error, setError };
 }
-console.log('TESTING BUILD SOURCE');
