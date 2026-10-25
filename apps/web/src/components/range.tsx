@@ -25,7 +25,7 @@ export default function Range({
       <div className="absolute inset-0 rounded-full bg-hairline" />
       {/* Buffered (gray) */}
       <div
-        className="absolute inset-y-0 start-0 rounded-full bg-gauge-buffered transition-[width] duration-150"
+        className="absolute inset-y-0 start-0 rounded-full bg-zinc-400/60 transition-[width] duration-150"
         style={{ width: `${bufferedPct}%` }}
         aria-hidden="true"
       />

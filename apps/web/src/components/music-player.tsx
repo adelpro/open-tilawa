@@ -99,6 +99,11 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
                 }
               });
               try { sb.appendBuffer(chunk as unknown as ArrayBuffer); } catch { /* ignore */ }
+              // Update buffered progress from SourceBuffer
+              if (sb.buffered.length > 0 && audio.duration > 0) {
+                const end = sb.buffered.end(sb.buffered.length - 1);
+                setBuffered(end / audio.duration);
+              }
             }
             try { if (!sb.updating) ms.endOfStream(); } catch { /* ignore */ }
           };
@@ -309,7 +314,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           <button onClick={handlePreviousTrack} className={btnClass} aria-label="Previous">
             <Image src={backwardSVG} alt="backward" width={20} height={20} />
           </button>
-          <button onClick={togglePlayPause} className={`${btnClass} h-12 w-12 bg-primary text-white hover:bg-primary-hover hover:text-white`} aria-label={isPlaying ? 'Pause' : 'Play'}>
+          <button onClick={togglePlayPause} className={`${btnClass} h-12 w-12 bg-ink text-canvas hover:bg-ink/80 hover:text-canvas`} aria-label={isPlaying ? 'Pause' : 'Play'}>
             <Image src={isPlaying ? pauseSVG : playSVG} alt={isPlaying ? 'pause' : 'play'} width={22} height={22} />
           </button>
           <button onClick={handleNextTrack} className={btnClass} aria-label="Next">
