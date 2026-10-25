@@ -1,0 +1,36 @@
+{
+  "recordedAt": "2026-10-20T08:10:00.000Z",
+  "note": "Condensed procedures served as MCP prompts. Written for this service rather than copied from a skill body — the rule in T8.5 — so the only thing a prompt carries from upstream is the procedure's shape. Regenerate hashes with scripts/record-skills.mjs after a deliberate edit.",
+  "records": [
+    {
+      "id": "write",
+      "role": "prompt — draft in the profile's voice, then run the gate",
+      "version": "1.0.0",
+      "upstream": "adelpro/writing-flow@5ab4ef8 (composeWrite)",
+      "licence": "ours (MIT)",
+      "files": {
+        "PROCEDURE.md": "996091062a57fdae2e6d2890cd02d11fa2fb4a68a58af424d971cf7828c99fcc"
+      }
+    },
+    {
+      "id": "audit",
+      "role": "prompt — avoid-ai-writing, then remove-ai-marks, then run_gate",
+      "version": "1.0.0",
+      "upstream": "adelpro/writing-flow@5ab4ef8 (house order)",
+      "licence": "ours (MIT); the gates it names are attributed in docs/SKILLS.md",
+      "files": {
+        "PROCEDURE.md": "cdbcd0caf5f5730dc56cceac33b48bb02a68755227e88a48365c16e6409ad860"
+      }
+    },
+    {
+      "id": "fasaha",
+      "role": "prompt — Arabic register review",
+      "version": "1.0.0",
+      "upstream": "adelpro/fasaha@1.0.0",
+      "licence": "ours (MIT)",
+      "files": {
+        "PROCEDURE.md": "f73bf4877c81bc729893b98cdfa866a425e505b5b9a3b2e3a68b9c540002d1e1"
+      }
+    }
+  ]
+}

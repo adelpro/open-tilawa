@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.yarn/unplugged/
+.yarn/cache/
+.yarn/install-state.gz
+.pnp.cjs
+.pnp.loader.mjs
+
+# Build outputs
+dist/
+apps/api/dist/
+apps/web/dist/
+libs/core/dist/
+
+# Database
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+
+# Environment
+.env
+apps/api/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Additional paths
+apps/api/data/
+apps/api/dist/
+apps/web/dist/
+libs/core/dist/
+dist/

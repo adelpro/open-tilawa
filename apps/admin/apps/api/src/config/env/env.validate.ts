@@ -1,0 +1,63 @@
+import { ValidationError, validateSync } from 'class-validator';
+import { plainToClass } from 'class-transformer';
+import { Logger } from '@nestjs/common';
+import { EnvConfigDTO } from './env.config.dto';
+import { Enveronements } from './types';
+
+/**
+ * Validates the environment and names every problem at once.
+ *
+ * Two deviations from the ported version, both deliberate:
+ *
+ * 1. **It throws instead of `process.exit(1)`.** Exiting from inside a config
+ *    validator kills the process mid-test and mid-boot with no diagnosable
+ *    error; throwing lets Nest report it and lets a test assert on it.
+ * 2. **Required keys are required only in production.** Development and test
+ *    boot on defaults, so a developer (or CI) does not need mail credentials
+ *    and two JWT secrets to run the suite. Production refuses to start without
+ *    them, which is the case where the check earns its keep.
+ */
+const REQUIRED_IN_PRODUCTION = [
+  'COOKIE_JWT_SECRET',
+  'TEMP_JWT_SECRET',
+  'USLUB_PEPPER',
+  'EMAIL',
+  'EMAIL_APP_SPECIFIC_PASS',
+] as const;
+
+const logger = new Logger('envValidate');
+
+export function envValidate(config: Record<string, unknown>): EnvConfigDTO {
+  const validatedConfig = plainToClass(EnvConfigDTO, config, { enableImplicitConversion: true });
+  const errors = validateSync(validatedConfig, { skipMissingProperties: true });
+
+  if (errors.length > 0) {
+    const message = errors
+      .map((error: ValidationError) => {
+        const constraints = error.constraints ?? {};
+        return `  ${error.property}: ${Object.values(constraints).join(', ')}`;
+      })
+      .join('\n');
+    throw new Error(`Environment validation failed:\n${message}`);
+  }
+
+  if (validatedConfig.NODE_ENV === Enveronements.PRODUCTION) {
+    const missing = REQUIRED_IN_PRODUCTION.filter((key) => {
+      const value = config[key];
+      return value === undefined || value === null || String(value).trim() === '';
+    });
+    if (missing.length > 0) {
+      throw new Error(
+        `Refusing to start in production without: ${missing.join(', ')}. ` +
+          'Set them in .env (see .env.example).',
+      );
+    }
+  } else {
+    const missing = REQUIRED_IN_PRODUCTION.filter((key) => !config[key]);
+    if (missing.length > 0) {
+      logger.debug(`running in ${validatedConfig.NODE_ENV} without: ${missing.join(', ')}`);
+    }
+  }
+
+  return validatedConfig;
+}

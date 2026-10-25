@@ -1,0 +1,419 @@
+/* Self-hosted fonts: Satoshi (EN) + IBM Plex Arabic (AR) + IBM Plex Mono (code) */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Arabic';
+  src: url('/fonts/ibm-plex-arabic-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Arabic';
+  src: url('/fonts/ibm-plex-arabic-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Arabic';
+  src: url('/fonts/ibm-plex-arabic-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Arabic';
+  src: url('/fonts/ibm-plex-arabic-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/ibm-plex-mono-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/ibm-plex-mono-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Uslub tokens — the single source of colour, type and shape.
+ * Values and rules: docs/DESIGN.md. No component may invent a colour.
+ * Palette: Color Hunt 086288 4d8dba 97d7ff ffefc4 (mapped with measured contrast).
+ */
+
+:root {
+  /* surfaces */
+  --canvas: #ffffff;
+  --canvas-parchment: #f5f5f7;
+  --canvas-cream: #ffefc4;
+  --surface-pearl: #fafafc;
+
+  /* text — measured against white */
+  --ink: #1d1d1f; /* 14.7:1 on cream, AAA */
+  --ink-secondary: #6e6e73; /* 5.07:1, AA */
+  --ink-on-dark: #f5f5f7;
+
+  /* the one interactive accent */
+  --primary: #086288; /* 6.75:1 on white; white label on it also 6.75 */
+  --primary-hover: #065273; /* 8.53:1 */
+  --primary-on-dark: #97d7ff; /* the accent in dark mode: 9.57:1 on #272729 */
+  --focus: #086288; /* 2px ring, 2px offset */
+
+  /* support and tints — never text on light surfaces */
+  --support: #4d8dba; /* 3.60:1: graphics and >=18px semibold only */
+  --tint-selected: rgba(151, 215, 255, 0.24);
+
+  /* lines */
+  --hairline: #e0e0e0;
+  --divider-soft: rgba(0, 0, 0, 0.04);
+
+  /* status */
+  --error: #d70015;
+  --success: #0f7b3f;
+  --warning-surface: #ffefc4;
+  /* Tints carry status as a wash behind a word, never as the word itself. */
+  --error-tint: rgba(215, 0, 21, 0.08);
+  --success-tint: rgba(15, 123, 63, 0.1);
+  --scrim: rgba(0, 0, 0, 0.32);
+
+  /* Premium shadow system (4-layer: 2 inset + 2 outer) */
+  --shadow-premium:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06), 0 4px 12px -2px rgba(0, 0, 0, 0.12);
+  --shadow-premium-dark:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 0 rgba(0, 0, 0, 0.12),
+    0 1px 2px 0 rgba(0, 0, 0, 0.24), 0 4px 12px -2px rgba(0, 0, 0, 0.32);
+  --shadow-hover:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    0 2px 4px 0 rgba(0, 0, 0, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.16);
+  --shadow-press:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06), inset 0 2px 4px 0 rgba(0, 0, 0, 0.12),
+    0 0px 0px 0 rgba(0, 0, 0, 0);
+  --shadow-inner: inset 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-glass: 0 4px 24px -4px rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+
+  /* type */
+  --font-sans: 'Satoshi', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Arabic first for Arabic, because a Latin-first stack renders Arabic with the
+     fallback that happens to exist — often a serif — and no amount of sizing fixes
+     that. Nothing is downloaded: every one of these ships with an OS. */
+  --font-arabic: 'IBM Plex Arabic', 'Noto Sans Arabic', Tahoma, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --display-lg: 600 34px/1.15 var(--font-sans);
+  --display-xl: 600 64px/1.05 var(--font-sans);
+  --display-md: 600 28px/1.2 var(--font-sans);
+  --display-feature: 600 22px/1.25 var(--font-sans);
+  --display-sm: 600 21px/1.19 var(--font-sans);
+  --display-section: 600 36px/1.15 var(--font-sans);
+  --body: 400 17px/1.47 var(--font-sans);
+  --body-strong: 600 17px/1.24 var(--font-sans);
+  --caption: 400 14px/1.43 var(--font-sans);
+  --caption-strong: 600 14px/1.29 var(--font-sans);
+  /* Small type gets *more* leading, not less: at 12px a line-height of 1 collides
+     with the next line. 1.45 matches the Arabic fine print. */
+  --fine-print: 400 13px/1.45 var(--font-sans);
+  --code: 400 13px/1.4 var(--font-mono);
+
+  /* shape */
+  --radius-sm: 8px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  /* Three durations, three jobs. Press is on the input path and must feel immediate;
+     hover is feedback and can take a frame or two; enter is the longest thing the
+     interface does. One curve, so nothing looks like it came from a different app. */
+  --motion-press: 100ms ease-out;
+  --motion-ui: 160ms ease-out;
+  --motion-enter: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion: var(--motion-ui);
+
+  /* Prose measure. The main column is 1000px; a sentence at 17px needs ~68 characters, 
+     not 115. Tables keep the full width. */
+  --measure: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --canvas: #000000;
+    --canvas-parchment: #1c1c1e;
+    --canvas-cream: #2c2618;
+    --surface-pearl: #272729;
+    --ink: var(--ink-on-dark);
+    --ink-secondary: #cccccc;
+    --primary: var(--primary-on-dark);
+    --primary-hover: #b8e2ff;
+    --focus: var(--primary-on-dark);
+    --hairline: #3a3a3c;
+    --error: #ff7b72;
+    --success: #30d158;
+    --warning-surface: #2c2618;
+    --error-tint: rgba(255, 123, 114, 0.14);
+    --success-tint: rgba(48, 209, 88, 0.14);
+  }
+}
+
+[data-theme='dark'] {
+  --shadow-premium: var(--shadow-premium-dark);
+  --shadow-hover:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 0 rgba(0, 0, 0, 0.12),
+    0 2px 4px 0 rgba(0, 0, 0, 0.24), 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  --canvas: #000000;
+  --canvas-parchment: #1c1c1e;
+  --canvas-cream: #2c2618;
+  --surface-pearl: #272729;
+  --ink: var(--ink-on-dark);
+  --ink-secondary: #cccccc;
+  --primary: var(--primary-on-dark);
+  --primary-hover: #b8e2ff;
+  --focus: var(--primary-on-dark);
+  --hairline: #3a3a3c;
+  --error: #ff7b72;
+  --success: #30d158;
+  --warning-surface: #2c2618;
+  --error-tint: rgba(255, 123, 114, 0.14);
+  --success-tint: rgba(48, 209, 88, 0.14);
+}
+
+[data-theme='light'] {
+  /* explicit light override — resets any system dark preference */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--canvas-parchment);
+  color: var(--ink);
+  font: var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  padding: var(--space-16) var(--space-6);
+  max-width: 720px;
+}
+
+.display-xl {
+  font: var(--display-xl);
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+
+.display-section {
+  font: var(--display-section);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.display-feature {
+  font: var(--display-feature);
+  margin: 0;
+}
+
+.display-lg {
+  font: var(--display-lg);
+  letter-spacing: -0.374px;
+  margin: 0 0 var(--space-4);
+}
+.display-md {
+  font: var(--display-md);
+  letter-spacing: -0.28px;
+}
+.display-sm {
+  font: var(--display-sm);
+  letter-spacing: 0.231px;
+}
+.body {
+  font: var(--body);
+  color: var(--ink);
+}
+.body-strong {
+  font: var(--body-strong);
+}
+.caption {
+  font: var(--caption);
+  color: var(--ink-secondary);
+}
+.fine-print {
+  font: var(--fine-print);
+  color: var(--ink);
+  opacity: 0.78;
+}
+.code {
+  font: var(--code);
+  background: var(--surface-pearl);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+
+/*
+ * Every press is scale(0.97) in 100ms — the system-wide micro-interaction.
+ *
+ * 0.95 over 160ms was the first attempt, and it read as a wobble: 19px of horizontal
+ * shrink on a 378px button, and nothing perceptible at all on a 61px one. 0.97 is the
+ * value from Apple's own example, and 100ms is a press rather than a hover.
+ */
+button,
+.pressable,
+.nav__link,
+.row,
+.link,
+.locale-switch__option {
+  transition:
+    transform var(--motion-press),
+    background-color var(--motion-ui),
+    color var(--motion-ui),
+    border-color var(--motion-ui);
+}
+button:active,
+.pressable:active {
+  transform: scale(0.97);
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/*
+ * Reduced motion is not "no feedback". The vestibular part goes — no transforms, no springs,
+ * no pulsing skeleton — but colour and opacity still transition, and a dialog still arrives
+ * and leaves as a cross-fade. Apple's rule is a gentler equivalent, not a dead interface;
+ * `transition: none` on everything was the blunt version and it removed the confirmation
+ * along with the movement.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-property: opacity, background-color, color, border-color !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .modal {
+    animation: reduced-fade-in 180ms both !important;
+    transform: none !important;
+  }
+  .modal--closing {
+    animation: reduced-fade-out 180ms both !important;
+    transform: none !important;
+  }
+  .scrim,
+  .scrim--closing {
+    animation: reduced-fade-in 180ms both !important;
+  }
+  .scrim--closing {
+    animation-name: reduced-fade-out !important;
+  }
+  .skeleton__bar {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+@keyframes reduced-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes reduced-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- Arabic ---------- */
+
+/*
+ * Arabic is not English in another font, and this block is the whole argument.
+ *
+ * `letter-spacing` is the strong one: Arabic glyphs are joined cursively, so any
+ * tracking the Latin display styles rely on hints at breaks inside words. The design's
+ * -0.374px would damage every heading on the page.
+ *
+ * Line height rises because Naskh carries diacritics and descenders that a 1.15
+ * leading clips, and sizes drop a notch because the same point size renders wider in
+ * Arabic than in Inter.
+ *
+ * The Arabic stack is chosen per language, not globally: listing the Arabic faces
+ * first in the Latin stack would pull `Geeza Pro` in for Latin text on macOS.
+ */
+html[lang='ar'] {
+  --font-sans: var(--font-arabic);
+  --display-lg: 600 32px/1.55 var(--font-arabic);
+  --display-xl: 600 44px/1.3 -0.01em var(--font-arabic);
+  --display-section: 600 28px/1.35 var(--font-arabic);
+  --display-feature: 600 19px/1.35 var(--font-arabic);
+  --display-md: 600 26px/1.5 var(--font-arabic);
+  --display-sm: 600 20px/1.45 var(--font-arabic);
+  --body: 400 17px/1.75 var(--font-arabic);
+  --body-strong: 600 17px/1.6 var(--font-arabic);
+  --caption: 400 14px/1.65 var(--font-arabic);
+  --caption-strong: 600 14px/1.55 var(--font-arabic);
+  --fine-print: 400 13px/1.6 var(--font-arabic);
+}
+
+html[lang='ar'] .display-lg,
+html[lang='ar'] .display-md,
+html[lang='ar'] .display-sm,
+html[lang='ar'] .shell__brand {
+  letter-spacing: 0;
+}
+
+/* Monospace stays Latin: keys, ids and code are not translated, and the Arabic
+   fallback in a monospace stack is not monospaced. */
+html[lang='ar'] .mono,
+html[lang='ar'] .code {
+  letter-spacing: 0;
+}

@@ -1,0 +1,426 @@
+import {
+  BadGatewayException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { TempLinksService } from '@/temp-links/temp-links.service';
+import { MAIL_TRANSPORT, MailMessage, MailNotConfiguredError, MailTransport } from './mailer.types';
+import type { Locale } from '@tilawa-admin/core';
+import * as path from 'path';
+import * as fs from 'fs';
+
+/** Who an email is about: the four fields every template interpolates. */
+export interface MailRecipient {
+  id: number | string;
+  email: string;
+  name: string;
+  /**
+   * The language to write in. Absent means English: every account created before
+   * migration 006 has `locale = 'en'`, and a caller that forgets this field gets the
+   * language the product is written in rather than a mixed message.
+   */
+  locale?: Locale;
+}
+
+/**
+ * Renders the four ported templates and sends them through one transport.
+ *
+ * Three deliberate differences from `nextpalestine`'s `MailerService`:
+ *
+ * 1. **Every send is awaited.** Upstream passed a `(error, info) => …` callback
+ *    and returned `void`; the caller's `await` resolved before the SMTP
+ *    conversation happened, and a failure only reached a `console.log`. A 502
+ *    from this service now means "the mail did not go out".
+ * 2. **One transporter, injected.** See `mailer.transport.ts`.
+ * 3. **A missing user is a typed throw, not a silent skip.** The controllers
+ *    that must not enumerate accounts catch it and answer generically; the ones
+ *    that operate on the caller cannot hit it at all.
+ *
+ * Templates are read once in the constructor, which is also why `nest-cli.json`
+ * lists them as assets and the Dockerfile copies them explicitly: a missing
+ * template exits the process at boot rather than at the first signup.
+ */
+@Injectable()
+export class MailerService {
+  private readonly logger = new Logger(MailerService.name);
+  private readonly registrationEmailTemplate: string;
+  private readonly activationEmailTemplate: string;
+  private readonly resetPasswordEmailTemplate: string;
+  private readonly otpEmailTemplate: string;
+  private readonly emailChangeEmailTemplate: string;
+  private readonly emailChangedNoticeEmailTemplate: string;
+  private readonly ownerTransferEmailTemplate: string;
+  private readonly ownerTransferCompleteEmailTemplate: string;
+  private readonly registrationEmailTemplateAr: string;
+  private readonly activationEmailTemplateAr: string;
+  private readonly resetPasswordEmailTemplateAr: string;
+  private readonly otpEmailTemplateAr: string;
+  private readonly emailChangeEmailTemplateAr: string;
+  private readonly emailChangedNoticeEmailTemplateAr: string;
+  private readonly ownerTransferEmailTemplateAr: string;
+  private readonly ownerTransferCompleteEmailTemplateAr: string;
+
+  constructor(
+    @Inject(MAIL_TRANSPORT) private readonly transport: MailTransport,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly links: TempLinksService,
+  ) {
+    this.registrationEmailTemplate = this.load('registration.email.template.html');
+    this.activationEmailTemplate = this.load('activation.email.template.html');
+    this.resetPasswordEmailTemplate = this.load('reset.password.email.template.html');
+    this.otpEmailTemplate = this.load('otp.email.template.html');
+    this.emailChangeEmailTemplate = this.load('email-change.email.template.html');
+    this.emailChangedNoticeEmailTemplate = this.load('email-changed-notice.email.template.html');
+    this.ownerTransferEmailTemplate = this.load('owner-transfer.email.template.html');
+    this.ownerTransferCompleteEmailTemplate = this.load(
+      'owner-transfer-complete.email.template.html',
+    );
+    // The Arabic variants are loaded here too, not lazily: a missing translation is
+    // then a boot failure like a missing template, instead of an Arabic account
+    // receiving English the first time it asks for a reset link.
+    this.registrationEmailTemplateAr = this.load('registration.email.template.ar.html');
+    this.activationEmailTemplateAr = this.load('activation.email.template.ar.html');
+    this.resetPasswordEmailTemplateAr = this.load('reset.password.email.template.ar.html');
+    this.otpEmailTemplateAr = this.load('otp.email.template.ar.html');
+    this.emailChangeEmailTemplateAr = this.load('email-change.email.template.ar.html');
+    this.emailChangedNoticeEmailTemplateAr = this.load(
+      'email-changed-notice.email.template.ar.html',
+    );
+    this.ownerTransferEmailTemplateAr = this.load('owner-transfer.email.template.ar.html');
+    this.ownerTransferCompleteEmailTemplateAr = this.load(
+      'owner-transfer-complete.email.template.ar.html',
+    );
+  }
+
+  /** The template for the recipient's language. */
+  private template(locale: Locale | undefined, english: string, arabic: string): string {
+    return locale === 'ar' ? arabic : english;
+  }
+
+  /** The subject for the recipient's language. */
+  private subject(locale: Locale | undefined, english: string, arabic: string): string {
+    const base = locale === 'ar' ? arabic : english;
+    const prefix = this.configService.get<string>('EMAIL_SUBJECT_PREFIX')?.trim();
+    return prefix ? `${prefix} ${base}` : base;
+  }
+
+  private load(file: string): string {
+    return fs.readFileSync(path.join(__dirname, 'templates', file), 'utf-8');
+  }
+
+  /** False on a host with no Gmail credentials, which is every dev machine. */
+  get isConfigured(): boolean {
+    return this.transport.kind !== 'null';
+  }
+
+  private get appName(): string {
+    return this.configService.get<string>('APP_NAME') ?? 'Uslub';
+  }
+
+  private get website(): string {
+    return this.configService.get<string>('WEBSITE') ?? 'http://localhost:9320';
+  }
+
+  private fill(template: string, values: Record<string, string>): string {
+    return Object.entries(values).reduce(
+      (html, [key, value]) => html.split(`{{${key}}}`).join(value),
+      template,
+    );
+  }
+
+  private async deliver(message: MailMessage): Promise<{ messageId: string }> {
+    try {
+      const info = await this.transport.send(message);
+      this.logger.log(`sent "${message.subject}" to ${message.to} (${info.messageId})`);
+      return info;
+    } catch (err) {
+      if (err instanceof MailNotConfiguredError) {
+        // 503, not 500: the account system is fine, the deployment is not
+        // finished. The body names the variables so the fix is obvious.
+        throw new ServiceUnavailableException(err.message);
+      }
+      this.logger.error(`send to ${message.to} failed: ${(err as Error).message}`);
+      throw new BadGatewayException('Failed to send email');
+    }
+  }
+
+  /**
+   * The activation and reset links both carry this token: a short-lived JWT
+   * signed with `TEMP_JWT_SECRET`, deliberately not the session secret, so a
+   * stolen link cannot be replayed as a session and vice versa.
+   */
+  private async temporaryToken(
+    id: number | string,
+    email: string,
+    purpose: 'activation' | 'reset' | 'email_change' | 'owner_transfer',
+    options: { ttlMs?: number; extra?: Record<string, unknown> } = {},
+  ): Promise<string> {
+    const ttlMs =
+      options.ttlMs ?? Number(this.configService.get<string>('TEMP_JWT_TTL_MS') ?? 900_000);
+    const { jti } = this.links.issue(id, purpose, ttlMs);
+    return this.jwtService.signAsync(
+      { id, email, purpose, jti, ...options.extra },
+      {
+        secret: this.configService.get<string>('TEMP_JWT_SECRET'),
+        expiresIn: Math.floor(ttlMs / 1000),
+      },
+    );
+  }
+
+  async sendRegistrationEmail(
+    recipient: MailRecipient,
+    password: string,
+  ): Promise<{ messageId: string }> {
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(
+        recipient.locale,
+        `Welcome ${recipient.name} to ${this.appName}`,
+        `مرحبًا ${recipient.name} في ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(
+          recipient.locale,
+          this.registrationEmailTemplate,
+          this.registrationEmailTemplateAr,
+        ),
+        {
+          APP_NAME: this.appName,
+          name: recipient.name,
+          email: recipient.email,
+          password,
+        },
+      ),
+    });
+  }
+
+  async sendActivationEmail(recipient: MailRecipient): Promise<{ messageId: string }> {
+    const token = await this.temporaryToken(recipient.id, recipient.email, 'activation');
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(
+        recipient.locale,
+        `Activate your ${this.appName} account`,
+        `تنشيط حسابك في ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(
+          recipient.locale,
+          this.activationEmailTemplate,
+          this.activationEmailTemplateAr,
+        ),
+        {
+          APP_NAME: this.appName,
+          website: this.website,
+          token,
+          name: recipient.name,
+          email: recipient.email,
+        },
+      ),
+    });
+  }
+
+  async sendResetPasswordEmail(recipient: MailRecipient): Promise<{ messageId: string }> {
+    const token = await this.temporaryToken(recipient.id, recipient.email, 'reset');
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(
+        recipient.locale,
+        `Reset your ${this.appName} password`,
+        `إعادة تعيين كلمة المرور في ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(
+          recipient.locale,
+          this.resetPasswordEmailTemplate,
+          this.resetPasswordEmailTemplateAr,
+        ),
+        {
+          APP_NAME: this.appName,
+          website: this.website,
+          token,
+          name: recipient.name,
+          email: recipient.email,
+        },
+      ),
+    });
+  }
+
+  /**
+   * Ask the new address to confirm. The token is bound to that address in its
+   * own signature, so a link forwarded to someone else still names the address
+   * it would move the account to — and the account itself stays on the old
+   * address until this is redeemed.
+   */
+  async sendEmailChangeConfirmation(
+    recipient: MailRecipient,
+    newEmail: string,
+  ): Promise<{ messageId: string }> {
+    const token = await this.temporaryToken(recipient.id, newEmail, 'email_change');
+    return this.deliver({
+      to: newEmail,
+      subject: this.subject(
+        recipient.locale,
+        `Confirm your new ${this.appName} email address`,
+        `تأكيد عنوان بريدك الجديد في ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(
+          recipient.locale,
+          this.emailChangeEmailTemplate,
+          this.emailChangeEmailTemplateAr,
+        ),
+        {
+          APP_NAME: this.appName,
+          website: this.website,
+          token,
+          name: recipient.name,
+          email: newEmail,
+        },
+      ),
+    });
+  }
+
+  /** Tell the old address what changed, after it has changed. */
+  async sendEmailChangedNotice(
+    recipient: MailRecipient,
+    newEmail: string,
+  ): Promise<{ messageId: string }> {
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(
+        recipient.locale,
+        `Your ${this.appName} email address was changed`,
+        `تم تغيير عنوان بريدك في ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(
+          recipient.locale,
+          this.emailChangedNoticeEmailTemplate,
+          this.emailChangedNoticeEmailTemplateAr,
+        ),
+        {
+          APP_NAME: this.appName,
+          name: recipient.name,
+          email: recipient.email,
+          newEmail,
+        },
+      ),
+    });
+  }
+
+  /**
+   * Ownership transfer: the invitation names the current Owner and the target
+   * in the signed token, so the acceptance link cannot be replayed against a
+   * different account.
+   */
+  async sendOwnerTransferInvite(
+    owner: MailRecipient,
+    target: MailRecipient,
+  ): Promise<{ messageId: string }> {
+    const token = await this.temporaryToken(owner.id, target.email, 'owner_transfer', {
+      ttlMs: 60 * 60 * 1000,
+      extra: { fromId: Number(owner.id), toId: Number(target.id) },
+    });
+    return this.deliver({
+      to: target.email,
+      subject: this.subject(
+        target.locale,
+        `You are invited to own ${this.appName}`,
+        `دعوة لامتلاك ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(
+          target.locale,
+          this.ownerTransferEmailTemplate,
+          this.ownerTransferEmailTemplateAr,
+        ),
+        {
+          APP_NAME: this.appName,
+          website: this.website,
+          token,
+          name: target.name,
+          email: target.email,
+          ownerName: owner.name,
+        },
+      ),
+    });
+  }
+
+  /** Tells both accounts that ownership moved and their sessions were revoked. */
+  async sendOwnerTransferComplete(
+    recipient: MailRecipient,
+    newOwnerName: string,
+  ): Promise<{ messageId: string }> {
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(
+        recipient.locale,
+        `Ownership of ${this.appName} has moved`,
+        `انتقلت ملكية ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(
+          recipient.locale,
+          this.ownerTransferCompleteEmailTemplate,
+          this.ownerTransferCompleteEmailTemplateAr,
+        ),
+        {
+          APP_NAME: this.appName,
+          website: this.website,
+          name: recipient.name,
+          email: recipient.email,
+          newOwnerName,
+        },
+      ),
+    });
+  }
+
+  async sendOTPCodeToEmail(recipient: MailRecipient, otp: string): Promise<{ messageId: string }> {
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(
+        recipient.locale,
+        `Your ${this.appName} verification code`,
+        `رمز التحقق في ${this.appName}`,
+      ),
+      html: this.fill(
+        this.template(recipient.locale, this.otpEmailTemplate, this.otpEmailTemplateAr),
+        {
+          APP_NAME: this.appName,
+          name: recipient.name,
+          code: otp,
+          email: recipient.email,
+        },
+      ),
+    });
+  }
+
+  async sendSetupToken(
+    to: string,
+    token: string,
+    baseUrl?: string,
+  ): Promise<{ messageId: string }> {
+    const link = baseUrl ? `${baseUrl.replace(/\/$/, '')}/setup?token=${token}` : null;
+    const linkHtml = link
+      ? `<p>Or open this link (the token is pre-filled): <a href="${link}">${link}</a></p>`
+      : '';
+    return this.deliver({
+      to,
+      subject: `Uslub setup token (valid 1 hour, single use)`,
+      html: `<p>Your Uslub super-admin setup token is:</p><p style="font-family:monospace;font-size:16px">${token}</p>${linkHtml}<p>It is valid for one hour and can be used once. Visit <code>/setup</code> and enter the token with your credentials.</p><p>If you did not request this, ignore this email and rotate the deployment.</p>`,
+    });
+  }
+  static requireRecipient(user: MailRecipient | null): MailRecipient {
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+}

@@ -1,0 +1,70 @@
+# Tilawa Admin — deployment topology: one edge, two artefacts, one published port.
+# Only `edge` is reachable from the host; the rest live on the private bridge.
+
+services:
+  edge:
+    image: nginx:alpine
+    container_name: tilawa-admin-edge
+    ports:
+      - "127.0.0.1:${EDGE_PORT:-9400}:80"
+    volumes:
+      - ./edge/templates:/etc/nginx/templates:ro
+    environment:
+      API_PORT: ${API_PORT:-9410}
+      WEB_PORT: ${WEB_PORT:-9420}
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - tilawa-admin
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: tilawa-admin-api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: ${API_PORT:-9410}
+      DB_PATH: ${DB_PATH:-/data/tilawa-admin.sqlite}
+      USLUB_VENDOR_DIR: ${USLUB_VENDOR_DIR:-/app/vendor}
+      APP_VERSION: ${APP_VERSION:-dev}
+      BUILD_SHA: ${GIT_SHA:-dev}
+    volumes:
+      - ./data:/data
+      - ./vendor:/app/vendor:ro
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${API_PORT:-9410}/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - tilawa-admin
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: tilawa-admin-web
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: ${WEB_PORT:-9420}
+    mem_limit: 256m
+    restart: unless-stopped
+    networks:
+      - tilawa-admin
+
+volumes:
+  data:
+
+networks:
+  tilawa-admin:

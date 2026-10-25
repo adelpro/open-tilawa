@@ -1,0 +1,70 @@
+# Uslub web — static SPA, rendered by the nginx image's envsubst step.
+# PORT is the only variable; it defaults to 9320 in compose.
+server {
+  listen ${PORT};
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  # A CSP for the SPA itself. The API has had one from helmet since P2; the HTML
+  # had none, which is why the Gravatar lookup needed no exception until now.
+  #
+  # `style-src 'unsafe-inline'` is deliberate rather than lazy: the components put
+  # layout in inline `style` attributes (a width, a gap), and CSP blocks those under
+  # `style-src` even though they are attributes and not <style> blocks. `img-src`
+  # names Gravatar because the avatar falls back to it; `connect-src` stays 'self'
+  # because every API call is same-origin through the edge.
+  #
+  # These live at server level and the locations below use `expires` rather than
+  # `add_header`: a location that declares any `add_header` stops inheriting its
+  # parent's, so cache headers written with `add_header` would silently drop the CSP.
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.gravatar.com; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" always;
+  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+
+  # hashed assets are immutable; index.html must never be cached. `expires` writes
+  # Cache-Control without an `add_header` of its own, so the headers above survive.
+  location /assets/ {
+    expires 1y;
+    try_files $uri =404;
+  }
+  location = /index.html {
+    expires -1;
+  }
+  location = / {
+    expires -1;
+  }
+
+  # Crawler files: short cache, so a corrected sitemap is not stuck at the edge for a
+  # day. They are files in dist/ now, not routes the SPA answers.
+  location = /robots.txt {
+    default_type text/plain;
+    expires 1h;
+  }
+  location = /sitemap.xml {
+    default_type application/xml;
+    expires 1h;
+  }
+  location = /manifest.webmanifest {
+    default_type application/manifest+json;
+    expires 1d;
+  }
+  location = /og.png {
+    expires 7d;
+  }
+
+  # The app's own routes. Only these fall back to the shell: `/dashboard/profiles/7`
+  # and `/reset-password/<token>` have no file of their own, and they are the SPA's
+  # business. Everything else must exist on disk — `=404` is what turns the old soft
+  # 404s (every invented URL answering 200 with the app) into a real answer.
+  location ~ ^/(dashboard|reset-password|activate|2fa|setup|oauth|about|privacy|terms|signin|signup)(/|$) {
+    expires -1;
+    try_files $uri $uri/ /index.html;
+  }
+
+  location / {
+    expires -1;
+    try_files $uri $uri/ =404;
+  }
+}

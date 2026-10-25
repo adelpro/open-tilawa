@@ -1,0 +1,58 @@
+{
+  "name": "tilawa-admin",
+  "version": "1.20.0",
+  "private": true,
+  "description": "Tilawa Admin Dashboard — manage seeders, TURN, torrents, reciters, trackers",
+  "license": "MIT",
+  "author": {
+    "name": "Adel Ben Yahia",
+    "url": "https://github.com/adelpro"
+  },
+  "packageManager": "yarn@4.18.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "build": "yarn workspaces foreach -A -t --topological-dev run build",
+    "test": "yarn workspace @uslub/core build && yarn workspaces foreach -A -t --topological-dev run test",
+    "lint": "yarn workspaces foreach -A -t --topological-dev run lint",
+    "typecheck": "yarn workspace @uslub/core build && yarn workspaces foreach -A -t --topological-dev run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "dev:api": "yarn workspace @uslub/api start:dev",
+    "dev:mcp": "yarn workspace @uslub/mcp start:dev",
+    "dev:web": "yarn workspace @uslub/web dev",
+    "admin": "node --env-file-if-exists=.env scripts/admin.mjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx,json,css,md}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.3.1",
+    "@commitlint/config-conventional": "^20.3.1",
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.1",
+    "prettier": "^3.8.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  },
+  "dependenciesMeta": {
+    "better-sqlite3": {
+      "built": true
+    },
+    "esbuild": {
+      "built": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+-- Interface theme, stored per account.
+--
+-- The same contract as `locale` (006_locale.sql): a preference, not an identity,
+-- never part of a token, and never read by an authorization path. It is stored on
+-- the row so a second device opens in the theme the first one was left in, which
+-- `localStorage` alone cannot do. The device's own choice still outranks this one,
+-- so switching to light for one screen is not undone on the next load.
+--
+-- Default 'system' rather than a fixed light/dark: a brand-new account has not
+-- answered the question, and the honest answer is "whatever the OS says". The API
+-- validates the value ('light' | 'dark' | 'system'); SQLite cannot add a CHECK to
+-- an existing table without a rebuild, so the column stays TEXT.
+ALTER TABLE users ADD COLUMN theme TEXT NOT NULL DEFAULT 'system';

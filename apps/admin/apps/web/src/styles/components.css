@@ -1,0 +1,2660 @@
+/*
+ * Components. Every value here is a token from tokens.css — no raw colour, no
+ * shadow, no gradient. The rules being encoded: one accent (#086288, sky in dark
+ * mode), hairlines instead of shadows, radii only at 8 / 18 / pill, and a
+ * scale(0.97) press everywhere.
+ */
+
+/* ---------- layout rhythm ---------- */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.stack--tight {
+  gap: var(--space-3);
+}
+.cluster {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.spread {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.cluster--end {
+  justify-content: flex-end;
+}
+.cluster--center {
+  justify-content: center;
+}
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.page-head > div {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.page-head > .btn,
+.page-head > .cluster {
+  flex: 0 0 auto;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.toolbar .field {
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+.toolbar .fine-print {
+  margin-inline-start: auto;
+}
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--hairline);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-secondary);
+  font: var(--caption-strong);
+  padding: 12px 14px;
+  min-height: 44px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab:hover {
+  color: var(--ink);
+  background: var(--canvas-parchment);
+}
+.tab--active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* One pane at a time, so the page's height is the pane's height. The extra room
+   under the fields keeps the sticky bar from covering the last line when the
+   pane is taller than the viewport. */
+.editor-pane {
+  padding-bottom: var(--space-8);
+}
+
+/* The single save action, pinned to the bottom of the window: the profile is
+   long, and a save button that scrolls away is a save that gets forgotten. The
+   negative margins cancel the shell's own padding so the hairline reaches the
+   edges instead of stopping short like an inset card. */
+.editor-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-inline: calc(var(--space-12) * -1);
+  margin-bottom: calc(var(--space-16) * -1);
+  padding: var(--space-3) var(--space-12) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  background: var(--canvas);
+  border-top: 1px solid var(--hairline);
+}
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll > .table {
+  min-width: 560px;
+}
+.table-scroll > .table--wide {
+  min-width: 760px;
+}
+.grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.muted {
+  color: var(--ink-secondary);
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- auth screens ---------- */
+
+.auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-12) var(--space-6);
+}
+.auth__card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--canvas);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+}
+.auth a {
+  color: var(--primary);
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: var(--caption-strong);
+  letter-spacing: -0.224px;
+  padding: 12px 26px;
+  min-height: 40px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--canvas);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+/* Pearl fill and a hairline ring: the secondary button never looks like the primary. */
+.btn--secondary {
+  background: var(--surface-pearl);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--divider-soft);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--canvas-parchment);
+}
+
+/* Coarse pointers get roomier targets per the touch-target guidance */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 48px;
+    padding: 14px 30px;
+  }
+}
+
+.btn--tertiary {
+  padding-inline: var(--space-2);
+}
+.btn--tertiary:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.btn--destructive {
+  color: var(--error);
+}
+.btn--destructive:hover:not(:disabled) {
+  background: var(--error-tint);
+}
+
+.btn--sm {
+  min-height: 30px;
+  padding: 6px 14px;
+}
+
+/* ---------- inputs ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.field__label {
+  font: var(--caption-strong);
+  color: var(--ink);
+}
+.field__hint {
+  font: var(--fine-print);
+  color: var(--ink-secondary);
+}
+
+.field__input,
+.field__textarea,
+.field__select {
+  font: var(--body);
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  min-height: 44px;
+  width: 100%;
+}
+
+.field__textarea {
+  font: var(--code);
+  min-height: 220px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.field__select {
+  min-height: 40px;
+}
+
+.field__input:focus-visible,
+.field__textarea:focus-visible,
+.field__select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-color: var(--primary);
+}
+
+.field__error {
+  font: var(--fine-print);
+  color: var(--error);
+}
+.field__error::before {
+  content: 'Error: ';
+}
+
+/* ---------- panels ---------- */
+
+.panel {
+  background: var(--canvas);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.panel--parchment {
+  background: var(--canvas-parchment);
+}
+.panel--cream {
+  background: var(--canvas-cream);
+  color: var(--ink);
+}
+
+.panel__title {
+  font: var(--display-sm);
+  letter-spacing: 0.231px;
+  margin: 0;
+}
+
+/* ---------- hierarchical rows (the Notes three-line pattern) ---------- */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  min-height: 68px;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+  text-align: start;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--canvas-parchment);
+}
+.row[aria-selected='true'] {
+  background: var(--tint-selected);
+}
+
+.row__label {
+  font: var(--body-strong);
+  letter-spacing: -0.374px;
+}
+.row__id {
+  font: var(--code);
+  color: var(--ink-secondary);
+}
+.row__meta {
+  font: var(--fine-print);
+  color: var(--ink-secondary);
+}
+
+/* ---------- tables ---------- */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--caption);
+}
+.table th {
+  font: var(--caption-strong);
+  color: var(--ink-secondary);
+  text-align: start;
+  padding: var(--space-2) var(--space-3);
+  background: var(--canvas-parchment);
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+.table td {
+  padding: 10px var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+  min-height: 36px;
+}
+.table tr:last-child td {
+  border-bottom: 0;
+}
+.table tr:hover td {
+  background: var(--canvas-parchment);
+}
+.table .num {
+  text-align: end;
+  font: var(--code);
+}
+
+/* ---------- the toolchain chain ---------- */
+
+/* The chain is an ordered list, not a stack of cards: the order is the
+   meaning, so the rows share one hairline column and the numbers inside the
+   step names are enough to tell which pass runs first. */
+.chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.chain__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.chain__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.chain__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font: var(--body-strong);
+}
+
+.chain__body {
+  margin: 0;
+  max-width: 65ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chain__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+/* The master sits outside the reorderable run: it composes everything above
+   it, so it has no arrows — only the way back to its editor. */
+.chain__row--master {
+  border-bottom: none;
+}
+
+/* A small square target for the arrow controls. The 44px floor is the same
+   one every other control in the shell keeps. */
+.icon-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+.icon-btn:hover:not(:disabled) {
+  background: var(--canvas-parchment);
+  color: var(--ink);
+}
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* The add/edit form is inset rather than a card: it belongs to the list above
+   it, not to the page. */
+.step-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--canvas-cream);
+}
+
+/* ---------- chips ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font: var(--fine-print);
+  white-space: nowrap;
+}
+
+button.chip {
+  appearance: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-height: 32px;
+}
+button.chip[aria-pressed='true'] {
+  border-color: currentColor;
+}
+
+.chip--ok {
+  background: var(--success-tint);
+  color: var(--success);
+}
+.chip--bad {
+  background: var(--error-tint);
+  color: var(--error);
+}
+.chip--info {
+  background: var(--tint-selected);
+  color: var(--ink);
+}
+.chip--notice {
+  background: var(--canvas-cream);
+  color: var(--ink);
+}
+
+/* ---------- shell, nav and drawer ---------- */
+
+.shell {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.shell__aside {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  overflow-y: auto;
+  background: var(--canvas);
+  border-inline-end: 1px solid var(--hairline);
+}
+
+[data-theme='dark'] .shell__aside {
+  background: var(--canvas-parchment);
+}
+
+/*
+ * The desktop column and the phone drawer are the same navigation. The column is
+ * permanent; the drawer is a fixed layer at the inline start with a scrim, one
+ * hairline and the account pinned to the bottom.
+ */
+.shell__topbar {
+  display: none;
+}
+
+.shell__bar {
+  padding: 0 var(--space-1);
+}
+
+.shell__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  font: var(--body-strong);
+  letter-spacing: -0.374px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.shell__brand-dot {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+  flex: none;
+}
+
+.shell__menu,
+.shell__close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.shell__menu:hover,
+.shell__close:hover {
+  background: var(--canvas-parchment);
+}
+.shell__drawer .shell__close {
+  display: inline-flex;
+}
+
+.shell__nav-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: var(--space-6);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav__label {
+  padding: 0 12px var(--space-2);
+  font: var(--caption-strong);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.nav__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font: var(--caption-strong);
+  color: var(--ink-secondary);
+  text-decoration: none;
+  transition:
+    background-color var(--motion-ui),
+    color var(--motion-ui);
+}
+
+.nav__icon {
+  flex: none;
+  opacity: 0.78;
+}
+
+.nav__link:hover {
+  background: var(--canvas-parchment);
+  color: var(--ink);
+}
+
+.nav__link--active {
+  color: var(--primary);
+  background: var(--tint-selected);
+}
+
+.nav__link--active::before {
+  content: '';
+  position: absolute;
+  inset-block: 9px;
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+}
+
+.nav__link--active .nav__icon {
+  opacity: 1;
+}
+
+.shell__account {
+  margin-top: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--canvas-parchment);
+  box-shadow: var(--shadow-premium);
+}
+
+.shell__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-bottom: var(--space-3);
+}
+
+.shell__identity-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.shell__account .locale-switch {
+  margin: 0;
+  padding: 0;
+}
+
+.shell__signout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: var(--space-2);
+  padding: 8px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-secondary);
+  font: var(--caption-strong);
+  cursor: pointer;
+}
+
+.shell__signout:hover {
+  color: var(--error);
+  background: var(--error-tint);
+}
+
+.shell__account-placeholder {
+  margin-top: auto;
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--canvas-parchment);
+}
+
+/* The drawer is display: none on desktop; the media query below reveals it. The
+   wrapper is fixed so it never takes a row from the shell grid, and it lets
+   pointer events through until the scrim is open. */
+.shell__drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  pointer-events: none;
+}
+
+.shell__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--scrim);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-ui);
+}
+
+.shell__panel {
+  position: fixed;
+  pointer-events: auto;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  width: min(320px, 88vw);
+  height: 100vh;
+  height: 100dvh;
+  padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-3)
+    calc(var(--space-3) + env(safe-area-inset-bottom));
+  background: var(--canvas);
+  border-inline-end: 1px solid var(--hairline);
+  border-start-end-radius: var(--radius-lg);
+  border-end-end-radius: var(--radius-lg);
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(-100%);
+  transition:
+    transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity var(--motion-ui),
+    visibility 0s linear 200ms;
+}
+
+[dir='rtl'] .shell__panel {
+  transform: translateX(100%);
+}
+
+.shell__drawer--open .shell__scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.shell__drawer--open .shell__panel {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity var(--motion-ui);
+}
+
+.shell__drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.shell__drawer-body {
+  flex: 1;
+  min-height: 0;
+  padding-top: var(--space-6);
+  overflow-y: auto;
+}
+
+.shell__panel .nav__link {
+  min-height: 48px;
+  font: var(--body-strong);
+  font-size: 15px;
+}
+
+.shell__panel .shell__account {
+  margin-top: var(--space-4);
+}
+
+.shell__main {
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
+  padding: var(--space-12) var(--space-12) var(--space-16);
+}
+.shell__head {
+  margin-bottom: var(--space-8);
+}
+
+/* The language switch in the account block: two options, no menu, because a menu
+   for two things is a click for nothing. */
+.locale-switch {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-3);
+  padding: 0 var(--space-3);
+}
+.locale-switch__option {
+  /* 18px tall was a measured coin toss on a phone, and this is the control that changes
+     the whole interface. 32px is the minimum that stays comfortable with a mouse; a
+     coarse pointer gets the full 44 without changing how it looks here. */
+  min-height: 32px;
+  padding: 2px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hairline);
+  background: transparent;
+  font: var(--fine-print);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .locale-switch__option {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+.locale-switch__option--active {
+  color: var(--primary);
+  background: var(--tint-selected);
+  border-color: transparent;
+}
+
+/* ---------- landing ---------- */
+
+/*
+ * The public page. It is deliberately not a marketing template: same paper, same
+ * hairlines, same type scale as the dashboard, because the product is one thing and
+ * its front door should not promise a different one.
+ */
+.landing {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-6) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.landing__nav {
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 0 24px;
+  height: 56px;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  transition: box-shadow 200ms ease-out;
+}
+
+[data-theme='dark'] .landing__nav {
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.landing__nav-dot,
+.shell__brand-dot {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  color: var(--accent, #086288);
+  flex-shrink: 0;
+}
+
+.landing__nav-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.landing__nav-menu {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--ink);
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.landing__nav-menu:hover {
+  box-shadow: none;
+  transform: none;
+}
+
+.landing__nav-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.landing__nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.landing__nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-decoration: none;
+  padding: 10px 14px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  transition:
+    color 150ms ease-out,
+    background 150ms ease-out;
+}
+
+.landing__nav-links a:hover {
+  color: var(--ink);
+  background: var(--canvas-parchment);
+}
+
+.landing__nav-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.landing__nav-signin {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-decoration: none;
+  /* fixed box height with zero vertical padding keeps the label optically centred
+     in both metrics (Latin 1.29 line-height, Arabic 1.55) instead of the
+     content-height drifting with the active font */
+  height: 40px;
+  padding: 0 26px;
+  border-radius: 999px;
+  transition:
+    color 150ms ease-out,
+    background 150ms ease-out;
+}
+
+.landing__nav-signin svg {
+  width: 16px;
+  height: 16px;
+}
+
+.landing__nav-signin:hover {
+  color: var(--ink);
+  background: var(--canvas-parchment);
+}
+
+.landing__nav-appearance {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.landing__nav-mobile-extra {
+  display: none;
+}
+
+.landing__nav-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+@media (max-width: 1024px) {
+  .landing__nav {
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .landing__nav-brand {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: center;
+    flex: none;
+  }
+
+  .landing__nav-right {
+    grid-column: 3;
+    grid-row: 1;
+    justify-content: flex-end;
+  }
+
+  .landing__nav-menu {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    color: var(--ink-secondary);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    box-shadow: none;
+  }
+
+  .landing__nav-menu svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .landing__nav-menu:hover {
+    background: var(--canvas-parchment);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .landing__nav-center {
+    display: none;
+    position: fixed;
+    top: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    bottom: 0;
+    height: 100dvh;
+    overflow-y: auto;
+    z-index: 1;
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 76px 20px 32px;
+    background: var(--canvas);
+    animation: nav-drawer-in 200ms ease-out;
+  }
+
+  .landing__nav-center--open {
+    display: flex;
+  }
+
+  @keyframes nav-drawer-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .landing__nav-mobile-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .landing__nav-mobile-extra .landing__nav-signin--mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    border: none;
+    border-radius: 999px;
+    background: var(--canvas-parchment);
+    font-size: 16px;
+  }
+
+  .landing__nav-mobile-extra .landing__nav-signin--mobile svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .landing__nav-mobile-row {
+    justify-content: stretch;
+    align-items: stretch;
+    gap: 8px;
+    border-top: 1px solid var(--hairline);
+    padding-top: 16px;
+  }
+
+  .landing__nav-mobile-row .locale-switch,
+  .landing__nav-mobile-row .theme-toggle {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .landing__nav-mobile-row .locale-switch__trigger,
+  .landing__nav-mobile-row .theme-toggle__trigger {
+    width: 100%;
+    height: 48px;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--canvas-parchment);
+  }
+
+  .landing__nav-mobile-row .locale-switch__current {
+    display: none;
+  }
+
+  .landing__nav-mobile-extra button {
+    width: 100%;
+  }
+
+  .landing__nav .landing__nav-cta--drawer {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .landing__nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0;
+  }
+
+  .landing__nav-links a {
+    width: 100%;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 4px;
+    border-radius: 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  .landing__nav-links a:last-child {
+    border-bottom: none;
+  }
+
+  .landing__nav-right {
+    gap: 4px;
+  }
+
+  .landing__nav-signin {
+    display: none;
+  }
+
+  .landing__nav-appearance {
+    gap: 2px;
+  }
+
+  .landing__nav-right-extra {
+    display: none;
+  }
+
+  .landing__lang {
+    display: none;
+  }
+}
+
+.landing__nav-brand,
+.landing__nav-menu,
+.landing__nav-right {
+  position: relative;
+  z-index: 2;
+}
+
+/* Nav gains a soft shadow once the page scrolls */
+.landing__nav--scrolled {
+  box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.25);
+}
+
+/* CTA pill in the nav bar (Raycast-style always-solid pill) */
+.landing__nav .landing__nav-cta {
+  border-radius: 999px;
+  padding-inline: 18px;
+  min-height: 40px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Hero needs top padding to clear the fixed nav */
+.landing__hero {
+  padding-top: 96px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas: 'copy shot';
+  gap: var(--space-8) var(--space-12);
+  align-items: center;
+}
+
+.landing__copy {
+  grid-area: copy;
+}
+
+.landing__shot {
+  grid-area: shot;
+}
+
+.landing__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+/* Linear-style staggered hero load-in: one rise, one settle, then still */
+.landing__copy > * {
+  animation: hero-rise 0.64s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.landing__copy > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+.landing__copy > *:nth-child(2) {
+  animation-delay: 110ms;
+}
+.landing__copy > *:nth-child(3) {
+  animation-delay: 180ms;
+}
+.landing__copy > *:nth-child(4) {
+  animation-delay: 250ms;
+}
+.landing__copy > *:nth-child(5) {
+  animation-delay: 320ms;
+}
+.landing__shot {
+  animation: hero-settle 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hero-settle {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(1.025);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Reduced motion: an instant state, opacity only */
+@media (prefers-reduced-motion: reduce) {
+  .landing__copy > *,
+  .landing__shot {
+    animation-duration: 1ms;
+    animation-delay: 0s;
+  }
+}
+
+/* ---------- closing CTA banner ---------- */
+.landing__cta {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--space-16) var(--space-12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+.landing__cta .body {
+  max-width: 52ch;
+  margin: 0;
+}
+
+/* ---------- hero product shot: hairline panel in the reference style ---------- */
+.landing__shot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: min(440px, 100%);
+  justify-self: center;
+  padding: var(--space-6);
+  background: var(--canvas-parchment);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.18);
+}
+.landing__shot-brand {
+  width: 28px;
+  height: 28px;
+  color: var(--primary);
+}
+.landing__shot-title {
+  width: 96px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--hairline);
+  align-self: center;
+  margin-top: -26px;
+}
+.landing__shot-seg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  width: max-content;
+}
+.landing__shot-segb {
+  width: 56px;
+  height: 16px;
+  border-radius: 999px;
+}
+.landing__shot-segb--on {
+  background: var(--primary);
+  opacity: 0.85;
+}
+.landing__shot-paper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-4);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+.landing__shot-line {
+  height: 9px;
+  border-radius: 5px;
+  background: var(--hairline);
+  width: 100%;
+}
+.landing__shot-line--head {
+  width: 62%;
+  height: 12px;
+  background: var(--ink-secondary);
+  opacity: 0.5;
+}
+.landing__shot-line--short {
+  width: 68%;
+}
+.landing__shot-line--gap {
+  margin-top: 6px;
+}
+.landing__shot-chips {
+  display: flex;
+  gap: 8px;
+}
+.landing__shot-chip {
+  width: 88px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+}
+.landing__shot-chip--alt {
+  background: var(--primary);
+  opacity: 0.18;
+  border-color: transparent;
+}
+
+.landing__brand {
+  margin: 0;
+  font: var(--caption-strong);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.landing__features {
+  /* Scroll-driven reveal for feature cards */
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-8);
+  padding-block: var(--space-16);
+}
+
+.landing__feature {
+  animation: landing-reveal linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 100%;
+}
+
+@keyframes landing-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing__feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--canvas-parchment);
+  color: var(--primary);
+  transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.landing__feature:hover .landing__feature-icon {
+  transform: scale(1.06);
+}
+.landing__feature h2 {
+  animation-delay: 90ms;
+}
+.landing__feature .body {
+  font-size: 14px;
+  animation-delay: 160ms;
+}
+.landing__feature h2 {
+  font: var(--display-feature);
+  margin-bottom: var(--space-2);
+}
+
+.landing__feature {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-6);
+  transition:
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out;
+}
+.landing__feature:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.14);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing__feature {
+    animation: none;
+  }
+}
+
+.landing__steps {
+  padding-block: var(--space-16);
+  border-top: 1px solid var(--hairline);
+}
+.landing__steps h2 {
+  font: var(--display-section);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.landing__steps ol {
+  margin: var(--space-6) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  font: var(--body);
+}
+.landing__steps li {
+  counter-increment: step;
+  margin-bottom: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  animation: landing-reveal linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 100%;
+}
+.landing__steps li:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+}
+.landing__steps li::before {
+  content: counter(step, decimal-leading-zero);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-inline-end: var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--canvas);
+  color: var(--primary);
+  font: var(--caption-strong);
+  vertical-align: middle;
+}
+@media (max-width: 920px) {
+  .landing__features {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+}
+
+@media (max-width: 760px) {
+  .landing {
+    padding: var(--space-12) var(--space-6);
+    gap: var(--space-12);
+  }
+  .landing__hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'copy'
+      'shot';
+  }
+
+  .landing__shot {
+    width: 100%;
+    justify-self: stretch;
+    box-shadow: 0 16px 32px -20px rgba(0, 0, 0, 0.16);
+  }
+  .landing__hero .display-xl {
+    font-size: 40px;
+    letter-spacing: -0.02em;
+  }
+  .landing__hero {
+    padding-top: 80px;
+  }
+  .landing__features {
+    grid-template-columns: 1fr;
+  }
+  .landing__cta {
+    padding: var(--space-12) var(--space-6);
+  }
+}
+
+/* ---------- skeleton ---------- */
+
+/*
+ * Shapes, not words. A waiting list renders rows at the final height so the content that
+ * replaces them does not move anything; the pulse is opacity only, on the compositor, and
+ * it stops entirely for anyone who asked for reduced motion — a fading grey block is not
+ * vestibular, but a block that fades forever is still motion in the corner of the eye.
+ */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.skeleton__row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.skeleton__bar {
+  display: block;
+  height: 11px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.07);
+}
+.skeleton__bar--lg {
+  height: 15px;
+  width: 34%;
+}
+.skeleton__bar--md {
+  width: 22%;
+}
+.skeleton__bar--sm {
+  width: 27%;
+  height: 9px;
+}
+.skeleton__bar--title {
+  height: 30px;
+  width: min(320px, 60%);
+  border-radius: var(--radius-sm);
+}
+.skeleton__bar--lede {
+  height: 12px;
+  width: min(420px, 80%);
+  margin-top: var(--space-3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton__bar {
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ---------- modal ---------- */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  z-index: 10;
+}
+
+.scrim {
+  animation: scrim-in var(--motion-enter) both;
+}
+.scrim--closing {
+  animation: scrim-out var(--motion-enter) both;
+}
+
+/*
+ * The dialog scales from its trigger, not from its centre: the panel's transform-origin is
+ * set inline from the position of whatever had focus when it opened. Enter and exit run the
+ * same path in reverse, which is what makes it read as one object arriving and leaving
+ * rather than two different effects.
+ */
+.modal {
+  animation: modal-in var(--motion-enter) both;
+  background: var(--canvas);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  padding: var(--space-8);
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow: auto;
+}
+
+.modal--closing {
+  animation: modal-out var(--motion-enter) both;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- the key reveal: cream, mono, no dismissal ---------- */
+
+.key-reveal {
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  background: var(--canvas-cream);
+}
+.key-reveal__value {
+  display: block;
+  font: var(--code);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  word-break: break-all;
+  margin: var(--space-3) 0;
+}
+
+.code-line {
+  font: var(--code);
+  background: var(--surface-pearl);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ---------- callouts ---------- */
+
+.notice {
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font: var(--caption);
+  background: var(--canvas-cream);
+  color: var(--ink);
+}
+
+.notice--bad {
+  background: var(--error-tint);
+  color: var(--error);
+}
+.notice--ok {
+  background: var(--success-tint);
+  color: var(--success);
+}
+
+.empty {
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  color: var(--ink-secondary);
+  font: var(--body);
+}
+
+@media (max-width: 1024px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    /*
+     * The bar is auto, the content takes the rest. A stacked sidebar used to eat
+     * 42% of the first screen before any content.
+     */
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+  }
+  .shell__aside {
+    display: none;
+  }
+  .shell__topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-6) var(--space-2);
+    background: var(--canvas);
+    border-block-end: 1px solid var(--hairline);
+  }
+  .shell__menu {
+    display: inline-flex;
+  }
+  .shell__drawer {
+    display: block;
+  }
+  .shell__main {
+    padding: var(--space-8) var(--space-6) var(--space-12);
+  }
+  .editor-actions {
+    margin-inline: calc(var(--space-6) * -1);
+    margin-bottom: calc(var(--space-12) * -1);
+    padding-inline: var(--space-6);
+  }
+}
+
+@media (max-width: 760px) {
+  .shell__topbar {
+    padding-inline: var(--space-4);
+  }
+  .shell__main {
+    padding: var(--space-6) var(--space-4) var(--space-12);
+  }
+  .editor-actions {
+    margin-inline: calc(var(--space-4) * -1);
+    padding-inline: var(--space-4);
+  }
+  .page-head {
+    align-items: flex-start;
+  }
+  .page-head > .btn,
+  .page-head > .cluster {
+    width: 100%;
+  }
+  .page-head > .cluster .btn {
+    flex: 1;
+  }
+  .toolbar .field {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .panel {
+    padding: var(--space-4);
+  }
+  .tabs {
+    margin-inline: calc(var(--space-4) * -1);
+    padding-inline: var(--space-4);
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .tab {
+    white-space: normal;
+  }
+}
+
+/* ── Avatar ───────────────────────────────────────────────────────────────────
+   A circle, a hairline, no shadow: the same restraint as the rest of the shell.
+   The monogram is ink on a tint rather than a random colour per user — one accent
+   in this interface, and it is not the avatar's job to introduce a second. */
+.avatar {
+  display: inline-block;
+  flex: none;
+  border-radius: var(--radius-pill);
+  object-fit: cover;
+  background: var(--canvas-parchment);
+  border: 1px solid var(--hairline);
+}
+
+.avatar-monogram {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  user-select: none;
+}
+
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.avatar-drop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/*
+ * Prose measure. The shell is 1000px wide, which is right for tables and wrong for
+ * sentences: 17px text across 1000px is ~115 characters, well past the ~68 where the eye
+ * loses the start of the next line. Ledes and descriptions cap out; tables do not.
+ */
+.body.muted,
+.body {
+  max-width: var(--measure);
+}
+
+/* An inline link with a real hit area — 14px tall was below the touch minimum. */
+.link {
+  display: inline-block;
+  padding-block: 7px;
+  margin-block: -7px;
+}
+
+/* ---------- icons ---------- */
+
+/*
+ * A glyph sits on the text baseline, inherits the text colour, and never resizes the
+ * control it is in: `.btn__icon` is a fixed 16px slot that the spinner replaces, so a
+ * button does not jump when it becomes busy.
+ */
+.icon {
+  flex: none;
+  vertical-align: -0.15em;
+}
+.btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+.spinner {
+  animation: spin 900ms linear infinite;
+}
+@keyframes spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+/* A field with a leading glyph, mirrored in Arabic by the inline properties alone. */
+.field__control {
+  position: relative;
+}
+.field__icon {
+  position: absolute;
+  inset-inline-start: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--ink-secondary);
+  pointer-events: none;
+}
+.field__control--icon .field__input,
+.field__control--icon .field__textarea {
+  padding-inline-start: 38px;
+}
+
+/* ---------- skip link ---------- */
+
+/*
+ * Off-screen until focused, then a real button at the top of the sidebar. The alternative —
+ * a visible link on every screen — costs a line of vertical space on the first screen of
+ * every page to solve a problem only a keyboard user has.
+ */
+.skip-link {
+  position: absolute;
+  inset-inline-start: var(--space-4);
+  top: -60px;
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--canvas);
+  font: var(--caption-strong);
+  text-decoration: none;
+  transition: top var(--motion-ui);
+}
+.skip-link:focus {
+  top: var(--space-3);
+}
+
+/* Headings read as phrases: balance stops a two-word orphan on the last line. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+/* Columns of figures line up only when every digit is the same width. */
+.num,
+td.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A group heading in the account screen: a label for a region, not another title. */
+.group-title {
+  margin: var(--space-8) 0 calc(var(--space-1) * -1);
+  font: var(--caption-strong);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+/* ---------- password reveal ---------- */
+
+/*
+ * The reveal control sits inside the field, at the inline end, and is a real 24px target
+ * rather than the 16px glyph it draws. The input reserves the space so a long password does
+ * not run underneath it.
+ */
+.field__reveal {
+  position: absolute;
+  inset-inline-end: 4px;
+  top: 50%;
+  translate: 0 -50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition:
+    color var(--motion-ui),
+    background-color var(--motion-ui);
+}
+.field__reveal:hover {
+  color: var(--ink);
+  background: var(--tint-selected);
+}
+.field__reveal[aria-pressed='true'] {
+  color: var(--primary);
+}
+.field__input--reveal {
+  padding-inline-end: 44px;
+}
+
+/* ---------- a separator that is a line, not a word ---------- */
+
+/*
+ * "or" floating between two buttons reads as a third option. A hairline through the middle
+ * of the word says "this line divides the page into two ways in", which is what it is.
+ */
+.or-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink-secondary);
+  font: var(--caption);
+}
+.or-rule::before,
+.or-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--hairline, rgba(0, 0, 0, 0.12));
+}
+
+/* ---------- password strength ---------- */
+
+.strength {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+}
+.strength__bar {
+  display: flex;
+  gap: 4px;
+  height: 4px;
+}
+.strength__segment {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--hairline, rgba(0, 0, 0, 0.1));
+  transition: background-color var(--motion-ui);
+}
+.strength__segment--on {
+  background: var(--ink-secondary);
+}
+.strength--l1 .strength__segment--on {
+  background: var(--error);
+}
+.strength--l2 .strength__segment--on {
+  background: #b26a00;
+}
+.strength--l3 .strength__segment--on {
+  background: var(--success, #0f7b3f);
+}
+.strength--l4 .strength__segment--on {
+  background: var(--success, #0f7b3f);
+}
+.strength--meter .strength__bar {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--hairline, rgba(0, 0, 0, 0.1));
+}
+.strength--meter .strength__fill {
+  display: block;
+  height: 100%;
+  background: var(--ink-secondary);
+  transition: inline-size var(--motion-ui);
+}
+.strength--meter.strength--l1 .strength__fill {
+  background: var(--error);
+}
+.strength--meter.strength--l2 .strength__fill {
+  background: #b26a00;
+}
+.strength--meter.strength--l3 .strength__fill,
+.strength--meter.strength--l4 .strength__fill {
+  background: var(--success, #0f7b3f);
+}
+.strength__word {
+  margin: 0;
+  font: var(--caption);
+  color: var(--ink-secondary);
+}
+.strength__next {
+  color: var(--ink-tertiary, var(--ink-secondary));
+}
+.strength__rules {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--caption);
+  color: var(--ink-secondary);
+}
+.strength__rules .is-met {
+  color: var(--success, #0f7b3f);
+}
+
+/* The language switch on the public page: no account block around it to hold it up. */
+.landing__lang {
+  justify-self: end;
+  align-self: start;
+}
+
+/* ---------- the bootstrap prompt ---------- */
+
+.prompt-block {
+  margin: 0;
+  padding: var(--space-4);
+  max-height: 22rem;
+  overflow: auto;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--canvas-deep, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--hairline, rgba(0, 0, 0, 0.1));
+  border-radius: var(--radius-sm);
+  color: var(--ink-secondary);
+}
+
+/* ---------- legal pages ---------- */
+
+.legal {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+}
+
+.legal__article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.legal__version {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  margin: 0 0 var(--space-4);
+}
+
+.legal__section {
+  margin-top: var(--space-4);
+}
+
+.legal__section h2 {
+  margin-bottom: var(--space-2);
+}
+
+/* ---------- footer ---------- */
+
+.site-footer {
+  margin-top: var(--space-12);
+  padding: var(--space-8) var(--space-4) var(--space-6);
+  background: var(--canvas-parchment);
+  border-top: 1px solid var(--hairline);
+  text-align: center;
+}
+
+.site-footer__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-8);
+  max-width: 1080px;
+  margin: 0 auto var(--space-8);
+  text-align: start;
+}
+
+.site-footer__brandblock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.site-footer__brandblock h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+.site-footer__mark {
+  width: 32px;
+  height: 32px;
+  color: var(--primary);
+}
+.site-footer__tagline {
+  font: var(--caption);
+  color: var(--ink-secondary);
+  margin: 0;
+  max-width: 30ch;
+}
+
+@media (max-width: 920px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+  .site-footer__brandblock {
+    grid-column: 1 / -1;
+  }
+}
+
+.site-footer__col h3 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+  margin: 0 0 var(--space-2);
+}
+
+.site-footer__col a {
+  display: block;
+  font-size: 13px;
+  color: var(--ink);
+  text-decoration: none;
+  margin-bottom: var(--space-1);
+  padding: 6px 0;
+  min-height: 28px;
+  transition: color 150ms ease-out;
+}
+
+.site-footer__col a:hover {
+  color: var(--primary);
+}
+
+.site-footer__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--hairline);
+  gap: var(--space-3);
+}
+
+.site-footer__nav {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.site-footer__nav a {
+  font-size: 14px;
+  color: var(--ink-secondary);
+  text-decoration: none;
+  padding: 8px 4px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.site-footer__nav a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.site-footer__copy {
+  font-size: 13px;
+  color: var(--ink);
+  opacity: 0.78;
+  margin: 0;
+}
+
+[dir='rtl'] .locale-switch__menu,
+[dir='rtl'] .theme-toggle__menu {
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+}
+
+/* ---------- theme toggle ---------- */
+
+/* Locale switch — globe trigger + dropdown */
+.locale-switch {
+  position: relative;
+}
+
+.locale-switch__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--ink-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition:
+    color 150ms ease-out,
+    border-color 150ms ease-out,
+    background 150ms ease-out;
+  box-shadow: none;
+}
+
+.locale-switch__trigger:hover {
+  color: var(--ink);
+  border-color: var(--ink-secondary);
+  background: var(--canvas-parchment);
+  box-shadow: none;
+  transform: none;
+}
+
+.locale-switch__current {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.locale-switch__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-end: 0;
+  min-width: 120px;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  box-shadow: var(--shadow-premium);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.locale-switch__option {
+  background: none;
+  border: none;
+  text-align: start;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--ink);
+  transition: background 150ms ease-out;
+  box-shadow: none;
+}
+
+.locale-switch__option:hover {
+  background: var(--canvas-parchment);
+  box-shadow: none;
+  transform: none;
+}
+
+.locale-switch__option--active {
+  background: var(--canvas-parchment);
+  font-weight: 600;
+}
+
+.theme-toggle {
+  position: relative;
+}
+
+.theme-toggle__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--ink-secondary);
+  transition:
+    color 150ms ease-out,
+    border-color 150ms ease-out,
+    background 150ms ease-out;
+  box-shadow: none;
+  padding: 0;
+}
+
+.theme-toggle__trigger:hover {
+  color: var(--ink);
+  border-color: var(--ink-secondary);
+  background: var(--canvas-parchment);
+  box-shadow: none;
+  transform: none;
+}
+
+.theme-toggle__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-end: 0;
+  min-width: 140px;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  box-shadow: var(--shadow-premium);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.theme-toggle__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  text-align: start;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--ink);
+  transition: background 150ms ease-out;
+  box-shadow: none;
+  width: 100%;
+}
+
+.theme-toggle__option:hover {
+  background: var(--canvas-parchment);
+  box-shadow: none;
+  transform: none;
+}
+
+.theme-toggle__option--active {
+  background: var(--canvas-parchment);
+  font-weight: 600;
+}
+
+.theme-toggle__option {
+  padding: 4px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.theme-toggle__option--active {
+  background: var(--canvas);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.landing__appearance {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ---------- premium depth (4-layer shadows) ---------- */
+
+/* The press stays the product's signature. Depth is for surfaces, not every button:
+   a tertiary control with a drop shadow reads as a card, not a verb. */
+
+button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Cards and panels */
+.card,
+.panel,
+[data-surface='card'] {
+  box-shadow: var(--shadow-premium);
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  box-shadow: var(--shadow-inner);
+  transition:
+    box-shadow 150ms ease-out,
+    border-color 150ms ease-out;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow:
+    var(--shadow-inner),
+    0 0 0 2px var(--primary),
+    0 2px 8px -2px rgba(8, 98, 136, 0.15);
+  border-color: var(--primary);
+}
+
+/* Floating elements (solid) */
+.glass,
+.floating {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-premium);
+}
+
+[data-theme='dark'] .glass,
+[data-theme='dark'] .floating {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+}
+
+/* Reduced motion / transparency fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  button:hover,
+  .btn:hover,
+  [role='button']:hover,
+  button:active,
+  .btn:active,
+  [role='button']:active,
+  .nav__link:hover {
+    transform: none;
+  }
+  .shell__panel,
+  [dir='rtl'] .shell__panel,
+  .shell__drawer--open .shell__panel {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .floating {
+    background: var(--canvas);
+    backdrop-filter: none;
+    border: 1px solid var(--hairline);
+  }
+}
+
+/* ---------- stats panel range pills (D2 whitelist picker) ---------- */
+.chip-range {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--canvas);
+  color: var(--ink-secondary);
+  font: var(--caption-strong);
+  padding: 8px 14px;
+  min-height: 40px;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-ui),
+    color var(--motion-ui);
+}
+.chip-range--on {
+  background: var(--primary);
+  color: var(--canvas);
+  border-color: var(--primary);
+}
+.chip-range--on:hover,
+.chip-range:hover {
+  color: var(--ink);
+  background: var(--canvas-parchment);
+}
+.chip-range--on:hover {
+  color: var(--canvas);
+  background: var(--primary);
+}
+
+/* ---------- responsive user table (compact cards on mobile) ---------- */
+@media (max-width: 760px) {
+  .table-scroll > .table,
+  .table-scroll > .table--wide {
+    min-width: 0;
+  }
+  .table-scroll > .table thead {
+    display: none;
+  }
+  .table-scroll > .table tbody,
+  .table-scroll > .table tr,
+  .table-scroll > .table td {
+    display: block;
+    width: 100%;
+  }
+  .table-scroll > .table tr {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--hairline, rgba(0, 0, 0, 0.1));
+    border-radius: var(--radius-sm, 8px);
+    background: var(--color-surface, #fff);
+  }
+  .table-scroll > .table td {
+    padding: var(--space-1) 0;
+  }
+  .table-scroll > .table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted, #666);
+    margin-bottom: 2px;
+  }
+  .table-scroll > .table td[data-label=""]::before {
+    display: none;
+  }
+}
