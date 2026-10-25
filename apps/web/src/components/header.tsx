@@ -62,7 +62,7 @@ export default function Header() {
           onClick={() => setMenuOpen(false)}
         >
           <Image
-            src="/images/logo.png"
+            src="/favicon.ico"
             alt=""
             width={28}
             height={28}

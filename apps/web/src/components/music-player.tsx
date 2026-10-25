@@ -225,7 +225,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       title: `سورة ${track.surahId}`,
       artist: selectedReciter?.name || 'Open Tilawa',
       album: selectedReciter?.source || '',
-      artwork: [{ src: '/images/logo.png', sizes: '512x512', type: 'image/png' }],
+      artwork: [{ src: '/favicon.ico', sizes: '64x64', type: 'image/x-icon' }],
     });
     navigator.mediaSession.setActionHandler('play', () => {
       audioRef.current?.play();
@@ -280,23 +280,32 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     <div className="flex w-full flex-col items-center gap-8">
       {/* Player card */}
       <div className="relative w-full max-w-xl rounded-md border border-gray-200 bg-card p-2 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        {/* Source badge: P2P vs HTTP fallback, pinned to the card's top-left */}
-        {playlist[currentTrack] && (
-          typeof (playlist[currentTrack] as any).file?.createReadStream === 'function' ? (
+        {/* Top-left tags: file source + transport badge grouped in one place */}
+        <div className="absolute left-2 top-2 flex items-center gap-1">
+          {selectedReciter && (
             <span
-              className="absolute left-2 top-2 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-gray-400 dark:bg-card-dark"
+              className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary dark:bg-card-dark"
+              title="مصدر الملفات"
             >
-              P2P
+              {selectedReciter.source}
             </span>
-          ) : (
-            <span
-              className="absolute left-2 top-2 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-gray-400 dark:bg-card-dark"
-              title="يتم التشغيل من المصدر الاحتياطي (HTTP)"
-            >
-              HTTP
-            </span>
-          )
-        )}
+          )}
+          {playlist[currentTrack] &&
+            (typeof (playlist[currentTrack] as any).file?.createReadStream === 'function' ? (
+              <span
+                className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-gray-400 dark:bg-card-dark"
+              >
+                P2P
+              </span>
+            ) : (
+              <span
+                className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-gray-400 dark:bg-card-dark"
+                title="يتم التشغيل من المصدر الاحتياطي (HTTP)"
+              >
+                HTTP
+              </span>
+            ))}
+        </div>
         <audio
           ref={audioRef}
           onTimeUpdate={handleTimeUpdate}
@@ -316,23 +325,8 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           className="hidden"
         />
 
-        {/* Reciter line: keeps the name + source visible with the list closed */}
-        {selectedReciter && (
-          <div className="mb-2 flex flex-row-reverse items-center justify-between px-1">
-            <span className="text-sm font-medium text-ink-secondary">
-              {selectedReciter.name}
-            </span>
-            <span
-              className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary"
-              title="مصدر الملفات"
-            >
-              {selectedReciter.source}
-            </span>
-          </div>
-        )}
-
         {/* Track info */}
-        <div className="mb-4 text-center">
+        <div className="mb-4 text-center pt-5">
           <TrackInfo currentTrackId={currentTrack} duration={duration} currentTime={currentTime} playlist={playlist} />
         </div>
 
@@ -343,15 +337,14 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
 
         {/* Controls */}
         <div className="flex items-center justify-center gap-2">
-          <button onClick={handlePreviousTrack} className={btnClass} aria-label="Previous">
-            {/* RTL: previous sits rightmost and points right; the svgs are LTR-drawn, so swap. */}
-            <Image src={forwardSVG} alt="backward" width={20} height={20} className="scale-x-[-1]" />
+          <button onClick={handleNextTrack} className={btnClass} aria-label="Next">
+            <Image src={forwardSVG} alt="forward" width={20} height={20} />
           </button>
           <button onClick={togglePlayPause} className="flex h-9 w-9 items-center justify-center rounded bg-ink text-canvas transition-colors duration-200 opacity-90 hover:opacity-100" aria-label={isPlaying ? 'Pause' : 'Play'}>
             <Image src={isPlaying ? pauseSVG : playSVG} alt={isPlaying ? 'pause' : 'play'} width={22} height={22} />
           </button>
-          <button onClick={handleNextTrack} className={btnClass} aria-label="Next">
-            <Image src={backwardSVG} alt="forward" width={20} height={20} className="scale-x-[-1]" />
+          <button onClick={handlePreviousTrack} className={btnClass} aria-label="Previous">
+            <Image src={backwardSVG} alt="backward" width={20} height={20} />
           </button>
           <button onClick={handleDownload} className={btnClass} aria-label="Download" title="Download for offline">
             <Image src={downloadSVG} alt="download" width={20} height={20} />
