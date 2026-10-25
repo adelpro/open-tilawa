@@ -18,50 +18,39 @@ export default function ReciterSelector() {
   const webtorrentReady = useAtomValue(webtorrentReadyAtom);
   const { torrentInfo } = useTorrent();
   const selectedReciterValue = useAtomValue(selectedReciterAtom);
-  const onButtonClick = () => {
-    setIsOpen(true);
-  };
-  const connectionIcon = (): React.ReactNode => {
-    if (selectedReciterValue === undefined) {
-      return <></>;
-    }
-    return torrentInfo && torrentInfo.magnetURI ? (
-      <Image
-        src={connectionSVG}
-        alt="connected"
-        className="cursor-pointer"
-        width={30}
-        height={30}
-        onClick={() => setTorrentInfoIsOpen(true)}
-      />
-    ) : (
-      <Image
-        src={connectionAnimatedSVG}
-        alt="connecting"
-        width={30}
-        height={30}
-        className="pointer-events-none"
-      />
-    );
-  };
-  if (!webtorrentReady) {
-    return <></>;
-  }
-  return (
-    <div className="flex w-full flex-row items-center justify-center">
-      <div className="flex w-full max-w-md flex-row items-center justify-center gap-3 rounded-md border border-slate-200 p-2 shadow-md transition-transform hover:scale-105">
-        {connectionIcon()}
-        <button
-          className="flex w-full max-w-md flex-row-reverse items-center justify-between"
-          onClick={onButtonClick}
-        >
-          <span>
-            {selectedReciterValue ? selectedReciterValue.name : 'اختر القارئ'}
-          </span>
+  const onButtonClick = () => setIsOpen(true);
 
-          <Image src={searchSVG} alt="search" width={30} height={30} />
+  if (!webtorrentReady) return <></>;
+
+  return (
+    <div className="flex w-full flex-row items-center justify-center gap-2">
+      {selectedReciterValue && (
+        <button
+          onClick={() => setTorrentInfoIsOpen(true)}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200"
+          title="معلومات الاتصال"
+        >
+          {torrentInfo && torrentInfo.magnetURI ? (
+            <Image src={connectionSVG} alt="connected" width={18} height={18} />
+          ) : (
+            <Image
+              src={connectionAnimatedSVG}
+              alt="connecting"
+              width={18}
+              height={18}
+            />
+          )}
         </button>
-      </div>
+      )}
+      <button
+        className="flex h-9 flex-1 items-center justify-between rounded-full bg-slate-100 px-4 text-sm transition-colors hover:bg-slate-200"
+        onClick={onButtonClick}
+      >
+        <span className="truncate">
+          {selectedReciterValue ? selectedReciterValue.name : 'اختر القارئ'}
+        </span>
+        <Image src={searchSVG} alt="search" width={16} height={16} />
+      </button>
       <ReciterSelectorDialog isOpen={isOpen} setIsOpen={setIsOpen} />
       <TorrentInfoDialog
         isOpen={torrentInfoIsOpen}

@@ -1,9 +1,23 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 import ReciterPage from '@/app/reciter/[id]/reciter-page';
 import UnderConstruction from '@/components/under-construction';
+import { loadState } from '@/hooks/use-persistence';
 
 import Logo from './logo';
 
 export default function Home() {
+  const router = useRouter();
+  useEffect(() => {
+    const st = loadState();
+    if (st.reciterId) {
+      router.replace(`/reciter/${st.reciterId}`);
+    }
+  }, [router]);
+
   return (
     <div className="flex w-full flex-col items-center justify-center bg-background text-foreground">
       <Logo />

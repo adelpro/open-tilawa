@@ -1,7 +1,8 @@
 import { MagnetlinkSource, Reciter, Riwaya } from '@/types';
 import { clientConfig } from '@/utils'; // Import clientConfig
+import { deriveTags } from '@/utils/reciter-tags';
 
-export const RECITERS: Reciter[] = [
+const RAW_RECITERS: Reciter[] = [
   {
     id: 1,
     name: 'سعد الغامدي',
@@ -23,7 +24,7 @@ export const RECITERS: Reciter[] = [
     name: 'عبد الباسط عبد الصمد',
     riwaya: Riwaya.Hafs,
     magnet:
-      'magnet:?xt=urn:btih:331e7486de1a8c634f4e1e5c78906e015187a76d&dn=Abdulbasit_Abdulsamad_Mojawwad&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&ws=https://archive.org/download/quranpro-abdul-basit-mujawwad/&xs=https://tilawa.quran.us.kg/torrents/331e7486de1a8c634f4e1e5c78906e015187a76d.torrent',
+      'magnet:?xt=urn:btih:331e7486de1a8c634f4e1e5c78906e015187a76d&dn=Abdulbasit_Abdulsamad_Mojawwad&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&xs=https://tilawa.quran.us.kg/torrents/331e7486de1a8c634f4e1e5c78906e015187a76d.torrent',
     complet: true,
     source: MagnetlinkSource.MP3QURAN,
   },
@@ -86,7 +87,7 @@ export const RECITERS: Reciter[] = [
     name: 'مشاري رشيد العفاسي',
     riwaya: Riwaya.Hafs,
     magnet:
-      'magnet:?xt=urn:btih:823CE8332E2BD3D555B5C35FC12BAB50A6976481&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&dn=%5BBitsearch.to%5D%20The%20Holy%20Quran%20MP3%20recited%20by%20Mishary%20Rashid%20Al%20Afasy&ws=https://archive.org/download/aldiaa-quran-afasy/&xs=https://tilawa.quran.us.kg/torrents/823ce8332e2bd3d555b5c35fc12bab50a6976481.torrent',
+      'magnet:?xt=urn:btih:823CE8332E2BD3D555B5C35FC12BAB50A6976481&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&dn=%5BBitsearch.to%5D%20The%20Holy%20Quran%20MP3%20recited%20by%20Mishary%20Rashid%20Al%20Afasy&xs=https://tilawa.quran.us.kg/torrents/823ce8332e2bd3d555b5c35fc12bab50a6976481.torrent',
     complet: true,
     source: MagnetlinkSource.UNKNOWN,
   },
@@ -181,3 +182,8 @@ export const RECITERS: Reciter[] = [
     source: MagnetlinkSource.INTERNETARCHIVE,
   },
 ];
+
+export const RECITERS = RAW_RECITERS.map((r) => ({
+  ...r,
+  tags: r.tags && r.tags.length ? r.tags : deriveTags(r),
+}));

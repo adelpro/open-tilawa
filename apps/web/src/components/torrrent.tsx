@@ -109,7 +109,7 @@ export default function TorrentPlayer() {
             </p>
           )}
           {torrentInfo && (
-            <p className="text-xs text-gray-400">
+            <p className={`text-xs ${torrentInfo.peers === 0 ? 'text-red-500' : 'text-gray-400'}`}>
               peers: {torrentInfo.peers} · {(torrentInfo.downloadSpeed / 1024).toFixed(0)} KB/s
             </p>
           )}

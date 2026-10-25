@@ -10,6 +10,9 @@ import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TrackType } from '@/types';
+import { useAtomValue } from 'jotai';
+import { selectedReciterAtom } from '@/jotai/atom';
+import { usePlaybackPersistence, loadState } from '@/hooks/use-persistence';
 
 import PlaylistDialog from './playlist-dialog';
 import Range from './range';
@@ -23,12 +26,15 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [currentTrack, setCurrentTrack] = useState<number>(0);
+  const selectedReciter = useAtomValue(selectedReciterAtom);
+  const reciterId = selectedReciter?.id;
   const [seedIndex, setSeedIndex] = useState<number>(0);
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+  usePlaybackPersistence(reciterId, currentTrack, audioRef);
 
   const shufflePlaylist = useCallback(() => {
     const indices = Array.from(
@@ -48,6 +54,15 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   useEffect(() => {
     shufflePlaylist();
   }, [shufflePlaylist]);
+
+  // Restore last played surah on mount.
+  useEffect(() => {
+    const st = loadState();
+    if (st.reciterId === reciterId && typeof st.surahIndex === 'number' &&
+        st.surahIndex >= 0 && st.surahIndex < playlist.length) {
+      setCurrentTrack(st.surahIndex);
+    }
+  }, [reciterId, playlist.length]);
 
   // Reset mirror index whenever the track changes.
   useEffect(() => {
@@ -188,6 +203,14 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           onTimeUpdate={handleTimeUpdate}
           onDurationChange={handleTimeUpdate}
           onEnded={handleNextTrack}
+          onLoadedMetadata={() => {
+            const audio = audioRef.current;
+            if (!audio) return;
+            const st = loadState();
+            if (st.reciterId === reciterId && st.surahIndex === currentTrack && typeof st.position === 'number') {
+              try { audio.currentTime = st.position; } catch {}
+            }
+          }}
           onError={() => {
             const t = playlist[currentTrack];
             if (t && t.webSeeds && seedIndex < t.webSeeds.length - 1) {
@@ -198,48 +221,48 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
         <div className="flex items-center justify-between gap-2 pt-5 md:gap-10">
           <button
             onClick={handlePreviousTrack}
-            className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
+            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
           >
-            <Image src={backwardSVG} alt="backward" width={30} height={30} />
+            <Image src={backwardSVG} alt="backward" width={20} height={20} />
           </button>
           <button
             onClick={togglePlayPause}
-            className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
+            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
           >
             {isPlaying ? (
-              <Image src={pauseSVG} alt="pause" width={30} height={30} />
+              <Image src={pauseSVG} alt="pause" width={20} height={20} />
             ) : (
-              <Image src={playSVG} alt="play" width={30} height={30} />
+              <Image src={playSVG} alt="play" width={20} height={20} />
             )}
           </button>
           <button
             onClick={handleNextTrack}
-            className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
+            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
           >
-            <Image src={forwardSVG} alt="forward" width={30} height={30} />
+            <Image src={forwardSVG} alt="forward" width={20} height={20} />
           </button>
           <button
             onClick={handleDownload}
-            className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
+            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
             title="Download for offline"
           >
-            <Image src={downloadSVG} alt="download" width={30} height={30} />
+            <Image src={downloadSVG} alt="download" width={20} height={20} />
           </button>
           <button
             onClick={toggleShuffle}
-            className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
+            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
           >
             {isShuffled ? (
-              <Image src={shuffleSVG} alt="shuffle" width={30} height={30} />
+              <Image src={shuffleSVG} alt="shuffle" width={20} height={20} />
             ) : (
-              <Image src={repeatSVG} alt="repeat" width={30} height={30} />
+              <Image src={repeatSVG} alt="repeat" width={20} height={20} />
             )}
           </button>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
+            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
           >
-            <Image src={playlistSVG} alt="playlist" width={30} height={30} />
+            <Image src={playlistSVG} alt="playlist" width={20} height={20} />
           </button>
         </div>
         <Range

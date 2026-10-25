@@ -10,6 +10,7 @@ import React, { useEffect } from 'react';
 import PwaUpdater from '@/components/pwa-updater';
 import { RECITERS } from '@/constants';
 import { selectedReciterAtom } from '@/jotai/atom';
+import { saveState } from '@/hooks/use-persistence';
 import { Reciter } from '@/types';
 
 import ReciterSelector from '../../../components/reciter-selector';
@@ -34,6 +35,7 @@ export default function ReciterPage({ id }: Props) {
       return;
     }
     setSelectedReciter(selectedReciter);
+    if (selectedReciter) saveState({ reciterId: selectedReciter.id });
   }, [id, setSelectedReciter]);
 
   return (

@@ -8,6 +8,7 @@ import { TorrentInfo, TrackType } from '@/types';
 import { getErrorMessage, isValidMagnetUri, updateMagnetURI } from '@/utils';
 
 const TORRENT_READY_TIMEOUT = 10_000; // 10s: metadata from .torrent should arrive well before this
+const MAX_AUTO_RETRIES = 3;
 
 export default function useTorrent() {
   const webtorrentReady = useAtomValue(webtorrentReadyAtom);
@@ -17,6 +18,12 @@ export default function useTorrent() {
   const [torrentInfo, setTorrentInfo] = useState<TorrentInfo | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [retryCount, setRetryCount] = useState(0);
+  const [autoRetryCount, setAutoRetryCount] = useState(0);
+
+  // Reset auto-retry counter when the selected reciter changes.
+  useEffect(() => {
+    setAutoRetryCount(0);
+  }, [magnetURI]);
   const clientRef = useRef<Instance | undefined>(undefined);
 
   // Initialize WebTorrent client once on mount
@@ -144,7 +151,11 @@ export default function useTorrent() {
       };
 
       readyTimeout = setTimeout(() => {
-        if (!torrent.ready && !cancelled) {
+        if (cancelled || torrent.ready) return;
+        if (autoRetryCount < MAX_AUTO_RETRIES) {
+          setAutoRetryCount((c) => c + 1);
+          setRetryCount((c) => c + 1);
+        } else {
           setError('Timeout: Could not fetch torrent metadata. Please try again later.');
         }
       }, TORRENT_READY_TIMEOUT);
@@ -201,7 +212,7 @@ export default function useTorrent() {
       cancelled = true;
       if (readyTimeout) clearTimeout(readyTimeout);
     };
-  }, [magnetURI, webtorrentReady, retryCount]);
+  }, [magnetURI, webtorrentReady, retryCount, autoRetryCount]);
 
   return { torrentInfo, error, setError, retry: () => setRetryCount((c) => c + 1) };
 }
