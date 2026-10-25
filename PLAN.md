@@ -39,3 +39,37 @@
 
 ## Double folders cleaned
 - Removed `/home/adelpro/open-quran-tracker` (local) — superseded by `/home/adelpro/code/open-tilawa/apps/{tracker,seeder}`; GitHub backup retained.
+
+### 6. Deferred feature: P2P HLS (Phase 5.4)
+Status: DEFERRED (not started). Registered as a future feature.
+
+What it is: split each surah MP3 into ~10s HLS segments (~150 KB each) and serve
+them via hls.js + p2p-media-loader, so peers share segments instead of whole
+surahs (helios-h2020/h.extension-MediaStreaming-WebTorrent pattern).
+
+Why deferred:
+- Sharing probability is low at our scale (114 surahs x many reciters); only the
+  popular surahs (Al-Fatiha, Al-Baqarah, Yasin, ...) would benefit.
+- Origin bandwidth is free (archive.org web seeds), so P2P HLS's main benefit
+  (offloading origin cost) does not apply yet.
+- Requires re-encoding ~2280 surahs into segments + hosting segments ourselves
+  (archive.org does not serve HLS), plus a player rewrite (hls.js +
+  p2p-media-loader instead of <audio> + streamTo).
+- Whole-file P2P via WebTorrent already covers the case where two peers want the
+  same surah; HTTP range requests already give seek.
+
+Trigger to revisit (any one):
+- Move off archive.org to a self-hosted/paid origin where bandwidth is a cost.
+- Add live/continuous streaming (radio, live recitation) where segments are the
+  right unit.
+- Evidence that specific surahs are hot enough that P2P would materially
+  reduce origin load.
+
+Minimal viable experiment (when revisiting):
+1. Pick one reciter + one surah (Al-Fatiha).
+2. ffmpeg -i 001.mp3 -c:a aac -hls_time 10 -hls_list_size 0 001.m3u8
+3. Host segments + manifest on the web container (nginx).
+4. Add hls.js + p2p-media-loader to a test page; verify sharing between two tabs.
+5. Measure whether segment sharing actually occurs at our user count.
+
+Related: keep full MP3 + streamTo + web seeds as the primary path (Phases 1-4).
