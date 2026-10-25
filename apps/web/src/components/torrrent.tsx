@@ -1,7 +1,7 @@
 'use client';
 
 import { useAtom, useAtomValue } from 'jotai';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ReactNode } from 'react';
 
 import MusicPlayer from '@/components/music-player';
@@ -14,6 +14,18 @@ export default function TorrentPlayer() {
   const [webtorrentReady, setWebTorrentReady] = useAtom(webtorrentReadyAtom);
   const { error, setError, torrentInfo, retry } = useTorrent();
   const selectedReciterValue = useAtomValue(selectedReciterAtom);
+
+  // Track how long the spinner has been showing, to add a helpful hint.
+  const [spinnerSeconds, setSpinnerSeconds] = useState(0);
+  useEffect(() => {
+    if (torrentInfo?.ready || error) {
+      setSpinnerSeconds(0);
+      return;
+    }
+    if (!selectedReciterValue?.magnet) return;
+    const id = setInterval(() => setSpinnerSeconds((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [torrentInfo?.ready, error, selectedReciterValue?.magnet]);
 
   useEffect(() => {
     if (webtorrentReady || window.WebTorrent) {
@@ -37,14 +49,15 @@ export default function TorrentPlayer() {
     };
   }, [webtorrentReady, setWebTorrentReady, setError]);
 
+  const wsMatch = selectedReciterValue?.magnet?.match(/(?:^|&)ws=([^&]+)/);
+  const wsUrl = wsMatch ? decodeURIComponent(wsMatch[1]) : null;
+
   const content = (): ReactNode => {
     if (error) {
-      const wsMatch = selectedReciterValue?.magnet?.match(/(?:^|&)ws=([^&]+)/);
-      const wsUrl = wsMatch ? decodeURIComponent(wsMatch[1]) : null;
       return (
         <div className="flex flex-col items-center gap-2 text-lg">
           <p>خطأ: {error}</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <button
               onClick={() => {
                 setError(undefined);
@@ -61,7 +74,7 @@ export default function TorrentPlayer() {
                 rel="noopener noreferrer"
                 className="rounded bg-slate-200 px-3 py-1 text-sm hover:bg-slate-300"
               >
-                تشغيل من المصدر
+                تشغيل من المصدر (archive.org)
               </a>
             )}
           </div>
@@ -84,7 +97,21 @@ export default function TorrentPlayer() {
 
     if (!torrentInfo?.ready) {
       return (
-        <Loader message="جاري تحميل الملف" textClassName="text-lg" rightIcon />
+        <div className="flex flex-col items-center gap-1">
+          <Loader message="جاري تحميل الملف" textClassName="text-lg" rightIcon />
+          {spinnerSeconds >= 3 && (
+            <p className="text-xs text-gray-500">
+              {spinnerSeconds < 8
+                ? 'جاري جلب البيانات الوصفية…'
+                : 'يستغرق أطول من المتوقع. تحقق من الاتصال أو جرّب "تشغيل من المصدر".'}
+            </p>
+          )}
+          {torrentInfo && (
+            <p className="text-xs text-gray-400">
+              peers: {torrentInfo.peers} · {(torrentInfo.downloadSpeed / 1024).toFixed(0)} KB/s
+            </p>
+          )}
+        </div>
       );
     }
 
@@ -100,6 +127,12 @@ export default function TorrentPlayer() {
       {torrentInfo?.files.length ? (
         <div className="flex flex-col gap-5">
           <MusicPlayer playlist={torrentInfo.files} />
+          {torrentInfo.ready && (
+            <p className="text-center text-xs text-gray-400">
+              peers: {torrentInfo.peers} · ↓ {(torrentInfo.downloadSpeed / 1024).toFixed(0)} KB/s ·{' '}
+              {(torrentInfo.progress * 100).toFixed(1)}%
+            </p>
+          )}
         </div>
       ) : (
         <></>
