@@ -14,6 +14,7 @@ services:
         condition: service_healthy
       web:
         condition: service_started
+    command: ["node", "seed-all.mjs"]
     restart: unless-stopped
     networks: [open-tilawa]
 
@@ -57,9 +58,15 @@ services:
       MAX_CONCURRENT_DOWNLOADS: ${MAX_CONCURRENT_DOWNLOADS:-3}
       MAGNETS_URL: ${MAGNETS_URL:-https://tilawa.quran.us.kg/api/magnet-uris}
       DOWNLOAD_PATH: /data/downloads
+      TORRENT_DIR: /data/torrents
+      ADMIN_PORT: ${ADMIN_PORT:-8085}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASS: ${ADMIN_PASS:-change-me-in-prod}
     volumes:
       - seed_downloads:/data/downloads
       - seed_torrents:/data/torrents
+    ports:
+      - "8085:8085" 
     depends_on:
       tracker:
         condition: service_healthy

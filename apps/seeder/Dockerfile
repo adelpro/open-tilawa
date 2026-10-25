@@ -13,6 +13,6 @@ RUN if [ -f yarn.lock ]; then yarn install --production --frozen-lockfile || yar
 
 COPY apps/seeder/ .
 
-EXPOSE 6881 6881/udp
+EXPOSE 6881 6881/udp 8085
 
-CMD ["node", "seed.mjs"]
+CMD ["node", "seed-all.mjs"]

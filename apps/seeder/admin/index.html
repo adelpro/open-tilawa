@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seeder Admin — Open Tilawa</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0a0a0a; color: #e5e5e5; padding: 2rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .stat { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1rem; min-width: 120px; }
+    .stat-label { font-size: 0.75rem; color: #888; }
+    .stat-value { font-size: 1.25rem; font-weight: 600; margin-top: 0.25rem; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+    th, td { padding: 0.5rem 0.75rem; text-align: right; border-bottom: 1px solid #333; font-size: 0.875rem; }
+    th { background: #1a1a1a; color: #aaa; font-weight: 500; }
+    tr:hover { background: #111; }
+    .progress-bar { height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #086288; }
+    .btn { background: #086288; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.875rem; }
+    .btn:hover { background: #0a7a9e; }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { background: #ef4444; }
+    .form-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .form-row input { flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 0.5rem; color: #e5e5e5; }
+    .status { font-size: 0.75rem; color: #888; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Seeder Admin — Open Tilawa</h1>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="form-row">
+    <input type="text" id="magnetInput" placeholder="ماغنت أو مسار ملف .torrent" />
+    <button class="btn" onclick="addTorrent()">إضافة</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>الاسم</th>
+        <th>التقدم</th>
+        <th>الأقران</th>
+        <th>رفع</th>
+        <th>تحميل</th>
+        <th>الحجم</th>
+        <th>إجراءات</th>
+      </tr>
+    </thead>
+    <tbody id="torrents"></tbody>
+  </table>
+
+  <p class="status" id="status">جاري التحميل...</p>
+
+  <script>
+    function fmtBytes(b) {
+      if (!b) return '0 B';
+      const units = ['B','KB','MB','GB','TB'];
+      const i = Math.floor(Math.log(b)/Math.log(1024));
+      return (b/Math.pow(1024,i)).toFixed(1)+' '+units[i];
+    }
+    function fmtSpeed(b) { return fmtBytes(b)+'/s'; }
+
+    async function refresh() {
+      try {
+        const res = await fetch('/api/torrents');
+        const data = await res.json();
+        // Stats
+        document.getElementById('stats').innerHTML = `
+          <div class="stat"><div class="stat-label">تورنتات</div><div class="stat-value">${data.stats.totalTorrents}</div></div>
+          <div class="stat"><div class="stat-label">أقران</div><div class="stat-value">${data.stats.totalPeers}</div></div>
+          <div class="stat"><div class="stat-label">رفع</div><div class="stat-value">${fmtSpeed(data.stats.uploadSpeed)}</div></div>
+          <div class="stat"><div class="stat-label">تحميل</div><div class="stat-value">${fmtSpeed(data.stats.downloadSpeed)}</div></div>
+        `;
+        // Table
+        document.getElementById('torrents').innerHTML = data.torrents.map(t => `
+          <tr>
+            <td>${t.name}</td>
+            <td>
+              <div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%"></div></div>
+              <span style="font-size:0.7rem;color:#888">${t.progress}%</span>
+            </td>
+            <td>${t.peers}</td>
+            <td>${fmtSpeed(t.uploadSpeed)}</td>
+            <td>${fmtSpeed(t.downloadSpeed)}</td>
+            <td>${fmtBytes(t.size)}</td>
+            <td><button class="btn btn-danger" onclick="removeTorrent('${t.infoHash}')">حذف</button></td>
+          </tr>
+        `).join('');
+        document.getElementById('status').textContent = `آخر تحديث: ${new Date().toLocaleTimeString()}`;
+      } catch (e) {
+        document.getElementById('status').textContent = 'خطأ: ' + e.message;
+      }
+    }
+
+    async function addTorrent() {
+      const val = document.getElementById('magnetInput').value.trim();
+      if (!val) return;
+      try {
+        const res = await fetch('/api/torrents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ magnet: val }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          document.getElementById('magnetInput').value = '';
+          refresh();
+        } else {
+          alert(data.error);
+        }
+      } catch (e) { alert(e.message); }
+    }
+
+    async function removeTorrent(hash) {
+      if (!confirm('حذف هذا التورنت؟')) return;
+      await fetch('/api/torrents/' + hash, { method: 'DELETE' });
+      refresh();
+    }
+
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>
