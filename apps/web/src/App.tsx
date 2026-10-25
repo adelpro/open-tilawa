@@ -7,6 +7,7 @@ import ReciterPage from './app/reciter/[id]/reciter-page';
 import NotFound from './app/not-found';
 
 import ActivityStatus from './components/activity-status';
+import ErrorBoundary from './components/error-boundary';
 import Header from './components/header';
 
 function ReciterRoute() {
@@ -17,6 +18,7 @@ function ReciterRoute() {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <main className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-background text-foreground">
       <ActivityStatus />
       <Header />
@@ -31,5 +33,6 @@ export default function App() {
         </Routes>
       </div>
     </main>
+    </ErrorBoundary>
   );
 }
