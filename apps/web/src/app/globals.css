@@ -18,6 +18,7 @@
   --error: #d70015;
   --success: #0f7b3f;
   --tint-selected: rgba(8,98,136,0.24);
+  --gauge-buffered: rgba(110,110,115,0.20);
   --focus: #086288;
   --radius-sm: 8px;
   --radius-lg: 18px;
@@ -45,6 +46,7 @@
     --error: #ff453a;
     --success: #32d74b;
     --tint-selected: rgba(151,215,255,0.24);
+  --gauge-buffered: rgba(142,142,147,0.25);
     --focus: #97d7ff;
     --shadow-premium:
       inset 0 1px 0 0 rgba(255,255,255,0.06),
@@ -69,6 +71,7 @@
   --error: #ff453a;
   --success: #32d74b;
   --tint-selected: rgba(151,215,255,0.24);
+  --gauge-buffered: rgba(142,142,147,0.25);
   --focus: #97d7ff;
   --shadow-premium:
     inset 0 1px 0 0 rgba(255,255,255,0.06),

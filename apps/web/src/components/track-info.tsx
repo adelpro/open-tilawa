@@ -7,14 +7,16 @@ type Props = {
   currentTrackId: number;
   duration: number;
   currentTime: number;
+  playlist?: { surahId: number }[];
 };
 export default function TrackInfo({
   currentTrackId,
   duration,
   currentTime,
+  playlist,
 }: Props) {
-  const currentTrack = PLAYLIST[currentTrackId];
-  const { surahId } = currentTrack;
+  const currentTrack = playlist ? playlist[currentTrackId] : undefined;
+  const surahId = currentTrack?.surahId ?? currentTrackId + 1;
   const surahName = SURAHS.find((surah) => surah.id === surahId)?.name;
 
   return (

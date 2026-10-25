@@ -29,6 +29,7 @@ const config: Config = {
         error: 'var(--error)',
         success: 'var(--success)',
         'tint-selected': 'var(--tint-selected)',
+        'gauge-buffered': 'var(--gauge-buffered)',
       },
     },
     keyframes: {

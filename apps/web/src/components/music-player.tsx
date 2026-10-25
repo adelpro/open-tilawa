@@ -26,6 +26,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
+  const [buffered, setBuffered] = useState<number>(0);
   const [currentTrack, setCurrentTrack] = useState<number>(0);
   const selectedReciter = useAtomValue(selectedReciterAtom);
   const reciterId = selectedReciter?.id;
@@ -145,8 +146,14 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   };
   const handleTimeUpdate = () => {
     if (!audioRef?.current) return;
-    if (!Number.isNaN(audioRef.current.duration)) setDuration(audioRef.current.duration);
-    if (!Number.isNaN(audioRef.current.currentTime)) setCurrentTime(audioRef.current.currentTime);
+    const audio = audioRef.current;
+    if (!Number.isNaN(audio.duration)) setDuration(audio.duration);
+    if (!Number.isNaN(audio.currentTime)) setCurrentTime(audio.currentTime);
+    // Compute buffered fraction from audio.buffered (TimeRanges)
+    if (audio.buffered.length > 0 && audio.duration > 0) {
+      const end = audio.buffered.end(audio.buffered.length - 1);
+      setBuffered(end / audio.duration);
+    }
   };
   const handlePreviousTrack = () => setCurrentTrack(getPreviousTrackIndex(currentTrack));
   const handleNextTrack = () => setCurrentTrack(getNextTrackIndex(currentTrack));
@@ -226,12 +233,12 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
 
         {/* Track info */}
         <div className="mb-6 text-center">
-          <TrackInfo currentTrackId={currentTrack} duration={duration} currentTime={currentTime} />
+          <TrackInfo currentTrackId={currentTrack} duration={duration} currentTime={currentTime} playlist={playlist} />
         </div>
 
         {/* Progress bar */}
         <div className="mb-6">
-          <Range currentTime={currentTime} setCurrentTime={setCurrentTime} duration={duration} audioRef={audioRef} />
+          <Range currentTime={currentTime} setCurrentTime={setCurrentTime} duration={duration} audioRef={audioRef} buffered={buffered} />
         </div>
 
         {/* Controls */}
