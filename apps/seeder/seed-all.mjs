@@ -40,6 +40,21 @@ for (const tf of torrentFiles) {
 const adminHtml = fs.readFileSync(path.join(process.cwd(), 'admin', 'index.html'), 'utf8');
 
 const server = http.createServer((req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+
+  // Public health endpoint (no auth)
+  if (url.pathname === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'ok',
+      torrents: client.torrents.length,
+      peers: client.torrents.reduce((s, t) => s + t.numPeers, 0),
+      uploadSpeed: client.uploadSpeed,
+      downloadSpeed: client.downloadSpeed,
+    }));
+    return;
+  }
+
   // Basic auth
   const auth = req.headers.authorization || '';
   const [scheme, encoded] = auth.split(' ');
@@ -58,8 +73,6 @@ const server = http.createServer((req, res) => {
     res.end('Unauthorized');
     return;
   }
-
-  const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (url.pathname === '/' || url.pathname === '/index.html') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
