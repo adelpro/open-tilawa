@@ -3,8 +3,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useNavigate } from 'react-router-dom';
 
-import closeSVG from '@svgs/close.svg';
-import menuSVG from '@svgs/menu.svg';
 import { APP_VERSION } from '@/constants/version';
 
 type Lang = 'ar' | 'en';
@@ -99,7 +97,7 @@ export default function Header() {
               className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm text-ink-secondary transition-colors duration-150 hover:bg-canvas-parchment hover:text-ink"
             >
               <span aria-hidden="true">🌐</span>
-              <span className="font-medium">{lang.toUpperCase()}</span>
+              <span className="hidden font-medium lg:inline">{lang.toUpperCase()}</span>
             </button>
             {langOpen && (
               <div className="absolute inset-inline-end-0 top-full mt-1 min-w-[120px] rounded-lg border border-hairline bg-canvas shadow-premium">
@@ -148,14 +146,32 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile menu toggle */}
+        {/* Mobile menu toggle — animated sandwich that morphs into a close (X) */}
         <button
           type="button"
-          className="rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-canvas-parchment md:hidden"
+          className="relative h-8 w-8 rounded-md p-1.5 transition-colors duration-150 hover:bg-canvas-parchment md:hidden"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle menu"
+          aria-expanded={menuOpen}
         >
-          <Image src={menuOpen ? closeSVG : menuSVG} alt="" width={24} height={24} aria-hidden="true" />
+          <span
+            aria-hidden="true"
+            className={`absolute left-1.5 right-1.5 h-[2px] rounded bg-ink transition-all duration-300 ${
+              menuOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-[6.5px]'
+            }`}
+          />
+          <span
+            aria-hidden="true"
+            className={`absolute left-1.5 right-1.5 top-1/2 h-[2px] -translate-y-1/2 rounded bg-ink transition-all duration-300 ${
+              menuOpen ? 'opacity-0 scale-x-0' : 'opacity-100'
+            }`}
+          />
+          <span
+            aria-hidden="true"
+            className={`absolute left-1.5 right-1.5 h-[2px] rounded bg-ink transition-all duration-300 ${
+              menuOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'bottom-[6.5px]'
+            }`}
+          />
         </button>
       </div>
 
