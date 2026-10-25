@@ -49,8 +49,10 @@ export default function TorrentPlayer() {
     };
   }, [webtorrentReady, setWebTorrentReady, setError]);
 
-  const wsMatch = selectedReciterValue?.magnet?.match(/(?:^|&)ws=([^&]+)/);
-  const wsUrl = wsMatch ? decodeURIComponent(wsMatch[1]) : null;
+  // Prefer an archive.org web seed if present, otherwise the first ws=.
+  const allWs = selectedReciterValue?.magnet?.match(/(?:^|&)ws=([^&]+)/g) || [];
+  const wsUrls = allWs.map((m) => decodeURIComponent(m.replace(/^(?:^|&)ws=/, '')));
+  const wsUrl = wsUrls.find((u) => u.includes('archive.org')) || wsUrls[0] || null;
 
   const content = (): ReactNode => {
     if (error) {
@@ -110,6 +112,29 @@ export default function TorrentPlayer() {
             <p className="text-xs text-gray-400">
               peers: {torrentInfo.peers} · {(torrentInfo.downloadSpeed / 1024).toFixed(0)} KB/s
             </p>
+          )}
+          {spinnerSeconds >= 8 && (
+            <div className="flex flex-wrap justify-center gap-2 pt-1">
+              <button
+                onClick={() => {
+                  setError(undefined);
+                  retry();
+                }}
+                className="rounded bg-slate-200 px-3 py-1 text-sm hover:bg-slate-300"
+              >
+                إعادة المحاولة
+              </button>
+              {wsUrl && (
+                <a
+                  href={wsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded bg-slate-200 px-3 py-1 text-sm hover:bg-slate-300"
+                >
+                  تشغيل من المصدر (archive.org)
+                </a>
+              )}
+            </div>
           )}
         </div>
       );
