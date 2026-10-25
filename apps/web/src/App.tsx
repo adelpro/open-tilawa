@@ -8,6 +8,7 @@ import NotFound from './app/not-found';
 
 import ActivityStatus from './components/activity-status';
 import Footer from './components/footer';
+import Header from './components/header';
 
 function ReciterRoute() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ export default function App() {
   return (
     <main className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-background text-foreground">
       <ActivityStatus />
+      <Header />
       <div className="w-full flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
