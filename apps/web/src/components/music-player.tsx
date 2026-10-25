@@ -77,14 +77,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       // ignore
     }
 
-    const seeds = track.webSeeds && track.webSeeds.length ? track.webSeeds : [];
-    const fileName = (track.file && track.file.name) ? track.file.name
-      : (track.link ? track.link.split('/').pop() : '');
-    if (seeds.length && seedIndex < seeds.length && seedIndex > 0) {
-      const base = seeds[seedIndex];
-      audio.src = base.endsWith('/') ? base + fileName : base + '/' + fileName;
-      audio.load();
-    } else if (track.link && seedIndex === 0) {
+    if (track.link && seedIndex === 0) {
       audio.src = track.link;
       audio.load();
     } else if (track.file && typeof track.file.createReadStream === 'function') {
@@ -223,10 +216,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
             }
           }}
           onError={() => {
-            const t = playlist[currentTrack];
-            if (t && t.webSeeds && seedIndex < t.webSeeds.length - 1) {
-              setSeedIndex((i) => i + 1);
-            }
+            console.error('Audio playback error');
           }}
           className="hidden"
         />

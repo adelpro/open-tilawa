@@ -51,9 +51,6 @@ export default function useTorrent() {
 
       const infoHashMatch = magnetURI.match(/btih:([a-zA-Z0-9]+)/);
       const infoHash = infoHashMatch ? infoHashMatch[1].toLowerCase() : '';
-      const wsMatches = [...magnetURI.matchAll(/[?&]ws=([^&]+)/g)];
-      const webSeedBases = wsMatches.map((m) => decodeURIComponent(m[1]));
-      const webSeedBase = webSeedBases.length ? webSeedBases[0] : '';
       const torrentFileUrl = infoHash ? '/torrents/' + infoHash + '.torrent' : '';
 
       let added = false;
@@ -85,8 +82,7 @@ export default function useTorrent() {
             //   '001.mp3', 'ar_001_Name.mp3', 'ar_Name_001.mp3'
             const surahMatch = file.name.match(/(\d{1,3})/);
             const surahId = surahMatch ? Number(surahMatch[1]) : 0;
-            const link = webSeedBase ? webSeedBase + file.name : '';
-            return { surahId, link, file, webSeeds: webSeedBases };
+            return { surahId, link: '', file, webSeeds: [] };
           })
           .sort((a: TrackType, b: TrackType) => a.surahId - b.surahId);
         setTorrentInfo({
