@@ -7,7 +7,7 @@ import { selectedReciterAtom, webtorrentReadyAtom } from '@/jotai/atom';
 import { TorrentInfo, TrackType } from '@/types';
 import { getErrorMessage, isValidMagnetUri, updateMagnetURI } from '@/utils';
 
-const TORRENT_READY_TIMEOUT = 60_000; // 1 min
+const TORRENT_READY_TIMEOUT = 10_000; // 10s: metadata from .torrent should arrive well before this
 
 export default function useTorrent() {
   const webtorrentReady = useAtomValue(webtorrentReadyAtom);
@@ -16,6 +16,7 @@ export default function useTorrent() {
 
   const [torrentInfo, setTorrentInfo] = useState<TorrentInfo | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [retryCount, setRetryCount] = useState(0);
   const clientRef = useRef<Instance | undefined>(undefined);
 
   // Initialize WebTorrent client once on mount
@@ -99,6 +100,9 @@ export default function useTorrent() {
               added = true;
               console.log('Torrent added from file:', torrent?.infoHash);
             } else {
+              // .torrent missing: fall back to magnet. In a browser this only
+              // works if WebRTC-reachable peers exist (HTTP trackers are dropped
+              // by updateMagnetURI). Surface a retryable error via the 10s timeout.
               console.log('Torrent file not found, using magnet');
             }
           } catch (e) {
@@ -120,7 +124,9 @@ export default function useTorrent() {
         const files: TrackType[] = mp3Files().map((file: TorrentFile) => {
           const surahId = Number(file.name.split('.')[0]);
           const link = webSeedBase ? webSeedBase + file.name : '';
-          return { surahId, link };
+          // Keep the TorrentFile reference so non-web-seed reciters can stream
+          // incrementally via file.streamTo() instead of loading the whole file.
+          return { surahId, link, file };
         });
         setTorrentInfo({
           magnetURI: torrent.magnetURI,
@@ -134,36 +140,6 @@ export default function useTorrent() {
         });
       };
 
-      const loadBlobUrls = async () => {
-        if (webSeedBase) return; // already streaming from HTTP
-        const files = mp3Files();
-        for (const file of files) {
-          if (cancelled) return;
-          const surahId = Number(file.name.split('.')[0]);
-          try {
-            const blob = await (file as any).blob();
-            if (cancelled) return;
-            const blobURL = URL.createObjectURL(blob);
-            setTorrentInfo((prev) => {
-              if (!prev) return prev;
-              const updated = prev.files.map((t) =>
-                t.surahId === surahId ? { ...t, link: blobURL } : t
-              );
-              return { ...prev, files: updated };
-            });
-          } catch (error) {
-            const errorMessage = getErrorMessage(error);
-            setTorrentInfo((prev) => {
-              if (!prev) return prev;
-              const updated = prev.files.map((t) =>
-                t.surahId === surahId ? { ...t, error: errorMessage } : t
-              );
-              return { ...prev, files: updated };
-            });
-          }
-        }
-      };
-
       readyTimeout = setTimeout(() => {
         if (!torrent.ready && !cancelled) {
           setError('Timeout: Could not fetch torrent metadata. Please try again later.');
@@ -174,7 +150,6 @@ export default function useTorrent() {
         clearTimeout(readyTimeout);
         setError(undefined);
         showPlaylist();
-        loadBlobUrls();
       };
 
       const onNoPeers = (announceType: string) => {
@@ -186,7 +161,6 @@ export default function useTorrent() {
         clearTimeout(readyTimeout);
         setError(undefined);
         showPlaylist();
-        loadBlobUrls();
       }
 
       torrent.on('error', (err: any) => {
@@ -224,7 +198,7 @@ export default function useTorrent() {
       cancelled = true;
       if (readyTimeout) clearTimeout(readyTimeout);
     };
-  }, [magnetURI, webtorrentReady]);
+  }, [magnetURI, webtorrentReady, retryCount]);
 
-  return { torrentInfo, error, setError };
+  return { torrentInfo, error, setError, retry: () => setRetryCount((c) => c + 1) };
 }

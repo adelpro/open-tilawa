@@ -1,5 +1,9 @@
 import { TRACKERS } from '@/constants';
 
+// Browser WebTorrent can only announce over WebSocket trackers (wss:// or ws://).
+// HTTP/UDP trackers (archive.org's bt1.archive.org:6969/announce, etc.) are
+// silently ineffective in a browser, so we drop them here and merge our own
+// wss:// tracker list. Web seeds (ws=) are preserved separately via urlList.
 export const updateMagnetURI = (magnetURI: string): string => {
   const [base, query = ''] = magnetURI.split('?');
   if (base !== 'magnet:') {

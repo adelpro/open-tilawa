@@ -1,7 +1,8 @@
 'use client';
 
 import { useAtom, useAtomValue } from 'jotai';
-import { ReactNode, useEffect } from 'react';
+import { useEffect } from 'react';
+import { ReactNode } from 'react';
 
 import MusicPlayer from '@/components/music-player';
 import useTorrent from '@/hooks/use-torrent';
@@ -11,7 +12,7 @@ import Loader from './loader';
 
 export default function TorrentPlayer() {
   const [webtorrentReady, setWebTorrentReady] = useAtom(webtorrentReadyAtom);
-  const { error, setError, torrentInfo } = useTorrent();
+  const { error, setError, torrentInfo, retry } = useTorrent();
   const selectedReciterValue = useAtomValue(selectedReciterAtom);
 
   useEffect(() => {
@@ -38,7 +39,34 @@ export default function TorrentPlayer() {
 
   const content = (): ReactNode => {
     if (error) {
-      return <p className="text-lg">خطأ: {error}</p>;
+      const wsMatch = selectedReciterValue?.magnet?.match(/(?:^|&)ws=([^&]+)/);
+      const wsUrl = wsMatch ? decodeURIComponent(wsMatch[1]) : null;
+      return (
+        <div className="flex flex-col items-center gap-2 text-lg">
+          <p>خطأ: {error}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setError(undefined);
+                retry();
+              }}
+              className="rounded bg-slate-200 px-3 py-1 text-sm hover:bg-slate-300"
+            >
+              إعادة المحاولة
+            </button>
+            {wsUrl && (
+              <a
+                href={wsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded bg-slate-200 px-3 py-1 text-sm hover:bg-slate-300"
+              >
+                تشغيل من المصدر
+              </a>
+            )}
+          </div>
+        </div>
+      );
     }
     if (!webtorrentReady) {
       return (

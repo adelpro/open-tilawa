@@ -23,8 +23,8 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const [duration, setDuration] = useState<number>(0);
   const [currentTrack, setCurrentTrack] = useState<number>(0);
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
-  const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -47,9 +47,52 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     shufflePlaylist();
   }, [shufflePlaylist]);
 
+  // Wire the audio source for the current track. Web-seed reciters stream over
+  // plain HTTP (browser range requests); P2P-only reciters stream incrementally
+  // via WebTorrent's streamTo() (MediaSource) instead of loading the whole file.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || playlist.length === 0) return;
+    const track = playlist[currentTrack];
+    if (!track) return;
+
+    // Reset element before switching sources.
+    audio.pause();
+    try {
+      audio.removeAttribute('src');
+      audio.load();
+    } catch {
+      // ignore
+    }
+
+    if (track.link) {
+      audio.src = track.link;
+      audio.load();
+    } else if (track.file && typeof track.file.streamTo === 'function') {
+      try {
+        track.file.streamTo(audio);
+      } catch (e) {
+        console.error('streamTo failed, falling back to blob:', e);
+        if (typeof track.file.getBlob === 'function') {
+          track.file.getBlob((err: any, blob: Blob) => {
+            if (err || !blob) return;
+            const url = URL.createObjectURL(blob);
+            audio.src = url;
+            audio.load();
+            if (isPlaying) audio.play().catch(() => {});
+          });
+        }
+      }
+    }
+
+    if (isPlaying) {
+      audio.play().catch(() => {});
+    }
+  }, [currentTrack, playlist, isPlaying]);
+
   useEffect(() => {
     if (audioRef.current && isPlaying) {
-      audioRef.current.play();
+      audioRef.current.play().catch(() => {});
     }
   }, [currentTrack, isPlaying]);
 
@@ -58,40 +101,30 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        audioRef.current.play().catch(() => {});
       }
       setIsPlaying(!isPlaying);
     }
   };
   const handleTimeUpdate = () => {
-    if (!audioRef?.current) {
-      return;
-    }
-
+    if (!audioRef?.current) return;
     if (!Number.isNaN(audioRef.current.duration)) {
       setDuration(audioRef.current.duration);
     }
-
     if (!Number.isNaN(audioRef.current.currentTime)) {
       setCurrentTime(audioRef.current.currentTime);
     }
   };
   const handlePreviousTrack = () => {
-    console.log('Previous track');
     setCurrentTrack(getPreviousTrackIndex(currentTrack));
   };
-
   const handleNextTrack = () => {
-    console.log('Next track');
     setCurrentTrack(getNextTrackIndex(currentTrack));
   };
   const toggleShuffle = () => {
-    if (!isShuffled) {
-      shufflePlaylist();
-    }
+    if (!isShuffled) shufflePlaylist();
     setIsShuffled(!isShuffled);
   };
-
   const getNextTrackIndex = (currentIndex: number) => {
     if (isShuffled) {
       const currentShuffledIndex = shuffledIndices.indexOf(currentIndex);
@@ -99,7 +132,6 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     }
     return (currentIndex + 1) % playlist.length;
   };
-
   const getPreviousTrackIndex = (currentIndex: number) => {
     if (isShuffled) {
       const currentShuffledIndex = shuffledIndices.indexOf(currentIndex);
@@ -118,7 +150,6 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           onTimeUpdate={handleTimeUpdate}
           onDurationChange={handleTimeUpdate}
           onEnded={handleNextTrack}
-          src={playlist[currentTrack]?.link}
         />
         <div className="flex items-center justify-between gap-2 pt-5 md:gap-10">
           <button
@@ -137,7 +168,6 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
               <Image src={playSVG} alt="play" width={30} height={30} />
             )}
           </button>
-
           <button
             onClick={handleNextTrack}
             className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"

@@ -1,1 +1,1 @@
-export type TrackType = { surahId: number; link: string; error?: string };
+export type TrackType = { surahId: number; link: string; file?: any; error?: string };
