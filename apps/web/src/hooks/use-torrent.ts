@@ -1,11 +1,11 @@
-import { useAtomValue } from 'jotai';
-import { useEffect, useRef, useState } from 'react';
-import type { Instance, Torrent, TorrentFile } from 'webtorrent';
+import { useAtomValue } from "jotai";
+import { useEffect, useRef, useState } from "react";
+import type { Instance, Torrent, TorrentFile } from "webtorrent";
 
-import { rtcConfig, TRACKERS } from '@/constants';
-import { selectedReciterAtom, webtorrentReadyAtom } from '@/jotai/atom';
-import { TorrentInfo, TrackType } from '@/types';
-import { isValidMagnetUri, updateMagnetURI } from '@/utils';
+import { rtcConfig, TRACKERS } from "@/constants";
+import { selectedReciterAtom, webtorrentReadyAtom } from "@/jotai/atom";
+import { TorrentInfo, TrackType } from "@/types";
+import { isValidMagnetUri, updateMagnetURI } from "@/utils";
 
 const TORRENT_READY_TIMEOUT = 10_000;
 
@@ -26,8 +26,34 @@ export default function useTorrent() {
     setTorrentInfo(undefined);
     setError(undefined);
 
-    if (!magnetURI) return;
     if (!webtorrentReady) return;
+
+    // No torrent yet (e.g. Itqan-sourced reciter): build the playlist directly
+    // from the reciter's Itqan MP3 links so playback works without peers.
+    if (!magnetURI) {
+      const itqanPlaylist = selectedReciterValue?.itqanPlaylist;
+      if (itqanPlaylist && itqanPlaylist.length > 0) {
+        setTorrentInfo({
+          magnetURI: "",
+          downloaded: 0,
+          downloadSpeed: 0,
+          uploadSpeed: 0,
+          progress: 1,
+          peers: 0,
+          files: itqanPlaylist
+            .slice()
+            .sort((a, b) => a.surahId - b.surahId)
+            .map((track) => ({
+              surahId: track.surahId,
+              link: track.link,
+              file: undefined,
+              webSeeds: [],
+            })),
+          ready: true,
+        });
+      }
+      return;
+    }
 
     let cancelled = false;
     let torrent: any = null;
@@ -40,18 +66,22 @@ export default function useTorrent() {
         return;
       }
 
-      const localClient = new (window as any).WebTorrent({ tracker: { rtcConfig } });
+      const localClient = new (window as any).WebTorrent({
+        tracker: { rtcConfig },
+      });
 
       if (!isValidMagnetUri(magnetURI)) {
-        setError('Invalid Magnet-URI provided.');
+        setError("Invalid Magnet-URI provided.");
         return;
       }
 
       const updatedMagnetURI = updateMagnetURI(magnetURI);
 
       const infoHashMatch = magnetURI.match(/btih:([a-zA-Z0-9]+)/);
-      const infoHash = infoHashMatch ? infoHashMatch[1].toLowerCase() : '';
-      const torrentFileUrl = infoHash ? '/torrents/' + infoHash + '.torrent' : '';
+      const infoHash = infoHashMatch ? infoHashMatch[1].toLowerCase() : "";
+      const torrentFileUrl = infoHash
+        ? "/torrents/" + infoHash + ".torrent"
+        : "";
 
       let added = false;
       if (torrentFileUrl) {
@@ -63,16 +93,18 @@ export default function useTorrent() {
             added = true;
           }
         } catch (e) {
-          console.error('Torrent file fetch error:', e);
+          console.error("Torrent file fetch error:", e);
         }
       }
       if (!added) {
-        torrent = localClient.add(updatedMagnetURI, { announce: TRACKERS }) as any;
+        torrent = localClient.add(updatedMagnetURI, {
+          announce: TRACKERS,
+        }) as any;
       }
 
       const mp3Files = () =>
         (torrent.files || []).filter((file: TorrentFile) =>
-          file.name.endsWith('.mp3')
+          file.name.endsWith(".mp3"),
         );
 
       const showPlaylist = () => {
@@ -82,7 +114,7 @@ export default function useTorrent() {
             //   '001.mp3', 'ar_001_Name.mp3', 'ar_Name_001.mp3'
             const surahMatch = file.name.match(/(\d{1,3})/);
             const surahId = surahMatch ? Number(surahMatch[1]) : 0;
-            return { surahId, link: '', file, webSeeds: [] };
+            return { surahId, link: "", file, webSeeds: [] };
           })
           .sort((a: TrackType, b: TrackType) => a.surahId - b.surahId);
         setTorrentInfo({
@@ -99,7 +131,9 @@ export default function useTorrent() {
 
       readyTimeout = setTimeout(() => {
         if (cancelled || torrent.ready) return;
-        setError('Timeout: Could not fetch torrent metadata. Please try again later.');
+        setError(
+          "Timeout: Could not fetch torrent metadata. Please try again later.",
+        );
       }, TORRENT_READY_TIMEOUT);
 
       if (torrent.ready) {
@@ -107,18 +141,18 @@ export default function useTorrent() {
         setError(undefined);
         showPlaylist();
       } else {
-        torrent.on('ready', () => {
+        torrent.on("ready", () => {
           clearTimeout(readyTimeout);
           setError(undefined);
           showPlaylist();
         });
       }
 
-      torrent.on('error', (err: any) => {
-        console.error('Torrent error:', err?.message || err);
-        setError('Torrent error: ' + (err?.message || err));
+      torrent.on("error", (err: any) => {
+        console.error("Torrent error:", err?.message || err);
+        setError("Torrent error: " + (err?.message || err));
       });
-      torrent.on('download', () => {
+      torrent.on("download", () => {
         if (cancelled) return;
         setTorrentInfo((prev) =>
           prev
@@ -130,13 +164,13 @@ export default function useTorrent() {
                 progress: torrent.progress,
                 peers: torrent.numPeers,
               }
-            : prev
+            : prev,
         );
       });
-      torrent.on('wire', () => {
+      torrent.on("wire", () => {
         if (cancelled) return;
         setTorrentInfo((prev) =>
-          prev ? { ...prev, peers: torrent.numPeers } : prev
+          prev ? { ...prev, peers: torrent.numPeers } : prev,
         );
       });
     };
@@ -147,7 +181,17 @@ export default function useTorrent() {
       cancelled = true;
       if (readyTimeout) clearTimeout(readyTimeout);
     };
-  }, [magnetURI, webtorrentReady, retryCount]);
+  }, [
+    magnetURI,
+    webtorrentReady,
+    retryCount,
+    selectedReciterValue?.itqanPlaylist,
+  ]);
 
-  return { torrentInfo, error, setError, retry: () => setRetryCount((c) => c + 1) };
+  return {
+    torrentInfo,
+    error,
+    setError,
+    retry: () => setRetryCount((c) => c + 1),
+  };
 }

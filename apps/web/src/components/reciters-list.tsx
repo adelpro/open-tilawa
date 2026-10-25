@@ -1,31 +1,43 @@
-'use client';
-import { useSetAtom } from 'jotai';
-import { useRouter } from 'next/navigation';
-import React, { useMemo, useState } from 'react';
+"use client";
+import { useSetAtom } from "jotai";
+import { useRouter } from "next/navigation";
+import React, { useMemo, useState } from "react";
 
-import { RECITERS } from '@/constants';
-import { selectedReciterAtom } from '@/jotai/atom';
-import { Reciter } from '@/types';
+import { RECITERS } from "@/constants";
+import { selectedReciterAtom } from "@/jotai/atom";
+import { MagnetlinkSource, Reciter } from "@/types";
+import { cn } from "@/utils/cn";
 
 type Props = {
   setIsOpen: (isOpen: boolean) => void;
 };
 
+// Builds once from the current list: every source that has at least one reciter.
+const AVAILABLE_SOURCES: MagnetlinkSource[] = Array.from(
+  new Set(RECITERS.map((reciter) => reciter.source)),
+);
+
 export default function RecitersList({ setIsOpen }: Props) {
   const navigate = useRouter();
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [sourceFilter, setSourceFilter] = useState<MagnetlinkSource | "all">(
+    "all",
+  );
 
   const setSelectedReciter = useSetAtom(selectedReciterAtom);
 
   const filteredReciters = useMemo(() => {
-    return RECITERS.filter((reciter) =>
-      reciter.name.includes(searchTerm)
-    ).sort((a, b) => a.id - b.id);
-  }, [searchTerm]);
+    return RECITERS.filter((reciter) => reciter.name.includes(searchTerm))
+      .filter(
+        (reciter) => sourceFilter === "all" || reciter.source === sourceFilter,
+      )
+      .sort((a, b) => a.id - b.id);
+  }, [searchTerm, sourceFilter]);
 
   const selectedReciterClickHandler = (reciter: Reciter) => {
     setIsOpen(false);
-    setSearchTerm('');
+    setSearchTerm("");
+    setSourceFilter("all");
     navigate.push(`/reciter/${reciter.id}`);
   };
 
@@ -40,7 +52,37 @@ export default function RecitersList({ setIsOpen }: Props) {
           className="w-full rounded-lg border border-hairline bg-canvas p-2 text-right text-ink shadow-premium"
         />
 
-        <span className="text-xs text-ink-secondary">{filteredReciters.length} قارئ</span>
+        <div className="flex flex-wrap justify-end gap-2" role="filter">
+          <button
+            onClick={() => setSourceFilter("all")}
+            className={cn(
+              "cursor-pointer rounded-md border border-hairline px-3 py-1 text-xs transition-colors",
+              sourceFilter === "all"
+                ? "bg-ink text-canvas"
+                : "bg-canvas text-ink-secondary hover:text-ink",
+            )}
+          >
+            الكل
+          </button>
+          {AVAILABLE_SOURCES.map((source) => (
+            <button
+              key={source}
+              onClick={() => setSourceFilter(source)}
+              className={cn(
+                "cursor-pointer rounded-md border border-hairline px-3 py-1 text-xs transition-colors",
+                sourceFilter === source
+                  ? "bg-ink text-canvas"
+                  : "bg-canvas text-ink-secondary hover:text-ink",
+              )}
+            >
+              {source}
+            </button>
+          ))}
+        </div>
+
+        <span className="text-xs text-ink-secondary">
+          {filteredReciters.length} قارئ
+        </span>
 
         {filteredReciters.map((reciter) => (
           <button
@@ -49,10 +91,14 @@ export default function RecitersList({ setIsOpen }: Props) {
             onClick={() => selectedReciterClickHandler(reciter)}
           >
             <div className="flex flex-row-reverse items-center justify-between">
-              <h2 className="text-right text-lg font-semibold text-ink">{reciter.name}</h2>
+              <h2 className="text-right text-lg font-semibold text-ink">
+                {reciter.name}
+              </h2>
               <span className="text-xs text-ink-secondary">#{reciter.id}</span>
             </div>
-            <p className="mb-1 text-right text-sm text-ink-secondary">{`برواية ${reciter.riwaya}`}</p>
+            <p className="mb-1 text-right text-sm text-ink-secondary">
+              {reciter.source}
+            </p>
           </button>
         ))}
       </div>

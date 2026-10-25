@@ -224,7 +224,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: `سورة ${track.surahId}`,
       artist: selectedReciter?.name || 'Open Tilawa',
-      album: selectedReciter?.riwaya || '',
+      album: selectedReciter?.source || '',
       artwork: [{ src: '/favicon.ico', sizes: '192x192', type: 'image/x-icon' }],
     });
     navigator.mediaSession.setActionHandler('play', () => {
@@ -314,7 +314,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           <button onClick={handlePreviousTrack} className={btnClass} aria-label="Previous">
             <Image src={backwardSVG} alt="backward" width={20} height={20} />
           </button>
-          <button onClick={togglePlayPause} className="flex h-9 w-9 items-center justify-center rounded bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700" aria-label={isPlaying ? 'Pause' : 'Play'}>
+          <button onClick={togglePlayPause} className="flex h-9 w-9 items-center justify-center rounded bg-ink text-canvas transition-colors duration-200 opacity-90 hover:opacity-100" aria-label={isPlaying ? 'Pause' : 'Play'}>
             <Image src={isPlaying ? pauseSVG : playSVG} alt={isPlaying ? 'pause' : 'play'} width={22} height={22} />
           </button>
           <button onClick={handleNextTrack} className={btnClass} aria-label="Next">
