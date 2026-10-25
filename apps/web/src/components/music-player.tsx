@@ -1,4 +1,5 @@
 import backwardSVG from '@svgs/music-backward.svg';
+import downloadSVG from '@svgs/download.svg';
 import forwardSVG from '@svgs/music-forward.svg';
 import pauseSVG from '@svgs/music-pause.svg';
 import playSVG from '@svgs/music-play.svg';
@@ -22,6 +23,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [currentTrack, setCurrentTrack] = useState<number>(0);
+  const [seedIndex, setSeedIndex] = useState<number>(0);
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
@@ -47,6 +49,11 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     shufflePlaylist();
   }, [shufflePlaylist]);
 
+  // Reset mirror index whenever the track changes.
+  useEffect(() => {
+    setSeedIndex(0);
+  }, [currentTrack]);
+
   // Wire the audio source for the current track. Web-seed reciters stream over
   // plain HTTP (browser range requests); P2P-only reciters stream incrementally
   // via WebTorrent's streamTo() (MediaSource) instead of loading the whole file.
@@ -65,7 +72,14 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       // ignore
     }
 
-    if (track.link) {
+    const seeds = track.webSeeds && track.webSeeds.length ? track.webSeeds : [];
+    const fileName = (track.file && track.file.name) ? track.file.name
+      : (track.link ? track.link.split('/').pop() : '');
+    if (seeds.length && seedIndex < seeds.length && seedIndex > 0) {
+      const base = seeds[seedIndex];
+      audio.src = base.endsWith('/') ? base + fileName : base + '/' + fileName;
+      audio.load();
+    } else if (track.link && seedIndex === 0) {
       audio.src = track.link;
       audio.load();
     } else if (track.file && typeof track.file.streamTo === 'function') {
@@ -88,7 +102,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     if (isPlaying) {
       audio.play().catch(() => {});
     }
-  }, [currentTrack, playlist, isPlaying]);
+  }, [currentTrack, playlist, isPlaying, seedIndex]);
 
   useEffect(() => {
     if (audioRef.current && isPlaying) {
@@ -121,6 +135,30 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const handleNextTrack = () => {
     setCurrentTrack(getNextTrackIndex(currentTrack));
   };
+  const handleDownload = () => {
+    const track = playlist[currentTrack];
+    if (!track) return;
+    if (track.file && typeof track.file.getBlob === 'function') {
+      track.file.getBlob((err: any, blob: Blob) => {
+        if (err || !blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (track.file && track.file.name) || `surah-${track.surahId}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      });
+    } else if (track.link) {
+      const a = document.createElement('a');
+      a.href = track.link;
+      a.download = track.link.split('/').pop() || `surah-${track.surahId}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
   const toggleShuffle = () => {
     if (!isShuffled) shufflePlaylist();
     setIsShuffled(!isShuffled);
@@ -150,6 +188,12 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           onTimeUpdate={handleTimeUpdate}
           onDurationChange={handleTimeUpdate}
           onEnded={handleNextTrack}
+          onError={() => {
+            const t = playlist[currentTrack];
+            if (t && t.webSeeds && seedIndex < t.webSeeds.length - 1) {
+              setSeedIndex((i) => i + 1);
+            }
+          }}
         />
         <div className="flex items-center justify-between gap-2 pt-5 md:gap-10">
           <button
@@ -173,6 +217,13 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
             className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
           >
             <Image src={forwardSVG} alt="forward" width={30} height={30} />
+          </button>
+          <button
+            onClick={handleDownload}
+            className="m-2 rounded p-2 transition-colors duration-300 hover:bg-gray-200"
+            title="Download for offline"
+          >
+            <Image src={downloadSVG} alt="download" width={30} height={30} />
           </button>
           <button
             onClick={toggleShuffle}

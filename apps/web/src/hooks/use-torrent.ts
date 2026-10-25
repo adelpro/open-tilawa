@@ -72,9 +72,11 @@ export default function useTorrent() {
       // Extract infohash for torrent file lookup
       const infoHashMatch = updatedMagnetURI.match(/btih:([a-zA-Z0-9]+)/);
       const infoHash = infoHashMatch ? infoHashMatch[1].toLowerCase() : '';
-      // Extract web seed base URL (ws=) from magnet for HTTP streaming
-      const wsMatch = updatedMagnetURI.match(/[?&]ws=([^&]+)/);
-      const webSeedBase = wsMatch ? decodeURIComponent(wsMatch[1]) : '';
+      // Extract ALL web seed base URLs (ws=) from magnet for HTTP streaming.
+      // Auto-discover every mirror so playback can fall back if one is down.
+      const wsMatches = [...updatedMagnetURI.matchAll(/[?&]ws=([^&]+)/g)];
+      const webSeedBases = wsMatches.map((m) => decodeURIComponent(m[1]));
+      const webSeedBase = webSeedBases.length ? webSeedBases[0] : '';
       // Try torrent file URL (provides metadata without WebRTC)
       const torrentFileUrl = infoHash ? '/torrents/' + infoHash + '.torrent?v=' + Date.now() : '';
 
@@ -126,7 +128,8 @@ export default function useTorrent() {
           const link = webSeedBase ? webSeedBase + file.name : '';
           // Keep the TorrentFile reference so non-web-seed reciters can stream
           // incrementally via file.streamTo() instead of loading the whole file.
-          return { surahId, link, file };
+          // webSeeds holds every discovered mirror for fallback.
+          return { surahId, link, file, webSeeds: webSeedBases };
         });
         setTorrentInfo({
           magnetURI: torrent.magnetURI,
