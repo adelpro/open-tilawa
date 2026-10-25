@@ -58,7 +58,7 @@ export default function Header() {
         {/* Brand */}
         <Link
           href="/"
-          className="relative flex items-center"
+          className="flex items-center gap-2"
           onClick={() => setMenuOpen(false)}
         >
           <Image
@@ -68,7 +68,7 @@ export default function Header() {
             height={30}
             className="h-[30px] w-auto shrink-0"
           />
-          <span className="absolute -top-1.5 left-0 rounded border border-hairline bg-canvas px-1 py-px text-[9px] leading-none text-ink-secondary">
+          <span className="rounded border border-hairline bg-canvas/80 px-1.5 py-0.5 text-[10px] leading-none text-ink-secondary shadow-sm">
             v{APP_VERSION}
           </span>
         </Link>
