@@ -220,3 +220,4 @@ export default function useTorrent() {
 
   return { torrentInfo, error, setError };
 }
+console.log('TESTING BUILD SOURCE');
