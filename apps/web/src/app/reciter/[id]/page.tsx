@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props) {
       url: `${normalizeAppUrl(clientConfig.APP_URL)}/reciter/${reciter?.id}`,
       images: [
         {
-          url: `/logo-og.png`,
+          url: `/images/logo.png`,
           width: 1024,
           height: 1024,
           alt: `${clientConfig.APP_NAME}`,
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: Props) {
       description: `استمع إلى تلاوات ${reciter?.name}`,
       images: [
         {
-          url: `/logo-og.png`,
+          url: `/images/logo.png`,
           width: 1024,
           height: 1024,
           alt: 'Quran - سيل القرآن',

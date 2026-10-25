@@ -225,7 +225,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       title: `سورة ${track.surahId}`,
       artist: selectedReciter?.name || 'Open Tilawa',
       album: selectedReciter?.source || '',
-      artwork: [{ src: '/favicon.ico', sizes: '192x192', type: 'image/x-icon' }],
+      artwork: [{ src: '/images/logo.png', sizes: '512x512', type: 'image/png' }],
     });
     navigator.mediaSession.setActionHandler('play', () => {
       audioRef.current?.play();
@@ -316,6 +316,21 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           className="hidden"
         />
 
+        {/* Reciter line: keeps the name + source visible with the list closed */}
+        {selectedReciter && (
+          <div className="mb-2 flex flex-row-reverse items-center justify-between px-1">
+            <span className="text-sm font-medium text-ink-secondary">
+              {selectedReciter.name}
+            </span>
+            <span
+              className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary"
+              title="مصدر الملفات"
+            >
+              {selectedReciter.source}
+            </span>
+          </div>
+        )}
+
         {/* Track info */}
         <div className="mb-4 text-center">
           <TrackInfo currentTrackId={currentTrack} duration={duration} currentTime={currentTime} playlist={playlist} />
@@ -329,13 +344,14 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
         {/* Controls */}
         <div className="flex items-center justify-center gap-2">
           <button onClick={handlePreviousTrack} className={btnClass} aria-label="Previous">
-            <Image src={backwardSVG} alt="backward" width={20} height={20} />
+            {/* RTL: previous sits rightmost and points right; the svgs are LTR-drawn, so swap. */}
+            <Image src={forwardSVG} alt="backward" width={20} height={20} className="scale-x-[-1]" />
           </button>
           <button onClick={togglePlayPause} className="flex h-9 w-9 items-center justify-center rounded bg-ink text-canvas transition-colors duration-200 opacity-90 hover:opacity-100" aria-label={isPlaying ? 'Pause' : 'Play'}>
             <Image src={isPlaying ? pauseSVG : playSVG} alt={isPlaying ? 'pause' : 'play'} width={22} height={22} />
           </button>
           <button onClick={handleNextTrack} className={btnClass} aria-label="Next">
-            <Image src={forwardSVG} alt="forward" width={20} height={20} />
+            <Image src={backwardSVG} alt="forward" width={20} height={20} className="scale-x-[-1]" />
           </button>
           <button onClick={handleDownload} className={btnClass} aria-label="Download" title="Download for offline">
             <Image src={downloadSVG} alt="download" width={20} height={20} />
