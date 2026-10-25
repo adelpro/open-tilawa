@@ -198,6 +198,79 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
 
   const btnClass = 'flex h-10 w-10 items-center justify-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-canvas-parchment hover:text-ink active:scale-95';
 
+  // Update document title when tab is hidden (for browser tab preview)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden && isPlaying && playlist[currentTrack]) {
+        document.title = `▶ سورة ${playlist[currentTrack].surahId} — Open Tilawa`;
+      } else {
+        document.title = 'Open Tilawa';
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [isPlaying, currentTrack, playlist]);
+
+  // Media Session API — lock screen / notification controls
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (!playlist[currentTrack]) return;
+    const track = playlist[currentTrack];
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: `سورة ${track.surahId}`,
+      artist: selectedReciter?.name || 'Open Tilawa',
+      album: selectedReciter?.riwaya || '',
+      artwork: [{ src: '/favicon.ico', sizes: '192x192', type: 'image/x-icon' }],
+    });
+    navigator.mediaSession.setActionHandler('play', () => {
+      audioRef.current?.play();
+      setIsPlaying(true);
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    });
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      const skip = details.seekOffset || 10;
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - skip);
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      const skip = details.seekOffset || 10;
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + skip);
+      }
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (currentTrack > 0) setCurrentTrack(currentTrack - 1);
+    });
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (currentTrack < playlist.length - 1) setCurrentTrack(currentTrack + 1);
+    });
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null);
+      navigator.mediaSession.setActionHandler('pause', null);
+      navigator.mediaSession.setActionHandler('seekbackward', null);
+      navigator.mediaSession.setActionHandler('seekforward', null);
+      navigator.mediaSession.setActionHandler('previoustrack', null);
+      navigator.mediaSession.setActionHandler('nexttrack', null);
+    };
+  }, [currentTrack, playlist, selectedReciter, duration]);
+
+  // Update media session position state
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !audioRef.current) return;
+    if (navigator.mediaSession.setPositionState) {
+      navigator.mediaSession.setPositionState({
+        duration: duration || 0,
+        playbackRate: 1,
+        position: currentTime || 0,
+      });
+    }
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+  }, [currentTime, duration, isPlaying]);
+
   return (
     <div className="flex w-full flex-col items-center gap-8">
       {/* Player card */}
