@@ -14,7 +14,6 @@ services:
         condition: service_healthy
       web:
         condition: service_started
-    command: ["node", "seed-all.mjs"]
     restart: unless-stopped
     networks: [open-tilawa]
 
@@ -72,6 +71,7 @@ services:
         condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    command: ["node", "seed-all.mjs"]
     restart: unless-stopped
     networks: [open-tilawa]
 
