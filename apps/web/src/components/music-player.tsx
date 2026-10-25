@@ -293,7 +293,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
               className="absolute left-2 top-2 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-gray-400 dark:bg-card-dark"
               title="يتم التشغيل من المصدر الاحتياطي (HTTP)"
             >
-              بديل HTTP
+              HTTP
             </span>
           )
         )}
