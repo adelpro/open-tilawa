@@ -348,7 +348,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
         )}
       </div>
 
-      <PlaylistDialog isOpen={isOpen} setIsOpen={setIsOpen} setCurrentTrack={setCurrentTrack} />
+      <PlaylistDialog isOpen={isOpen} setIsOpen={setIsOpen} setCurrentTrack={setCurrentTrack} playlist={playlist} />
     </div>
   );
 }

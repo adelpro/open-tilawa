@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { PLAYLIST, SURAHS } from '@/constants';
+import { SURAHS } from '@/constants';
 import { formatTime } from '@/utils';
 
 type Props = {
