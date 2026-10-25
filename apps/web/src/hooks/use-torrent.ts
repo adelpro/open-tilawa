@@ -79,11 +79,16 @@ export default function useTorrent() {
         );
 
       const showPlaylist = () => {
-        const files: TrackType[] = mp3Files().map((file: TorrentFile) => {
-          const surahId = Number(file.name.split('.')[0]);
-          const link = webSeedBase ? webSeedBase + file.name : '';
-          return { surahId, link, file, webSeeds: webSeedBases };
-        });
+        const files: TrackType[] = mp3Files()
+          .map((file: TorrentFile) => {
+            // Extract surah number from various naming patterns:
+            //   '001.mp3', 'ar_001_Name.mp3', 'ar_Name_001.mp3'
+            const surahMatch = file.name.match(/(\d{1,3})/);
+            const surahId = surahMatch ? Number(surahMatch[1]) : 0;
+            const link = webSeedBase ? webSeedBase + file.name : '';
+            return { surahId, link, file, webSeeds: webSeedBases };
+          })
+          .sort((a: TrackType, b: TrackType) => a.surahId - b.surahId);
         setTorrentInfo({
           magnetURI: torrent.magnetURI,
           downloaded: torrent.downloaded,
