@@ -62,6 +62,7 @@ export default function Header() {
         >
           <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
           <span className="text-lg font-semibold text-ink">Open Tilawa</span>
+          <span className="text-xs text-ink-secondary">v{APP_VERSION}</span>
         </Link>
 
         {/* Desktop nav links — center */}
