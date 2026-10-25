@@ -49,7 +49,15 @@ export default function ReciterSelector() {
         <span className="truncate">
           {selectedReciterValue ? selectedReciterValue.name : 'اختر القارئ'}
         </span>
-        <Image src={searchSVG} alt="search" width={16} height={16} />
+        {selectedReciterValue && (
+          <span
+            className="mx-2 shrink-0 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary"
+            title="مصدر الملفات"
+          >
+            {selectedReciterValue.source}
+          </span>
+        )}
+        <Image src={searchSVG} alt="search" width={16} height={16} className="shrink-0" />
       </button>
       <ReciterSelectorDialog isOpen={isOpen} setIsOpen={setIsOpen} />
       <TorrentInfoDialog

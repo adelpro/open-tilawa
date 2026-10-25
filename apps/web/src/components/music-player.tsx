@@ -280,16 +280,8 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     <div className="flex w-full flex-col items-center gap-8">
       {/* Player card */}
       <div className="relative w-full max-w-xl rounded-md border border-gray-200 bg-card p-2 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        {/* Top-left tags: file source + transport badge grouped in one place */}
+        {/* Top-left badge: transport state (P2P / HTTP fallback) */}
         <div className="absolute left-2 top-2 flex items-center gap-1">
-          {selectedReciter && (
-            <span
-              className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary dark:bg-card-dark"
-              title="مصدر الملفات"
-            >
-              {selectedReciter.source}
-            </span>
-          )}
           {playlist[currentTrack] &&
             (typeof (playlist[currentTrack] as any).file?.createReadStream === 'function' ? (
               <span

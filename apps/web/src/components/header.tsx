@@ -62,11 +62,11 @@ export default function Header() {
           onClick={() => setMenuOpen(false)}
         >
           <Image
-            src="/favicon.ico"
+            src="/images/icon.png"
             alt=""
-            width={28}
-            height={28}
-            className="shrink-0"
+            width={64}
+            height={30}
+            className="h-[30px] w-auto shrink-0"
             aria-hidden="true"
           />
           <span className="text-lg font-semibold text-ink">Open Tilawa</span>

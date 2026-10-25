@@ -28,6 +28,7 @@ export default function RecitersList({ setIsOpen }: Props) {
   const [sourceFilter, setSourceFilter] = useState<MagnetlinkSource | "all">(
     "all",
   );
+  const [httpFilter, setHttpFilter] = useState<boolean>(false);
 
   const setSelectedReciter = useSetAtom(selectedReciterAtom);
 
@@ -36,13 +37,15 @@ export default function RecitersList({ setIsOpen }: Props) {
       .filter(
         (reciter) => sourceFilter === "all" || reciter.source === sourceFilter,
       )
+      .filter((reciter) => !httpFilter || hasHttpFallback(reciter))
       .sort((a, b) => a.name.localeCompare(b.name, "ar"));
-  }, [searchTerm, sourceFilter]);
+  }, [searchTerm, sourceFilter, httpFilter]);
 
   const selectedReciterClickHandler = (reciter: Reciter) => {
     setIsOpen(false);
     setSearchTerm("");
     setSourceFilter("all");
+    setHttpFilter(false);
     navigate.push(`/reciter/${reciter.id}`);
   };
 
@@ -83,6 +86,22 @@ export default function RecitersList({ setIsOpen }: Props) {
               {source}
             </button>
           ))}
+        </div>
+
+        {/* HTTP filter: reciters with an HTTP fallback (playlist link or web seeds) */}
+        <div className="flex flex-wrap justify-start gap-2">
+          <button
+            onClick={() => setHttpFilter((v) => !v)}
+            aria-pressed={httpFilter}
+            className={cn(
+              "cursor-pointer rounded-md border border-hairline px-3 py-1 text-xs transition-colors",
+              httpFilter
+                ? "bg-ink text-canvas"
+                : "bg-canvas text-ink-secondary hover:text-ink",
+            )}
+          >
+            HTTP
+          </button>
         </div>
 
         <span className="text-xs text-ink-secondary">
