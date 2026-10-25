@@ -58,7 +58,7 @@ export default function Header() {
         {/* Brand */}
         <Link
           href="/"
-          className="flex items-center gap-2"
+          className="relative flex items-center"
           onClick={() => setMenuOpen(false)}
         >
           <Image
@@ -68,7 +68,9 @@ export default function Header() {
             height={30}
             className="h-[30px] w-auto shrink-0"
           />
-          <span className="text-xs text-ink-secondary">v{APP_VERSION}</span>
+          <span className="absolute -top-1.5 left-0 rounded border border-hairline bg-canvas px-1 py-px text-[9px] leading-none text-ink-secondary">
+            v{APP_VERSION}
+          </span>
         </Link>
 
         {/* Desktop nav links — center */}
