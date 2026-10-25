@@ -90,3 +90,43 @@ Endpoints (local): Edge `http://127.0.0.1:8084/`, Tracker stats `http://127.0.0.
 - **Phase 5.2**: user-triggered offline download button.
 - **Phase 5.3**: TURN external IP fixed (DDNS hostname + conditional restart).
 - **Phase 5.4**: P2P HLS deferred (registered in PLAN.md with trigger conditions).
+
+## Deploying New Nodes
+
+### Seeder Node (Docker)
+
+Run on any Ubuntu/Debian server:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder --port 8085 --admin-user admin --admin-pass YOUR_PASSWORD
+```
+
+Then add to dashboard:
+1. Go to https://admin-tilawa.quran.us.kg
+2. Navigate to **Seeders** → **Add Seeder**
+3. Name: server hostname
+4. URL: `http://<server-ip>:8085`
+
+### TURN Server (Native)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type turn --turn-realm turn.quran.us.kg --turn-user opentilawa --turn-pass YOUR_PASSWORD
+```
+
+Then add to dashboard:
+1. Go to https://admin-tilawa.quran.us.kg
+2. Navigate to **TURN Servers** → **Add TURN Server**
+3. Name: `hostname-turn`
+4. URL: `turn:<server-ip>:3478`
+
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| TYPE | seeder | Node type: seeder or turn |
+| PORT | 8085 | Seeder admin port |
+| ADMIN_USER | admin | Seeder admin username |
+| ADMIN_PASS | change-me-in-prod | Seeder admin password |
+| TURN_REALM | turn.quran.us.kg | TURN realm |
+| TURN_USER | opentilawa | TURN username |
+| TURN_PASS | (auto-generated) | TURN password |
