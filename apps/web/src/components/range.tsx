@@ -15,23 +15,20 @@ export default function Range({
   audioRef,
   buffered = 0,
 }: Props) {
-  const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const playedPct = duration > 0 ? (currentTime / duration) * 100 : 0;
   const bufferedPct = Math.min(100, Math.max(0, buffered * 100));
 
   return (
-    <div className="relative h-2 w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Track background */}
-      <div className="absolute inset-0 rounded-full bg-hairline" />
+    <div className="relative h-1.5 w-full rounded-full bg-blue-200 dark:bg-blue-900/40">
       {/* Buffered (gray) */}
       <div
-        className="absolute inset-y-0 start-0 rounded-full bg-zinc-400/60 transition-[width] duration-150"
+        className="absolute inset-y-0 start-0 rounded-full bg-gray-300 transition-[width] duration-150 dark:bg-gray-600"
         style={{ width: `${bufferedPct}%` }}
         aria-hidden="true"
       />
       {/* Played (blue) */}
       <div
-        className="absolute inset-y-0 start-0 rounded-full bg-primary transition-[width] duration-150"
+        className="absolute inset-y-0 start-0 rounded-full bg-blue-600 transition-[width] duration-150"
         style={{ width: `${playedPct}%` }}
         aria-hidden="true"
       />
@@ -50,12 +47,6 @@ export default function Range({
           }
         }}
         aria-label="Seek"
-      />
-      {/* Thumb */}
-      <div
-        className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded bg-primary shadow-premium transition-[inset-inline-start] duration-150"
-        style={{ insetInlineStart: `calc(${playedPct}% - 8px)` }}
-        aria-hidden="true"
       />
     </div>
   );

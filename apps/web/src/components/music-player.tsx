@@ -201,7 +201,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     return (currentIndex - 1 + playlist.length) % playlist.length;
   };
 
-  const btnClass = 'flex h-10 w-10 items-center justify-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-canvas-parchment hover:text-ink active:scale-95';
+  const btnClass = 'flex h-9 w-9 items-center justify-center rounded text-ink-secondary transition-colors duration-200 hover:bg-gray-200 hover:text-ink dark:hover:bg-gray-700';
 
   // Update document title when tab is hidden (for browser tab preview)
   useEffect(() => {
@@ -279,7 +279,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   return (
     <div className="flex w-full flex-col items-center gap-8">
       {/* Player card */}
-      <div className="w-full max-w-md rounded-lg border border-hairline bg-canvas p-6 shadow-premium">
+      <div className="w-full max-w-xl rounded-md border border-gray-200 bg-card p-2 shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <audio
           ref={audioRef}
           onTimeUpdate={handleTimeUpdate}
@@ -300,12 +300,12 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
         />
 
         {/* Track info */}
-        <div className="mb-6 text-center">
+        <div className="mb-4 text-center">
           <TrackInfo currentTrackId={currentTrack} duration={duration} currentTime={currentTime} playlist={playlist} />
         </div>
 
         {/* Progress bar */}
-        <div className="mb-6">
+        <div className="mb-4">
           <Range currentTime={currentTime} setCurrentTime={setCurrentTime} duration={duration} audioRef={audioRef} buffered={buffered} />
         </div>
 
@@ -314,7 +314,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           <button onClick={handlePreviousTrack} className={btnClass} aria-label="Previous">
             <Image src={backwardSVG} alt="backward" width={20} height={20} />
           </button>
-          <button onClick={togglePlayPause} className={`${btnClass} h-12 w-12 bg-ink text-canvas hover:bg-ink/80 hover:text-canvas`} aria-label={isPlaying ? 'Pause' : 'Play'}>
+          <button onClick={togglePlayPause} className="flex h-9 w-9 items-center justify-center rounded bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700" aria-label={isPlaying ? 'Pause' : 'Play'}>
             <Image src={isPlaying ? pauseSVG : playSVG} alt={isPlaying ? 'pause' : 'play'} width={22} height={22} />
           </button>
           <button onClick={handleNextTrack} className={btnClass} aria-label="Next">
@@ -331,6 +331,9 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           </button>
         </div>
       </div>
+
+      {/* Fixed status slot */}
+      <div className="min-h-[52px] w-full max-w-xl" />
 
       <PlaylistDialog isOpen={isOpen} setIsOpen={setIsOpen} setCurrentTrack={setCurrentTrack} />
     </div>
