@@ -17,6 +17,11 @@ const AVAILABLE_SOURCES: MagnetlinkSource[] = Array.from(
   new Set(RECITERS.map((reciter) => reciter.source)),
 );
 
+/** True when a reciter can play over plain HTTP without peers: an itqan playlist, or web seeds in the magnet. */
+const hasHttpFallback = (reciter: Reciter): boolean =>
+  (!reciter.magnet && (reciter.itqanPlaylist?.length ?? 0) > 0) ||
+  /&ws=/.test(reciter.magnet);
+
 export default function RecitersList({ setIsOpen }: Props) {
   const navigate = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -90,15 +95,27 @@ export default function RecitersList({ setIsOpen }: Props) {
             className="w-full cursor-pointer rounded-lg border border-hairline bg-canvas p-3 shadow-premium transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.98]"
             onClick={() => selectedReciterClickHandler(reciter)}
           >
-            <div className="flex flex-row-reverse items-center justify-between">
+            <div className="flex flex-row-reverse flex-wrap items-center justify-between gap-2">
               <h2 className="text-right text-lg font-semibold text-ink">
                 {reciter.name}
               </h2>
-              <span className="text-xs text-ink-secondary">#{reciter.id}</span>
+              <div className="flex flex-wrap items-center justify-start gap-1">
+                <span
+                  className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary"
+                  title="مصدر الملفات"
+                >
+                  {reciter.source}
+                </span>
+                {hasHttpFallback(reciter) && (
+                  <span
+                    className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] font-medium text-ink"
+                    title="يعمل من روابط HTTP عندما لا يوجد أقران (P2P)"
+                  >
+                    HTTP
+                  </span>
+                )}
+              </div>
             </div>
-            <p className="mb-1 text-right text-sm text-ink-secondary">
-              {reciter.source}
-            </p>
           </button>
         ))}
       </div>

@@ -74,6 +74,22 @@ const RAW_RECITERS: Reciter[] = [
     source: MagnetlinkSource.ITQAN,
     itqanPlaylist: majidAlzamilPlaylist,
   },
+  {
+    id: 14,
+    name: 'وديع اليمني',
+    magnet:
+      'magnet:?xt=urn:btih:e63e2267f739b5f8a14a05c8501df17856e33166&dn=Wadih_Al_Yamani&tr=http://bt1.archive.org:6969/announce&tr=http://bt2.archive.org:6969/announce&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&ws=https://archive.org/download/wadee/&xs=https://tilawa.quran.us.kg/torrents/e63e2267f739b5f8a14a05c8501df17856e33166.torrent',
+    complet: true,
+    source: MagnetlinkSource.INTERNETARCHIVE,
+  },
+  {
+    id: 17,
+    name: 'هزاع البلوشي',
+    magnet:
+      'magnet:?xt=urn:btih:98e5196da5665c10eab1f7d951cd1fc840cd73b6&dn=Quran-Huzza-Al_Baloushi&tr=http%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=http%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Farchive.org%2Fdownload%2F&ws=http%3A%2F%2Fia601208.us.archive.org%2F33%2Fitems%2F&xs=https://tilawa.quran.us.kg/torrents/98e5196da5665c10eab1f7d951cd1fc840cd73b6.torrent',
+    complet: true,
+    source: MagnetlinkSource.INTERNETARCHIVE,
+  },
 ];
 
 export const RECITERS = RAW_RECITERS;

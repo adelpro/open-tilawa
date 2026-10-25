@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useNavigate } from 'react-router-dom';
 
+import closeSVG from '@svgs/close.svg';
+import menuSVG from '@svgs/menu.svg';
 import { APP_VERSION } from '@/constants/version';
 
 type Lang = 'ar' | 'en';
@@ -60,7 +63,14 @@ export default function Header() {
           className="flex items-center gap-2"
           onClick={() => setMenuOpen(false)}
         >
-          <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+          <Image
+            src="/images/logo.png"
+            alt=""
+            width={28}
+            height={28}
+            className="shrink-0"
+            aria-hidden="true"
+          />
           <span className="text-lg font-semibold text-ink">Open Tilawa</span>
           <span className="text-xs text-ink-secondary">v{APP_VERSION}</span>
         </Link>
@@ -141,11 +151,11 @@ export default function Header() {
         {/* Mobile menu toggle */}
         <button
           type="button"
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-150 hover:bg-canvas-parchment md:hidden"
+          className="rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-canvas-parchment md:hidden"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle menu"
         >
-          {menuOpen ? '✕' : 'Menu'}
+          <Image src={menuOpen ? closeSVG : menuSVG} alt="" width={24} height={24} aria-hidden="true" />
         </button>
       </div>
 
