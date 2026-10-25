@@ -7,7 +7,6 @@ import ReciterPage from './app/reciter/[id]/reciter-page';
 import NotFound from './app/not-found';
 
 import ActivityStatus from './components/activity-status';
-import Footer from './components/footer';
 import Header from './components/header';
 
 function ReciterRoute() {
@@ -31,7 +30,6 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
-      <Footer />
     </main>
   );
 }
