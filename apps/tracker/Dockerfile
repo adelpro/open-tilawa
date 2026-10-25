@@ -2,7 +2,7 @@
 FROM node:18-alpine
 
 LABEL maintainer="Adelpro <adelpro@gmail.com>"
-LABEL name="open-quran-tracker"
+LABEL name="open-tilawa-tracker"
 LABEL version="1.1"
 
 # Set the working directory

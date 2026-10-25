@@ -45,12 +45,12 @@ const rtcConfig = {
     { urls: 'stun:stun.l.google.com:19302' },
     {
       urls: 'turn:host.docker.internal:3478?transport=udp',
-      username: process.env.TURN_USERNAME || 'openquran',
+      username: process.env.TURN_USERNAME || 'opentilawa',
       credential: process.env.TURN_PASSWORD || 'change-me-in-prod',
     },
     {
       urls: 'turn:host.docker.internal:3478?transport=tcp',
-      username: process.env.TURN_USERNAME || 'openquran',
+      username: process.env.TURN_USERNAME || 'opentilawa',
       credential: process.env.TURN_PASSWORD || 'change-me-in-prod',
     },
   ],

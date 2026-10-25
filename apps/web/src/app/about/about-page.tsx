@@ -12,12 +12,12 @@ export default function AboutPage() {
     >
       <div className="mx-auto w-full max-w-2xl">
         <h1 className="mb-6 text-center text-3xl font-bold">
-          حول تطبيق Open Quran
+          حول تطبيق Open Tilawa
         </h1>
 
         <div className="m-1 space-y-4 rounded p-2 ps-4 text-lg md:m-2 md:border md:border-gray-200 md:p-8 md:shadow-sm md:dark:border-gray-700">
           <p>
-            Open Quran هو تطبيق قرآن مفتوح المصدر صمم لتوفير تجربة استماع مثالية
+            Open Tilawa هو تطبيق قرآن مفتوح المصدر صمم لتوفير تجربة استماع مثالية
             عبر مختلف المنصات. بُني التطبيق باستخدام تقنيات ويب حديثة لضمان:
           </p>
 

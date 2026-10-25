@@ -23,7 +23,7 @@ export default function Home() {
     <div className="flex w-full flex-col items-center justify-center bg-background text-foreground">
       <Logo />
       <ReciterPage id={undefined} />
-      <p className="mt-4 text-center text-xs text-gray-400">Open Quran v{APP_VERSION}</p>
+      <p className="mt-4 text-center text-xs text-gray-400">Open Tilawa v{APP_VERSION}</p>
       <UnderConstruction />
     </div>
   );

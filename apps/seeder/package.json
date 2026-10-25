@@ -2,7 +2,7 @@
   "name": "webtorrent-seeder",
   "version": "1.2.0",
   "main": "seed.mjs",
-  "description": "A Node.js backend for open-quran application for seeding torrents using WebTorrent.",
+  "description": "A Node.js backend for open-tilawa application for seeding torrents using WebTorrent.",
   "scripts": {
     "start": "node seed.mjs"
   },

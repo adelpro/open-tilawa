@@ -1,6 +1,6 @@
 # open-tilawa
 
-Self-hostable infrastructure for the **Open Quran WebTorrent stack**: a
+Self-hostable infrastructure for the **Open Tilawa WebTorrent stack**: a
 peer-to-peer Quran recitation player that streams audio from archive.org web
 seeds and WebTorrent peers, with no central media server.
 

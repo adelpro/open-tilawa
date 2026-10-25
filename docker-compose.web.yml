@@ -1,11 +1,11 @@
-# Optional: run the Next.js frontend (open-quran) in a container.
+# Optional: run the Next.js frontend (open-tilawa) in a container.
 # Requires adelpro/open-quran cloned next to this repo:
-#   git clone https://github.com/adelpro/open-quran.git ../open-quran
+#   git clone https://github.com/adelpro/open-quran.git ../open-tilawa
 # Run: docker compose -f docker-compose.yml -f docker-compose.web.yml up -d
 services:
   web:
     build:
-      context: ../open-quran
+      context: ../open-tilawa
       dockerfile: Dockerfile
     container_name: open-tilawa-web
     restart: unless-stopped

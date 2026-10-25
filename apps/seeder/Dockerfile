@@ -1,7 +1,7 @@
 FROM node:22-slim
 
 LABEL maintainer="Adelpro <adelpro@gmail.com>"
-LABEL name="open-quran-seeder"
+LABEL name="open-tilawa-seeder"
 LABEL version="1.2"
 
 WORKDIR /app

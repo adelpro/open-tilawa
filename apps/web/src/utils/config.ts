@@ -1,5 +1,5 @@
 export const clientConfig = {
-  APP_NAME: (import.meta as any).env?.VITE_APP_NAME || 'Open Quran',
+  APP_NAME: (import.meta as any).env?.VITE_APP_NAME || 'Open Tilawa',
   APP_URL: (import.meta as any).env?.VITE_APP_URL || 'https://tilawa.quran.us.kg',
   TRACKER_ONE_URL:
     (import.meta as any).env?.VITE_TRACKER_ONE_URL || 'https://trackerf.quran.us.kg/stats',
