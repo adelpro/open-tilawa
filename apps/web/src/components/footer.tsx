@@ -6,6 +6,7 @@ import Image from 'next/image';
 import React from 'react';
 
 import { FooterLink } from './footer-link';
+import { APP_VERSION } from '@/constants/version';
 
 export default function Footer() {
   return (
@@ -60,6 +61,7 @@ export default function Footer() {
           <p className="hidden truncate text-right sm:block">إتصل بنا</p>
         </FooterLink>
       </div>
+      <p className="mt-2 text-center text-[10px] text-gray-400">v{APP_VERSION}</p>
     </div>
   );
 }
