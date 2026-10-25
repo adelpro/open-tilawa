@@ -1,37 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'logo*.png', 'icon.svg'],
-      manifest: {
-        name: 'Open Quran',
-        short_name: 'Open Quran',
-        description: 'استمع إلى تلاوات سيل القرآن',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
-        display: 'standalone',
-        lang: 'ar',
-        dir: 'rtl',
-        start_url: '/',
-        icons: [
-          { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        maximumFileSizeToCacheInBytes: 100 * 1024 * 1024,
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
-      },
-      devOptions: { enabled: false },
-    }),
+    
   ],
   resolve: {
     alias: {
