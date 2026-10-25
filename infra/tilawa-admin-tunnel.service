@@ -1,0 +1,14 @@
+[Unit]
+Description=Cloudflare Tunnel for Tilawa Admin Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=adelpro
+ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel --config /home/adelpro/.cloudflared/tilawa-admin-config.yml run
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
