@@ -31,7 +31,7 @@ export default function RecitersList({ setIsOpen }: Props) {
       .filter(
         (reciter) => sourceFilter === "all" || reciter.source === sourceFilter,
       )
-      .sort((a, b) => a.id - b.id);
+      .sort((a, b) => a.name.localeCompare(b.name, "ar"));
   }, [searchTerm, sourceFilter]);
 
   const selectedReciterClickHandler = (reciter: Reciter) => {
@@ -52,7 +52,7 @@ export default function RecitersList({ setIsOpen }: Props) {
           className="w-full rounded-lg border border-hairline bg-canvas p-2 text-right text-ink shadow-premium"
         />
 
-        <div className="flex flex-wrap justify-end gap-2" role="filter">
+        <div className="flex flex-wrap justify-start gap-2" role="filter">
           <button
             onClick={() => setSourceFilter("all")}
             className={cn(

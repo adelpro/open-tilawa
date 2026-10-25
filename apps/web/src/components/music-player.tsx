@@ -279,7 +279,24 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   return (
     <div className="flex w-full flex-col items-center gap-8">
       {/* Player card */}
-      <div className="w-full max-w-xl rounded-md border border-gray-200 bg-card p-2 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+      <div className="relative w-full max-w-xl rounded-md border border-gray-200 bg-card p-2 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        {/* Source badge: P2P vs HTTP fallback, pinned to the card's top-left */}
+        {playlist[currentTrack] && (
+          typeof (playlist[currentTrack] as any).file?.createReadStream === 'function' ? (
+            <span
+              className="absolute left-2 top-2 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-gray-400 dark:bg-card-dark"
+            >
+              P2P
+            </span>
+          ) : (
+            <span
+              className="absolute left-2 top-2 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-gray-400 dark:bg-card-dark"
+              title="يتم التشغيل من المصدر الاحتياطي (HTTP)"
+            >
+              بديل HTTP
+            </span>
+          )
+        )}
         <audio
           ref={audioRef}
           onTimeUpdate={handleTimeUpdate}
@@ -332,21 +349,8 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
         </div>
       </div>
 
-      {/* Fixed status slot */}
-      <div className="min-h-[52px] w-full max-w-xl">
-        {playlist[currentTrack] && (
-          typeof (playlist[currentTrack] as any).file?.createReadStream === 'function' ? (
-            <p className="text-center text-xs text-gray-400">P2P</p>
-          ) : (
-            <p
-              className="text-center text-xs text-gray-400"
-              title="يتم التشغيل من المصدر الاحتياطي (HTTP)"
-            >
-              بديل HTTP
-            </p>
-          )
-        )}
-      </div>
+      {/* Fixed status slot (reserved so the card layout doesn't jump) */}
+      <div className="min-h-[52px] w-full max-w-xl" />
 
       <PlaylistDialog isOpen={isOpen} setIsOpen={setIsOpen} setCurrentTrack={setCurrentTrack} playlist={playlist} />
     </div>
