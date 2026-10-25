@@ -75,9 +75,63 @@ services:
     restart: unless-stopped
     networks: [open-tilawa]
 
+
+  admin-api:
+    build:
+      context: ./apps/admin
+      dockerfile: apps/api/Dockerfile
+    container_name: open-tilawa-admin-api
+    env_file:
+      - path: ./apps/admin/.env
+        required: false
+    environment:
+      PORT: ${ADMIN_API_PORT:-9410}
+      DB_PATH: /data/tilawa-admin.sqlite
+      USLUB_VENDOR_DIR: /app/vendor
+      CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin-tilawa.quran.us.kg}
+    volumes:
+      - admin_data:/data
+    ports:
+      - "127.0.0.1:${ADMIN_API_PORT:-9410}:${ADMIN_API_PORT:-9410}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${ADMIN_API_PORT:-9410}/api/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    restart: unless-stopped
+    networks: [open-tilawa]
+
+  admin-web:
+    build:
+      context: ./apps/admin
+      dockerfile: apps/web/Dockerfile
+    container_name: open-tilawa-admin-web
+    restart: unless-stopped
+    networks: [open-tilawa]
+
+  admin-edge:
+    image: nginx:alpine
+    container_name: open-tilawa-admin-edge
+    ports:
+      - "127.0.0.1:${ADMIN_EDGE_PORT:-9400}:80"
+    volumes:
+      - ./apps/admin/edge/templates:/etc/nginx/templates:ro
+    environment:
+      API_PORT: ${ADMIN_API_PORT:-9410}
+      WEB_PORT: 80
+    depends_on:
+      admin-api:
+        condition: service_healthy
+      admin-web:
+        condition: service_started
+    restart: unless-stopped
+    networks: [open-tilawa]
+
 volumes:
   seed_downloads:
   seed_torrents:
+  admin_data:
 
 networks:
   open-tilawa:
