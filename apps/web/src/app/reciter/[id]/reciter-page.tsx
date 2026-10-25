@@ -26,7 +26,9 @@ export default function ReciterPage({ id }: Props) {
       setSelectedReciter(undefined);
       return;
     }
-    const selectedReciter: Reciter = RECITERS[Number(id) - 1];
+    const selectedReciter: Reciter | undefined = RECITERS.find(
+      (r) => r.id === Number(id)
+    );
     if (!selectedReciter) {
       setSelectedReciter(undefined);
       return;
