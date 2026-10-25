@@ -59,7 +59,7 @@ export const RECITERS: Reciter[] = [
     name: 'عبد الباسط عبد الصمد',
     riwaya: Riwaya.Warsh,
     magnet:
-      'magnet:?xt=urn:btih:110eedff1111d5028bfb853dd13ca903cffd4d10&dn=Abdulbasit_Abdussamad_Warsh_an_Nafi&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&xs=https://tilawa.quran.us.kg/torrents/110eedff1111d5028bfb853dd13ca903cffd4d10.torrent',
+      'magnet:?xt=urn:btih:110eedff1111d5028bfb853dd13ca903cffd4d10&dn=Abdulbasit_Abdussamad_Warsh_an_Nafi&tr=wss://tracker.btorrent.xyz&tr=wss://tracker.openwebtorrent.com&tr=wss://tracker.quran.us.kg&tr=wss://trackerf.quran.us.kg&ws=https://archive.org/download/Abdulbasit_Abdussamad_Warsh_an_Nafi/&xs=https://tilawa.quran.us.kg/torrents/110eedff1111d5028bfb853dd13ca903cffd4d10.torrent',
     complet: true,
     source: MagnetlinkSource.MP3QURAN,
   },
