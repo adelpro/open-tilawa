@@ -21,6 +21,7 @@ import TrackInfo from './track-info';
 interface MusicPlayerProps {
   playlist: TrackType[];
 }
+
 export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -37,16 +38,10 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   usePlaybackPersistence(reciterId, currentTrack, audioRef);
 
   const shufflePlaylist = useCallback(() => {
-    const indices = Array.from(
-      { length: playlist.length },
-      (_, indice) => indice
-    );
-    for (let index = indices.length - 1; index > 0; index--) {
-      const randomIndex = Math.floor(Math.random() * (index + 1));
-      [indices[index], indices[randomIndex]] = [
-        indices[randomIndex],
-        indices[index],
-      ];
+    const indices = Array.from({ length: playlist.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
     }
     setShuffledIndices(indices);
   }, [playlist.length]);
@@ -55,7 +50,6 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     shufflePlaylist();
   }, [shufflePlaylist]);
 
-  // Restore last played surah on mount.
   useEffect(() => {
     const st = loadState();
     if (st.reciterId === reciterId && typeof st.surahIndex === 'number' &&
@@ -64,21 +58,16 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
     }
   }, [reciterId, playlist.length]);
 
-  // Reset mirror index whenever the track changes.
   useEffect(() => {
     setSeedIndex(0);
   }, [currentTrack]);
 
-  // Wire the audio source for the current track. Web-seed reciters stream over
-  // plain HTTP (browser range requests); P2P-only reciters stream incrementally
-  // via WebTorrent's streamTo() (MediaSource) instead of loading the whole file.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || playlist.length === 0) return;
     const track = playlist[currentTrack];
     if (!track) return;
 
-    // Reset element before switching sources.
     audio.pause();
     try {
       audio.removeAttribute('src');
@@ -98,9 +87,6 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       audio.src = track.link;
       audio.load();
     } else if (track.file && typeof track.file.createReadStream === 'function') {
-      // Stream P2P content incrementally via MediaSource instead of loading
-      // the whole file. streamTo() needs a WebTorrent server (ServiceWorker)
-      // which we do not register, so it always throws "No server created".
       const file = track.file as any;
       if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg')) {
         const ms = new MediaSource();
@@ -111,7 +97,6 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           const reader = file.createReadStream();
           const pump = async () => {
             for await (const chunk of reader) {
-              if (audio.paused && !isPlaying) break;
               await new Promise<void>((resolve) => {
                 if (sb.updating) {
                   sb.addEventListener('updateend', () => resolve(), { once: true });
@@ -126,9 +111,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
           pump().catch((e) => console.error('MediaSource pump failed:', e));
         }, { once: true });
         audio.load();
-        if (isPlaying) audio.play().catch(() => {});
       } else {
-        // Fallback: load whole file (old behaviour)
         const chunks: Uint8Array[] = [];
         const reader = file.createReadStream();
         (async () => {
@@ -155,35 +138,27 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
 
   const togglePlayPause = () => {
     if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(() => {});
-      }
+      if (isPlaying) audioRef.current.pause();
+      else audioRef.current.play().catch(() => {});
       setIsPlaying(!isPlaying);
     }
   };
   const handleTimeUpdate = () => {
     if (!audioRef?.current) return;
-    if (!Number.isNaN(audioRef.current.duration)) {
-      setDuration(audioRef.current.duration);
-    }
-    if (!Number.isNaN(audioRef.current.currentTime)) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
+    if (!Number.isNaN(audioRef.current.duration)) setDuration(audioRef.current.duration);
+    if (!Number.isNaN(audioRef.current.currentTime)) setCurrentTime(audioRef.current.currentTime);
   };
-  const handlePreviousTrack = () => {
-    setCurrentTrack(getPreviousTrackIndex(currentTrack));
-  };
-  const handleNextTrack = () => {
-    setCurrentTrack(getNextTrackIndex(currentTrack));
-  };
+  const handlePreviousTrack = () => setCurrentTrack(getPreviousTrackIndex(currentTrack));
+  const handleNextTrack = () => setCurrentTrack(getNextTrackIndex(currentTrack));
   const handleDownload = () => {
     const track = playlist[currentTrack];
     if (!track) return;
-    if (track.file && typeof track.file.getBlob === 'function') {
-      track.file.getBlob((err: any, blob: Blob) => {
-        if (err || !blob) return;
+    if (track.file && typeof track.file.createReadStream === 'function') {
+      const chunks: Uint8Array[] = [];
+      const reader = (track.file as any).createReadStream();
+      (async () => {
+        for await (const c of reader) chunks.push(c);
+        const blob = new Blob(chunks as BlobPart[], { type: 'audio/mpeg' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -192,7 +167,7 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      });
+      })().catch(() => {});
     } else if (track.link) {
       const a = document.createElement('a');
       a.href = track.link;
@@ -208,24 +183,25 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   };
   const getNextTrackIndex = (currentIndex: number) => {
     if (isShuffled) {
-      const currentShuffledIndex = shuffledIndices.indexOf(currentIndex);
-      return shuffledIndices[(currentShuffledIndex + 1) % playlist.length];
+      const i = shuffledIndices.indexOf(currentIndex);
+      return shuffledIndices[(i + 1) % playlist.length];
     }
     return (currentIndex + 1) % playlist.length;
   };
   const getPreviousTrackIndex = (currentIndex: number) => {
     if (isShuffled) {
-      const currentShuffledIndex = shuffledIndices.indexOf(currentIndex);
-      return shuffledIndices[
-        (currentShuffledIndex - 1 + playlist.length) % playlist.length
-      ];
+      const i = shuffledIndices.indexOf(currentIndex);
+      return shuffledIndices[(i - 1 + playlist.length) % playlist.length];
     }
     return (currentIndex - 1 + playlist.length) % playlist.length;
   };
 
+  const btnClass = 'flex h-10 w-10 items-center justify-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-canvas-parchment hover:text-ink active:scale-95';
+
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-3">
-      <div className="flex h-20 w-full max-w-md flex-col items-center justify-center rounded-t-md border border-slate-200 p-0 shadow-md transition-transform hover:scale-105">
+    <div className="flex w-full flex-col items-center gap-8">
+      {/* Player card */}
+      <div className="w-full max-w-md rounded-lg border border-hairline bg-canvas p-6 shadow-premium">
         <audio
           ref={audioRef}
           onTimeUpdate={handleTimeUpdate}
@@ -245,71 +221,43 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
               setSeedIndex((i) => i + 1);
             }
           }}
+          className="hidden"
         />
-        <div className="flex items-center justify-between gap-2 pt-5 md:gap-10">
-          <button
-            onClick={handlePreviousTrack}
-            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
-          >
+
+        {/* Track info */}
+        <div className="mb-6 text-center">
+          <TrackInfo currentTrackId={currentTrack} duration={duration} currentTime={currentTime} />
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-6">
+          <Range currentTime={currentTime} setCurrentTime={setCurrentTime} duration={duration} audioRef={audioRef} />
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center justify-center gap-2">
+          <button onClick={handlePreviousTrack} className={btnClass} aria-label="Previous">
             <Image src={backwardSVG} alt="backward" width={20} height={20} />
           </button>
-          <button
-            onClick={togglePlayPause}
-            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
-          >
-            {isPlaying ? (
-              <Image src={pauseSVG} alt="pause" width={20} height={20} />
-            ) : (
-              <Image src={playSVG} alt="play" width={20} height={20} />
-            )}
+          <button onClick={togglePlayPause} className={`${btnClass} h-12 w-12 bg-primary text-white hover:bg-primary-hover hover:text-white`} aria-label={isPlaying ? 'Pause' : 'Play'}>
+            <Image src={isPlaying ? pauseSVG : playSVG} alt={isPlaying ? 'pause' : 'play'} width={22} height={22} />
           </button>
-          <button
-            onClick={handleNextTrack}
-            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
-          >
+          <button onClick={handleNextTrack} className={btnClass} aria-label="Next">
             <Image src={forwardSVG} alt="forward" width={20} height={20} />
           </button>
-          <button
-            onClick={handleDownload}
-            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
-            title="Download for offline"
-          >
+          <button onClick={handleDownload} className={btnClass} aria-label="Download" title="Download for offline">
             <Image src={downloadSVG} alt="download" width={20} height={20} />
           </button>
-          <button
-            onClick={toggleShuffle}
-            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
-          >
-            {isShuffled ? (
-              <Image src={shuffleSVG} alt="shuffle" width={20} height={20} />
-            ) : (
-              <Image src={repeatSVG} alt="repeat" width={20} height={20} />
-            )}
+          <button onClick={toggleShuffle} className={btnClass} aria-label="Shuffle">
+            <Image src={isShuffled ? shuffleSVG : repeatSVG} alt="shuffle" width={20} height={20} />
           </button>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="rounded p-1.5 transition-colors duration-200 hover:bg-slate-100"
-          >
+          <button onClick={() => setIsOpen(!isOpen)} className={btnClass} aria-label="Playlist">
             <Image src={playlistSVG} alt="playlist" width={20} height={20} />
           </button>
         </div>
-        <Range
-          currentTime={currentTime}
-          setCurrentTime={setCurrentTime}
-          duration={duration}
-          audioRef={audioRef}
-        />
-        <PlaylistDialog
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          setCurrentTrack={setCurrentTrack}
-        />
       </div>
-      <TrackInfo
-        currentTrackId={currentTrack}
-        duration={duration}
-        currentTime={currentTime}
-      />
+
+      <PlaylistDialog isOpen={isOpen} setIsOpen={setIsOpen} setCurrentTrack={setCurrentTrack} />
     </div>
   );
 }
