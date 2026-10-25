@@ -63,13 +63,11 @@ export default function Header() {
         >
           <Image
             src="/images/icon.png"
-            alt=""
+            alt="تلاوة"
             width={64}
             height={30}
             className="h-[30px] w-auto shrink-0"
-            aria-hidden="true"
           />
-          <span className="text-lg font-semibold text-ink">Open Tilawa</span>
           <span className="text-xs text-ink-secondary">v{APP_VERSION}</span>
         </Link>
 

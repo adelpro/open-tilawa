@@ -43,21 +43,23 @@ export default function ReciterSelector() {
         </button>
       )}
       <button
-        className="flex h-9 flex-1 items-center justify-between rounded-full bg-slate-100 px-4 text-sm transition-colors hover:bg-slate-200"
+        className="flex h-9 flex-1 items-center rounded-full bg-slate-100 px-4 text-sm transition-colors hover:bg-slate-200"
         onClick={onButtonClick}
       >
-        <span className="truncate">
+        <span className="flex-1 truncate text-right">
           {selectedReciterValue ? selectedReciterValue.name : 'اختر القارئ'}
         </span>
-        {selectedReciterValue && (
-          <span
-            className="mx-2 shrink-0 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary"
-            title="مصدر الملفات"
-          >
-            {selectedReciterValue.source}
-          </span>
-        )}
-        <Image src={searchSVG} alt="search" width={16} height={16} className="shrink-0" />
+        <span className="flex shrink-0 items-center gap-2">
+          {selectedReciterValue && (
+            <span
+              className="rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-secondary"
+              title="مصدر الملفات"
+            >
+              {selectedReciterValue.source}
+            </span>
+          )}
+          <Image src={searchSVG} alt="search" width={16} height={16} />
+        </span>
       </button>
       <ReciterSelectorDialog isOpen={isOpen} setIsOpen={setIsOpen} />
       <TorrentInfoDialog
