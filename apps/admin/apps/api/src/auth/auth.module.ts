@@ -6,6 +6,8 @@ import { UsersModule } from '../users/users.module';
 import { TempLinksModule } from '@/temp-links/temp-links.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { ResetPasswordController } from './reset-password.controller';
+import { ResetPasswordService } from './reset-password.service';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -24,8 +26,8 @@ import { JwtModule } from '@nestjs/jwt';
     MailerModule,
     TempLinksModule,
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController, ResetPasswordController],
+  providers: [AuthService, ResetPasswordService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}
