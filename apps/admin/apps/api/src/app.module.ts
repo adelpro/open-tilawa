@@ -18,6 +18,7 @@ import { SeedersModule } from './seeders/seeders.module';
 import { TurnsModule } from './turns/turns.module';
 import { TorrentsModule } from './torrents/torrents.module';
 import { RecitersModule } from './reciters/reciters.module';
+import { TwoFaModule } from './two-fa/two-fa.module';
 import { envValidate } from './config/env/env.validate';
 
 @Module({
@@ -37,6 +38,7 @@ import { envValidate } from './config/env/env.validate';
     TurnsModule,
     TorrentsModule,
     RecitersModule,
+    TwoFaModule,
     AdminModule,
     SetupModule,
     CsrfModule,

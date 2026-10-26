@@ -7,7 +7,7 @@ import { bootHarness, type Harness } from './harness';
  * mutation, that profiles are per-account and never silently shareable, and that
  * a key's plaintext exists in exactly one response and nowhere after it.
  */
-const SAMPLE = [
+const _SAMPLE = [
   '---',
   'name: sample-voice',
   'description: a short sample',

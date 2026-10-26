@@ -56,12 +56,8 @@ describe('pending-2FA grant (audit fixes)', () => {
     // the pending cookie must fail on everyday guarded routes
     await agentUntrusted.set('X-Fingerprint', 'fresh-fp').get('/api/me').expect(401);
     await agentUntrusted.get('/api/2fa/enable').expect(401);
-    // ...and must not authorize OAuth consent
-    const noConsent = await agentUntrusted
-      .post('/api/oauth/authorize/approve')
-      .send({ client_id: 'nope', redirect_uri: 'http://localhost:1/cb', code_challenge: 'x' })
-      .expect(200);
-    expect(noConsent.body.error).toBe('access_denied');
+    // ...and must not reach admin routes
+    await agentUntrusted.get('/api/admin/users').expect(401);
 
     // but it must complete the challenge
     const v = await agentUntrusted

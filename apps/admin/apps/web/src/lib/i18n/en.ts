@@ -435,8 +435,6 @@ export const en = {
     'No master here — your account default “{name}” runs instead. Change it in Account.',
   'editor.master.accountNone': 'No master runs — neither this profile nor your account has one.',
 
-
-
   'admin.title': 'Admin.',
   'admin.owner': 'Owner',
   'admin.lede':
@@ -512,4 +510,11 @@ export const en = {
   'landing.step1': 'Deploy a seeder or TURN node with one script.',
   'landing.step2': 'Register it in the dashboard with its address.',
   'landing.step3': 'Manage torrents and watch health from your account.',
-'landing.banner.title': 'One console. Every node.',
+  'landing.banner.title': 'One console. Every node.',
+  'app.tagline': 'The Quran audio distribution control room.',
+  'footer.links': 'Pages',
+  'landing.langNote': 'The interface is available in English and Arabic.',
+} as const;
+
+export type MessageKey = keyof typeof en;
+export type Catalogue = Record<MessageKey, string>;

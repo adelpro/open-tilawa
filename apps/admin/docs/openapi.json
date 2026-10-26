@@ -695,6 +695,118 @@
         "tags": ["Reciters"]
       }
     },
+    "/api/2fa/enable": {
+      "get": {
+        "operationId": "TwoFaController_enable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["TwoFa"]
+      }
+    },
+    "/api/2fa/verify": {
+      "post": {
+        "operationId": "TwoFaController_verify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFaTOTPDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["TwoFa"]
+      }
+    },
+    "/api/2fa/email-code": {
+      "post": {
+        "operationId": "TwoFaController_requestEmailCode",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": ["TwoFa"]
+      }
+    },
+    "/api/2fa/email-code/verify": {
+      "post": {
+        "operationId": "TwoFaController_verifyEmailCode",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFaEmailCodeVerifyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["TwoFa"]
+      }
+    },
+    "/api/2fa/recovery": {
+      "post": {
+        "operationId": "TwoFaController_redeemRecovery",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFaRecoveryDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["TwoFa"]
+      }
+    },
+    "/api/2fa/recovery/regenerate": {
+      "post": {
+        "operationId": "TwoFaController_regenerate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFaRegenerateDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["TwoFa"]
+      }
+    },
     "/api/admin/users": {
       "get": {
         "operationId": "AdminController_listUsers",
@@ -1104,6 +1216,50 @@
           }
         },
         "required": ["id", "label", "createdAt", "expiresAt"]
+      },
+      "TwoFaTOTPDTO": {
+        "type": "object",
+        "properties": {
+          "TOTP": {
+            "type": "string",
+            "example": "123456",
+            "description": "The six-digit authenticator code"
+          }
+        },
+        "required": ["TOTP"]
+      },
+      "TwoFaEmailCodeVerifyDTO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "019283",
+            "description": "The six-digit emailed code"
+          }
+        },
+        "required": ["code"]
+      },
+      "TwoFaRecoveryDTO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "4f3a-9d21",
+            "description": "An unused recovery code"
+          }
+        },
+        "required": ["code"]
+      },
+      "TwoFaRegenerateDTO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "A current authenticator code"
+          }
+        },
+        "required": ["code"]
       },
       "AdminCreateUserDTO": {
         "type": "object",
