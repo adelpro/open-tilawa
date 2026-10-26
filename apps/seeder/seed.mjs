@@ -5,7 +5,6 @@ import WebTorrent from 'webtorrent';
 import Semaphore from './utils/semaphore.js';
 import TRACKERS from './constants/TRACKERS.js';
 import getInfoHashFromMagnetLink from './utils/getInfoHashFromMagnetLink.js';
-import MAGNETLINKS from './constants/MAGNETLINKS.js';
 
 // CONSTANTS
 const DOWNLOAD_PATH = '/app/downloads';
@@ -64,18 +63,30 @@ const options = {
   announce: TRACKERS
 };
 
+/**
+ * The magnet list is configuration, not code.
+ *
+ * A list baked into the image froze the catalogue at build time: adding a reciter
+ * meant rebuilding and redeploying every node. MAGNETS_URL is the one source; if
+ * it cannot be read the node seeds only its local .torrent files rather than
+ * quietly falling back to a stale embedded list.
+ */
 async function processMagnetLinks() {
   let fetchedMAGNETLINKS;
+  const magnetsUrl = process.env.MAGNETS_URL;
+  if (!magnetsUrl) {
+    log.warning('MAGNETS_URL is not set — no magnet list to fetch; seed local .torrent files instead');
+    return;
+  }
   try {
-    const magnetsUrl = process.env.MAGNETS_URL || 'https://tilawa.quran.us.kg/api/magnet-uris';
     const response = await fetch(magnetsUrl);
-    if (!response.ok) throw new Error('Network response was not ok');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     fetchedMAGNETLINKS = await response.json();
     if (!Array.isArray(fetchedMAGNETLINKS)) throw new Error('Response is not an array');
-    log.success(`🔗 Fetched ${fetchedMAGNETLINKS.length} magnet links from tilawa.quran.us.kg/api/magnet-uris`);
+    log.success(`🔗 Fetched ${fetchedMAGNETLINKS.length} magnet links from ${magnetsUrl}`);
   } catch (err) {
-    log.warning('Failed to fetch magnet links from tilawa.quran.us.kg/api/magnet-uris, loading default magnet links');
-    fetchedMAGNETLINKS = MAGNETLINKS;
+    log.error(`Could not fetch the magnet list from ${magnetsUrl}: ${err.message}`);
+    return;
   }
 
   for (const magnet of fetchedMAGNETLINKS) {

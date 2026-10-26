@@ -56,7 +56,7 @@ export function Seeders(): ReactElement {
     setBusy('add');
     setError(null);
     try {
-      await api('/seeders', {
+      const created = await api<{ id: number }>('/seeders', {
         method: 'POST',
         body: {
           name: newName.trim(),
@@ -72,6 +72,9 @@ export function Seeders(): ReactElement {
       setShowAdd(false);
       setMessage(t('seeders.added'));
       await load();
+      // Next step is the node's own screen: the catalogue checklist is there,
+      // already ticked for everything the new node is missing.
+      navigate(`/torrents/${created.id}`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.addFailed'));
     } finally {

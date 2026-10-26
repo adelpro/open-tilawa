@@ -325,6 +325,31 @@ export class SeedersService {
     return body;
   }
 
+  /** Resolve a magnet's metadata through a node (no data kept on the node). */
+  async metadata(
+    id: number,
+    magnet: string,
+  ): Promise<{
+    name: string;
+    infoHash: string;
+    size: number;
+    files: number;
+    magnet: string;
+  }> {
+    const seeder = await this.requireSeeder(id);
+    const res = await this.call(
+      seeder,
+      '/api/metadata',
+      {
+        method: 'POST',
+        body: JSON.stringify({ magnet }),
+        headers: { 'Content-Type': 'application/json' },
+      },
+      30_000,
+    );
+    return this.json(res);
+  }
+
   async files(id: number): Promise<string[]> {
     const seeder = await this.requireSeeder(id);
     const res = await this.call(seeder, '/api/files', { method: 'GET' });
@@ -384,6 +409,7 @@ export class SeedersService {
     seeder: Seeder & { adminUser: string | null; adminPass: string | null },
     pathname: string,
     init: RequestInit,
+    timeoutMs = SEEDER_TIMEOUT_MS,
   ): Promise<Response> {
     const headers = new Headers(init.headers);
     if (!seeder.adminUser || !seeder.adminPass) {
@@ -402,7 +428,7 @@ export class SeedersService {
       res = await fetch(`${seeder.url}${pathname}`, {
         ...init,
         headers,
-        signal: AbortSignal.timeout(SEEDER_TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (err) {
       const error = err as Error;

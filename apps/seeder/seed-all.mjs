@@ -207,6 +207,68 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  /**
+   * POST /api/metadata { magnet } -> { name, infoHash, size, files, magnet }
+   *
+   * Resolves a magnet far enough to know what it is, then destroys it. The
+   * dashboard uses this to learn a release's size before adding it, and for the
+   * magnet converter, so it must not keep the data: `destroyStore` removes
+   * whatever was fetched while the metadata handshake ran.
+   */
+  if (url.pathname === '/api/metadata' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      let answered = false;
+      const answer = (status, payload) => {
+        if (answered) return;
+        answered = true;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(payload));
+      };
+      const magnet = (() => {
+        try { return JSON.parse(body).magnet; } catch { return null; }
+      })();
+      if (typeof magnet !== 'string' || !magnet.startsWith('magnet:')) {
+        answer(400, { error: 'a magnet: URI is required' });
+        return;
+      }
+      const info = (torrent) => ({
+        name: torrent.name,
+        infoHash: torrent.infoHash,
+        size: torrent.length,
+        files: torrent.files.length,
+        magnet: torrent.magnetURI,
+      });
+      const hash = new URL(magnet).searchParams.get('xt')?.replace('urn:btih:', '').toLowerCase();
+      const held = hash && client.torrents.find((t) => t.infoHash.toLowerCase() === hash);
+      if (held && held.length) {
+        answer(200, info(held));
+        return;
+      }
+
+      const timer = setTimeout(() => answer(504, { error: 'timed out waiting for metadata' }), 25000);
+      let torrent;
+      try {
+        torrent = client.add(magnet, { path: DOWNLOAD_PATH, destroyStore: true }, (ready) => {
+          clearTimeout(timer);
+          const payload = info(ready);
+          ready.destroy({ destroyStore: true }, () => answer(200, payload));
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        answer(400, { error: e.message });
+        return;
+      }
+      torrent.on('error', (e) => {
+        clearTimeout(timer);
+        try { torrent.destroy({ destroyStore: true }, () => answer(502, { error: e.message })); }
+        catch { answer(502, { error: e.message }); }
+      });
+    });
+    return;
+  }
+
   if (url.pathname === '/api/files') {
     try {
       const files = fs.readdirSync(TORRENT_DIR).filter(f => f.endsWith('.torrent'));

@@ -619,6 +619,27 @@
         "tags": ["Seeders"]
       }
     },
+    "/api/seeders/{id}/metadata": {
+      "post": {
+        "operationId": "SeedersController_metadata",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
     "/api/seeders/{id}/files": {
       "get": {
         "operationId": "SeedersController_files",
@@ -638,6 +659,42 @@
           }
         },
         "tags": ["Seeders"]
+      }
+    },
+    "/api/tools/torrent-info": {
+      "post": {
+        "operationId": "ToolsController_torrentInfo",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Tools"]
+      }
+    },
+    "/api/tools/magnet-info": {
+      "post": {
+        "operationId": "ToolsController_magnetInfo",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Tools"]
+      }
+    },
+    "/api/tools/magnet": {
+      "post": {
+        "operationId": "ToolsController_build",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Tools"]
       }
     },
     "/api/turns": {
@@ -874,7 +931,7 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
             "description": ""
           }
         },

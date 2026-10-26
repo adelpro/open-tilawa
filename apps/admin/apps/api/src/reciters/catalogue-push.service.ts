@@ -138,6 +138,64 @@ export class CataloguePushService {
     return { added, sized, catalogue: this.reciters.list().length };
   }
 
+  /**
+   * Delete a catalogue row, optionally taking it off every node first.
+   *
+   * The catalogue is the source of truth, so removing a release usually means
+   * removing it everywhere. It stays a choice: a node may be kept as an archive,
+   * and its disk is the operator's. Failures per node are reported, not fatal —
+   * a node that is down must not block the catalogue edit.
+   */
+  async remove(
+    id: number,
+    purgeNodes: boolean,
+    actorId?: number,
+  ): Promise<{
+    removed: boolean;
+    nodes: { seederId: number; name: string; removed: boolean; error: string | null }[];
+  }> {
+    const reciter = this.reciters.get(id);
+    if (!reciter) throw new NotFoundException('reciter not found');
+
+    const nodes: { seederId: number; name: string; removed: boolean; error: string | null }[] = [];
+    if (purgeNodes) {
+      for (const seeder of this.seeders.list()) {
+        if (!seeder.hasCredentials) {
+          nodes.push({
+            seederId: seeder.id,
+            name: seeder.name,
+            removed: false,
+            error: 'no credentials',
+          });
+          continue;
+        }
+        try {
+          await this.seeders.removeTorrent(seeder.id, reciter.infohash);
+          nodes.push({ seederId: seeder.id, name: seeder.name, removed: true, error: null });
+        } catch (err) {
+          // 404 means the node never held it, which is the outcome we wanted.
+          nodes.push({
+            seederId: seeder.id,
+            name: seeder.name,
+            removed: false,
+            error: (err as Error).message,
+          });
+        }
+      }
+    }
+
+    this.reciters.remove(id);
+    this.audit.record({
+      actorId: actorId ?? null,
+      userId: null,
+      action: 'reciter:delete',
+      target: String(id),
+      status: 'ok',
+      after: { infohash: reciter.infohash, purgeNodes, nodes },
+    });
+    return { removed: true, nodes };
+  }
+
   private async compute(nodeIds?: number[]): Promise<PushPlan> {
     const catalogue = this.reciters.list();
     const seeders = this.seeders

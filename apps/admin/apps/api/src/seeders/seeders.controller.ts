@@ -126,6 +126,12 @@ export class SeedersController {
     await this.service.removeTorrent(Number(id), infoHash);
   }
 
+  @Post(':id/metadata')
+  @HttpCode(HttpStatus.OK)
+  metadata(@Param('id') id: string, @Body() body: { magnet: string }) {
+    return this.service.metadata(Number(id), body.magnet);
+  }
+
   @Get(':id/files')
   async files(@Param('id') id: string) {
     return { files: await this.service.files(Number(id)) };

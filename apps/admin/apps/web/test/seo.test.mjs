@@ -80,7 +80,10 @@ describe('crawler files', () => {
   it('writes a sitemap that lists exactly the public pages', () => {
     const sitemap = readFileSync(join(dist, 'sitemap.xml'), 'utf-8');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-    assert.deepEqual(locs, data.pages.map((page) => `${data.site}${page.path}`));
+    assert.deepEqual(
+      locs,
+      data.pages.map((page) => `${data.site}${page.path}`),
+    );
     assert.match(sitemap, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
     assert.match(sitemap, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
   });
@@ -90,10 +93,7 @@ describe('crawler files', () => {
     assert.equal(manifest.start_url, '/');
     assert.equal(manifest.theme_color, '#086288');
     assert.equal(manifest.background_color, '#ffefc4');
-    assert.equal(
-      manifest.screenshots.filter((shot) => shot.form_factor === 'wide').length,
-      1,
-    );
+    assert.equal(manifest.screenshots.filter((shot) => shot.form_factor === 'wide').length, 1);
     assert.ok(manifest.screenshots[0].label.length > 5);
     assert.ok(manifest.icons.length >= 2);
   });
@@ -127,7 +127,10 @@ describe('the edge no longer answers everything with the app', () => {
   const conf = readFileSync(join(WEB, 'templates/default.conf.template'), 'utf-8');
 
   it('falls back to the shell only for app routes', () => {
-    assert.match(conf, /location ~ \^\/\(dashboard\|reset-password\|activate\|2fa\|setup\|oauth\|about\|privacy\|terms\|signin\|signup\)\(/);
+    assert.match(
+      conf,
+      /location ~ \^\/\(dashboard\|reset-password\|activate\|2fa\|setup\|oauth\|about\|privacy\|terms\|signin\|signup\)\(/,
+    );
   });
 
   it('404s anything that is not a file or an app route', () => {

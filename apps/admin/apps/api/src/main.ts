@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
@@ -33,7 +34,13 @@ const apiVersion = (() => {
 })();
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+
+  // The tools screen uploads a .torrent as base64 JSON (+33%), and torrent files
+  // are routinely hundreds of kilobytes. The Express default is 100 kB, which
+  // answered a real 295 kB file with 413.
+  app.useBodyParser('json', { limit: '8mb' });
+  app.useBodyParser('urlencoded', { limit: '1mb', extended: true });
   const config = app.get(ConfigService);
 
   // Behind the edge container: without this, throttling sees one client.

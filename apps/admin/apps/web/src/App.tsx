@@ -17,6 +17,7 @@ import { ResetPassword } from './routes/ResetPassword';
 import { Setup } from './routes/Setup';
 import { About } from './routes/About';
 import { Help } from './routes/Help';
+import { Tools } from './routes/Tools';
 import { Privacy } from './routes/Privacy';
 import { Terms } from './routes/Terms';
 import { Account } from './routes/Account';
@@ -314,6 +315,7 @@ function Screen({
   if (first === 'torrents') return <Torrents seederId={second} />;
   if (first === 'reciters') return <Reciters />;
   if (first === 'account') return <Account />;
+  if (first === 'tools') return <Tools />;
   if (first === 'help') return <Help />;
   const consolePath = consolePathFor(role);
   if (first === 'admin' && consolePath === '/dashboard/admin') {

@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   Param,
+  Query,
   Body,
   HttpCode,
   HttpStatus,
@@ -105,8 +106,12 @@ export class RecitersController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    this.service.remove(Number(id));
+  @HttpCode(HttpStatus.OK)
+  remove(
+    @Param('id') id: string,
+    @Query('purgeNodes') purgeNodes: string | undefined,
+    @CurrentUser('id') actorId: string | number,
+  ) {
+    return this.push.remove(Number(id), purgeNodes === 'true', Number(actorId));
   }
 }

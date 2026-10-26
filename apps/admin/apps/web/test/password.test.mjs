@@ -22,9 +22,8 @@ const API_PATTERN_SOURCE = '^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$
 
 // Node strips the type annotations on import (22.6+), so the module under test is the one
 // the browser gets — no build step, and no second copy of the rules.
-const { checkPassword, scorePassword, PASSWORD_MIN_LENGTH, PASSWORD_RULES } = await import(
-  '../src/lib/password.ts'
-);
+const { checkPassword, scorePassword, PASSWORD_MIN_LENGTH, PASSWORD_RULES } =
+  await import('../src/lib/password.ts');
 
 describe('the rules match the API', () => {
   it('has the same minimum length', () => {
@@ -39,12 +38,23 @@ describe('the rules match the API', () => {
       'the API pattern changed — update apps/web/src/lib/password.ts to match',
     );
     const pattern = new RegExp(API_PATTERN_SOURCE);
-    for (const sample of ['Password1', 'password1', 'PASSWORD1', 'Password', 'Pass1', 'Password123']) {
+    for (const sample of [
+      'Password1',
+      'password1',
+      'PASSWORD1',
+      'Password',
+      'Pass1',
+      'Password123',
+    ]) {
       const apiAccepts = pattern.test(sample);
       const dashboardAccepts = ['length', 'upper', 'lower', 'digit'].every(
         (rule) => checkPassword(sample).find((check) => check.rule === rule)?.met,
       );
-      assert.equal(dashboardAccepts, apiAccepts, `${sample}: API ${apiAccepts}, dashboard ${dashboardAccepts}`);
+      assert.equal(
+        dashboardAccepts,
+        apiAccepts,
+        `${sample}: API ${apiAccepts}, dashboard ${dashboardAccepts}`,
+      );
     }
   });
 
@@ -85,7 +95,9 @@ describe('scoring', () => {
   });
 
   it('reports which rule is still open, in order', () => {
-    const open = checkPassword('abc').filter((check) => !check.met).map((check) => check.rule);
+    const open = checkPassword('abc')
+      .filter((check) => !check.met)
+      .map((check) => check.rule);
     assert.deepEqual(open, ['length', 'upper', 'digit']);
   });
 });

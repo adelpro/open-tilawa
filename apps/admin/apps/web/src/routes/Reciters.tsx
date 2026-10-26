@@ -8,6 +8,7 @@ import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
+import { Modal } from '../components/Modal';
 import { bytes } from '../lib/format';
 import type { Seeder } from '../lib/types-seeders';
 
@@ -63,8 +64,11 @@ export function Reciters(): ReactElement {
   const [editInfohash, setEditInfohash] = useState('');
   const [editMagnet, setEditMagnet] = useState('');
   const [editSizeGb, setEditSizeGb] = useState('');
-  const [pushing, setPushing] = useState(false);
+  const [deleting, setDeleting] = useState<Reciter | null>(null);
+  const [purgeNodes, setPurgeNodes] = useState(false);
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
+  const [fetchNode, setFetchNode] = useState<number | null>(null);
+  const [pushing, setPushing] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [plan, setPlan] = useState<PushPlan | null>(null);
   const [pushBusy, setPushBusy] = useState<string | null>(null);
@@ -82,6 +86,24 @@ export function Reciters(): ReactElement {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let live = true;
+    api<Seeder[]>('/seeders')
+      .then((rows) => {
+        if (!live) return;
+        setNodes(rows);
+        setFetchNode(
+          (current) => current ?? rows.find((row) => row.hasCredentials)?.id ?? rows[0]?.id ?? null,
+        );
+      })
+      .catch(() => {
+        if (live) setNodes([]);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   async function add(): Promise<void> {
     if (!newName.trim() || !newInfohash.trim()) return;
@@ -199,15 +221,43 @@ export function Reciters(): ReactElement {
     }
   }
 
-  async function remove(id: number): Promise<void> {
-    setBusy(`remove-${id}`);
+  async function confirmDelete(): Promise<void> {
+    if (!deleting) return;
+    setBusy('delete');
     setError(null);
     try {
-      await api(`/reciters/${id}`, { method: 'DELETE' });
-      setMessage(t('reciters.removed'));
+      await api(`/reciters/${deleting.id}?purgeNodes=${purgeNodes}`, { method: 'DELETE' });
+      setMessage(purgeNodes ? t('reciters.removedEverywhere') : t('reciters.removed'));
+      setDeleting(null);
+      setPurgeNodes(false);
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('reciters.removeFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function fetchMetadata(): Promise<void> {
+    if (fetchNode === null || !newMagnet.trim()) return;
+    setBusy('fetch');
+    setError(null);
+    try {
+      const info = await api<{
+        name: string;
+        infoHash: string;
+        size: number;
+        files: number;
+        magnet: string;
+      }>(`/seeders/${fetchNode}/metadata`, { method: 'POST', body: { magnet: newMagnet.trim() } });
+      setNewName(info.name);
+      setNewInfohash(info.infoHash);
+      setNewMagnet(info.magnet);
+      setNewFileCount(String(info.files));
+      setNewSizeGb((info.size / 1024 ** 3).toFixed(2));
+      setMessage(t('reciters.fetched'));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.fetchFailed'));
     } finally {
       setBusy(null);
     }
@@ -268,6 +318,31 @@ export function Reciters(): ReactElement {
                 />
               )}
             </Field>
+            <div className="cluster cluster--end">
+              <Button
+                variant="secondary"
+                small
+                onClick={() => void fetchMetadata()}
+                busy={busy === 'fetch'}
+                disabled={!newMagnet.trim() || fetchNode === null}
+              >
+                {t('reciters.fetch')}
+              </Button>
+              {nodes && nodes.length > 0 ? (
+                <select
+                  className="field__select"
+                  aria-label={t('reciters.fetchNode')}
+                  value={fetchNode ?? ''}
+                  onChange={(event) => setFetchNode(Number(event.target.value))}
+                >
+                  {nodes.map((node) => (
+                    <option key={node.id} value={node.id}>
+                      {node.name}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+            </div>
             <Field label={t('reciters.magnet')} hint={t('reciters.magnetHint')}>
               {(id) => (
                 <Input
@@ -440,6 +515,31 @@ export function Reciters(): ReactElement {
                 />
               )}
             </Field>
+            <div className="cluster cluster--end">
+              <Button
+                variant="secondary"
+                small
+                onClick={() => void fetchMetadata()}
+                busy={busy === 'fetch'}
+                disabled={!newMagnet.trim() || fetchNode === null}
+              >
+                {t('reciters.fetch')}
+              </Button>
+              {nodes && nodes.length > 0 ? (
+                <select
+                  className="field__select"
+                  aria-label={t('reciters.fetchNode')}
+                  value={fetchNode ?? ''}
+                  onChange={(event) => setFetchNode(Number(event.target.value))}
+                >
+                  {nodes.map((node) => (
+                    <option key={node.id} value={node.id}>
+                      {node.name}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+            </div>
             <Field label={t('reciters.magnet')} hint={t('reciters.magnetHint')}>
               {(id) => (
                 <Input
@@ -528,7 +628,7 @@ export function Reciters(): ReactElement {
                         <Button
                           small
                           variant="destructive"
-                          onClick={() => void remove(reciter.id)}
+                          onClick={() => setDeleting(reciter)}
                           busy={busy === `remove-${reciter.id}`}
                         >
                           {t('reciters.remove')}
@@ -542,6 +642,33 @@ export function Reciters(): ReactElement {
           </div>
         </Panel>
       )}
+      {deleting ? (
+        <Modal title={t('reciters.deleteTitle')} onClose={() => setDeleting(null)}>
+          <div className="stack">
+            <p className="body">{t('reciters.deleteBody', { name: deleting.name })}</p>
+            <label className="cluster" style={{ cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={purgeNodes}
+                onChange={(event) => setPurgeNodes(event.target.checked)}
+              />
+              {t('reciters.deletePurge')}
+            </label>
+            <div className="cluster cluster--end">
+              <Button variant="tertiary" onClick={() => setDeleting(null)}>
+                {t('reciters.cancel')}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => void confirmDelete()}
+                busy={busy === 'delete'}
+              >
+                {t('reciters.deleteConfirm')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
     </div>
   );
 }

@@ -130,10 +130,7 @@ describe('headings and the account screen (A9, T13.8)', () => {
   });
 
   it('gives each screen exactly one h1', () => {
-    for (const route of [
-      'Account.tsx',
-      'AdminConsole.tsx',
-    ]) {
+    for (const route of ['Account.tsx', 'AdminConsole.tsx']) {
       const source = read(`routes/${route}`);
       const h1s = (source.match(/<h1/g) ?? []).length;
       assert.ok(h1s <= 1, `${route} has ${h1s} h1 elements`);

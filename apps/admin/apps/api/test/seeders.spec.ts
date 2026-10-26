@@ -446,4 +446,48 @@ describe('seeder proxy', () => {
       .send({ name: 'x' })
       .expect(404);
   });
+
+  it('deletes a reciter from the catalogue, and from the nodes when asked', async () => {
+    const { body } = await agent
+      .post('/api/reciters')
+      .set('x-csrf-token', csrf)
+      .send({
+        name: 'To Purge',
+        riwaya: 'Hafs',
+        infohash: 'abc123',
+        magnet: 'magnet:?xt=urn:btih:abc123',
+        fileCount: 1,
+      })
+      .expect(201);
+
+    const purged = await agent
+      .delete(`/api/reciters/${body.id}?purgeNodes=true`)
+      .set('x-csrf-token', csrf)
+      .expect(200);
+    expect(purged.body.removed).toBe(true);
+    expect(purged.body.nodes[0]).toMatchObject({ seederId, removed: true, error: null });
+    // The fake node saw the DELETE for that infohash.
+    expect(fake.seen.some((entry) => entry === 'delete:abc123')).toBe(true);
+
+    const catalogue = (await agent.get('/api/reciters').expect(200)).body as { id: number }[];
+    expect(catalogue.some((row) => row.id === body.id)).toBe(false);
+  });
+
+  it('keeps the nodes untouched when the purge is not requested', async () => {
+    const { body } = await agent
+      .post('/api/reciters')
+      .set('x-csrf-token', csrf)
+      .send({
+        name: 'Catalogue Only',
+        riwaya: 'Hafs',
+        infohash: 'def456',
+        magnet: 'magnet:?xt=urn:btih:def456',
+        fileCount: 1,
+      })
+      .expect(201);
+    const before = fake.seen.length;
+    await agent.delete(`/api/reciters/${body.id}`).set('x-csrf-token', csrf).expect(200);
+    // No new seeder call was made.
+    expect(fake.seen.length).toBe(before);
+  });
 });

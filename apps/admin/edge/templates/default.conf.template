@@ -11,7 +11,7 @@
 # variable, the name is resolved per request through Docker's embedded DNS, so
 # recreating a backend becomes invisible to the edge.
 
-client_max_body_size 2m;   # avatar uploads; nginx defaults to 1m
+client_max_body_size 8m;   # avatar uploads and .torrent files (base64 JSON adds a third)
 
 # 127.0.0.11 is Docker's embedded DNS server. `valid=10s` bounds the cache.
 resolver 127.0.0.11 valid=10s ipv6=off;

@@ -10,6 +10,7 @@ import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
+import { Modal } from '../components/Modal';
 import type { Seeder, SeederInventory } from '../lib/types-seeders';
 
 interface Reciter {
@@ -44,6 +45,7 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
   const [catalogue, setCatalogue] = useState<Reciter[] | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [catalogueBusy, setCatalogueBusy] = useState<string | null>(null);
+  const [confirmUntracked, setConfirmUntracked] = useState(false);
 
   const loadSeeders = useCallback(async () => {
     try {
@@ -181,11 +183,41 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
   const heldHashes = new Set(
     (inventory?.torrents ?? []).map((torrent) => torrent.infoHash.toLowerCase()),
   );
+  const catalogueHashes = new Set((catalogue ?? []).map((row) => row.infohash.toLowerCase()));
   const missing = (catalogue ?? []).filter((row) => !heldHashes.has(row.infohash.toLowerCase()));
+  const untracked = (inventory?.torrents ?? []).filter(
+    (torrent) => !catalogueHashes.has(torrent.infoHash.toLowerCase()),
+  );
   const pickedSize = (catalogue ?? [])
     .filter((row) => picked.includes(row.infohash))
     .reduce((sum, row) => sum + (row.sizeBytes ?? 0), 0);
   const selectedNode = seeders?.find((row) => row.id === seederId) ?? null;
+
+  useEffect(() => {
+    if (!catalogue || !inventory) return;
+    const held = new Set(inventory.torrents.map((torrent) => torrent.infoHash.toLowerCase()));
+    setPicked(
+      catalogue.filter((row) => !held.has(row.infohash.toLowerCase())).map((row) => row.infohash),
+    );
+  }, [catalogue, inventory]);
+
+  async function removeUntracked(): Promise<void> {
+    if (seederId === null) return;
+    setConfirmUntracked(false);
+    setCatalogueBusy('purge');
+    setError(null);
+    try {
+      for (const torrent of untracked) {
+        await api(`/seeders/${seederId}/torrents/${torrent.infoHash}`, { method: 'DELETE' });
+      }
+      setMessage(t('torrents.untrackedRemoved', { count: String(untracked.length) }));
+      await loadInventory(seederId);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('torrents.removeFailed'));
+    } finally {
+      setCatalogueBusy(null);
+    }
+  }
 
   if (!user) return <p className="body muted">{t('torrents.signInRequired')}</p>;
 
@@ -318,12 +350,24 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
         )
       ) : (
         <Panel>
-          <p className="body muted">
-            {t('torrents.summary', {
-              count: String(inventory.stats.totalTorrents),
-              peers: String(inventory.stats.totalPeers),
-            })}
-          </p>
+          <div className="spread" style={{ marginBottom: 'var(--space-3)' }}>
+            <p className="body muted">
+              {t('torrents.summary', {
+                count: String(inventory.stats.totalTorrents),
+                peers: String(inventory.stats.totalPeers),
+              })}
+            </p>
+            {untracked.length > 0 ? (
+              <Button
+                small
+                variant="destructive"
+                onClick={() => setConfirmUntracked(true)}
+                busy={catalogueBusy === 'purge'}
+              >
+                {t('torrents.removeUntracked', { count: String(untracked.length) })}
+              </Button>
+            ) : null}
+          </div>
           {inventory.torrents.length === 0 ? (
             <p className="body muted">{t('torrents.empty')}</p>
           ) : (
@@ -336,6 +380,7 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
                     <th scope="col">{t('torrents.progress')}</th>
                     <th scope="col">{t('torrents.peers')}</th>
                     <th scope="col">{t('torrents.speed')}</th>
+                    <th scope="col">{t('torrents.source')}</th>
                     <th scope="col">{t('torrents.actions')}</th>
                   </tr>
                 </thead>
@@ -355,6 +400,19 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
                       <td className="num">
                         ↑ {bytes(torrent.uploadSpeed, locale, true)} · ↓{' '}
                         {bytes(torrent.downloadSpeed, locale, true)}
+                      </td>
+                      <td>
+                        <Chip
+                          tone={
+                            catalogueHashes.has(torrent.infoHash.toLowerCase()) ? 'ok' : 'notice'
+                          }
+                        >
+                          {t(
+                            catalogueHashes.has(torrent.infoHash.toLowerCase())
+                              ? 'torrents.inCatalogue'
+                              : 'torrents.untracked',
+                          )}
+                        </Chip>
                       </td>
                       <td>
                         <span className="cluster cluster--end">
@@ -398,6 +456,18 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
             <p className="body muted">{t('torrents.catalogueComplete')}</p>
           ) : (
             <div className="stack">
+              <div className="cluster">
+                <Button
+                  small
+                  variant="tertiary"
+                  onClick={() => setPicked(missing.map((row) => row.infohash))}
+                >
+                  {t('torrents.selectAll')}
+                </Button>
+                <Button small variant="tertiary" onClick={() => setPicked([])}>
+                  {t('torrents.selectNone')}
+                </Button>
+              </div>
               <div className="table-scroll">
                 <table className="table">
                   <thead>
@@ -471,6 +541,24 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
             </div>
           )}
         </Panel>
+      ) : null}
+      {confirmUntracked ? (
+        <Modal title={t('torrents.untrackedTitle')} onClose={() => setConfirmUntracked(false)}>
+          <div className="stack">
+            <p className="body">
+              {t('torrents.untrackedBody', { count: String(untracked.length) })}
+            </p>
+            <p className="fine-print">{t('torrents.untrackedHint')}</p>
+            <div className="cluster cluster--end">
+              <Button variant="tertiary" onClick={() => setConfirmUntracked(false)}>
+                {t('torrents.cancel')}
+              </Button>
+              <Button variant="destructive" onClick={() => void removeUntracked()}>
+                {t('torrents.untrackedConfirm')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       ) : null}
     </div>
   );

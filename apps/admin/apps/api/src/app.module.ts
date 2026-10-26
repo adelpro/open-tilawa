@@ -15,6 +15,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { MeModule } from './me/me.module';
 import { SeedersModule } from './seeders/seeders.module';
+import { ToolsModule } from './tools/tools.module';
 import { TurnsModule } from './turns/turns.module';
 import { RecitersModule } from './reciters/reciters.module';
 import { TwoFaModule } from './two-fa/two-fa.module';
@@ -34,6 +35,7 @@ import { envValidate } from './config/env/env.validate';
     TokensModule,
     MeModule,
     SeedersModule,
+    ToolsModule,
     TurnsModule,
     RecitersModule,
     TwoFaModule,

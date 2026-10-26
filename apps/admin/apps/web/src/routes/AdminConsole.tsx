@@ -171,7 +171,11 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
               />
               <label className="field" style={{ minWidth: '8rem' }}>
                 <span className="label">Role</span>
-                <select className="input" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}>
+                <select
+                  className="input"
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
+                >
                   <option value="all">All</option>
                   <option value="user">user</option>
                   <option value="admin">admin</option>
@@ -180,7 +184,11 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
               </label>
               <label className="field" style={{ minWidth: '8rem' }}>
                 <span className="label">Status</span>
-                <select className="input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}>
+                <select
+                  className="input"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                >
                   <option value="all">All</option>
                   <option value="active">active</option>
                   <option value="disabled">disabled</option>
@@ -190,7 +198,9 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
                 {t('admin.refresh')}
               </Button>
               {visibleUsers ? (
-                <span className="fine-print">{t('admin.count', { count: visibleUsers.length })}</span>
+                <span className="fine-print">
+                  {t('admin.count', { count: visibleUsers.length })}
+                </span>
               ) : null}
             </div>
 
@@ -225,7 +235,9 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
                             {entry.name}
                             {self ? <span className="fine-print"> · {t('admin.you')}</span> : null}
                           </td>
-                          <td className="muted" data-label={t('common.email')}>{entry.email}</td>
+                          <td className="muted" data-label={t('common.email')}>
+                            {entry.email}
+                          </td>
                           <td data-label={t('admin.role')}>
                             <Chip tone={entry.role === 'user' ? 'info' : 'notice'}>
                               {entry.role}
