@@ -8,6 +8,8 @@ type SheetProps = {
   title: string;
   open: boolean;
   onClose: () => void;
+  /** `full` claims 90dvh; `auto` hugs its rows (the route menu). */
+  size?: 'full' | 'auto';
   children: ReactNode;
 };
 
@@ -30,7 +32,7 @@ function CloseGlyph() {
  * layer and returning focus to the trigger all come from the platform, so
  * there is no hand-rolled modal state to get wrong.
  */
-export default function Sheet({ title, open, onClose, children }: SheetProps) {
+export default function Sheet({ title, open, onClose, size = 'full', children }: SheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function Sheet({ title, open, onClose, children }: SheetProps) {
       }}
       className="sheet fixed inset-x-0 bottom-0 top-auto m-0 mx-auto w-full max-w-[520px] rounded-t-2xl border-t border-line bg-canvas p-0 text-ink backdrop:bg-black/30"
     >
-      <div className="flex h-[90dvh] flex-col">
+      <div className={size === 'full' ? 'flex h-[90dvh] flex-col' : 'flex max-h-[90dvh] flex-col'}>
         <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-5">
           <h2 className="text-[15px] font-semibold">{title}</h2>
           <button
@@ -68,7 +70,12 @@ export default function Sheet({ title, open, onClose, children }: SheetProps) {
             <CloseGlyph />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+        <div
+          className={cn(
+            'min-h-0 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]',
+            size === 'full' && 'flex-1',
+          )}
+        >
           {children}
         </div>
       </div>
