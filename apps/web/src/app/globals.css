@@ -66,6 +66,14 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
+/* One clear button, ours: the native one is blue and sat next to the panel's
+   close button. */
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* Top bar, player, bottom bar: the page is a column of three, and only the
    middle one is allowed to grow. */
 .app-shell {
@@ -83,6 +91,26 @@ select {
   padding: 24px;
 }
 
+/* On a desk the page is a fixed frame: bars, then a row of player + list. The
+   row needs a definite height, or the player's flex-basis 0 collapses it. */
+@media (min-width: 1024px) {
+  .app-shell {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .player-screen {
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+/* The brand mark is a navy raster. On the night palette it becomes a white
+   silhouette, which is how the same logo reads on a dark shelf. */
+[data-theme='dark'] .brand-mark {
+  filter: brightness(0) invert(1);
+}
+
 /* Bottom sheet, on a native <dialog>: the platform supplies the backdrop, the
    top layer and the focus trap; this places it and slides it in. */
 .sheet {
@@ -92,6 +120,7 @@ select {
 .sheet[open] {
   animation: sheet-in 180ms cubic-bezier(0.2, 0, 0.2, 1);
 }
+
 
 .sheet::backdrop {
   background: rgba(0, 0, 0, 0.3);

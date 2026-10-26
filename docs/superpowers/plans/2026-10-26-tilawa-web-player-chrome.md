@@ -236,3 +236,39 @@ compose up -d web` restores the chrome-less player.
   `node-datachannel` has no musl prebuild and tried to compile in the Alpine
   build stage. It also had a stale `# syntax=docker/dockerfile:1` that forced a
   registry round-trip; removed.
+
+---
+
+## Second pass (2026-10-26, after the first review)
+
+- **The surah name is a glyph, not text.** QUL's *Surah name font v1*
+  (`static-cdn.tarteel.ai/qul/fonts/surah_names/surah_names.woff2`, 88 KB) draws
+  each name as one glyph in the private-use block: surah `N` is
+  `U+E900 + N - 1`. Monochrome, so `currentColor` carries it through the theme.
+  The accessible name stays on the `<h1 aria-label>`; the glyph is `aria-hidden`.
+  The colour variant (resource 237) is 830 KB and byte-identical in shape, so the
+  flat one is what ships.
+- **Arabic names now live in the catalogue.** `reciters.name_ar` (added in code,
+  like `size_bytes`), seeded from `apps/api/src/reciters/reciter-names.ts` by
+  infohash, only where it is still null, and returned by
+  `/api/public/reciters` as `nameAr`. The web prefers `nameAr`, then its own
+  table, then a cleaned torrent name. The seeder's folder names
+  (`Maher_Al-Muaiqly_(Update2)_(MP3_Quran)`) never reach the screen again.
+- **The merge had two bugs worth naming:** HTTP-only reciters (بدر التركي, ماجد
+  الزميل) disappeared whenever the catalogue answered, and `5e0becf3` — a Maher
+  torrent — displayed as سعد الغامدي because the static list had the wrong hash
+  beside that name. Both are covered by `test/reciter-merge.test.ts`; سعد الغامدي
+  is `ff77deab`.
+- **Search** in both lists: `normalizeArabic` folds hamza/taa-marbuta/tashkeel
+  and both digit sets, so `الانفال`, `الأنفال` and `8` all find الأنفال.
+- **The logo replaces the wordmark** in the top bar (`images/icon.png`, inverted
+  to a white silhouette on the night palette).
+- **The reciter moved into the menu** (`القارئ — {name}`), so the player column
+  holds only the glyph, the meta line, the scrubber and five controls.
+- **The list is two surfaces over one component**: a 46dvh peek sheet that
+  expands to 90dvh on phones, and a standing 360px column on the start edge at
+  `lg` (the sheet is not even mounted there). A right-edge drawer was built and
+  rejected on review.
+- **Admin console:** mobile table rows painted `--color-surface` from a legacy
+  palette that had no dark value and was never imported, which is why cards
+  stayed white on black. They now use `--canvas-parchment`.

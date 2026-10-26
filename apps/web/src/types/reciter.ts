@@ -1,4 +1,4 @@
-import { MagnetlinkSource } from "@/types";
+import type { MagnetlinkSource } from "@/types";
 
 export type ItqanTrack = {
   surahId: number;

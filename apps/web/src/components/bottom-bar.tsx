@@ -42,7 +42,8 @@ export default function BottomBar({
 
   return (
     <footer className="shrink-0 border-t border-line pb-[env(safe-area-inset-bottom)]">
-      <div className="relative mx-auto w-full max-w-[520px] px-2">
+      <div className="lg:pe-[360px]">
+        <div className="relative mx-auto w-full max-w-[520px] px-2">
         {detailsOpen && (
         <DetailsPopover
           source={source}
@@ -57,7 +58,7 @@ export default function BottomBar({
           type="button"
           onClick={onOpenList}
           aria-label="قائمة السور"
-          className="flex h-11 min-w-0 items-center gap-2 rounded-full px-2 text-[14px] text-ink transition-colors hover:bg-line active:bg-line"
+          className="flex h-11 min-w-0 items-center gap-2 rounded-full px-2 text-[14px] text-ink transition-colors hover:bg-line active:bg-line lg:hidden"
         >
           <Icon name="playlist" className="text-muted" />
           <span className="truncate">{surahName}</span>
@@ -87,7 +88,8 @@ export default function BottomBar({
             )}
           >
             <Icon name="wifi" />
-          </button>
+            </button>
+            </div>
           </div>
         </div>
       </div>

@@ -1,48 +1,26 @@
 import { useEffect, useState } from 'react';
 
 import { RECITERS } from '@/constants';
-import { parseMagnet } from '@/utils/magnet';
-import { MagnetlinkSource, type Reciter } from '@/types';
+import type { Reciter } from '@/types';
+import { mergeReciters, type CatalogueRow } from '@/utils/reciter-merge';
 
 /**
  * The reciter list, served by the admin catalogue.
  *
  * The catalogue is the source of truth for *what exists and where it announces*;
- * the static list remains the source of display metadata (Arabic name, source
- * badge, Itqan fallback playlist), matched by infohash. A row the catalogue adds
- * has no Arabic name yet, so its catalogue name is shown.
+ * the static list keeps the metadata only we have (source badge, Itqan fallback
+ * playlist, stable ids); `constants/reciter-names` supplies the Arabic name, by
+ * infohash, because the catalogue serves torrent folder names.
  *
  * If the request fails the static list is returned unchanged: a catalogue outage
  * must not turn the player into an empty page.
  */
-
-interface CatalogueRow {
-  name: string;
-  riwaya: string;
-  infohash: string;
-  magnet: string;
-  sizeBytes: number | null;
-  fileCount: number;
-}
 
 const ADMIN_API =
   (import.meta as { env?: Record<string, string> }).env?.VITE_ADMIN_API_URL ||
   'https://admin-tilawa.quran.us.kg';
 
 let pending: Promise<Reciter[]> | null = null;
-
-function infohashOf(magnet: string): string | null {
-  // Decodes both the literal and the percent-encoded magnet forms; a regex over
-  // the raw string only understands the first.
-  return parseMagnet(magnet)?.infoHash ?? null;
-}
-
-/** Stable id for a catalogue-only row, so a link to it survives a reload. */
-function idFromHash(hash: string): number {
-  let value = 0;
-  for (const char of hash.slice(0, 8)) value = (value * 31 + char.charCodeAt(0)) % 1_000_000;
-  return 1_000_000 + value;
-}
 
 async function fetchAndMerge(): Promise<Reciter[]> {
   try {
@@ -53,30 +31,7 @@ async function fetchAndMerge(): Promise<Reciter[]> {
     const body = (await response.json()) as { reciters?: CatalogueRow[] };
     if (!Array.isArray(body.reciters) || body.reciters.length === 0) return RECITERS;
 
-    const known = new Map<string, Reciter>();
-    for (const reciter of RECITERS) {
-      const hash = infohashOf(reciter.magnet);
-      if (hash) known.set(hash, reciter);
-    }
-
-    const merged: Reciter[] = [];
-    for (const row of body.reciters) {
-      const hash = row.infohash.toLowerCase();
-      const existing = known.get(hash);
-      if (existing) {
-        merged.push({ ...existing, magnet: row.magnet });
-        known.delete(hash);
-      } else {
-        merged.push({
-          id: idFromHash(hash),
-          name: row.name,
-          magnet: row.magnet,
-          source: MagnetlinkSource.MP3QURAN,
-          complet: true,
-        });
-      }
-    }
-    return merged;
+    return mergeReciters(body.reciters as CatalogueRow[], RECITERS);
   } catch {
     return RECITERS;
   }
@@ -101,5 +56,3 @@ export function useReciters(): { reciters: Reciter[]; fromCatalogue: boolean } {
 
   return { reciters, fromCatalogue };
 }
-
-export { infohashOf };

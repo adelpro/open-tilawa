@@ -5,10 +5,11 @@ import BottomBar from '@/components/bottom-bar';
 import type { StreamSource } from '@/components/details-popover';
 import { AboutSheet, MenuSheet, PrivacySheet } from '@/components/menu-sheet';
 import Scrubber from '@/components/scrubber';
-import Sheet, { ReciterSheet, SurahSheet } from '@/components/sheet';
+import { ReciterSheet, SurahColumn, SurahSheet } from '@/components/sheet';
 import TopBar from '@/components/top-bar';
 import Transport from '@/components/transport';
 import { surahById } from '@/constants/surah';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { usePlayerNav } from '@/hooks/use-player-nav';
 import { getPosition, loadState, saveState } from '@/hooks/use-persistence';
 import { useReciters } from '@/hooks/use-reciters';
@@ -25,6 +26,7 @@ import {
 } from '@/jotai/player';
 import type { Reciter } from '@/types';
 import { seekBy } from '@/utils/clamp';
+import { surahNameGlyph } from '@/utils/surah-glyph';
 import { surahIdOf } from '@/utils/surah-id';
 
 /**
@@ -48,6 +50,7 @@ export default function PlayerPage() {
     usePlayerNav();
 
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const wide = useMediaQuery('(min-width: 1024px)');
 
   /** Put the listener back where they stopped: their reciter, their surah. */
   const restoreFor = useCallback(
@@ -106,21 +109,16 @@ export default function PlayerPage() {
     <div className="app-shell">
       <TopBar onOpenMenu={() => openSheet('menu')} />
 
-      <main className="player-screen">
+      <div className="lg:flex lg:min-h-0 lg:flex-1">
+        <main className="player-screen lg:order-2 lg:flex-1">
         <div className="w-full max-w-[520px]">
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={() => openSheet('reciters')}
-              aria-label="اختيار القارئ"
-              className="flex h-11 items-center rounded-full border border-line bg-line px-4 text-[15px] text-ink transition-colors hover:border-ink/30 active:opacity-80"
-            >
-              {reciter?.name ?? 'اختر قارئاً'}
-            </button>
-          </div>
-
-          <h1 className="font-display mt-3 text-center text-[52px] leading-[1.3] text-ink">
-            {surah?.name ?? `سورة ${surahId}`}
+          <h1
+            aria-label={surah?.name ?? `سورة ${surahId}`}
+            className="mt-3 text-center leading-none text-ink"
+          >
+            <span aria-hidden="true" className="font-surah block text-[64px] leading-[1.2]">
+              {surahNameGlyph(surahId)}
+            </span>
           </h1>
           <p className="tnum mt-1 text-center text-[13px] text-muted">سورة {surahId} من 114</p>
 
@@ -159,7 +157,15 @@ export default function PlayerPage() {
             </div>
           )}
         </div>
-      </main>
+        </main>
+
+        {/* The desk gets a standing list; the phone gets the peek sheet. */}
+        {wide && (
+          <aside className="flex shrink-0 flex-col border-e border-line lg:order-1 lg:w-[360px]">
+            <SurahColumn current={surahId} sizes={sizes} onPick={pickSurah} />
+          </aside>
+        )}
+      </div>
 
       <BottomBar
         surahName={surah?.name ?? `سورة ${surahId}`}
@@ -173,19 +179,29 @@ export default function PlayerPage() {
         onCloseDetails={() => setDetailsOpen(false)}
       />
 
-      <Sheet title="السور" open={sheet === 'surahs'} onClose={close}>
-        <SurahSheet open={sheet === 'surahs'} current={surahId} sizes={sizes} onPick={pickSurah} />
-      </Sheet>
+      <SurahSheet
+        open={sheet === 'surahs'}
+        onClose={close}
+        current={surahId}
+        sizes={sizes}
+        onPick={pickSurah}
+      />
 
-      <Sheet title="القرّاء" open={sheet === 'reciters'} onClose={close}>
-        <ReciterSheet reciters={reciters} current={reciter?.id} onPick={pickReciter} />
-      </Sheet>
+      <ReciterSheet
+        open={sheet === 'reciters'}
+        onClose={close}
+        reciters={reciters}
+        current={reciter?.id}
+        onPick={pickReciter}
+      />
 
       <MenuSheet
         open={sheet === 'menu'}
         onClose={close}
         theme={theme}
         onTheme={setTheme}
+        reciterName={reciter?.name ?? 'اختر قارئاً'}
+        onOpenReciters={() => openSheet('reciters')}
         onOpenAbout={() => open('about')}
         onOpenPrivacy={() => open('privacy')}
       />

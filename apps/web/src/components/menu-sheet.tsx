@@ -20,6 +20,8 @@ export function MenuSheet({
   onClose,
   theme,
   onTheme,
+  reciterName,
+  onOpenReciters,
   onOpenAbout,
   onOpenPrivacy,
 }: {
@@ -27,12 +29,22 @@ export function MenuSheet({
   onClose: () => void;
   theme: Theme;
   onTheme: (theme: Theme) => void;
+  reciterName: string;
+  onOpenReciters: () => void;
   onOpenAbout: () => void;
   onOpenPrivacy: () => void;
 }) {
   return (
     <Sheet title="الإعدادات" open={open} onClose={onClose} size="auto">
       <div className="pb-3">
+        <button type="button" onClick={onOpenReciters} className={row}>
+          <span className="flex items-center gap-2">
+            <span>القارئ</span>
+            <span className="text-[13px] text-muted">{reciterName}</span>
+          </span>
+          <Icon name="chevron-left" className="h-4 w-4 text-muted" />
+        </button>
+
         <div className="flex h-14 items-center justify-between px-5">
           <span className="text-[15px]">المظهر</span>
           <div

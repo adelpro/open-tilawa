@@ -1,4 +1,4 @@
-import { TrackType } from './track-type';
+import type { TrackType } from './track-type';
 
 export type TorrentInfo = {
   magnetURI: string;

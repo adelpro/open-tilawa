@@ -6,10 +6,12 @@ export type IconName =
   | 'playlist'
   | 'wifi'
   | 'chevron-up'
+  | 'chevron-down'
   | 'chevron-left'
   | 'chevron-right'
   | 'dots'
   | 'close'
+  | 'search'
   | 'play'
   | 'pause';
 
@@ -42,6 +44,7 @@ const GLYPHS: Record<IconName, ReactElement> = {
     </>
   ),
   'chevron-up': <path {...STROKE} d="M6 15l6-6 6 6" />,
+  'chevron-down': <path {...STROKE} d="M6 9l6 6 6-6" />,
   'chevron-left': <path {...STROKE} d="M15 5l-7 7 7 7" />,
   'chevron-right': <path {...STROKE} d="M9 5l7 7-7 7" />,
   dots: (
@@ -52,6 +55,12 @@ const GLYPHS: Record<IconName, ReactElement> = {
     </>
   ),
   close: <path {...STROKE} d="M6 6l12 12M18 6L6 18" />,
+  search: (
+    <>
+      <circle {...STROKE} cx="11" cy="11" r="6.5" />
+      <path {...STROKE} d="M20 20l-4.4-4.4" />
+    </>
+  ),
   play: <path d="M8 5.5v13l11-6.5z" fill="currentColor" />,
   pause: <path d="M8 5h3v14H8zM13 5h3v14h-3z" fill="currentColor" />,
 };

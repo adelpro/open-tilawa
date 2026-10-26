@@ -8,8 +8,15 @@ import Icon from '@/components/icons';
 export default function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
   return (
     <header className="shrink-0 border-b border-line">
-      <div className="mx-auto flex h-14 w-full max-w-[520px] items-center justify-between px-4">
-        <span className="font-display text-[18px] font-semibold leading-none text-ink">تلاوة</span>
+      <div className="lg:pe-[360px]">
+        <div className="mx-auto flex h-14 w-full max-w-[520px] items-center justify-between px-4">
+        <img
+          src="/images/icon.png"
+          alt="تلاوة"
+          width={54}
+          height={26}
+          className="brand-mark h-[26px] w-auto"
+        />
 
         <button
           type="button"
@@ -19,7 +26,8 @@ export default function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
           className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink active:bg-line"
         >
           <Icon name="dots" />
-        </button>
+          </button>
+        </div>
       </div>
     </header>
   );
