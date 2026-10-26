@@ -6,9 +6,9 @@ import dynamic from 'next/dynamic';
 import React, { useEffect } from 'react';
 
 import PwaUpdater from '@/components/pwa-updater';
-import { RECITERS } from '@/constants';
 import { selectedReciterAtom } from '@/jotai/atom';
 import { saveState } from '@/hooks/use-persistence';
+import { useReciters } from '@/hooks/use-reciters';
 import { Reciter } from '@/types';
 
 import ReciterSelector from '../../../components/reciter-selector';
@@ -20,12 +20,14 @@ export default function ReciterPage({ id }: Props) {
   });
   const setSelectedReciter = useSetAtom(selectedReciterAtom);
 
+  const { reciters } = useReciters();
+
   useEffect(() => {
     if (!id) {
       setSelectedReciter(undefined);
       return;
     }
-    const selectedReciter: Reciter | undefined = RECITERS.find(
+    const selectedReciter: Reciter | undefined = reciters.find(
       (r) => r.id === Number(id)
     );
     if (!selectedReciter) {
@@ -34,7 +36,7 @@ export default function ReciterPage({ id }: Props) {
     }
     setSelectedReciter(selectedReciter);
     if (selectedReciter) saveState({ reciterId: selectedReciter.id });
-  }, [id, setSelectedReciter]);
+  }, [id, reciters, setSelectedReciter]);
 
   return (
     <div className="flex w-full items-center justify-center p-2 md:p-5">

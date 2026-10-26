@@ -1,4 +1,5 @@
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { MeModule } from './me/me.module';
 import { SeedersModule } from './seeders/seeders.module';
 import { ToolsModule } from './tools/tools.module';
+import { StatusModule } from './status/status.module';
 import { TurnsModule } from './turns/turns.module';
 import { RecitersModule } from './reciters/reciters.module';
 import { TwoFaModule } from './two-fa/two-fa.module';
@@ -23,6 +25,7 @@ import { envValidate } from './config/env/env.validate';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}`, '.env'],
@@ -36,6 +39,7 @@ import { envValidate } from './config/env/env.validate';
     MeModule,
     SeedersModule,
     ToolsModule,
+    StatusModule,
     TurnsModule,
     RecitersModule,
     TwoFaModule,
@@ -44,10 +48,7 @@ import { envValidate } from './config/env/env.validate';
     CsrfModule,
   ],
   controllers: [HealthController],
-  providers: [
-    { provide: APP_GUARD, useClass: TilawaThrottlerGuard },
-    CsrfMiddleware,
-  ],
+  providers: [{ provide: APP_GUARD, useClass: TilawaThrottlerGuard }, CsrfMiddleware],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

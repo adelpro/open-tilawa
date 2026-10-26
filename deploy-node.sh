@@ -81,7 +81,24 @@ services:
     volumes:
       - /opt/tilawa-seeder/data:/data/torrents
     restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
 EOF
+
+# Opt-in remote updates: watchtower pulls the published image and recreates the
+# node. Label-scoped, so it never touches anything else on the host.
+if [[ "${WATCHTOWER:-0}" == "1" ]]; then
+  cat >> /opt/tilawa-seeder/docker-compose.yml <<EOF
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: tilawa-watchtower
+    command: --label-enable --interval 600 --cleanup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+EOF
+fi
     cd /opt/tilawa-seeder
     docker compose pull
     docker compose up -d

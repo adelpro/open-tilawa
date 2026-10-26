@@ -2670,3 +2670,35 @@ select:focus {
     display: none;
   }
 }
+
+/* ---------- status timeline ---------- */
+.timeline {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 18px;
+  margin-top: var(--space-2);
+}
+.timeline__bar {
+  flex: 1 1 0;
+  min-width: 3px;
+  border-radius: 2px;
+  background: var(--hairline);
+}
+.timeline__bar[data-state='up'] {
+  background: var(--success);
+}
+.timeline__bar[data-state='partial'] {
+  background: var(--warning, #b45309);
+}
+.timeline__bar[data-state='down'] {
+  background: var(--error);
+}
+.timeline__bar[data-state='empty'] {
+  background: var(--hairline);
+}
+.grid--cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}

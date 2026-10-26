@@ -697,6 +697,63 @@
         "tags": ["Tools"]
       }
     },
+    "/api/status": {
+      "get": {
+        "operationId": "StatusController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Status"]
+      }
+    },
+    "/api/status/check": {
+      "post": {
+        "operationId": "StatusController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Status"]
+      }
+    },
+    "/api/status/services": {
+      "post": {
+        "operationId": "StatusController_add",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Status"]
+      }
+    },
+    "/api/status/services/{id}": {
+      "delete": {
+        "operationId": "StatusController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Status"]
+      }
+    },
     "/api/turns": {
       "get": {
         "operationId": "TurnsController_list",
@@ -958,6 +1015,18 @@
           }
         },
         "tags": ["Settings"]
+      }
+    },
+    "/api/public/reciters": {
+      "get": {
+        "operationId": "PublicRecitersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["PublicReciters"]
       }
     },
     "/api/2fa/enable": {

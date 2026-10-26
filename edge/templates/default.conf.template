@@ -1,10 +1,16 @@
+# Upstreams are resolved per request: nginx otherwise caches the container IP at
+# startup, and recreating `web` (every deploy) leaves the edge answering 502
+# until it is restarted.
+resolver 127.0.0.11 valid=10s ipv6=off;
+
 # Web frontend (default) — serves the React/Vite SPA
 server {
   listen 80 default_server;
   server_name _ tilawa.quran.us.kg;
 
   location / {
-    proxy_pass http://web:80;
+    set $web_upstream http://web:80;
+    proxy_pass $web_upstream;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -23,7 +29,8 @@ server {
   server_name tracker.quran.us.kg;
 
   location / {
-    proxy_pass http://tracker:${TRACKER_PORT};
+    set $tracker_upstream http://tracker:${TRACKER_PORT};
+    proxy_pass $tracker_upstream;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
@@ -36,21 +43,13 @@ server {
   }
 
   location /stats {
-    proxy_pass http://tracker:${TRACKER_PORT}/stats;
+    set $tracker_stats http://tracker:${TRACKER_PORT}/stats;
+    proxy_pass $tracker_stats;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
   }
-}
-
-# Retired tracker alias: its DNS record still resolves until it is deleted in
-# Cloudflare. Answer explicitly rather than letting the default (web) server
-# hand a torrent client an HTML page.
-server {
-  listen 80;
-  server_name trackerf.quran.us.kg;
-  return 410;
 }
 
 # Seeder admin UI
@@ -59,7 +58,8 @@ server {
   server_name admin.tilawa.quran.us.kg;
 
   location / {
-    proxy_pass http://seeder:8085;
+    set $seeder_upstream http://seeder:8085;
+    proxy_pass $seeder_upstream;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

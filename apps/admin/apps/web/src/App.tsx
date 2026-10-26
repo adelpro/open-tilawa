@@ -18,6 +18,7 @@ import { Setup } from './routes/Setup';
 import { About } from './routes/About';
 import { Help } from './routes/Help';
 import { Tools } from './routes/Tools';
+import { Status } from './routes/Status';
 import { Privacy } from './routes/Privacy';
 import { Terms } from './routes/Terms';
 import { Account } from './routes/Account';
@@ -316,6 +317,7 @@ function Screen({
   if (first === 'reciters') return <Reciters />;
   if (first === 'account') return <Account />;
   if (first === 'tools') return <Tools />;
+  if (first === 'status') return <Status />;
   if (first === 'help') return <Help />;
   const consolePath = consolePathFor(role);
   if (first === 'admin' && consolePath === '/dashboard/admin') {

@@ -91,11 +91,20 @@ A Docker socket is root-equivalent on the host. If that is not acceptable on a
 given installation, leave `SEEDER_UPDATE` unset — the button answers 503 and the
 node is updated by hand.
 
-**From the node itself** (registry image — the fleet path):
+**From the node itself** (registry image — the fleet path). Two options:
+
+1. Manual, on schedule:
+2. Automatic: re-run `deploy-node.sh` once with `WATCHTOWER=1` (or add the
+   service by hand). It runs `containrrr/watchtower --label-enable --interval
+   600`, scoped to the seeder label, so a new `latest` image recreates the node
+   and nothing else on the host is touched.
 
 ```bash
 cd /opt/tilawa-seeder && docker compose pull && docker compose up -d
 ```
+
+The dashboard's own Update button remains local-only: it drives the Docker socket
+of the host the admin runs on, not a remote node's.
 
 Tag a release (`v1.21.0`) to publish `ghcr.io/adelpro/open-tilawa-seeder:1.21.0`
 (multi-arch: amd64 + arm64) through the `Publish Seeder Image` workflow; nodes
@@ -123,7 +132,7 @@ The tracker list lives in the dashboard (Reciters → **Trackers**): one `ws://`
 `wss://` URL per line. Every magnet the dashboard builds — reciter save, catalogue
 import, the torrent tool — announces to it, and saving rewrites existing
 catalogue magnets so no row keeps an old list. `tracker.quran.us.kg` is the one
-hostname; the old `trackerf` alias is retired and answers 410.
+hostname; the old `trackerf` alias has been removed from DNS and the edge.
 
 ## Publishing a release
 

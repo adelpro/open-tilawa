@@ -16,6 +16,7 @@ describe('navigation by role', () => {
         'nav.turns',
         'nav.torrents',
         'nav.reciters',
+        'nav.status',
         'nav.tools',
         'nav.account',
         'nav.help',

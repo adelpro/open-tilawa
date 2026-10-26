@@ -3,7 +3,7 @@ import { useSetAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 
-import { RECITERS } from "@/constants";
+import { useReciters } from "@/hooks/use-reciters";
 import { selectedReciterAtom } from "@/jotai/atom";
 import { MagnetlinkSource, Reciter } from "@/types";
 import { cn } from "@/utils/cn";
@@ -12,10 +12,6 @@ type Props = {
   setIsOpen: (isOpen: boolean) => void;
 };
 
-// Builds once from the current list: every source that has at least one reciter.
-const AVAILABLE_SOURCES: MagnetlinkSource[] = Array.from(
-  new Set(RECITERS.map((reciter) => reciter.source)),
-);
 
 /** True when a reciter can play over plain HTTP without peers: an itqan playlist, or web seeds in the magnet. */
 const hasHttpFallback = (reciter: Reciter): boolean =>
@@ -31,15 +27,22 @@ export default function RecitersList({ setIsOpen }: Props) {
   const [httpFilter, setHttpFilter] = useState<boolean>(false);
 
   const setSelectedReciter = useSetAtom(selectedReciterAtom);
+  const { reciters } = useReciters();
+
+  // The source filter only offers badges the current list actually has.
+  const availableSources = useMemo(
+    () => Array.from(new Set(reciters.map((reciter) => reciter.source))),
+    [reciters],
+  );
 
   const filteredReciters = useMemo(() => {
-    return RECITERS.filter((reciter) => reciter.name.includes(searchTerm))
+    return reciters.filter((reciter) => reciter.name.includes(searchTerm))
       .filter(
         (reciter) => sourceFilter === "all" || reciter.source === sourceFilter,
       )
       .filter((reciter) => !httpFilter || hasHttpFallback(reciter))
       .sort((a, b) => a.name.localeCompare(b.name, "ar"));
-  }, [searchTerm, sourceFilter, httpFilter]);
+  }, [reciters, searchTerm, sourceFilter, httpFilter]);
 
   const selectedReciterClickHandler = (reciter: Reciter) => {
     setIsOpen(false);
@@ -72,7 +75,7 @@ export default function RecitersList({ setIsOpen }: Props) {
           >
             الكل
           </button>
-          {AVAILABLE_SOURCES.map((source) => (
+          {availableSources.map((source) => (
             <button
               key={source}
               onClick={() => setSourceFilter(source)}

@@ -45,8 +45,8 @@ each piece does, which port it listens on, and how data moves between them.
 - **Binding:** `127.0.0.1:8083` on the host, on the compose network as `tracker`.
 - **Public name:** `tracker.quran.us.kg`, one name, through a Cloudflare tunnel
   with `enableWebsockets: true`; the edge proxies to the tracker with
-  `Upgrade`/`Connection` headers preserved. The retired `trackerf` hostname
-  answers 410 until its DNS record is deleted.
+  `Upgrade`/`Connection` headers preserved. The old `trackerf` hostname is gone
+  (DNS record deleted).
 - **State:** none. It is stateless; no volume, no backup, safe to recreate.
 - **Stats:** `/stats` is public on the tracker host; it must stay behind the
   proxy rather than published directly.
@@ -104,7 +104,9 @@ each piece does, which port it listens on, and how data moves between them.
   the reciter catalogue, the tracker list, and a torrent ↔ magnet tool.
 - **Software updates:** `POST /api/seeders/:id/update` runs a fixed compose pair
   against the host daemon through a mounted socket. It is admin-only,
-  CSRF-guarded, audited, and only works for the **local** node.
+  CSRF-guarded, audited, and only works for the **local** node. Remote nodes
+  update themselves: `docker compose pull && up -d`, or Watchtower with
+  `--label-enable` (`WATCHTOWER=1` in `deploy-node.sh`).
 - **Roles:** every ops route requires `admin` (satisfied by `super_admin`);
   sessions are cookie-based with CSRF double-submit.
 
