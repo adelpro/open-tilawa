@@ -1,6 +1,7 @@
 import Icon from '@/components/icons';
 import type { StreamSource } from '@/components/stream-sheet';
 import { cn } from '@/utils/cn';
+import { shouldShowRing } from '@/utils/stream-ring';
 
 const SOURCE_LABEL: Record<StreamSource, string> = {
   connected: 'متصل عبر الأقران',
@@ -31,7 +32,8 @@ export default function PlayerFooter({
   onOpenReciters: () => void;
   onOpenStream: () => void;
 }) {
-  const showRing = source !== 'http' && progress > 0.01 && progress < 0.995;
+  const showRing = shouldShowRing(source);
+  const hasProgress = progress > 0.005;
   const percent = Math.round(progress * 100);
   const ring = 2 * Math.PI * 20;
   return (
@@ -65,7 +67,7 @@ export default function PlayerFooter({
           type="button"
           onClick={onOpenStream}
           aria-label={
-            showRing ? `${SOURCE_LABEL[source]}، التنزيل ${percent}%` : SOURCE_LABEL[source]
+            hasProgress ? `${SOURCE_LABEL[source]}، التنزيل ${percent}%` : SOURCE_LABEL[source]
           }
           aria-haspopup="dialog"
           className={cn(
@@ -79,14 +81,21 @@ export default function PlayerFooter({
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 h-11 w-11 -rotate-90 text-ink"
             >
-              <circle cx="22" cy="22" r="20" fill="none" stroke="var(--line)" strokeWidth="1.5" />
+              <circle
+                cx="22"
+                cy="22"
+                r="20"
+                fill="none"
+                stroke="rgba(17, 17, 17, 0.14)"
+                strokeWidth="2"
+              />
               <circle
                 cx="22"
                 cy="22"
                 r="20"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeDasharray={ring}
                 strokeDashoffset={ring * (1 - progress)}

@@ -30,8 +30,8 @@ export default function NavSheet({
 }) {
   return (
     <Sheet title="القائمة" open={open} onClose={onClose} size="auto">
-      <div className="border-b border-line pb-4">
-        <div className="flex h-10 items-center justify-between px-5">
+      <div className="border-b border-line pb-3">
+        <div className="flex h-9 items-center justify-between px-5">
           <span className="text-[13px] text-muted">مؤقّت النوم</span>
           {sleepActive && (
             <span className="tnum text-[13px] font-semibold text-ink">
@@ -39,7 +39,7 @@ export default function NavSheet({
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 px-5 pt-1">
+        <div className="flex flex-wrap gap-1.5 px-5 pt-0.5">
           {SLEEP_OPTIONS.map((minutes) => {
             const active = (minutes === 0 && !sleepActive) || (minutes > 0 && sleepActive);
             return (
@@ -49,7 +49,7 @@ export default function NavSheet({
                 onClick={() => onSleep(minutes)}
                 aria-pressed={minutes === 0 ? !sleepActive : undefined}
                 className={cn(
-                  'h-9 rounded-full border px-3 text-[13px] transition-colors',
+                  'h-8 rounded-full border px-3 text-[13px] transition-colors',
                   minutes === 0 && !sleepActive
                     ? 'border-ink bg-ink font-semibold text-invert'
                     : 'border-line text-ink hover:border-ink/40',
@@ -72,7 +72,7 @@ export default function NavSheet({
               onClick={() => onNavigate(item.route)}
               aria-current={current ? 'page' : undefined}
               className={cn(
-                'flex h-14 w-full items-center justify-between px-5 text-start text-[15px] text-ink transition-colors hover:bg-line active:bg-line',
+                'flex h-11 w-full items-center justify-between px-5 text-start text-[15px] text-ink transition-colors hover:bg-line active:bg-line',
                 current && 'font-semibold',
               )}
             >
