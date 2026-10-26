@@ -2651,7 +2651,7 @@ select:focus {
     padding: var(--space-3);
     border: 1px solid var(--hairline, rgba(0, 0, 0, 0.1));
     border-radius: var(--radius-sm, 8px);
-    background: var(--color-surface, #fff);
+    background: var(--canvas-parchment);
   }
   .table-scroll > .table td {
     padding: var(--space-1) 0;

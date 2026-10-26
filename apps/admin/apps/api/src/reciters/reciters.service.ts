@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { SQLITE_DB } from '../store/store.module';
 import type { Db } from '@tilawa-admin/core';
+import { RECITER_NAMES_AR } from './reciter-names';
 
 export interface Reciter {
   id: number;
   name: string;
+  /** Arabic display name; null until seeded or entered in the console. */
+  nameAr: string | null;
   riwaya: string;
   infohash: string;
   magnet: string;
@@ -33,6 +36,17 @@ export class RecitersService {
     const cols = (this.db.pragma('table_info(reciters)') as { name: string }[]).map((c) => c.name);
     if (!cols.includes('size_bytes'))
       this.db.exec('ALTER TABLE reciters ADD COLUMN size_bytes INTEGER');
+    if (!cols.includes('name_ar')) this.db.exec('ALTER TABLE reciters ADD COLUMN name_ar TEXT');
+
+    this.seedArabicNames();
+  }
+
+  /** Fill only the rows nobody has named yet; an edit in the console wins. */
+  private seedArabicNames(): void {
+    const update = this.db.prepare(
+      'UPDATE reciters SET name_ar = ? WHERE lower(infohash) = ? AND name_ar IS NULL',
+    );
+    for (const [hash, name] of Object.entries(RECITER_NAMES_AR)) update.run(name, hash);
   }
 
   list(): Reciter[] {
@@ -42,6 +56,7 @@ export class RecitersService {
       .map((r: any) => ({
         id: r.id,
         name: r.name,
+        nameAr: (r.name_ar as string | null) ?? null,
         riwaya: r.riwaya,
         infohash: r.infohash,
         magnet: r.magnet,
@@ -123,6 +138,7 @@ export class RecitersService {
     return {
       id: r.id,
       name: r.name,
+      nameAr: (r.name_ar as string | null) ?? null,
       riwaya: r.riwaya,
       infohash: r.infohash,
       magnet: r.magnet,

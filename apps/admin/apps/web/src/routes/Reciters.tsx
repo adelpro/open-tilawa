@@ -31,6 +31,7 @@ interface PushPlan {
 interface Reciter {
   id: number;
   name: string;
+  nameAr: string | null;
   riwaya: string;
   infohash: string;
   magnet: string;
@@ -650,7 +651,12 @@ export function Reciters(): ReactElement {
                 {reciters.map((reciter) => (
                   <tr key={reciter.id}>
                     <td>
-                      <span className="row__label">{reciter.name}</span>
+                      <span className="row__label">{reciter.nameAr ?? reciter.name}</span>
+                      {reciter.nameAr ? (
+                        <span className="row__id" dir="ltr">
+                          {reciter.name}
+                        </span>
+                      ) : null}
                     </td>
                     <td>
                       <Chip tone="info">{reciter.riwaya}</Chip>
