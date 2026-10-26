@@ -49,7 +49,7 @@
   },
   "dependenciesMeta": {
     "better-sqlite3": {
-      "built": true
+      "built": false
     },
     "esbuild": {
       "built": true
