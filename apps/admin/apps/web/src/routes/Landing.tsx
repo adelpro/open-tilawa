@@ -5,6 +5,7 @@ import { useI18n } from '../lib/i18n';
 import { Icon } from '../components/icons';
 import type { IconName } from '../components/icons';
 import { FeatherMark } from '../components/FeatherMark';
+import { BrandLabel } from '../components/BrandLabel';
 import { Button } from '../components/Button';
 import { LocaleSwitch } from '../components/LocaleSwitch';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -19,7 +20,7 @@ import { Footer } from '../components/Footer';
  * this screen renders the same copy the prerenderer writes, in both languages, and
  * `/` shows it to anyone who is not signed in.
  */
-export function Landing(): ReactElement {
+export function Landing({ version }: { version: string | null }): ReactElement {
   const { t } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -50,7 +51,7 @@ export function Landing(): ReactElement {
         aria-label="Main navigation"
       >
         <span className="landing__nav-brand">
-          <FeatherMark className="landing__nav-dot" /> {t('app.brand')}
+          <BrandLabel version={version} />
         </span>
         <button
           type="button"

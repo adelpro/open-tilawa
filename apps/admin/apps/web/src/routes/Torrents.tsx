@@ -12,6 +12,16 @@ import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import type { Seeder, SeederInventory } from '../lib/types-seeders';
 
+interface Reciter {
+  id: number;
+  name: string;
+  riwaya: string;
+  infohash: string;
+  magnet: string;
+  fileCount: number;
+  sizeBytes: number | null;
+}
+
 /**
  * Torrents live on the seeders, not in this database: everything here is a
  * proxy to the selected node's admin API, so what the screen shows is what the
@@ -31,6 +41,9 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
   const [mode, setMode] = useState<'magnet' | 'file'>('magnet');
   const [magnet, setMagnet] = useState('');
   const [torrentPath, setTorrentPath] = useState('');
+  const [catalogue, setCatalogue] = useState<Reciter[] | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [catalogueBusy, setCatalogueBusy] = useState<string | null>(null);
 
   const loadSeeders = useCallback(async () => {
     try {
@@ -58,6 +71,14 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
     [t],
   );
 
+  const loadCatalogue = useCallback(async () => {
+    try {
+      setCatalogue(await api<Reciter[]>('/reciters'));
+    } catch {
+      setCatalogue([]);
+    }
+  }, []);
+
   const loadFiles = useCallback(async (id: number) => {
     try {
       setFiles((await api<{ files: string[] }>(`/seeders/${id}/files`)).files);
@@ -74,7 +95,8 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
     if (seederId === null) return;
     void loadInventory(seederId);
     void loadFiles(seederId);
-  }, [seederId, loadInventory, loadFiles]);
+    void loadCatalogue();
+  }, [seederId, loadInventory, loadFiles, loadCatalogue]);
 
   async function addTorrent(): Promise<void> {
     if (seederId === null) return;
@@ -114,6 +136,56 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
       setBusy(null);
     }
   }
+
+  async function addPicked(): Promise<void> {
+    if (seederId === null || !catalogue) return;
+    setCatalogueBusy('add');
+    setError(null);
+    try {
+      for (const infohash of picked) {
+        const reciter = catalogue.find((row) => row.infohash === infohash);
+        if (!reciter) continue;
+        await api(`/seeders/${seederId}/torrents`, {
+          method: 'POST',
+          body: { magnet: reciter.magnet || `magnet:?xt=urn:btih:${reciter.infohash}` },
+        });
+      }
+      setPicked([]);
+      setMessage(t('torrents.catalogueAdded', { count: String(picked.length) }));
+      await loadInventory(seederId);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('torrents.addFailed'));
+    } finally {
+      setCatalogueBusy(null);
+    }
+  }
+
+  async function importCatalogue(): Promise<void> {
+    if (seederId === null) return;
+    setCatalogueBusy('import');
+    setError(null);
+    try {
+      const result = await api<{ added: number; sized: number }>('/reciters/import', {
+        method: 'POST',
+        body: { seederId },
+      });
+      setMessage(t('torrents.importDone', { added: String(result.added) }));
+      await loadCatalogue();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('torrents.importFailed'));
+    } finally {
+      setCatalogueBusy(null);
+    }
+  }
+
+  const heldHashes = new Set(
+    (inventory?.torrents ?? []).map((torrent) => torrent.infoHash.toLowerCase()),
+  );
+  const missing = (catalogue ?? []).filter((row) => !heldHashes.has(row.infohash.toLowerCase()));
+  const pickedSize = (catalogue ?? [])
+    .filter((row) => picked.includes(row.infohash))
+    .reduce((sum, row) => sum + (row.sizeBytes ?? 0), 0);
+  const selectedNode = seeders?.find((row) => row.id === seederId) ?? null;
 
   if (!user) return <p className="body muted">{t('torrents.signInRequired')}</p>;
 
@@ -304,6 +376,102 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
           )}
         </Panel>
       )}
+      {seederId !== null && catalogue ? (
+        <Panel>
+          <div className="spread" style={{ marginBottom: 'var(--space-3)' }}>
+            <div>
+              <h2 className="group-title">{t('torrents.catalogue')}</h2>
+              <p className="body muted">{t('torrents.catalogueHint')}</p>
+            </div>
+            <Button
+              variant="tertiary"
+              onClick={() => void importCatalogue()}
+              busy={catalogueBusy === 'import'}
+            >
+              {t('torrents.importCatalogue')}
+            </Button>
+          </div>
+
+          {catalogue.length === 0 ? (
+            <p className="body muted">{t('torrents.catalogueEmpty')}</p>
+          ) : missing.length === 0 ? (
+            <p className="body muted">{t('torrents.catalogueComplete')}</p>
+          ) : (
+            <div className="stack">
+              <div className="table-scroll">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{t('torrents.pick')}</th>
+                      <th scope="col">{t('torrents.name')}</th>
+                      <th scope="col">{t('reciters.riwaya')}</th>
+                      <th scope="col">{t('torrents.size')}</th>
+                      <th scope="col">{t('torrents.state')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {catalogue.map((row) => {
+                      const onNode = heldHashes.has(row.infohash.toLowerCase());
+                      return (
+                        <tr key={row.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              aria-label={row.name}
+                              disabled={onNode}
+                              checked={onNode || picked.includes(row.infohash)}
+                              onChange={(event) =>
+                                setPicked((current) =>
+                                  event.target.checked
+                                    ? [...current, row.infohash]
+                                    : current.filter((hash) => hash !== row.infohash),
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <span className="row__label">{row.name}</span>
+                            <br />
+                            <span className="row__id">{row.infohash.slice(0, 16)}…</span>
+                          </td>
+                          <td>{row.riwaya}</td>
+                          <td className="num">{bytes(row.sizeBytes, locale)}</td>
+                          <td>
+                            <Chip tone={onNode ? 'ok' : 'notice'}>
+                              {t(onNode ? 'torrents.onNode' : 'torrents.offNode')}
+                            </Chip>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="cluster">
+                <Button
+                  onClick={() => void addPicked()}
+                  busy={catalogueBusy === 'add'}
+                  disabled={picked.length === 0}
+                >
+                  {t('torrents.addSelected', { count: String(picked.length) })}
+                </Button>
+                <span className="fine-print">
+                  {t('torrents.selectedSummary', {
+                    size: bytes(pickedSize, locale),
+                    free: bytes(selectedNode?.freeBytes ?? null, locale),
+                  })}
+                </span>
+              </div>
+              {selectedNode?.freeBytes !== null &&
+              selectedNode?.freeBytes !== undefined &&
+              pickedSize > selectedNode.freeBytes ? (
+                <Notice tone="bad">{t('torrents.diskWarn')}</Notice>
+              ) : null}
+            </div>
+          )}
+        </Panel>
+      ) : null}
     </div>
   );
 }

@@ -17,6 +17,7 @@ import type { Catalogue } from './en';
  *   Latin digits throughout, matching the dates and counts rendered by `Intl`.
  */
 export const ar: Catalogue = {
+  'app.brandShort': 'الإدارة',
   'app.brand': 'تلاوة Admin',
   'app.loading': 'جارٍ التحميل…',
 
@@ -304,6 +305,30 @@ export const ar: Catalogue = {
   'reciters.skip.no_credentials': 'لا بيانات اعتماد مخزّنة',
   'reciters.skip.low_space': 'المساحة المتاحة لا تكفي',
   'reciters.skip.unreachable': 'تعذّر الوصول',
+
+  'reciters.size': 'الحجم (GB)',
+  'reciters.sizeHint': 'يُستخدم لتخطيط المساحة قبل الإرسال؛ اتركه فارغًا إن كان مجهولًا.',
+  'reciters.edit': 'تعديل',
+  'reciters.editTitle': 'تعديل القارئ',
+  'reciters.updated': 'حُدّث القارئ.',
+  'reciters.updateFailed': 'تعذّر تحديث القارئ.',
+
+  'torrents.catalogue': 'الفهرس',
+  'torrents.catalogueHint':
+    'فهرس القرّاء هو المصدر. علّم ما ينبغي أن يحمله هذا الخادم؛ يُضاف من رابط الفهرس المغناطيسي.',
+  'torrents.catalogueEmpty': 'الفهرس فارغ — استورده من هذا الخادم أو أضف قرّاء من صفحة القرّاء.',
+  'torrents.catalogueComplete': 'هذا الخادم يحمل كل إصدارات الفهرس.',
+  'torrents.importCatalogue': 'استورد هذا الخادم إلى الفهرس',
+  'torrents.importDone': 'مُلئ الفهرس من الخادم — أُضيف {added}.',
+  'torrents.importFailed': 'تعذّر استيراد محتوى الخادم.',
+  'torrents.pick': 'اختيار',
+  'torrents.state': 'على الخادم',
+  'torrents.onNode': 'على الخادم',
+  'torrents.offNode': 'ليس على الخادم',
+  'torrents.addSelected': 'أضف المحدد ({count})',
+  'torrents.selectedSummary': 'المحدد {size} · المتاح على الخادم {free}',
+  'torrents.diskWarn': 'المحدد أكبر من المساحة المتاحة التي يعلنها الخادم.',
+  'torrents.catalogueAdded': 'أُضيف {count} قارئًا إلى الخادم.',
 
   'footer.copy': '© تلاوة. جميع الحقوق محفوظة.',
 

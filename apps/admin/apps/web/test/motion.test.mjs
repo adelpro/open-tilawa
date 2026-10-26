@@ -89,7 +89,7 @@ describe('targets', () => {
 
 describe('the frame survives loading', () => {
   it('renders the shell, not the word, while the session resolves', () => {
-    assert.match(app, /if \(loading\) return <ShellSkeleton \/>/);
+    assert.match(app, /if \(loading\) return <ShellSkeleton[^>]*\/>/);
     assert.match(app, /function ShellSkeleton/);
     // The old full-page word is gone from the shell.
     assert.equal(/<div className="auth">\s*<p className="body muted">/.test(app), false);

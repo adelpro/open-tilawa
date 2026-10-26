@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AuditRepository } from '@tilawa-admin/core';
 import { RecitersService } from '../reciters/reciters.service';
 import { SeedersService } from '../seeders/seeders.service';
@@ -91,6 +91,51 @@ export class CataloguePushService {
     }
 
     return { ...plan, applied: results };
+  }
+
+  /**
+   * Fill the catalogue from what a node already holds.
+   *
+   * This is the one honest source of a release's size: the seeder knows it, and
+   * a hand-typed row does not. Existing rows are not overwritten — only a
+   * missing size is filled — because the catalogue is edited deliberately.
+   */
+  async importFrom(seederId: number): Promise<{ added: number; sized: number; catalogue: number }> {
+    const seeder = this.seeders.get(seederId);
+    if (!seeder) throw new NotFoundException('seeder not found');
+    const inventory = await this.seeders.inventory(seederId);
+    const existing = new Map(this.reciters.list().map((r) => [r.infohash.toLowerCase(), r]));
+    let added = 0;
+    let sized = 0;
+    for (const torrent of inventory.torrents) {
+      const key = torrent.infoHash.toLowerCase();
+      const row = existing.get(key);
+      if (!row) {
+        this.reciters.add({
+          name: torrent.name,
+          riwaya: 'Hafs',
+          infohash: torrent.infoHash,
+          magnet: `magnet:?xt=urn:btih:${torrent.infoHash}`,
+          fileCount: torrent.files,
+          sizeBytes: torrent.size || null,
+        });
+        added += 1;
+        continue;
+      }
+      if (row.sizeBytes === null && torrent.size > 0) {
+        this.reciters.update(row.id, { sizeBytes: torrent.size });
+        sized += 1;
+      }
+    }
+    this.audit.record({
+      actorId: null,
+      userId: seederId,
+      action: 'seeder:catalogue_import',
+      target: String(seederId),
+      status: 'ok',
+      after: { added, sized },
+    });
+    return { added, sized, catalogue: this.reciters.list().length };
   }
 
   private async compute(nodeIds?: number[]): Promise<PushPlan> {

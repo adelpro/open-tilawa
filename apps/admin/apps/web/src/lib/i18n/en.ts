@@ -11,6 +11,7 @@
  * changes.
  */
 export const en = {
+  'app.brandShort': 'Admin',
   'app.brand': 'Tilawa Admin',
   'app.loading': 'Loading…',
 
@@ -301,6 +302,31 @@ export const en = {
   'reciters.skip.no_credentials': 'No credentials stored',
   'reciters.skip.low_space': 'Not enough free space',
   'reciters.skip.unreachable': 'Unreachable',
+
+  'reciters.size': 'Size (GB)',
+  'reciters.sizeHint': 'Used to plan disk space before a push; leave empty if unknown.',
+  'reciters.edit': 'Edit',
+  'reciters.editTitle': 'Edit reciter',
+  'reciters.updated': 'Reciter updated.',
+  'reciters.updateFailed': 'Could not update the reciter.',
+
+  'torrents.catalogue': 'Catalogue',
+  'torrents.catalogueHint':
+    'The reciter catalogue is the source of truth. Tick what this node should carry; it is added from its catalogue magnet.',
+  'torrents.catalogueEmpty':
+    'The catalogue is empty — import this node or add reciters on the Reciters screen.',
+  'torrents.catalogueComplete': 'This node already carries every catalogue release.',
+  'torrents.importCatalogue': 'Import this node into the catalogue',
+  'torrents.importDone': 'Catalogue filled from the node — {added} added.',
+  'torrents.importFailed': 'Could not import the node inventory.',
+  'torrents.pick': 'Pick',
+  'torrents.state': 'On node',
+  'torrents.onNode': 'On node',
+  'torrents.offNode': 'Not on node',
+  'torrents.addSelected': 'Add selected ({count})',
+  'torrents.selectedSummary': 'Selected {size} · node free {free}',
+  'torrents.diskWarn': 'The selection is larger than the free space this node reports.',
+  'torrents.catalogueAdded': 'Added {count} reciters to the node.',
 
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 

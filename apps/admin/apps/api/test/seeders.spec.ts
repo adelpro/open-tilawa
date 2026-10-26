@@ -390,4 +390,60 @@ describe('seeder proxy', () => {
       else process.env.CATALOGUE_PUSH_MIN_FREE_BYTES = previous;
     }
   });
+
+  it('fills sizes from a node inventory and is idempotent', async () => {
+    // The fake node holds one torrent (abc123, 1024 bytes); earlier tests put
+    // that infohash in the catalogue without a size, so import sizes it.
+    const res = await agent
+      .post('/api/reciters/import')
+      .set('x-csrf-token', csrf)
+      .send({ seederId })
+      .expect(200);
+    expect(res.body.sized).toBe(1);
+    expect(res.body.added).toBe(0);
+    const { body: catalogue } = await agent.get('/api/reciters').expect(200);
+    const imported = catalogue.find((r: { infohash: string }) => r.infohash === 'abc123');
+    expect(imported.sizeBytes).toBe(1024);
+    const again = await agent
+      .post('/api/reciters/import')
+      .set('x-csrf-token', csrf)
+      .send({ seederId })
+      .expect(200);
+    expect(again.body.added).toBe(0);
+    expect(again.body.sized).toBe(0);
+  });
+
+  it('edits a reciter row, including the size learned from a node', async () => {
+    const { body } = await agent
+      .post('/api/reciters')
+      .set('x-csrf-token', csrf)
+      .send({
+        name: 'Half Known',
+        riwaya: 'Hafs',
+        infohash: 'fff000',
+        magnet: 'magnet:?xt=urn:btih:fff000',
+        fileCount: 10,
+      })
+      .expect(201);
+    expect(body.sizeBytes).toBeNull();
+
+    const patched = await agent
+      .patch(`/api/reciters/${body.id}`)
+      .set('x-csrf-token', csrf)
+      .send({ name: 'Fully Known', sizeBytes: 5 * 1024 ** 3 })
+      .expect(200);
+    expect(patched.body.name).toBe('Fully Known');
+    expect(patched.body.sizeBytes).toBe(5 * 1024 ** 3);
+
+    await agent
+      .patch(`/api/reciters/${body.id}`)
+      .set('x-csrf-token', csrf)
+      .send({ name: ' ' })
+      .expect(400);
+    await agent
+      .patch('/api/reciters/9999')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'x' })
+      .expect(404);
+  });
 });

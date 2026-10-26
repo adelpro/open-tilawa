@@ -1,4 +1,3 @@
-import { FeatherMark } from './components/FeatherMark';
 import { useEffect, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { SessionProvider, useSession } from './lib/session';
@@ -8,6 +7,7 @@ import { navigate, useRouter } from './lib/router';
 import { navItemsFor, consolePathFor } from './lib/nav';
 import type { AppRole } from './lib/nav';
 import { api } from './lib/api';
+import { BrandLabel } from './components/BrandLabel';
 import { SignIn } from './routes/SignIn';
 import { Landing } from './routes/Landing';
 import { SignUp } from './routes/SignUp';
@@ -59,10 +59,25 @@ function Screens(): ReactElement {
   const [first, second] = segments;
   const [menuOpen, setMenuOpen] = useState(false);
   const [setupRequired, setSetupRequired] = useState<boolean | null>(null);
+  const [version, setVersion] = useState<string | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const closeMenu = (): void => setMenuOpen(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    // The released version, for the header label. `/health` is public on
+    // purpose; a failed call just leaves the label without a version.
+    api<{ version?: string }>('/health')
+      .then((health) => {
+        if (!cancelled && health.version) setVersion(health.version);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,13 +189,13 @@ function Screens(): ReactElement {
   // cream page — no brand, no nav, no frame — and then the whole interface appeared at
   // once. The shell is static copy, so it can be rendered before we know who is asking:
   // only the parts that need the account are placeholders. The frame never disappears.
-  if (loading) return <ShellSkeleton />;
+  if (loading) return <ShellSkeleton version={null} />;
 
   // Signed out: the root is the public page, everywhere else is the sign-in form. The
   // landing screen is what the prerendered HTML also contains, so a crawler and a
   // visitor are looking at the same thing.
   if (!user) {
-    if (!first) return <Landing />;
+    if (!first) return <Landing version={version} />;
     if (first === 'about') return <About />;
     if (first === 'help') return <Help />;
     if (first === 'privacy') return <Privacy />;
@@ -209,7 +224,7 @@ function Screens(): ReactElement {
               go('/dashboard')(event);
             }}
           >
-            <FeatherMark className="shell__brand-dot" /> {t('app.brand')}
+            <BrandLabel version={version} />
           </a>
         </div>
         <div className="shell__nav-wrap">
@@ -226,7 +241,7 @@ function Screens(): ReactElement {
             go('/dashboard')(event);
           }}
         >
-          <FeatherMark className="shell__brand-dot" /> {t('app.brand')}
+          <BrandLabel version={version} />
         </a>
         <button
           ref={menuButton}
@@ -257,7 +272,7 @@ function Screens(): ReactElement {
         >
           <div className="shell__drawer-head">
             <span className="shell__brand">
-              <FeatherMark className="shell__brand-dot" /> {t('app.brand')}
+              <BrandLabel version={version} />
             </span>
             <button
               ref={closeButton}
@@ -389,14 +404,14 @@ function AccountBlock({
  * moves when the real interface replaces it, which is the point: a loading state that
  * changes the layout is worse than the wait it covers.
  */
-function ShellSkeleton(): ReactElement {
+function ShellSkeleton({ version }: { version: string | null }): ReactElement {
   const { t } = useI18n();
   return (
     <div className="shell">
       <aside className="shell__aside">
         <div className="shell__bar">
           <span className="shell__brand">
-            <FeatherMark className="shell__brand-dot" /> {t('app.brand')}
+            <BrandLabel version={version} />
           </span>
         </div>
         <div className="shell__nav-wrap">
@@ -418,7 +433,7 @@ function ShellSkeleton(): ReactElement {
       </aside>
       <header className="shell__topbar">
         <span className="shell__brand">
-          <FeatherMark className="shell__brand-dot" /> {t('app.brand')}
+          <BrandLabel version={version} />
         </span>
       </header>
       <main className="shell__main" aria-busy="true">

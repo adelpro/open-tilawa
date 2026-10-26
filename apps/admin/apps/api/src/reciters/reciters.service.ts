@@ -10,6 +10,8 @@ export interface Reciter {
   infohash: string;
   magnet: string;
   fileCount: number;
+  /** Release size in bytes; null until known (import fills it from the node). */
+  sizeBytes: number | null;
   createdAt: string;
 }
 
@@ -24,9 +26,13 @@ export class RecitersService {
         infohash TEXT NOT NULL,
         magnet TEXT NOT NULL,
         file_count INTEGER NOT NULL DEFAULT 0,
+        size_bytes INTEGER,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
+    const cols = (this.db.pragma('table_info(reciters)') as { name: string }[]).map((c) => c.name);
+    if (!cols.includes('size_bytes'))
+      this.db.exec('ALTER TABLE reciters ADD COLUMN size_bytes INTEGER');
   }
 
   list(): Reciter[] {
@@ -40,17 +46,75 @@ export class RecitersService {
         infohash: r.infohash,
         magnet: r.magnet,
         fileCount: r.file_count,
+        sizeBytes: (r.size_bytes as number | null) ?? null,
         createdAt: r.created_at,
       }));
   }
 
-  add(name: string, riwaya: string, infohash: string, magnet: string, fileCount: number): Reciter {
+  add(input: {
+    name: string;
+    riwaya: string;
+    infohash: string;
+    magnet: string;
+    fileCount: number;
+    sizeBytes?: number | null;
+  }): Reciter {
     const info = this.db
       .prepare(
-        'INSERT INTO reciters (name, riwaya, infohash, magnet, file_count) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO reciters (name, riwaya, infohash, magnet, file_count, size_bytes) VALUES (?, ?, ?, ?, ?, ?)',
       )
-      .run(name, riwaya, infohash, magnet, fileCount);
+      .run(
+        input.name,
+        input.riwaya,
+        input.infohash,
+        input.magnet,
+        input.fileCount,
+        input.sizeBytes ?? null,
+      );
     return this.get(Number(info.lastInsertRowid))!;
+  }
+
+  /**
+   * Partial edit. The catalogue is the source of truth, so a wrong name, a new
+   * magnet or a size learned from a node must be fixable without deleting the
+   * row (which would break the reciter↔torrent record entirely).
+   */
+  update(
+    id: number,
+    input: {
+      name?: string;
+      riwaya?: string;
+      infohash?: string;
+      magnet?: string;
+      fileCount?: number;
+      sizeBytes?: number | null;
+    },
+  ): Reciter | null {
+    if (!this.get(id)) return null;
+    const sets: string[] = [];
+    const values: unknown[] = [];
+    const put = (column: string, value: unknown): void => {
+      sets.push(`${column} = ?`);
+      values.push(value);
+    };
+    if (input.name !== undefined) {
+      const name = input.name.trim();
+      if (!name) throw new Error('the name cannot be empty');
+      put('name', name);
+    }
+    if (input.riwaya !== undefined) put('riwaya', input.riwaya.trim() || 'Hafs');
+    if (input.infohash !== undefined) {
+      const infohash = input.infohash.trim();
+      if (!infohash) throw new Error('the infohash cannot be empty');
+      put('infohash', infohash);
+    }
+    if (input.magnet !== undefined) put('magnet', input.magnet.trim());
+    if (input.fileCount !== undefined) put('file_count', input.fileCount);
+    if (input.sizeBytes !== undefined) put('size_bytes', input.sizeBytes);
+    if (sets.length > 0) {
+      this.db.prepare(`UPDATE reciters SET ${sets.join(', ')} WHERE id = ?`).run(...values, id);
+    }
+    return this.get(id);
   }
 
   get(id: number): Reciter | null {
@@ -63,6 +127,7 @@ export class RecitersService {
       infohash: r.infohash,
       magnet: r.magnet,
       fileCount: r.file_count,
+      sizeBytes: (r.size_bytes as number | null) ?? null,
       createdAt: r.created_at,
     };
   }

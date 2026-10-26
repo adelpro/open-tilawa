@@ -34,6 +34,7 @@ interface Reciter {
   infohash: string;
   magnet: string;
   fileCount: number;
+  sizeBytes: number | null;
   createdAt: string;
 }
 
@@ -55,6 +56,13 @@ export function Reciters(): ReactElement {
   const [newInfohash, setNewInfohash] = useState('');
   const [newMagnet, setNewMagnet] = useState('');
   const [newFileCount, setNewFileCount] = useState('114');
+  const [newSizeGb, setNewSizeGb] = useState('');
+  const [editing, setEditing] = useState<Reciter | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editRiwaya, setEditRiwaya] = useState('');
+  const [editInfohash, setEditInfohash] = useState('');
+  const [editMagnet, setEditMagnet] = useState('');
+  const [editSizeGb, setEditSizeGb] = useState('');
   const [pushing, setPushing] = useState(false);
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
   const [selected, setSelected] = useState<number[]>([]);
@@ -88,17 +96,54 @@ export function Reciters(): ReactElement {
           infohash: newInfohash.trim(),
           magnet: newMagnet.trim(),
           fileCount: Number(newFileCount) || 0,
+          sizeBytes: newSizeGb.trim() ? Math.round(Number(newSizeGb) * 1024 ** 3) : null,
         },
       });
       setNewName('');
       setNewInfohash('');
       setNewMagnet('');
       setNewFileCount('114');
+      setNewSizeGb('');
       setShowAdd(false);
       setMessage(t('reciters.added'));
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('reciters.addFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function startEdit(reciter: Reciter): void {
+    setEditing(reciter);
+    setEditName(reciter.name);
+    setEditRiwaya(reciter.riwaya);
+    setEditInfohash(reciter.infohash);
+    setEditMagnet(reciter.magnet);
+    setEditSizeGb(reciter.sizeBytes === null ? '' : (reciter.sizeBytes / 1024 ** 3).toFixed(2));
+    setError(null);
+  }
+
+  async function saveEdit(): Promise<void> {
+    if (!editing) return;
+    setBusy('edit');
+    setError(null);
+    try {
+      await api(`/reciters/${editing.id}`, {
+        method: 'PATCH',
+        body: {
+          name: editName.trim(),
+          riwaya: editRiwaya,
+          infohash: editInfohash.trim(),
+          magnet: editMagnet.trim(),
+          sizeBytes: editSizeGb.trim() ? Math.round(Number(editSizeGb) * 1024 ** 3) : null,
+        },
+      });
+      setEditing(null);
+      setMessage(t('reciters.updated'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.updateFailed'));
     } finally {
       setBusy(null);
     }
@@ -189,6 +234,70 @@ export function Reciters(): ReactElement {
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
+
+      {editing ? (
+        <Panel tone="parchment">
+          <h2 className="group-title">
+            {t('reciters.editTitle')} — {editing.name}
+          </h2>
+          <div className="stack">
+            <Field label={t('reciters.name')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('reciters.riwaya')} hint={t('reciters.riwayaHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editRiwaya}
+                  onChange={(event) => setEditRiwaya(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('reciters.infohash')} hint={t('reciters.infohashHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editInfohash}
+                  onChange={(event) => setEditInfohash(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('reciters.magnet')} hint={t('reciters.magnetHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editMagnet}
+                  onChange={(event) => setEditMagnet(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('reciters.size')} hint={t('reciters.sizeHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editSizeGb}
+                  onChange={(event) => setEditSizeGb(event.target.value)}
+                  inputMode="decimal"
+                />
+              )}
+            </Field>
+            <div className="cluster">
+              <Button onClick={() => void saveEdit()} busy={busy === 'edit'}>
+                {t('common.save')}
+              </Button>
+              <Button variant="tertiary" onClick={() => setEditing(null)}>
+                {t('reciters.cancel')}
+              </Button>
+            </div>
+          </div>
+        </Panel>
+      ) : null}
 
       {pushing ? (
         <Panel tone="parchment">
@@ -351,6 +460,17 @@ export function Reciters(): ReactElement {
                 />
               )}
             </Field>
+            <Field label={t('reciters.size')} hint={t('reciters.sizeHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newSizeGb}
+                  onChange={(event) => setNewSizeGb(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="6.5"
+                />
+              )}
+            </Field>
             <div className="cluster">
               <Button
                 onClick={() => void add()}
@@ -380,6 +500,7 @@ export function Reciters(): ReactElement {
                   <th scope="col">{t('reciters.riwaya')}</th>
                   <th scope="col">{t('reciters.infohash')}</th>
                   <th scope="col">{t('reciters.fileCount')}</th>
+                  <th scope="col">{t('reciters.size')}</th>
                   <th scope="col">{t('reciters.actions')}</th>
                 </tr>
               </thead>
@@ -396,8 +517,14 @@ export function Reciters(): ReactElement {
                       <span className="row__id">{reciter.infohash.slice(0, 16)}…</span>
                     </td>
                     <td className="num">{reciter.fileCount}</td>
+                    <td className="num">
+                      {reciter.sizeBytes === null ? '—' : bytes(reciter.sizeBytes, locale)}
+                    </td>
                     <td>
                       <span className="cluster cluster--end">
+                        <Button small variant="tertiary" onClick={() => startEdit(reciter)}>
+                          {t('reciters.edit')}
+                        </Button>
                         <Button
                           small
                           variant="destructive"

@@ -805,6 +805,18 @@
         "tags": ["Reciters"]
       }
     },
+    "/api/reciters/import": {
+      "post": {
+        "operationId": "RecitersController_importFrom",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      }
+    },
     "/api/reciters/push/plan": {
       "post": {
         "operationId": "RecitersController_plan",
@@ -830,6 +842,25 @@
       }
     },
     "/api/reciters/{id}": {
+      "patch": {
+        "operationId": "RecitersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      },
       "delete": {
         "operationId": "RecitersController_remove",
         "parameters": [

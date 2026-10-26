@@ -1,7 +1,10 @@
 import {
+  BadRequestException,
+  NotFoundException,
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -30,6 +33,13 @@ export class RecitersController {
     return this.service.list();
   }
 
+  /** Fill the catalogue from a node's own inventory (sizes included). */
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  importFrom(@Body() body: { seederId: number }) {
+    return this.push.importFrom(Number(body?.seederId));
+  }
+
   /** What a push would do, without touching a node. */
   @Post('push/plan')
   @HttpCode(HttpStatus.OK)
@@ -54,15 +64,44 @@ export class RecitersController {
       infohash: string;
       magnet: string;
       fileCount?: number;
+      sizeBytes?: number | null;
     },
   ) {
-    return this.service.add(
-      body.name,
-      body.riwaya,
-      body.infohash,
-      body.magnet,
-      body.fileCount ?? 0,
-    );
+    try {
+      return this.service.add({
+        name: body.name,
+        riwaya: body.riwaya,
+        infohash: body.infohash,
+        magnet: body.magnet,
+        fileCount: body.fileCount ?? 0,
+        sizeBytes: body.sizeBytes ?? null,
+      });
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      name?: string;
+      riwaya?: string;
+      infohash?: string;
+      magnet?: string;
+      fileCount?: number;
+      sizeBytes?: number | null;
+    },
+  ) {
+    let updated;
+    try {
+      updated = this.service.update(Number(id), body);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    if (!updated) throw new NotFoundException('reciter not found');
+    return updated;
   }
 
   @Delete(':id')
