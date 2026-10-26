@@ -8638,7 +8638,7 @@ __metadata:
     typescript-eslint: "npm:^8.20.0"
   dependenciesMeta:
     better-sqlite3:
-      built: true
+      built: false
     esbuild:
       built: true
   languageName: unknown

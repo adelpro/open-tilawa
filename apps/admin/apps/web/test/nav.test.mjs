@@ -11,7 +11,7 @@ describe('navigation by role', () => {
     const items = navItemsFor('user');
     assert.deepEqual(
       items.map((item) => item.labelKey),
-      ['nav.profiles', 'nav.keys', 'nav.usage', 'nav.account'],
+      ['nav.seeders', 'nav.turns', 'nav.torrents', 'nav.reciters', 'nav.account', 'nav.help'],
     );
     assert.equal(consolePathFor('user'), null);
   });

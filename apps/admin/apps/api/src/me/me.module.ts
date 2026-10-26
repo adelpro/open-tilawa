@@ -5,7 +5,6 @@ import { AuthModule } from '@/auth/auth.module';
 import { TempLinksModule } from '@/temp-links/temp-links.module';
 import { MailerModule } from '@/mailer/mailer.module';
 import { MeController } from './me.controller';
-import { MeEmailChangeController } from './me-email-change.controller';
 import { MeService } from './me.service';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
@@ -20,7 +19,7 @@ import { JwtModule } from '@nestjs/jwt';
     TempLinksModule,
     MailerModule,
   ],
-  controllers: [MeController, MeEmailChangeController],
+  controllers: [MeController],
   providers: [MeService],
 })
 export class MeModule {}

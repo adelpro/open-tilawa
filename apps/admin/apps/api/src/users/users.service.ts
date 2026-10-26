@@ -145,9 +145,6 @@ export class UsersService {
       locale: changes.locale,
       // The same category of preference as `locale`, stored beside it.
       theme: changes.theme,
-      // The account's fallback master prompt; only used when a profile has none.
-      masterName: changes.masterName,
-      masterBody: changes.masterBody,
     };
 
     // Changing an email invalidates activation by default, as upstream did. A

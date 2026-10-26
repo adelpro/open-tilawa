@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import { Field, Input } from './Field';
 import { PasswordInput } from './PasswordInput';
 import { PasswordStrength } from './PasswordStrength';
-import { Icon } from './icons';
 import type { IconName } from './icons';
 import type { StrengthVariant } from './PasswordStrength';
 
@@ -68,8 +67,8 @@ export function PasswordField({
   hint,
   error,
   required = false,
-  disabled = false,
-  name = 'password',
+  disabled: _disabled = false,
+  name: _name = 'password',
   autoComplete,
   showStrength = false,
   strengthVariant = 'bars',

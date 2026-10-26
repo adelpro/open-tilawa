@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -11,7 +10,7 @@ import {
 import { TrustedDevicesService } from '@/trusted-devices/trusted-devices.service';
 import { TempLinksService } from '@/temp-links/temp-links.service';
 import { AuthenticatedUser } from './types/authenticatedUser.type';
-import type { User, UserIdentitiesRepository } from '@tilawa-admin/core';
+import type { User } from '@tilawa-admin/core';
 import { FingerprintObj } from './types/fingerprint.type';
 import { MailerService } from '../mailer/mailer.service';
 import { TokensService } from '../tokens/tokens.service';
@@ -85,7 +84,6 @@ export class AuthService {
     private trustedDeviceService: TrustedDevicesService,
     private configService: ConfigService,
     private readonly tempLinks: TempLinksService,
-    @Inject('USLUB_USER_IDENTITIES') private readonly identities: UserIdentitiesRepository,
   ) {}
 
   getCookieOptions(): CookieOptions {
@@ -120,21 +118,6 @@ export class AuthService {
       ? await argonVerify(user.password, password, argonConfig)
       : false;
     if (!isValidPassword) {
-      // An account created through a provider has no password to be wrong. Saying so
-      // is the difference between a dead end and an instruction: the person may have
-      // forgotten they signed up with Google, and "invalid password" would never say.
-      if (!user.password) {
-        const provider = this.identities.listForUser(user.id)[0]?.provider;
-        if (provider) {
-          this.logger.warn(`auth.signin failed reason=provider_account user=${user.id}`);
-          // No provider name in the answer: that 409 drew an
-          // account-existence oracle next to the generic 401 (any wrong
-          // password would map "provider-linked" accounts to a distinct
-          // status + message). Answer exactly like a wrong password; the
-          // server-side warning above keeps the operator signal.
-          throw new UnauthorizedException('Invalid email or password');
-        }
-      }
       this.logger.warn(`auth.signin failed reason=bad_password user=${user.id}`);
       throw new UnauthorizedException('Invalid email or password');
     }

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,14 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import {
-  buildBootstrapPrompt,
-  PROMPT_VERSION,
-  type BootstrapPrompt,
-  type Locale,
-  type Theme,
-  type User,
-} from '@tilawa-admin/core';
+import { type Locale, type Theme, type User } from '@tilawa-admin/core';
 import { TrustedDevicesService } from '@/trusted-devices/trusted-devices.service';
 import { AuthenticatedUser } from '@/auth/types/authenticatedUser.type';
 import { CurrentUser } from '@/auth/decorators/currentUser.decorator';
@@ -61,23 +53,6 @@ export class MeController {
    * request time from the same field list the validator uses, so it cannot describe a manifest
    * this server would refuse.
    */
-  @Get('bootstrap-prompt')
-  @ApiOperation({ summary: "The prompt that starts a profile from the account's own agent" })
-  @HttpCode(HttpStatus.OK)
-  bootstrapPrompt(): {
-    promptVersion: number;
-    fields: BootstrapPrompt['fields'];
-    mcp: string;
-    paste: string;
-  } {
-    return {
-      promptVersion: PROMPT_VERSION,
-      fields: buildBootstrapPrompt('paste').fields,
-      mcp: buildBootstrapPrompt('mcp').text,
-      paste: buildBootstrapPrompt('paste').text,
-    };
-  }
-
   @Get()
   @ApiResponse({ status: 200, description: 'Get current user' })
   @ApiOperation({ summary: 'Get the current user' })
@@ -91,8 +66,6 @@ export class MeController {
       passwordSet: boolean;
       locale: Locale;
       theme: Theme;
-      masterName: string | null;
-      masterBody: string | null;
     }
   > {
     const user = await this.userService.getUserById(id);
@@ -121,10 +94,6 @@ export class MeController {
       // Same contract: the account's theme is the fallback for a device that has not
       // chosen one. The device's own choice still wins in the browser.
       theme: user.theme ?? 'system',
-      // The A3 fallback master. Null means the bundled default chain's answer:
-      // no master of its own, so a profile without one simply ends at findings.
-      masterName: user.masterName ?? null,
-      masterBody: user.masterBody ?? null,
     };
   }
 
@@ -141,25 +110,6 @@ export class MeController {
     // `role`, `status` and `isActivated` are not in this DTO on purpose: a user
     // must not be able to promote themselves through their own profile.
     const changes: Partial<User> = { ...updateUser.user };
-
-    // The master is one preference, not two columns a caller can half-fill. Both
-    // fields or neither: an empty pair clears it, a single field is a mistake the
-    // API names rather than storing a nameless prompt.
-    if (changes.masterName !== undefined || changes.masterBody !== undefined) {
-      const name = (changes.masterName ?? '').trim();
-      const body = (changes.masterBody ?? '').trim();
-      if (!name && !body) {
-        changes.masterName = null;
-        changes.masterBody = null;
-      } else if (!name || !body) {
-        throw new BadRequestException(
-          'a default master step needs both a name and instructions — send both, or neither to clear it',
-        );
-      } else {
-        changes.masterName = name;
-        changes.masterBody = body;
-      }
-    }
 
     return this.userService.update(id, changes);
   }

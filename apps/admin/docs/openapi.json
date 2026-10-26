@@ -1,0 +1,1141 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Health"]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "operationId": "UsersController_getAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Users"]
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "operationId": "UsersController_getUserById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Users"]
+      },
+      "put": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Users"]
+      },
+      "delete": {
+        "operationId": "UsersController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Users"]
+      }
+    },
+    "/api/auth/local/signin": {
+      "post": {
+        "operationId": "AuthController_signinLocal",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/signinUserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign-in successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticatedUserResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account not activated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "430": {
+            "description": "2FA verification required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Local signin",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/auth/local/signup": {
+      "post": {
+        "operationId": "AuthController_signupLocal",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupUserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created, activation email sent"
+          },
+          "400": {
+            "description": "Email already registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Mail is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Local signup — creates the account and mails the activation link",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/auth/local/activate": {
+      "post": {
+        "operationId": "AuthController_activateLocal",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Account activated, session started"
+          },
+          "401": {
+            "description": "Invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Activate an account with the emailed token",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/auth/local/confirm-email-change": {
+      "post": {
+        "operationId": "AuthController_confirmEmailChange",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Email changed and a fresh session started"
+          },
+          "401": {
+            "description": "Invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm an email change with the emailed token",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/auth/local/resend-activation": {
+      "post": {
+        "operationId": "AuthController_resendActivation",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "Accepted, whether or not the address needs one"
+          }
+        },
+        "summary": "Re-send the activation link (always answered generically)",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/auth/signout": {
+      "post": {
+        "operationId": "AuthController_Signout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Succesfully Signed out"
+          }
+        },
+        "summary": "Signout user",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/auth/protected": {
+      "get": {
+        "operationId": "AuthController_protectedLocal",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Protected route, only autheticated user with role:user can access this route",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/reset-password/send-email": {
+      "post": {
+        "operationId": "ResetPasswordController_sendEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendResetEmailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Always a generic confirmation"
+          },
+          "400": {
+            "description": "Malformed email"
+          }
+        },
+        "summary": "Send a single-use password reset link by email",
+        "tags": ["ResetPassword"]
+      }
+    },
+    "/api/reset-password/validate": {
+      "post": {
+        "operationId": "ResetPasswordController_validate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed, sessions revoked"
+          },
+          "400": {
+            "description": "Missing fields"
+          }
+        },
+        "summary": "Consume an emailed reset link and set a new password",
+        "tags": ["ResetPassword"]
+      }
+    },
+    "/api/tokens": {
+      "get": {
+        "operationId": "TokensController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MyTokensResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the devices currently signed in",
+        "tags": ["tokens"]
+      }
+    },
+    "/api/tokens/{id}": {
+      "delete": {
+        "operationId": "TokensController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete one device and forget its 2FA trust",
+        "tags": ["tokens"]
+      }
+    },
+    "/api/me": {
+      "get": {
+        "operationId": "MeController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get current user"
+          }
+        },
+        "summary": "Get the current user",
+        "tags": ["Me"]
+      },
+      "patch": {
+        "operationId": "MeController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current user updated successfully"
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update the current user",
+        "tags": ["Me"]
+      },
+      "delete": {
+        "operationId": "MeController_deleteMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user deleted successfully"
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Delete the current user",
+        "tags": ["Me"]
+      }
+    },
+    "/api/me/update-password": {
+      "post": {
+        "operationId": "MeController_updatePassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Password updated, this device re-issued a session"
+          }
+        },
+        "summary": "Update password (revokes every other session)",
+        "tags": ["Me"]
+      }
+    },
+    "/api/seeders": {
+      "get": {
+        "operationId": "SeedersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      },
+      "post": {
+        "operationId": "SeedersController_add",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
+    "/api/seeders/{id}": {
+      "delete": {
+        "operationId": "SeedersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
+    "/api/seeders/{id}/poll": {
+      "post": {
+        "operationId": "SeedersController_poll",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
+    "/api/seeders/poll-all": {
+      "post": {
+        "operationId": "SeedersController_pollAll",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
+    "/api/turns": {
+      "get": {
+        "operationId": "TurnsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      },
+      "post": {
+        "operationId": "TurnsController_add",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      }
+    },
+    "/api/turns/{id}": {
+      "delete": {
+        "operationId": "TurnsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      }
+    },
+    "/api/turns/{id}/poll": {
+      "post": {
+        "operationId": "TurnsController_poll",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      }
+    },
+    "/api/turns/poll-all": {
+      "post": {
+        "operationId": "TurnsController_pollAll",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      }
+    },
+    "/api/torrents": {
+      "get": {
+        "operationId": "TorrentsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Torrents"]
+      },
+      "post": {
+        "operationId": "TorrentsController_add",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Torrents"]
+      }
+    },
+    "/api/torrents/{id}": {
+      "delete": {
+        "operationId": "TorrentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Torrents"]
+      }
+    },
+    "/api/reciters": {
+      "get": {
+        "operationId": "RecitersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      },
+      "post": {
+        "operationId": "RecitersController_add",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      }
+    },
+    "/api/reciters/{id}": {
+      "delete": {
+        "operationId": "RecitersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "operationId": "AdminController_listUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List users, optionally filtered by name or email",
+        "tags": ["Admin"]
+      },
+      "post": {
+        "operationId": "AdminController_createUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateUserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create a user (a super_admin may create an admin)",
+        "tags": ["Admin"]
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "operationId": "AdminController_getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "One user",
+        "tags": ["Admin"]
+      },
+      "delete": {
+        "operationId": "AdminController_deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete a user and everything they own (super_admin only)",
+        "tags": ["Admin"]
+      }
+    },
+    "/api/admin/users/{id}/disable": {
+      "post": {
+        "operationId": "AdminController_disable",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Disable a user and revoke their keys and sessions",
+        "tags": ["Admin"]
+      }
+    },
+    "/api/admin/users/{id}/enable": {
+      "post": {
+        "operationId": "AdminController_enable",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Re-enable a user",
+        "tags": ["Admin"]
+      }
+    },
+    "/api/admin/users/{id}/role": {
+      "post": {
+        "operationId": "AdminController_changeRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminChangeRoleDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Change a role (super_admin only, audited, last one protected)",
+        "tags": ["Admin"]
+      }
+    },
+    "/api/admin/audit": {
+      "get": {
+        "operationId": "AdminController_audit",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first"
+          }
+        },
+        "summary": "Recent audit rows (a super_admin sees every actor)",
+        "tags": ["Admin"]
+      }
+    },
+    "/api/setup/status": {
+      "get": {
+        "operationId": "SetupController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Whether the initial super-admin setup is still required",
+        "tags": ["Setup"]
+      }
+    },
+    "/api/setup": {
+      "post": {
+        "operationId": "SetupController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Super-admin created"
+          },
+          "400": {
+            "description": "Invalid token or setup already complete"
+          }
+        },
+        "summary": "Consume a setup token and create the super_admin account",
+        "tags": ["Setup"]
+      }
+    },
+    "/api/csrf": {
+      "get": {
+        "operationId": "CsrfController_issue",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Token issued and set as a cookie"
+          }
+        },
+        "summary": "Issue a CSRF token (echo it in x-csrf-token)",
+        "tags": ["csrf"]
+      }
+    }
+  },
+  "info": {
+    "title": "Tilawa Admin API",
+    "description": "",
+    "version": "1.20.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "UpdateUserDTO": {
+        "type": "object",
+        "properties": {}
+      },
+      "SigninDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "johndoe@email.com",
+            "description": "The email of the person"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123",
+            "description": "The password of the person"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "signinUserDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SigninDTO"
+          }
+        },
+        "required": ["user"]
+      },
+      "AuthenticatedUserResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "object",
+            "example": "42",
+            "description": "The unique identifier for the user."
+          },
+          "email": {
+            "type": "string",
+            "example": "example@example.com",
+            "description": "The email address of the user."
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe",
+            "description": "The name of the user."
+          },
+          "isActivated": {
+            "type": "boolean",
+            "example": "true",
+            "description": "The provider used for authentication."
+          },
+          "isTwoFAEnabled": {
+            "type": "boolean",
+            "example": "true",
+            "description": "The provider used for authentication."
+          },
+          "provider": {
+            "type": "string",
+            "example": "local",
+            "description": "The provider used for authentication."
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "isActivated",
+          "isTwoFAEnabled",
+          "provider"
+        ]
+      },
+      "ErrorResponseDTO": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "example": "Number",
+            "description": "The response status code"
+          },
+          "message": {
+            "type": "string",
+            "example": "Response message",
+            "description": "The response message"
+          },
+          "error": {
+            "type": "string",
+            "example": "Response error",
+            "description": "The response error"
+          }
+        },
+        "required": ["statusCode", "message", "error"]
+      },
+      "SignupDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "JohnDoe",
+            "description": "The name of the person"
+          },
+          "email": {
+            "type": "string",
+            "example": "johndoe@email.com",
+            "description": "The email of the person"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123",
+            "description": "The password of the person"
+          }
+        },
+        "required": ["name", "email", "password"]
+      },
+      "SignupUserDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SignupDTO"
+          }
+        },
+        "required": ["user"]
+      },
+      "SendResetEmailDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "johndoe@email.com"
+          }
+        },
+        "required": ["email"]
+      },
+      "ResetPasswordDTO": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The token carried by the emailed reset link"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123",
+            "description": "The new password; the one policy for every password entry point"
+          }
+        },
+        "required": ["token", "password"]
+      },
+      "MyTokensResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "The session identifier."
+          },
+          "label": {
+            "type": "string",
+            "example": "laptop",
+            "description": "Device label, when the client sends one."
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-19T20:00:00.000Z",
+            "description": "When the session was created."
+          },
+          "expiresAt": {
+            "type": "string",
+            "example": "2026-10-26T20:00:00.000Z",
+            "description": "When the token expires."
+          }
+        },
+        "required": ["id", "label", "createdAt", "expiresAt"]
+      },
+      "AdminCreateUserDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Nadia"
+          },
+          "email": {
+            "type": "string",
+            "example": "nadia@example.com"
+          },
+          "password": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin", "super_admin"]
+          }
+        },
+        "required": ["name", "email"]
+      },
+      "AdminChangeRoleDTO": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin", "super_admin"]
+          }
+        },
+        "required": ["role"]
+      }
+    }
+  }
+}

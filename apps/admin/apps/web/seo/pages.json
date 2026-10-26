@@ -1,5 +1,5 @@
 {
-  "$comment": "The public pages, as data. Read by apps/web/scripts/prerender.mjs at build time to write real HTML, and by the tests to check what a crawler will see. Keep the copy here identical to the catalogue entries the Landing screen renders \u2014 a prerendered page that says something different from the mounted app is cloaking.",
+  "$comment": "The public pages, as data. Read by apps/web/scripts/prerender.mjs at build time to write real HTML, and by the tests to check what a crawler will see. Keep the copy here identical to the catalogue entries the Landing screen renders — a prerendered page that says something different from the mounted app is cloaking.",
   "site": "https://admin-tilawa.quran.us.kg",
   "pages": [
     {
@@ -12,66 +12,66 @@
         "title": "Tilawa Admin",
         "description": "Tilawa Admin manages your seeder and TURN infrastructure.",
         "brand": "Tilawa Admin",
-        "h1": "Your voice, in every tool you write in.",
-        "lede": "Tilawa Admin keeps your writing profile \u2014 how you sound, what you refuse to sound like \u2014 and serves it to the agents and editors you already use. Over MCP, so nothing has to be installed twice.",
+        "h1": "The tilawa, delivered.",
+        "lede": "Tilawa Admin is the control room for Quran audio distribution: seeder nodes, TURN servers and the torrent catalogue for every reciter, run from one console.",
         "features": [
           {
-            "title": "One voice, many contexts",
-            "body": "A profile per context \u2014 essays, documentation, email \u2014 and a default for the client that asks for nothing."
+            "title": "Seeders under control",
+            "body": "Add a seeder node, watch its health and its speeds, and manage its torrents without leaving the dashboard."
           },
           {
-            "title": "Checks, not impressions",
-            "body": "Two gates run on every draft, with hashed procedures and a report that names the line. A draft passes or it says why."
+            "title": "TURN, always watched",
+            "body": "The dashboard probes every TURN server over STUN every five minutes and keeps the latency history, so an outage is a fact, not a surprise."
           },
           {
-            "title": "Works where you already write",
-            "body": "A standard MCP endpoint: Claude, Codex, Cursor, or your own agent. The same voice follows you between them."
+            "title": "Reciters, in one catalogue",
+            "body": "Every reciter with its riwaya, infohash and magnet, in one catalogue the SPA and the API agree on."
           }
         ],
         "steps": {
           "title": "Three steps, once.",
           "items": [
-            "Paste a few samples of your writing.",
-            "Get a profile and an API key.",
-            "Point your client at the endpoint."
+            "Deploy a seeder or TURN node with one script.",
+            "Register it in the dashboard with its address.",
+            "Manage torrents and watch health from your account."
           ]
         },
         "cta": "Create an account",
         "secondary": "Sign in",
-        "note": "No card, no browser extension: one endpoint, one key."
+        "note": "One login, two factors, one audit trail."
       },
       "ar": {
         "lang": "ar",
-        "title": "\u0623\u0633\u0644\u0648\u0628 \u2014 \u0623\u0633\u0644\u0648\u0628\u0643 \u0641\u064a \u0627\u0644\u0643\u062a\u0627\u0628\u0629\u060c \u062d\u064a\u062b\u0645\u0627 \u0643\u062a\u0628\u062a",
-        "description": "\u064a\u062d\u0641\u0638 \u0623\u0633\u0644\u0648\u0628 \u0645\u0644\u0641\u0651\u0643 \u0627\u0644\u0643\u062a\u0627\u0628\u064a \u0648\u064a\u0642\u062f\u0651\u0645\u0647 \u0644\u0644\u0648\u0643\u0644\u0627\u0621 \u0648\u0627\u0644\u0645\u062d\u0631\u0651\u0631\u0627\u062a \u0627\u0644\u062a\u064a \u062a\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0639\u0628\u0631 MCP.",
-        "brand": "\u0623\u0633\u0644\u0648\u0628",
-        "h1": "\u0623\u0633\u0644\u0648\u0628\u0643\u060c \u0641\u064a \u0643\u0644 \u0623\u062f\u0627\u0629 \u062a\u0643\u062a\u0628 \u0641\u064a\u0647\u0627.",
-        "lede": "\u064a\u062d\u0641\u0638 \u0623\u0633\u0644\u0648\u0628 \u0645\u0644\u0641\u0651\u0643 \u0627\u0644\u0643\u062a\u0627\u0628\u064a \u2014 \u0643\u064a\u0641 \u062a\u0643\u062a\u0628\u060c \u0648\u0645\u0627 \u062a\u0631\u0641\u0636 \u0623\u0646 \u062a\u0634\u0628\u0647\u0647 \u2014 \u0648\u064a\u0642\u062f\u0651\u0645\u0647 \u0644\u0644\u0648\u0643\u0644\u0627\u0621 \u0648\u0627\u0644\u0645\u062d\u0631\u0651\u0631\u0627\u062a \u0627\u0644\u062a\u064a \u062a\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0623\u0635\u0644\u064b\u0627. \u0639\u0628\u0631 MCP\u060c \u0641\u0644\u0627 \u0634\u064a\u0621 \u064a\u064f\u062b\u0628\u064e\u0651\u062a \u0645\u0631\u062a\u064a\u0646.",
+        "title": "تلاوة — خوادمك وتلاوتك، من مكان واحد.",
+        "description": "لوحة التحكم لتوزيع تلاوة القرآن: خوادم التوزيع وخوادم TURN وفهرس التورنت.",
+        "brand": "تلاوة",
+        "h1": "خوادمك وتلاوتك، من مكان واحد.",
+        "lede": "لوحة التحكم لتوزيع تلاوة القرآن: خوادم التوزيع وخوادم TURN وفهرس التورنت لكل قارئ، تُدار وتُراقب من مكان واحد.",
         "features": [
           {
-            "title": "\u0623\u0633\u0644\u0648\u0628 \u0648\u0627\u062d\u062f\u060c \u0633\u064a\u0627\u0642\u0627\u062a \u0643\u062b\u064a\u0631\u0629",
-            "body": "\u0645\u0644\u0641 \u0644\u0643\u0644 \u0633\u064a\u0627\u0642 \u2014 \u0627\u0644\u0645\u0642\u0627\u0644\u0627\u062a \u0648\u0627\u0644\u062a\u0648\u062b\u064a\u0642 \u0648\u0627\u0644\u0628\u0631\u064a\u062f \u2014 \u0648\u0627\u0641\u062a\u0631\u0627\u0636\u064a \u0644\u0645\u0646 \u0644\u0627 \u064a\u0637\u0644\u0628 \u0634\u064a\u0626\u064b\u0627."
+            "title": "خوادم التوزيع تحت السيطرة",
+            "body": "أضف خادم توزيع، وتابع صحّته وسرعاته، وأدر ملفاته دون أن تغادر اللوحة."
           },
           {
-            "title": "\u0641\u062d\u0635 \u0644\u0627 \u0627\u0646\u0637\u0628\u0627\u0639",
-            "body": "\u0628\u0648\u0627\u0628\u062a\u0627\u0646 \u062a\u0639\u0645\u0644\u0627\u0646 \u0639\u0644\u0649 \u0643\u0644 \u0645\u0633\u0648\u0651\u062f\u0629\u060c \u0628\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0645\u062c\u0632\u0651\u0623\u0629 \u0648\u062a\u0642\u0631\u064a\u0631 \u064a\u0633\u0645\u0651\u064a \u0627\u0644\u0633\u0637\u0631."
+            "title": "TURN تحت المراقبة دائمًا",
+            "body": "تفحص اللوحة كل خادم TURN عبر STUN كل خمس دقائق وتحفظ سجلّ التأخير، فتنقطع الخدمة معلومةً لا مفاجأة."
           },
           {
-            "title": "\u064a\u0639\u0645\u0644 \u062d\u064a\u062b \u062a\u0643\u062a\u0628 \u0628\u0627\u0644\u0641\u0639\u0644",
-            "body": "\u0646\u0642\u0637\u0629 MCP \u0642\u064a\u0627\u0633\u064a\u0629: Claude \u0623\u0648 Codex \u0623\u0648 Cursor \u0623\u0648 \u0648\u0643\u064a\u0644\u0643 \u0627\u0644\u062e\u0627\u0635."
+            "title": "القرّاء في فهرس واحد",
+            "body": "كل قارئ وروايته وملفّه التورنت، في فهرس واحد تكتبه الواجهة البرمجية وتقرؤه الواجهة على السواء."
           }
         ],
         "steps": {
-          "title": "\u062b\u0644\u0627\u062b \u062e\u0637\u0648\u0627\u062a\u060c \u0645\u0631\u0629 \u0648\u0627\u062d\u062f\u0629.",
+          "title": "ثلاث خطوات، مرة واحدة.",
           "items": [
-            "\u0623\u0644\u0635\u0642 \u0646\u0645\u0627\u0630\u062c \u0645\u0646 \u0643\u062a\u0627\u0628\u062a\u0643.",
-            "\u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u0645\u0644\u0641 \u0648\u0645\u0641\u062a\u0627\u062d API.",
-            "\u0648\u062c\u0651\u0647 \u0639\u0645\u064a\u0644\u0643 \u0625\u0644\u0649 \u0646\u0642\u0637\u0629 \u0627\u0644\u0627\u062a\u0635\u0627\u0644."
+            "انشر خادم توزيع أو TURN بنصّ واحد.",
+            "سجّله في اللوحة بعنوانه.",
+            "أدر ملفات التورنت وتابع الصحة من حسابك."
           ]
         },
-        "cta": "\u0623\u0646\u0634\u0626 \u062d\u0633\u0627\u0628\u064b\u0627",
-        "secondary": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
-        "note": "\u0628\u0644\u0627 \u0628\u0637\u0627\u0642\u0629 \u0648\u0628\u0644\u0627 \u0625\u0636\u0627\u0641\u0629 \u0645\u062a\u0635\u0641\u062d: \u0646\u0642\u0637\u0629 \u0648\u0627\u062d\u062f\u0629\u060c \u0648\u0645\u0641\u062a\u0627\u062d \u0648\u0627\u062d\u062f."
+        "cta": "أنشئ حسابًا",
+        "secondary": "تسجيل الدخول",
+        "note": "دخول واحد، وتحقّق بخطوتين، وسجلّ تدقيق واحد."
       }
     },
     {
@@ -85,7 +85,7 @@
         "description": "Tilawa Admin keeps your writing profile and serves it to the agents and editors you already use, over MCP.",
         "brand": "Tilawa Admin",
         "h1": "About Tilawa Admin",
-        "lede": "Tilawa Admin is a writing-profile service. It keeps how you sound \u2014 and what you refuse to sound like \u2014 and serves that profile to the agents and editors you already use, over MCP.",
+        "lede": "Tilawa Admin is a writing-profile service. It keeps how you sound — and what you refuse to sound like — and serves that profile to the agents and editors you already use, over MCP.",
         "features": [],
         "steps": {
           "title": "",
@@ -97,18 +97,18 @@
       },
       "ar": {
         "lang": "ar",
-        "title": "\u0646\u0628\u0630\u0629 \u0639\u0646 \u0623\u0633\u0644\u0648\u0628",
-        "description": "\u064a\u062d\u0641\u0638 \u0623\u0633\u0644\u0648\u0628 \u0645\u0644\u0641\u0651\u0643 \u0627\u0644\u0643\u062a\u0627\u0628\u064a \u0648\u064a\u0642\u062f\u0651\u0645\u0647 \u0644\u0644\u0648\u0643\u0644\u0627\u0621 \u0648\u0627\u0644\u0645\u062d\u0631\u0651\u0631\u0627\u062a \u0627\u0644\u062a\u064a \u062a\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0639\u0628\u0631 MCP.",
-        "brand": "\u0623\u0633\u0644\u0648\u0628",
-        "h1": "\u0646\u0628\u0630\u0629 \u0639\u0646 \u0623\u0633\u0644\u0648\u0628",
-        "lede": "\u0623\u0633\u0644\u0648\u0628 \u062e\u062f\u0645\u0629 \u0644\u0645\u0644\u0641\u0627\u062a \u0627\u0644\u0643\u062a\u0627\u0628\u0629. \u064a\u062d\u0641\u0638 \u0643\u064a\u0641 \u062a\u0643\u062a\u0628 \u0648\u0645\u0627 \u062a\u0631\u0641\u0636 \u0623\u0646 \u062a\u0634\u0628\u0647\u0647\u060c \u0648\u064a\u0642\u062f\u0651\u0645\u0647 \u0644\u0644\u0648\u0643\u0644\u0627\u0621 \u0648\u0627\u0644\u0645\u062d\u0631\u0651\u0631\u0627\u062a \u0627\u0644\u062a\u064a \u062a\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0639\u0628\u0631 MCP.",
+        "title": "نبذة عن أسلوب",
+        "description": "يحفظ أسلوب ملفّك الكتابي ويقدّمه للوكلاء والمحرّرات التي تستخدمها عبر MCP.",
+        "brand": "أسلوب",
+        "h1": "نبذة عن أسلوب",
+        "lede": "أسلوب خدمة لملفات الكتابة. يحفظ كيف تكتب وما ترفض أن تشبهه، ويقدّمه للوكلاء والمحرّرات التي تستخدمها عبر MCP.",
         "features": [],
         "steps": {
           "title": "",
           "items": []
         },
-        "cta": "\u0623\u0646\u0634\u0626 \u062d\u0633\u0627\u0628\u064b\u0627",
-        "secondary": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
+        "cta": "أنشئ حسابًا",
+        "secondary": "تسجيل الدخول",
         "note": ""
       }
     },
@@ -119,7 +119,7 @@
       "changefreq": "yearly",
       "en": {
         "lang": "en",
-        "title": "Privacy Policy \u2014 Tilawa Admin",
+        "title": "Privacy Policy — Tilawa Admin",
         "description": "How Tilawa Admin collects, uses, and protects your data.",
         "brand": "Tilawa Admin",
         "h1": "Privacy Policy",
@@ -135,18 +135,18 @@
       },
       "ar": {
         "lang": "ar",
-        "title": "\u0633\u064a\u0627\u0633\u0629 \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u2014 \u0623\u0633\u0644\u0648\u0628",
-        "description": "\u0643\u064a\u0641 \u064a\u062c\u0645\u0639 \u0623\u0633\u0644\u0648\u0628 \u0628\u064a\u0627\u0646\u0627\u062a\u0643 \u0648\u064a\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0648\u064a\u062d\u0645\u064a\u0647\u0627.",
-        "brand": "\u0623\u0633\u0644\u0648\u0628",
-        "h1": "\u0633\u064a\u0627\u0633\u0629 \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629",
-        "lede": "\u0643\u064a\u0641 \u0646\u062c\u0645\u0639 \u0628\u064a\u0627\u0646\u0627\u062a\u0643 \u0648\u0646\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0648\u0646\u062d\u0645\u064a\u0647\u0627.",
+        "title": "سياسة الخصوصية — أسلوب",
+        "description": "كيف يجمع أسلوب بياناتك ويستخدمها ويحميها.",
+        "brand": "أسلوب",
+        "h1": "سياسة الخصوصية",
+        "lede": "كيف نجمع بياناتك ونستخدمها ونحميها.",
         "features": [],
         "steps": {
           "title": "",
           "items": []
         },
-        "cta": "\u0623\u0646\u0634\u0626 \u062d\u0633\u0627\u0628\u064b\u0627",
-        "secondary": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
+        "cta": "أنشئ حسابًا",
+        "secondary": "تسجيل الدخول",
         "note": ""
       }
     },
@@ -157,7 +157,7 @@
       "changefreq": "yearly",
       "en": {
         "lang": "en",
-        "title": "Terms of Service \u2014 Tilawa Admin",
+        "title": "Terms of Service — Tilawa Admin",
         "description": "The terms that govern your use of Tilawa Admin.",
         "brand": "Tilawa Admin",
         "h1": "Terms of Service",
@@ -173,18 +173,18 @@
       },
       "ar": {
         "lang": "ar",
-        "title": "\u0634\u0631\u0648\u0637 \u0627\u0644\u062e\u062f\u0645\u0629 \u2014 \u0623\u0633\u0644\u0648\u0628",
-        "description": "\u0627\u0644\u0634\u0631\u0648\u0637 \u0627\u0644\u062a\u064a \u062a\u062d\u0643\u0645 \u0627\u0633\u062a\u062e\u062f\u0627\u0645\u0643 \u0644\u0623\u0633\u0644\u0648\u0628.",
-        "brand": "\u0623\u0633\u0644\u0648\u0628",
-        "h1": "\u0634\u0631\u0648\u0637 \u0627\u0644\u062e\u062f\u0645\u0629",
-        "lede": "\u0627\u0644\u0634\u0631\u0648\u0637 \u0627\u0644\u062a\u064a \u062a\u062d\u0643\u0645 \u0627\u0633\u062a\u062e\u062f\u0627\u0645\u0643 \u0644\u0623\u0633\u0644\u0648\u0628.",
+        "title": "شروط الخدمة — أسلوب",
+        "description": "الشروط التي تحكم استخدامك لأسلوب.",
+        "brand": "أسلوب",
+        "h1": "شروط الخدمة",
+        "lede": "الشروط التي تحكم استخدامك لأسلوب.",
         "features": [],
         "steps": {
           "title": "",
           "items": []
         },
-        "cta": "\u0623\u0646\u0634\u0626 \u062d\u0633\u0627\u0628\u064b\u0627",
-        "secondary": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
+        "cta": "أنشئ حسابًا",
+        "secondary": "تسجيل الدخول",
         "note": ""
       }
     }

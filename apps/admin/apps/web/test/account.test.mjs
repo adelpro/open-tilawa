@@ -42,30 +42,3 @@ describe('signed-in devices', () => {
     assert.match(account, /method: 'DELETE'/);
   });
 });
-
-describe('changing the account email', () => {
-  it('asks for the new address and the current password before mailing a link', () => {
-    assert.match(account, /\/me\/email-change/);
-    assert.match(account, /newEmail/);
-    assert.match(account, /account\.email\.title/);
-    assert.match(account, /account\.password\.current/);
-  });
-
-  it('mounts the link landing route', () => {
-    assert.match(app, /first === 'email-change'/);
-  });
-});
-
-describe('owner safeguards', () => {
-  it('badges the owner and explains why the account cannot be deleted', () => {
-    assert.match(account, /user\?\.isOwner/);
-    assert.match(account, /account\.owner\.deleteHint/);
-    assert.match(account, /disabled=\{user\?\.isOwner \|\|/);
-  });
-
-  it('offers the transfer form and mounts its acceptance route', () => {
-    assert.match(account, /\/me\/owner-transfer/);
-    assert.match(account, /account\.owner\.transferAction/);
-    assert.match(app, /first === 'owner-transfer'/);
-  });
-});

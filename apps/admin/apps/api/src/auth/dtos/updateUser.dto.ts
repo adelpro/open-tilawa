@@ -60,25 +60,6 @@ class UpdateDTO {
   @IsIn(['light', 'dark', 'system'], { message: 'theme must be light, dark or system' })
   theme: 'light' | 'dark' | 'system';
 
-  @ApiProperty({
-    example: 'house-master',
-    description: 'Default master step name — used only when a profile has no master',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(40, { message: 'masterName must contain a maximum of 40 characters' })
-  masterName?: string;
-
-  @ApiProperty({
-    example: 'Compose one revision in my voice…',
-    description: 'Default master step instructions; sent with masterName, or both empty to clear',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(4000, { message: 'masterBody must contain a maximum of 4000 characters' })
-  masterBody?: string;
 }
 
 export class UpdateUserDTO {

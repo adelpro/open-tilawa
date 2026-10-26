@@ -9,7 +9,6 @@ import request from 'supertest';
 import type { AddressInfo } from 'node:net';
 import { openDatabase, UsersRepository, type Db, type Role } from '@tilawa-admin/core';
 import { MAIL_TRANSPORT } from '../src/mailer/mailer.types';
-import { OAUTH_HTTP } from '../src/auth/oauth/oauth.client';
 import { UsersService } from '../src/users/users.service';
 
 export interface RecordedMail {
@@ -62,93 +61,9 @@ export interface RecordedIdentity {
   name: string;
 }
 
-/**
- * A stand-in for Google and GitHub.
- *
- * Consent cannot be automated, so the strategy's own `validate` step is what gets
- * replaced here: the token exchange and the profile read answer from this recorder,
- * and everything after them — the account rules, the linking, the session — is the
- * real code. That is where the bugs live; the consent screen is not.
- */
-export function createOAuthRecorder() {
-  const responses: Record<string, RecordedIdentity> = {};
-  let tokensFail = false;
-  const calls: string[] = [];
-
-  const body = (value: unknown) => ({
-    ok: true,
-    status: 200,
-    text: async () => JSON.stringify(value),
-  });
-  const failure = (status: number, value: unknown) => ({
-    ok: false,
-    status,
-    text: async () => JSON.stringify(value),
-  });
-
-  const http = async (url: string, init: RequestInit) => {
-    calls.push(url);
-    void init;
-
-    if (url.includes('/token') || url.includes('/login/oauth/access_token')) {
-      if (tokensFail) return failure(400, { error: 'invalid_grant' });
-      return body({ access_token: 'test-access-token', token_type: 'bearer' });
-    }
-
-    if (url.includes('openidconnect.googleapis.com')) {
-      const identity = responses.google;
-      if (!identity) return failure(404, { error: 'no google identity configured' });
-      return body({
-        sub: identity.subject,
-        email: identity.email,
-        email_verified: identity.verified,
-        name: identity.name,
-      });
-    }
-
-    if (url.endsWith('api.github.com/user')) {
-      const identity = responses.github;
-      if (!identity) return failure(404, { error: 'no github identity configured' });
-      return body({ id: Number(identity.subject), login: identity.name, name: identity.name });
-    }
-
-    if (url.endsWith('api.github.com/user/emails')) {
-      const identity = responses.github;
-      if (!identity) return failure(404, { error: 'no github identity configured' });
-      return body([
-        { email: 'secondary@example.com', primary: false, verified: true },
-        { email: identity.email, primary: true, verified: identity.verified },
-      ]);
-    }
-
-    return failure(404, { error: `unexpected url ${url}` });
-  };
-
-  return {
-    http,
-    calls,
-    /** Who the next provider call will claim to be. */
-    identity(provider: 'google' | 'github', identity: RecordedIdentity): void {
-      responses[provider] = identity;
-    },
-    clearIdentity(provider: 'google' | 'github'): void {
-      delete responses[provider];
-    },
-    failTokens(): void {
-      tokensFail = true;
-    },
-    reset(): void {
-      tokensFail = false;
-      calls.length = 0;
-      for (const key of Object.keys(responses)) delete responses[key];
-    },
-  };
-}
-
 export interface Harness {
   app: INestApplication;
   mail: ReturnType<typeof createMailRecorder>;
-  oauth: ReturnType<typeof createOAuthRecorder>;
   db: Db;
   users: UsersRepository;
   dir: string;
@@ -195,7 +110,6 @@ export async function bootHarness(options: { claimed?: boolean } = {}): Promise<
   delete process.env.EMAIL_APP_SPECIFIC_PASS;
 
   const mail = createMailRecorder();
-  const oauth = createOAuthRecorder();
 
   /**
    * `AppModule` is imported **after** the environment is set, not at the top of
@@ -209,8 +123,6 @@ export async function bootHarness(options: { claimed?: boolean } = {}): Promise<
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(MAIL_TRANSPORT)
     .useValue(mail.transport)
-    .overrideProvider(OAUTH_HTTP)
-    .useValue(oauth.http)
     // Throttling is skipped by `UslubThrottlerGuard` when NODE_ENV is `test`;
     // the override below is belt-and-braces for the same intent.
     .overrideProvider(APP_GUARD)
@@ -251,7 +163,6 @@ export async function bootHarness(options: { claimed?: boolean } = {}): Promise<
   return {
     app,
     mail,
-    oauth,
     db,
     users,
     dir,

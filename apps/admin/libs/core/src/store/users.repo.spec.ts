@@ -50,30 +50,6 @@ describe('ownership', () => {
     expect(users.getById(a.id)?.isOwner).toBe(true);
   });
 
-  it('transferOwner flips both rows in one transaction', () => {
-    const a = users.create({ name: 'A', email: 'a@example.com', role: 'super_admin' });
-    const b = users.create({ name: 'B', email: 'b@example.com', role: 'super_admin' });
-    users.setOwner(a.id);
-
-    const result = users.transferOwner(a.id, b.id);
-    expect(result.from.isOwner).toBe(false);
-    expect(result.to.isOwner).toBe(true);
-    expect(users.getOwner()?.id).toBe(b.id);
-    // The previous Owner keeps their rank; the transfer does not strip it.
-    expect(users.getById(a.id)?.role).toBe('super_admin');
-  });
-
-  it('transferOwner refuses a non-owner source and a non-super-admin target', () => {
-    const a = users.create({ name: 'A', email: 'a@example.com', role: 'super_admin' });
-    const b = users.create({ name: 'B', email: 'b@example.com', role: 'super_admin' });
-    const c = users.create({ name: 'C', email: 'c@example.com' });
-    users.setOwner(a.id);
-
-    expect(() => users.transferOwner(b.id, c.id)).toThrow(/owner/i);
-    expect(() => users.transferOwner(a.id, c.id)).toThrow(/super_admin/i);
-    expect(users.getOwner()?.id).toBe(a.id);
-  });
-
   it('createGuarded refuses creation while unclaimed and succeeds once claimed', () => {
     const input = { name: 'A', email: 'a@example.com' };
     expect(() => users.createGuarded(input)).toThrow(InstanceNotClaimedError);

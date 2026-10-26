@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
-import { Chip, Notice } from '../components/Chip';
+import { Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 
@@ -79,30 +79,28 @@ export function Torrents(): ReactElement {
         </Button>
       </div>
 
-      {error && <Notice tone="error" className="mb-4">{error}</Notice>}
-      {message && <Notice tone="info" className="mb-4">{message}</Notice>}
+      {error && <Notice tone="bad">{error}</Notice>}
+      {message && <Notice tone="info">{message}</Notice>}
 
       {showAdd && (
         <Panel className="mb-6 p-4">
           <div className="flex flex-col gap-3">
             <Field label="Name">
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Reciter Name" />
+              {(id) => <Input id={id} value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Reciter Name" />}
             </Field>
             <Field label="Infohash">
-              <Input value={newInfohash} onChange={(e) => setNewInfohash(e.target.value)} placeholder="abc123..." />
+              {(id) => <Input id={id} value={newInfohash} onChange={(e) => setNewInfohash(e.target.value)} placeholder="abc123..." />}
             </Field>
             <Field label="Magnet (optional)">
-              <Input value={newMagnet} onChange={(e) => setNewMagnet(e.target.value)} placeholder="magnet:?xt=urn:btih:..." />
+              {(id) => <Input id={id} value={newMagnet} onChange={(e) => setNewMagnet(e.target.value)} placeholder="magnet:?xt=urn:btih:..." />}
             </Field>
-            <Button onClick={add} disabled={busy === 'add' || !newName.trim() || !newInfohash.trim()}>
-              {busy === 'add' ? 'Adding...' : 'Add'}
-            </Button>
+            <Button onClick={add} busy={busy === 'add'} disabled={!newName.trim() || !newInfohash.trim()}>Add</Button>
           </div>
         </Panel>
       )}
 
       {torrents === null ? (
-        <SkeletonRows />
+        <SkeletonRows rows={4} label="Loading" />
       ) : torrents.length === 0 ? (
         <Panel className="p-8 text-center text-gray-500">
           No torrents yet. Click "Add Torrent" to get started.
@@ -117,7 +115,7 @@ export function Torrents(): ReactElement {
                   <div className="text-xs text-gray-400 mt-1 font-mono">{t.infohash}</div>
                   <div className="text-xs text-gray-400 mt-1">{t.createdAt}</div>
                 </div>
-                <Button size="sm" tone="danger" onClick={() => remove(t.id)} disabled={busy === `remove-${t.id}`}>
+                <Button small variant="destructive" onClick={() => remove(t.id)} disabled={busy === `remove-${t.id}`}>
                   {busy === `remove-${t.id}` ? '...' : 'Remove'}
                 </Button>
               </div>

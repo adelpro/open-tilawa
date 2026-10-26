@@ -83,36 +83,34 @@ export function Reciters(): ReactElement {
         </Button>
       </div>
 
-      {error && <Notice tone="error" className="mb-4">{error}</Notice>}
-      {message && <Notice tone="info" className="mb-4">{message}</Notice>}
+      {error && <Notice tone="bad">{error}</Notice>}
+      {message && <Notice tone="info">{message}</Notice>}
 
       {showAdd && (
         <Panel className="mb-6 p-4">
           <div className="flex flex-col gap-3">
             <Field label="Name">
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Saad Al-Ghamdi" />
+              {(id) => <Input id={id} value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Saad Al-Ghamdi" />}
             </Field>
             <Field label="Riwaya">
-              <Input value={newRiwaya} onChange={(e) => setNewRiwaya(e.target.value)} placeholder="Hafs" />
+              {(id) => <Input id={id} value={newRiwaya} onChange={(e) => setNewRiwaya(e.target.value)} placeholder="Hafs" />}
             </Field>
             <Field label="Infohash">
-              <Input value={newInfohash} onChange={(e) => setNewInfohash(e.target.value)} placeholder="abc123..." />
+              {(id) => <Input id={id} value={newInfohash} onChange={(e) => setNewInfohash(e.target.value)} placeholder="abc123..." />}
             </Field>
             <Field label="Magnet (optional)">
-              <Input value={newMagnet} onChange={(e) => setNewMagnet(e.target.value)} placeholder="magnet:?xt=urn:btih:..." />
+              {(id) => <Input id={id} value={newMagnet} onChange={(e) => setNewMagnet(e.target.value)} placeholder="magnet:?xt=urn:btih:..." />}
             </Field>
             <Field label="File Count">
-              <Input value={newFileCount} onChange={(e) => setNewFileCount(e.target.value)} placeholder="114" />
+              {(id) => <Input id={id} value={newFileCount} onChange={(e) => setNewFileCount(e.target.value)} placeholder="114" />}
             </Field>
-            <Button onClick={add} disabled={busy === 'add' || !newName.trim() || !newInfohash.trim()}>
-              {busy === 'add' ? 'Adding...' : 'Add'}
-            </Button>
+            <Button onClick={add} busy={busy === 'add'} disabled={!newName.trim() || !newInfohash.trim()}>Add</Button>
           </div>
         </Panel>
       )}
 
       {reciters === null ? (
-        <SkeletonRows />
+        <SkeletonRows rows={4} label="Loading" />
       ) : reciters.length === 0 ? (
         <Panel className="p-8 text-center text-gray-500">
           No reciters yet. Click "Add Reciter" to get started.
@@ -129,7 +127,7 @@ export function Reciters(): ReactElement {
                   </div>
                   <div className="text-xs text-gray-400 mt-1">{r.fileCount} files · {r.infohash.slice(0, 16)}...</div>
                 </div>
-                <Button size="sm" tone="danger" onClick={() => remove(r.id)} disabled={busy === `remove-${r.id}`}>
+                <Button small variant="destructive" onClick={() => remove(r.id)} disabled={busy === `remove-${r.id}`}>
                   {busy === `remove-${r.id}` ? '...' : 'Remove'}
                 </Button>
               </div>

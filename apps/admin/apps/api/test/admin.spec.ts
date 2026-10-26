@@ -64,18 +64,6 @@ describe('admin console', () => {
     expect(JSON.stringify(res.body)).not.toContain('hash');
   });
 
-  it('reports gate health to an admin, and refuses everyone else', async () => {
-    const writer = await signin('writer@example.com');
-    await writer.get('/api/admin/gate-health').expect(403);
-
-    const admin = await signin('admin@example.com');
-    const res = await admin.get('/api/admin/gate-health').expect(200);
-    expect(Array.isArray(res.body.gates)).toBe(true);
-    expect(res.body.gates).toHaveLength(2);
-    // `ok` is the doctor's own verdict, not a summary this route computes.
-    expect(typeof res.body.ok).toBe('boolean');
-  });
-
   it('filters by name or email', async () => {
     const admin = await signin('admin@example.com');
     const res = await admin.get('/api/admin/users?q=writ').expect(200);
@@ -95,29 +83,6 @@ describe('admin console', () => {
       .post('/api/admin/users')
       .send({ name: 'Third', email: 'third@example.com', password, role: 'admin' })
       .expect(403);
-  });
-
-  it('mints a key for a user and returns the plaintext exactly once', async () => {
-    const admin = await signin('admin@example.com');
-    const res = await admin
-      .post(`/api/admin/users/${userId}/keys`)
-      .send({ label: 'ci', scopes: ['profile:read', 'gate:run'] })
-      .expect(201);
-
-    expect(res.body.key).toMatch(/^usl_/);
-    expect(res.body.prefix).toHaveLength(12);
-
-    const listed = await admin.get(`/api/admin/users/${userId}/keys`).expect(200);
-    expect(JSON.stringify(listed.body)).not.toContain(res.body.key);
-    expect(listed.body[0].key_prefix).toBe(res.body.prefix);
-  });
-
-  it('refuses an unknown scope', async () => {
-    const admin = await signin('admin@example.com');
-    await admin
-      .post(`/api/admin/users/${userId}/keys`)
-      .send({ label: 'bad', scopes: ['profile:read', 'root:everything'] })
-      .expect(400);
   });
 
   it('refuses a self role change', async () => {
@@ -149,7 +114,7 @@ describe('admin console', () => {
     expect(JSON.parse(auditRow.before_json)).toEqual({ role: 'user', isOwner: false });
     expect(JSON.parse(auditRow.after_json)).toEqual({ role: 'admin', isOwner: false });
 
-    // The writer holds a key and a session from signing in earlier in the suite.
+    // The writer holds a session from signing in earlier in the suite.
     const writer = await signin('writer@example.com');
     await writer.get('/api/me').expect(200);
 
@@ -157,10 +122,6 @@ describe('admin console', () => {
 
     // Demotion takes effect on the next request, not at token expiry.
     await writer.get('/api/me').expect(401);
-    const liveKeys = h.db
-      .prepare('SELECT COUNT(*) AS n FROM api_keys WHERE user_id = ? AND revoked_at IS NULL')
-      .get(userId) as { n: number };
-    expect(liveKeys.n).toBe(0);
   });
 
   it('protects the Owner and lets only the Owner manage super_admins', async () => {
@@ -215,7 +176,6 @@ describe('admin console', () => {
       expect.arrayContaining([
         'admin:role_change',
         'admin:user_disable',
-        'admin:key_mint',
         'admin:user_create',
       ]),
     );

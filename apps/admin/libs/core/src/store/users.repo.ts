@@ -30,8 +30,6 @@ export interface User {
   /** Interface theme. The same contract as `locale`. */
   theme: Theme;
   /** The account's default master step; runs only when a profile has none. */
-  masterName?: string | null;
-  masterBody?: string | null;
   /** Set when the account has an uploaded avatar; also the cache key the SPA uses. */
   avatarUpdatedAt?: string | null;
   createdAt: string;
@@ -57,8 +55,6 @@ interface UserRow {
   is_owner: number;
   locale: Locale;
   theme: Theme;
-  master_name: string | null;
-  master_body: string | null;
   avatar_updated_at: string | null;
   created_at: string;
   updated_at: string;
@@ -71,7 +67,7 @@ interface UserRow {
  */
 const USER_COLUMNS = `id, name, email, password_hash, role, tier, status, profile_picture,
   cover_image, about, social_links, is_activated, twofa_enabled, twofa_secret, locale, theme,
-  master_name, master_body, avatar_updated_at, is_owner, created_at, updated_at`;
+  avatar_updated_at, is_owner, created_at, updated_at`;
 
 export interface CreateUserInput {
   name: string;
@@ -111,8 +107,6 @@ export interface UpdateUserInput {
   twoFASecrect?: string | null;
   locale?: Locale;
   theme?: Theme;
-  masterName?: string | null;
-  masterBody?: string | null;
   /** Ignored: sessions own tokens now. Kept so ported call sites still compile. */
   token?: string;
 }
@@ -136,8 +130,6 @@ function toUser(row: UserRow, passwordHash?: string | null): User {
     isOwner: row.is_owner === 1,
     locale: row.locale ?? 'en',
     theme: row.theme ?? 'system',
-    masterName: row.master_name,
-    masterBody: row.master_body,
     avatarUpdatedAt: row.avatar_updated_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -160,8 +152,6 @@ const COLUMN_OF: Record<string, string> = {
   twoFASecrect: 'twofa_secret',
   locale: 'locale',
   theme: 'theme',
-  masterName: 'master_name',
-  masterBody: 'master_body',
 };
 
 /** Raised when an unclaimed instance tries to create an account. */
@@ -260,37 +250,6 @@ export class UsersRepository {
         )
         .run(id);
       return this.getById(id) as User;
-    });
-    return run.immediate();
-  }
-
-  /**
-   * The in-product handover. The target must already be an active super_admin,
-   * so a typo cannot hand the instance to an arbitrary account. The previous
-   * Owner keeps `super_admin`; only the flag moves.
-   */
-  transferOwner(fromId: number, toId: number): { from: User; to: User } {
-    const run = this.db.transaction(() => {
-      if (fromId === toId) throw new OwnerTransferError('same_user', 'Choose a different account');
-      const from = this.getById(fromId);
-      if (!from) throw new OwnerTransferError('missing_user', 'User not found');
-      if (!from.isOwner) throw new OwnerTransferError('not_owner', 'Only the owner can transfer');
-      const to = this.getById(toId);
-      if (!to) throw new OwnerTransferError('missing_user', 'Target not found');
-      if (to.role !== 'super_admin' || to.status !== 'active') {
-        throw new OwnerTransferError('not_super_admin', 'Target is not an active super_admin');
-      }
-      this.db
-        .prepare(
-          `UPDATE users SET is_owner = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?`,
-        )
-        .run(fromId);
-      this.db
-        .prepare(
-          `UPDATE users SET is_owner = 1, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?`,
-        )
-        .run(toId);
-      return { from: this.getById(fromId) as User, to: this.getById(toId) as User };
     });
     return run.immediate();
   }

@@ -1,1 +1,0 @@
-﻿A sentence that carries a byte order mark.

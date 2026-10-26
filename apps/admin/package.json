@@ -18,16 +18,16 @@
   ],
   "scripts": {
     "build": "yarn workspaces foreach -A -t --topological-dev run build",
-    "test": "yarn workspace @uslub/core build && yarn workspaces foreach -A -t --topological-dev run test",
+    "test": "yarn workspace @tilawa-admin/core build && yarn workspaces foreach -A -t --topological-dev run test",
     "lint": "yarn workspaces foreach -A -t --topological-dev run lint",
-    "typecheck": "yarn workspace @uslub/core build && yarn workspaces foreach -A -t --topological-dev run typecheck",
+    "typecheck": "yarn workspace @tilawa-admin/core build && yarn workspaces foreach -A -t --topological-dev run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "dev:api": "yarn workspace @uslub/api start:dev",
-    "dev:mcp": "yarn workspace @uslub/mcp start:dev",
-    "dev:web": "yarn workspace @uslub/web dev",
+    "dev:api": "yarn workspace @tilawa-admin/api start:dev",
+    "dev:web": "yarn workspace @tilawa-admin/web dev",
     "admin": "node --env-file-if-exists=.env scripts/admin.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "lint-staged": {
     "**/*.{ts,tsx,js,jsx,json,css,md}": [

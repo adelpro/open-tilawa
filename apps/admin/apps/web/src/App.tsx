@@ -12,8 +12,6 @@ import { SignIn } from './routes/SignIn';
 import { Landing } from './routes/Landing';
 import { SignUp } from './routes/SignUp';
 import { Activate } from './routes/Activate';
-import { EmailChange } from './routes/EmailChange';
-import { OwnerTransfer } from './routes/OwnerTransfer';
 import { TwoFactor } from './routes/TwoFactor';
 import { ResetPassword } from './routes/ResetPassword';
 import { Setup } from './routes/Setup';
@@ -21,7 +19,6 @@ import { About } from './routes/About';
 import { Help } from './routes/Help';
 import { Privacy } from './routes/Privacy';
 import { Terms } from './routes/Terms';
-import { OAuthConsent } from './routes/OAuthConsent';
 import { Account } from './routes/Account';
 import { AdminConsole } from './routes/AdminConsole';
 import { Seeders } from './routes/Seeders';
@@ -165,13 +162,10 @@ function Screens(): ReactElement {
   if (first === 'signup') return <SignUp />;
   if (first === 'activate') return <Activate token={second ?? null} />;
   if (first === 'reset-password') return <ResetPassword token={second ?? null} />;
-  if (first === 'email-change') return <EmailChange token={second ?? null} />;
-  if (first === 'owner-transfer') return <OwnerTransfer token={second ?? null} />;
   if (first === 'setup') return <Setup />;
   if (first === 'about') return <About />;
   if (first === 'privacy') return <Privacy />;
   if (first === 'terms') return <Terms />;
-  if (first === 'oauth' && second === 'consent') return <OAuthConsent />;
   if (first === '2fa') return <TwoFactor />;
   if (first === 'signin') return <SignIn />;
 
@@ -290,7 +284,7 @@ function Screens(): ReactElement {
 
 function Screen({
   first,
-  second,
+  second: _second,
   role,
 }: {
   first: string | undefined;
@@ -406,9 +400,9 @@ function ShellSkeleton(): ReactElement {
           <nav className="nav" aria-hidden="true">
             <div className="nav__group">
               <span className="nav__label">{t('nav.workspace')}</span>
-              <span className="nav__link">{t('nav.profiles')}</span>
-              <span className="nav__link">{t('nav.keys')}</span>
-              <span className="nav__link">{t('nav.usage')}</span>
+              <span className="nav__link">{t('nav.seeders')}</span>
+              <span className="nav__link">{t('nav.turns')}</span>
+              <span className="nav__link">{t('nav.torrents')}</span>
               <span className="nav__link">{t('nav.account')}</span>
             </div>
           </nav>

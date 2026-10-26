@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { relative } from '../lib/format';
 import { useI18n } from '../lib/i18n';
 import { useSession } from '../lib/session';
-import type { AdminUser, AuditEntry, DoctorReport } from '../lib/types';
+import type { AdminUser, AuditEntry } from '../lib/types';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { SearchField } from '../components/fields';
@@ -14,7 +14,7 @@ import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { Tabs } from '../components/Tabs';
 
-type Tab = 'users' | 'health' | 'audit';
+type Tab = 'users' | 'audit';
 
 /**
  * The admin console, in two sizes.
@@ -37,7 +37,6 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
   const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'admin' | 'super_admin'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'disabled'>('all');
   const [audit, setAudit] = useState<AuditEntry[] | null>(null);
-  const [health, setHealth] = useState<DoctorReport | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -70,11 +69,6 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
         setAudit(await api<AuditEntry[]>('/admin/audit?limit=50'));
       } catch {
         setAudit([]);
-      }
-      try {
-        setHealth(await api<DoctorReport>('/admin/gate-health'));
-      } catch {
-        setHealth(null);
       }
     })();
   }, []);
@@ -136,7 +130,6 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'users', label: t('admin.tab.users') },
-    { id: 'health', label: t('admin.tab.health') },
     { id: 'audit', label: t('admin.tab.audit') },
   ];
 
@@ -296,84 +289,6 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
                   </tbody>
                 </table>
               </div>
-            )}
-          </Panel>
-        ) : null}
-
-        {tab === 'health' ? (
-          <Panel>
-            <div className="panel-head">
-              <h2 className="display-sm">{t('admin.gateHealth')}</h2>
-              {health ? (
-                <Chip tone={health.ok ? 'ok' : 'bad'}>
-                  {health.ok ? t('admin.healthy') : t('admin.degraded')}
-                </Chip>
-              ) : null}
-            </div>
-            {health === undefined ? (
-              <SkeletonRows rows={3} label={t('admin.gateHealth')} />
-            ) : health === null ? (
-              <p className="body muted">{t('admin.unavailable')}</p>
-            ) : (
-              <>
-                <div className="table-scroll">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>{t('admin.gate')}</th>
-                        <th>{t('admin.present')}</th>
-                        <th>{t('admin.version')}</th>
-                        <th>{t('admin.filesDrifted')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {health.gates.map((gate) => (
-                        <tr key={gate.id}>
-                          <td>
-                            <code>{gate.id}</code>
-                          </td>
-                          <td>
-                            <Chip tone={gate.present ? 'ok' : 'bad'}>
-                              {gate.present ? t('admin.yes') : t('admin.no')}
-                            </Chip>
-                          </td>
-                          <td className="muted">{gate.version ?? '—'}</td>
-                          <td className="num">
-                            {gate.files.filter((file) => file.drift).length} / {gate.files.length}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="fine-print" style={{ marginTop: 'var(--space-3)' }}>
-                  {t('admin.python', {
-                    value: health.python.version ?? health.python.problem ?? t('admin.no'),
-                  })}{' '}
-                  · {t('admin.vendor', { dir: health.vendor.dir })}
-                  {health.vendor.mismatches.length > 0
-                    ? ` · ${t('admin.mismatches', { count: health.vendor.mismatches.length })}`
-                    : ''}
-                </p>
-                {health.skills && health.skills.length > 0 ? (
-                  <p className="fine-print">
-                    {t('admin.prompts', {
-                      list: health.skills
-                        .map(
-                          (skill) =>
-                            `${skill.id}${skill.version ? ` v${skill.version}` : ''}${
-                              skill.drift
-                                ? ` ${t('admin.promptDrift')}`
-                                : skill.present
-                                  ? ''
-                                  : ` ${t('admin.promptMissing')}`
-                            }`,
-                        )
-                        .join(' · '),
-                    })}
-                  </p>
-                ) : null}
-              </>
             )}
           </Panel>
         ) : null}

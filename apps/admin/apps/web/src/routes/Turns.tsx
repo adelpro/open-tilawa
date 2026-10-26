@@ -20,7 +20,6 @@ export function Turns(): ReactElement {
   const [newUrl, setNewUrl] = useState('');
 
   const load = useCallback(async () => {
-    setError(null);
     try {
       setTurns(await api<Turn[]>('/turns'));
     } catch (caught) {
@@ -92,36 +91,34 @@ export function Turns(): ReactElement {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">TURN Servers</h1>
         <div className="flex gap-2">
-          <Button onClick={pollAll} disabled={busy === 'poll-all'}>
-            {busy === 'poll-all' ? 'Polling...' : 'Poll All'}
-          </Button>
+          <Button onClick={pollAll} busy={busy === 'poll-all'}>Poll all</Button>
           <Button onClick={() => setShowAdd(!showAdd)}>
             {showAdd ? 'Cancel' : 'Add TURN Server'}
           </Button>
         </div>
       </div>
 
-      {error && <Notice tone="error" className="mb-4">{error}</Notice>}
-      {message && <Notice tone="info" className="mb-4">{message}</Notice>}
+      {error && <Notice tone="bad">{error}</Notice>}
+      {message && <Notice tone="info">{message}</Notice>}
 
       {showAdd && (
         <Panel className="mb-6 p-4">
           <div className="flex flex-col gap-3">
             <Field label="Name">
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="TURN 1" />
+              {(id) => <Input id={id} value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="TURN 1" />}
             </Field>
             <Field label="URL">
-              <Input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="turn:192.168.1.100:3478" />
+              {(id) => <Input id={id} value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="turn:192.168.1.100:3478" />}
             </Field>
-            <Button onClick={add} disabled={busy === 'add' || !newName.trim() || !newUrl.trim()}>
-              {busy === 'add' ? 'Adding...' : 'Add'}
+            <Button onClick={add} busy={busy === 'add'} disabled={!newName.trim() || !newUrl.trim()}>
+              Add
             </Button>
           </div>
         </Panel>
       )}
 
       {turns === null ? (
-        <SkeletonRows />
+        <SkeletonRows rows={4} label="Loading TURN servers" />
       ) : turns.length === 0 ? (
         <Panel className="p-8 text-center text-gray-500">
           No TURN servers yet. Click "Add TURN Server" to get started.
@@ -134,18 +131,14 @@ export function Turns(): ReactElement {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{t.name}</span>
-                    <Chip tone={t.status === 'online' ? 'success' : 'error'}>{t.status}</Chip>
+                    <Chip tone={t.status === 'online' ? 'ok' : 'bad'}>{t.status}</Chip>
                   </div>
                   <div className="text-sm text-gray-500 mt-1">{t.url}</div>
                   {t.realm && <div className="text-xs text-gray-400 mt-1">Realm: {t.realm}</div>}
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => poll(t.id)} disabled={busy === `poll-${t.id}`}>
-                    {busy === `poll-${t.id}` ? '...' : 'Poll'}
-                  </Button>
-                  <Button size="sm" tone="danger" onClick={() => remove(t.id)} disabled={busy === `remove-${t.id}`}>
-                    {busy === `remove-${t.id}` ? '...' : 'Remove'}
-                  </Button>
+                  <Button small onClick={() => poll(t.id)} busy={busy === `poll-${t.id}`}>Poll</Button>
+                  <Button small variant="destructive" onClick={() => remove(t.id)} busy={busy === `remove-${t.id}`}>Remove</Button>
                 </div>
               </div>
             </Panel>

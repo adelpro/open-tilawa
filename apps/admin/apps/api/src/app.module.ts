@@ -7,7 +7,6 @@ import { UslubThrottlerGuard } from './config/throttler.guard';
 import { CsrfModule } from './csrf/csrf.module';
 import { CsrfMiddleware } from './csrf/csrf.middleware';
 import { SetupModule } from './setup/setup.module';
-import { OwnerModule } from './owner/owner.module';
 import { AdminModule } from './admin/admin.module';
 import { HealthController } from './health.controller';
 import { StoreModule } from './store/store.module';
@@ -40,7 +39,6 @@ import { envValidate } from './config/env/env.validate';
     RecitersModule,
     AdminModule,
     SetupModule,
-    OwnerModule,
     CsrfModule,
   ],
   controllers: [HealthController],

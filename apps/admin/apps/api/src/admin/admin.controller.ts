@@ -18,7 +18,7 @@ import { CurrentUser } from '@/auth/decorators/currentUser.decorator';
 import { JWTAuthGuard } from '@/auth/guards/jwt.guard';
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { RoleGuard } from '@/auth/guards/roles.guard';
-import { AdminChangeRoleDTO, AdminCreateUserDTO, AdminMintKeyDTO } from './admin.dto';
+import { AdminChangeRoleDTO, AdminCreateUserDTO } from './admin.dto';
 import { AdminActor, AdminService, PublicUser } from './admin.service';
 
 /**
@@ -113,38 +113,6 @@ export class AdminController {
   }
 
   @Roles('admin')
-  @Get('users/:id/keys')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'List a user’s API keys (prefixes only, never the key)' })
-  listKeys(@Param('id', ParseIntPipe) id: number) {
-    return this.admin.listKeys(id);
-  }
-
-  @Roles('admin')
-  @Post('users/:id/keys')
-  @ApiOperation({ summary: 'Mint a key for a user — the plaintext appears once' })
-  @ApiBody({ type: AdminMintKeyDTO })
-  mintKey(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: AdminMintKeyDTO,
-  ) {
-    return this.admin.mintKey(this.actorOf(currentUser), id, dto);
-  }
-
-  @Roles('admin')
-  @Delete('users/:id/keys/:prefix')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Revoke one of a user’s keys by prefix' })
-  revokeKey(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param('id', ParseIntPipe) id: number,
-    @Param('prefix') prefix: string,
-  ): Promise<{ revoked: true }> {
-    return this.admin.revokeKey(this.actorOf(currentUser), id, prefix);
-  }
-
-  @Roles('admin')
   @Get('audit')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Recent audit rows (a super_admin sees every actor)' })
@@ -154,13 +122,5 @@ export class AdminController {
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.admin.auditTail(this.actorOf(currentUser), limit ?? 200);
-  }
-
-  @Roles('admin')
-  @Get('gate-health')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Gate health: vendored gates, interpreter, store' })
-  gateHealth() {
-    return this.admin.gateHealth();
   }
 }

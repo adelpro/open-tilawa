@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { Icon } from './icons';
 import { useI18n } from '../lib/i18n';

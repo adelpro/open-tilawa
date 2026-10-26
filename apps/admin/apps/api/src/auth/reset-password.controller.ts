@@ -12,7 +12,7 @@ export class ResetPasswordController {
   constructor(private readonly reset: ResetPasswordService) {}
 
   @Post('send-email')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Send a single-use password reset link by email' })
   @ApiOkResponse({ description: 'Always a generic confirmation' })
   @ApiBadRequestResponse({ description: 'Malformed email' })

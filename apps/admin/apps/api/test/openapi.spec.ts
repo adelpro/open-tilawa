@@ -15,6 +15,9 @@ import { bootHarness } from './harness';
  */
 describe('openapi', () => {
   it('matches the committed document', async () => {
+    const version = (
+      JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string }
+    ).version;
     const h = await bootHarness();
     // The harness gives us the app via its internal moduleRef; rebuild the document
     // the same way export-openapi.ts does, so the comparison is apples to apples.
@@ -24,7 +27,7 @@ describe('openapi', () => {
     app.setGlobalPrefix('api');
     const document = SwaggerModule.createDocument(
       app,
-      new DocumentBuilder().setTitle('Uslub API').setVersion('1.7.0').build(),
+      new DocumentBuilder().setTitle('Tilawa Admin API').setVersion(version).build(),
     );
     await app.close();
     await h.close();
@@ -48,7 +51,7 @@ describe('openapi', () => {
     const committed = JSON.parse(
       readFileSync(join(__dirname, '..', '..', '..', 'docs', 'openapi.json'), 'utf-8'),
     );
-    expect(Object.keys(committed.paths).length).toBeGreaterThanOrEqual(50);
+    expect(Object.keys(committed.paths).length).toBeGreaterThanOrEqual(25);
     expect(committed.components?.schemas).toBeDefined();
   });
 });

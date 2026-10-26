@@ -7,21 +7,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  ApiKeysRepository,
   AuditRepository,
   ROLE_RANK,
-  SCOPES,
   SessionsRepository,
   UsersRepository,
-  isScope,
-  runDoctor,
-  type DoctorReport,
-  type EngineTools,
   type Role,
-  type Scope,
   type User,
 } from '@tilawa-admin/core';
-import { ENGINE_TOOLS, SQLITE_DB } from '@/store/store.module';
+import { SQLITE_DB } from '@/store/store.module';
 import { UsersService } from '@/users/users.service';
 import type { Db } from '@tilawa-admin/core';
 
@@ -71,21 +64,11 @@ export class AdminService {
     @Inject(SQLITE_DB) private readonly db: Db,
     private readonly users: UsersRepository,
     private readonly usersService: UsersService,
-    private readonly keys: ApiKeysRepository,
     private readonly sessions: SessionsRepository,
     private readonly audit: AuditRepository,
-    @Inject(ENGINE_TOOLS) private readonly tools: EngineTools,
   ) {}
 
   // --- reads -------------------------------------------------------------
-
-  /**
-   * Gate health for the operations panel (T6.6): the same `doctor` the CLI runs,
-   * so the panel cannot report a rosier picture than the binary does.
-   */
-  gateHealth(): DoctorReport {
-    return runDoctor({ tools: this.tools, db: this.db });
-  }
 
   async listUsers(query?: string): Promise<PublicUser[]> {
     const all = this.users.getAll();
@@ -103,11 +86,6 @@ export class AdminService {
     const user = this.users.getById(id);
     if (!user) throw new NotFoundException('User not found');
     return this.toPublic(user);
-  }
-
-  async listKeys(userId: number): Promise<ReturnType<ApiKeysRepository['listByUser']>> {
-    this.requireUser(userId);
-    return this.keys.listByUser(userId);
   }
 
   /** The most recent audit rows, newest first. Super admins see every actor's. */
@@ -204,7 +182,6 @@ export class AdminService {
 
       if (demoting) {
         // A demotion that leaves working keys behind is not a demotion.
-        this.keys.revokeAllForUser(current.id);
         this.sessions.deleteByUser(current.id);
       }
       return updated;
@@ -268,7 +245,6 @@ export class AdminService {
       const updated = this.users.update(current.id, { status });
       if (!updated) throw new NotFoundException('User not found');
       if (status === 'disabled') {
-        this.keys.revokeAllForUser(current.id);
         this.sessions.deleteByUser(current.id);
       }
       return updated;
@@ -284,61 +260,6 @@ export class AdminService {
       after: { status: updated.status, isOwner: updated.isOwner },
     });
     return this.toPublic(updated);
-  }
-
-  /** Mints a key for another account. The plaintext appears once, here. */
-  async mintKey(
-    actor: AdminActor,
-    targetId: number,
-    input: { label: string; scopes?: string[]; expiresAt?: string },
-  ): Promise<{ key: string; id: number; prefix: string; scopes: string }> {
-    const target = this.requireUser(targetId);
-    this.assertActor(actor);
-    if (target.role === 'super_admin' && actor.id !== target.id && actor.role !== 'super_admin') {
-      throw new ForbiddenException('An admin cannot mint keys for a super_admin');
-    }
-
-    const scopes = (input.scopes ?? []).map((scope) => scope.trim());
-    const unknown = scopes.filter((scope) => !isScope(scope));
-    if (unknown.length > 0) {
-      throw new BadRequestException(
-        `Unknown scope(s): ${unknown.join(', ')}. Allowed: ${SCOPES.join(', ')}`,
-      );
-    }
-
-    const { key, record } = this.keys.mint({
-      userId: target.id,
-      label: input.label,
-      scopes: scopes as Scope[],
-      expiresAt: input.expiresAt ?? null,
-    });
-
-    this.audit.record({
-      actorId: actor.id,
-      userId: target.id,
-      keyId: record.id,
-      action: 'admin:key_mint',
-      // The prefix identifies the key; the key itself is never logged.
-      target: record.key_prefix,
-      after: { label: record.label, scopes: record.scopes },
-    });
-
-    return { key, id: record.id, prefix: record.key_prefix, scopes: record.scopes };
-  }
-
-  async revokeKey(actor: AdminActor, targetId: number, prefix: string): Promise<{ revoked: true }> {
-    const target = this.requireUser(targetId);
-    this.assertActor(actor);
-    const revoked = this.keys.revokeByPrefix(prefix, target.id);
-    if (!revoked) throw new NotFoundException('Key not found');
-
-    this.audit.record({
-      actorId: actor.id,
-      userId: target.id,
-      action: 'admin:key_revoke',
-      target: prefix,
-    });
-    return { revoked: true };
   }
 
   async deleteUser(actor: AdminActor, targetId: number): Promise<{ deleted: true }> {
@@ -367,7 +288,6 @@ export class AdminService {
       if (current.role === 'super_admin' && this.activeSuperAdmins() <= 1) {
         throw new ConflictException('The last active super_admin cannot be deleted');
       }
-      this.keys.revokeAllForUser(current.id);
       this.sessions.deleteByUser(current.id);
       this.users.delete(current.id);
       return true;

@@ -96,7 +96,7 @@ describe('the frame survives loading', () => {
   });
 
   it('uses skeletons for the lists that wait', () => {
-    for (const route of ['Profiles.tsx', 'Keys.tsx']) {
+    for (const route of ['Seeders.tsx', 'Turns.tsx', 'Torrents.tsx']) {
       const source = readFileSync(join(ROOT, 'routes', route), 'utf-8');
       assert.match(source, /SkeletonRows/, `${route} does not use the skeleton`);
       assert.equal(

@@ -131,9 +131,6 @@ describe('headings and the account screen (A9, T13.8)', () => {
 
   it('gives each screen exactly one h1', () => {
     for (const route of [
-      'Profiles.tsx',
-      'Keys.tsx',
-      'Usage.tsx',
       'Account.tsx',
       'AdminConsole.tsx',
     ]) {
