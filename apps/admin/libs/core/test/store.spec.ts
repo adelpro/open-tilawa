@@ -36,7 +36,7 @@ describe('store', () => {
     // migration is applied and *not* re-applied, and a hardcoded list turns every
     // new migration into a test edit that says nothing.
     expect(appliedMigrations(db)).toEqual(
-      expect.arrayContaining(['001_init.sql', '002_auth.sql', '003_voice.sql']),
+      expect.arrayContaining(['001_init.sql', '002_auth.sql', '004_avatar.sql', '013_owner.sql']),
     );
     expect(appliedMigrations(db)).toEqual(appliedMigrations(db)); // re-read, not re-run
   });
@@ -69,7 +69,7 @@ describe('store', () => {
         .map((row) => (row as { name: string }).name);
       expect(columns.filter((name) => name === 'skill_md')).toHaveLength(1);
       expect(appliedMigrations(check)).toEqual(
-        expect.arrayContaining(['001_init.sql', '002_auth.sql', '003_voice.sql']),
+        expect.arrayContaining(['001_init.sql', '002_auth.sql', '004_avatar.sql', '013_owner.sql']),
       );
       check.close();
     } finally {
