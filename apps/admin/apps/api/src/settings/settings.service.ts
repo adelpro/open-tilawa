@@ -69,22 +69,50 @@ export function mergeTrackers(magnet: string, trackers: string[]): string {
   const url = new URL(magnet);
   const existing = url.searchParams.getAll('tr');
   const merged = [...new Set([...existing, ...trackers])];
-  const params = new URLSearchParams();
-  const xt = url.searchParams.get('xt');
-  if (xt) params.set('xt', xt);
-  const dn = url.searchParams.get('dn');
-  if (dn) params.set('dn', dn);
-  for (const tracker of merged) params.append('tr', tracker);
   // Anything else the magnet carried (xl, ws, so, as) is preserved as-is.
+  const extras: [string, string][] = [];
   for (const [key, value] of url.searchParams) {
-    if (!['xt', 'dn', 'tr'].includes(key)) params.append(key, value);
+    if (!['xt', 'dn', 'tr'].includes(key)) extras.push([key, value]);
   }
-  return `magnet:?${params.toString()}`;
+  return magnetQuery({
+    xt: url.searchParams.get('xt') ?? undefined,
+    dn: url.searchParams.get('dn') ?? undefined,
+    tr: merged,
+    extras,
+  });
 }
 
 /** A fresh magnet for a catalogue row: hash + name + the configured trackers. */
 export function magnetForInfo(infoHash: string, name: string, trackers: string[]): string {
-  const params = new URLSearchParams({ xt: `urn:btih:${infoHash}`, dn: name });
-  for (const tracker of trackers) params.append('tr', tracker);
-  return `magnet:?${params.toString()}`;
+  return magnetQuery({ xt: `urn:btih:${infoHash}`, dn: name, tr: trackers });
+}
+
+/**
+ * A magnet query value, encoded exactly as much as it needs to be.
+ *
+ * `:` and `/` are legal inside a query value (RFC 3986), and every magnet parser
+ * depends on seeing them literally: magnet-uri splits on `&`/`=` and does not
+ * percent-decode, so `xt=urn%3Abtih%3A…` is rejected as an invalid torrent
+ * identifier — which is precisely what `URLSearchParams.toString()` produces.
+ * Values are therefore encoded here and those two characters restored.
+ */
+function magnetValue(value: string): string {
+  return encodeURIComponent(value).replace(/%3A/gi, ':').replace(/%2F/gi, '/');
+}
+
+interface MagnetQuery {
+  xt?: string;
+  dn?: string;
+  tr?: string[];
+  /** Parameters this service does not own: ws, xl, so, as… */
+  extras?: [string, string][];
+}
+
+function magnetQuery({ xt, dn, tr = [], extras = [] }: MagnetQuery): string {
+  const parts: string[] = [];
+  if (xt) parts.push(`xt=${magnetValue(xt)}`);
+  if (dn) parts.push(`dn=${magnetValue(dn)}`);
+  for (const tracker of tr) parts.push(`tr=${magnetValue(tracker)}`);
+  for (const [key, value] of extras) parts.push(`${magnetValue(key)}=${magnetValue(value)}`);
+  return `magnet:?${parts.join('&')}`;
 }
