@@ -5,6 +5,7 @@ import path from 'path';
 import http from 'http';
 import crypto from 'crypto';
 import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
+import TRACKERS from './constants/TRACKERS.js';
 import { readFileSync as readFile, statfsSync } from 'fs';
 
 /**
@@ -103,7 +104,9 @@ log.info(`Found ${torrentFiles.length} torrent files in ${TORRENT_DIR}`);
 
 for (const tf of torrentFiles) {
   const fullPath = path.join(TORRENT_DIR, tf);
-  client.add(fullPath, { path: DOWNLOAD_PATH }, (torrent) => {
+  // Announce to our tracker as well as whatever the .torrent already lists:
+  // without this the node seeds happily but is invisible on the tracker.
+  client.add(fullPath, { path: DOWNLOAD_PATH, announce: TRACKERS }, (torrent) => {
     log.success(`Seeding: ${torrent.name} (${torrent.infoHash}) — ${torrent.files.length} files`);
   });
 }
@@ -268,7 +271,7 @@ const server = http.createServer((req, res) => {
           });
           return;
         }
-        client.add(source, { path: DOWNLOAD_PATH }, (torrent) => {
+        client.add(source, { path: DOWNLOAD_PATH, announce: TRACKERS }, (torrent) => {
           // `xl` is a hint; the metadata length is the fact. Checking here aborts
           // before the payload moves, which is the only place a cap can hold.
           const settled = quotaCheck(torrent.length);

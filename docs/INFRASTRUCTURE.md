@@ -72,6 +72,10 @@ each piece does, which port it listens on, and how data moves between them.
   live speed.
 - **Admin UI:** `ADMIN_UI=0` keeps `/api` for the dashboard but stops serving the
   browsable page.
+- **Announce:** the node announces every torrent it seeds to the tracker list in
+  `constants/TRACKERS.js` (canonical: `wss://tracker.quran.us.kg`) in addition to
+  the trackers inside each `.torrent`. A remote node without the internal
+  `tracker` service simply has one unreachable entry; the rest still announce.
 - **Add/remove:** normally driven by the dashboard (it proxies with the stored
   credentials); the node's own API remains the authority.
 
