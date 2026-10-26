@@ -92,7 +92,7 @@ function head(page, copy, canonicalUrl) {
     <meta property="og:image" content="${site}/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Tilawa Admin — your writing voice, wherever you write" />
+    <meta property="og:image:alt" content="Tilawa Admin — Quran audio distribution: seeders, TURN, torrents and reciters" />
     <meta property="og:locale" content="en" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -101,7 +101,7 @@ function head(page, copy, canonicalUrl) {
     <meta name="twitter:image" content="${site}/og.png" />
 
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />    <link rel="icon" href="/logo-favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
@@ -254,7 +254,7 @@ writeFileSync(
           sizes: '390x844',
           type: 'image/png',
           form_factor: 'narrow',
-          label: 'Tilawa Admin — your writing voice, wherever you write',
+          label: 'Tilawa Admin — Quran audio distribution: seeders, TURN, torrents and reciters',
         },
       ],
     },

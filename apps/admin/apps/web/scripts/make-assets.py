@@ -1,92 +1,116 @@
 #!/usr/bin/env python3
 """Generate the brand bits the browser and a link preview ask for.
 
-Run by hand, not at build: the icons and the share image are brand assets, and the
-Docker build stage is node-only. `apps/web/public/` is copied verbatim into `dist/`
-by Vite, so the outputs land in the image with no extra step.
+The source of truth is `public/logo.png` — the تلاوة wordmark the public web app
+also ships. There is no vector version of the mark in the repository, so every
+icon is rasterised from that one image: trimming its transparent padding first
+is what keeps the wordmark legible at 32px.
+
+Run by hand, not at build: the icons are brand assets, and the Docker build
+stage is node-only. `apps/web/public/` is copied verbatim into `dist/` by Vite,
+so the outputs land in the image with no extra step.
 
     python3 apps/web/scripts/make-assets.py
-
-Design: the accent `#086288` on the canvas cream `#ffefc4`, and two concentric rings
-— the mark is a sound, not a letter. No font is needed for the icon, which is why it
-stays legible at 16px in every renderer; the share image uses DejaVu because it is a
-picture, not a logo.
 """
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 PUBLIC = Path(__file__).resolve().parents[1] / 'public'
-ACCENT = (8, 98, 136, 255)
-CREAM = (255, 239, 196, 255)
-INK = (28, 28, 30, 255)
-MUTED = (90, 90, 96, 255)
+LOGO = PUBLIC / 'logo.png'
 
-BOLD = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
-REGULAR = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-
-
-def mark(size: int) -> Image.Image:
-    """The icon: cream tile, accent rings, drawn at 4x and downsampled."""
-    scale = 4
-    canvas = size * scale
-    image = Image.new('RGBA', (canvas, canvas), CREAM)
-    draw = ImageDraw.Draw(image)
-    centre = canvas / 2
-    for radius, width in ((canvas * 0.34, canvas * 0.085), (canvas * 0.17, canvas * 0.06)):
-        draw.ellipse(
-            [centre - radius, centre - radius, centre + radius, centre + radius],
-            outline=ACCENT,
-            width=max(1, int(width)),
-        )
-    draw.ellipse(
-        [centre - canvas * 0.045, centre - canvas * 0.045, centre + canvas * 0.045, centre + canvas * 0.045],
-        fill=ACCENT,
-    )
-    return image.resize((size, size), Image.LANCZOS)
+# The wordmark's own ink, sampled from logo.png; matching it keeps the raster
+# icons and the artwork indistinguishable.
+INK = (31, 77, 120, 255)
+GREY = (92, 99, 112, 255)
+WHITE = (255, 255, 255, 255)
 
 
-def share_image() -> Image.Image:
-    width, height = 1200, 630
-    image = Image.new('RGB', (width, height), CREAM)
-    draw = ImageDraw.Draw(image)
+def wordmark() -> Image.Image:
+    """The logo with its transparent margins removed."""
+    image = Image.open(LOGO).convert('RGBA')
+    box = image.getbbox()
+    if box is None:
+        raise SystemExit(f'make-assets: {LOGO} is fully transparent')
+    return image.crop(box)
 
-    # Rings, same mark, sized to the canvas rather than copied from the icon.
-    centre = (330, height / 2)
-    for radius, thickness in ((150, 22), (78, 16)):
-        draw.ellipse(
-            [centre[0] - radius, centre[1] - radius, centre[0] + radius, centre[1] + radius],
-            outline=ACCENT,
-            width=thickness,
-        )
-    draw.ellipse(
-        [centre[0] - 16, centre[1] - 16, centre[0] + 16, centre[1] + 16],
-        fill=ACCENT,
-    )
 
-    title = ImageFont.truetype(BOLD, 96)
-    lead = ImageFont.truetype(REGULAR, 38)
-    small = ImageFont.truetype(REGULAR, 26)
+def fit(mark: Image.Image, width: int) -> Image.Image:
+    height = max(1, round(mark.height * width / mark.width))
+    return mark.resize((width, height), Image.LANCZOS)
 
-    x = 560
-    draw.text((x, 190), 'Tilawa Admin', font=title, fill=INK)
-    draw.text((x, 310), 'Your writing voice,', font=lead, fill=MUTED)
-    draw.text((x, 358), 'wherever you write.', font=lead, fill=MUTED)
-    draw.text((x, 470), 'admin-tilawa.quran.us.kg', font=small, fill=ACCENT)
-    return image
+
+def square_icon(
+    mark: Image.Image,
+    size: int,
+    fill: tuple[int, int, int, int] | None,
+    width_fraction: float = 0.78,
+) -> Image.Image:
+    """The wordmark centred in a square, never wider than `width_fraction` of it."""
+    canvas = Image.new('RGBA', (size, size), fill or (0, 0, 0, 0))
+    scaled = fit(mark, round(size * width_fraction))
+    canvas.alpha_composite(scaled, ((size - scaled.width) // 2, (size - scaled.height) // 2))
+    return canvas
+
+
+def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
+    name = 'DejaVuSans-Bold.ttf' if bold else 'DejaVuSans.ttf'
+    for base in ('/usr/share/fonts/truetype/dejavu', '/usr/share/fonts/TTF'):
+        candidate = Path(base) / name
+        if candidate.exists():
+            return ImageFont.truetype(str(candidate), size)
+    return ImageFont.load_default()
 
 
 def main() -> None:
-    PUBLIC.mkdir(parents=True, exist_ok=True)
+    mark = wordmark()
 
-    icon = mark(512)
-    icon.save(PUBLIC / 'icon-512.png')
-    mark(180).save(PUBLIC / 'apple-touch-icon.png')
-    mark(32).save(PUBLIC / 'favicon-32.png')
-    # A one-entry ICO is a valid ICO, and every browser since IE11 reads PNG entries.
-    mark(64).save(PUBLIC / 'favicon.ico', sizes=[(16, 16), (32, 32), (64, 64)])
+    # Browser tab: transparent and as wide as a 32px slot allows — a wordmark
+    # loses too much detail with the padding the larger icons can afford.
+    favicon32 = square_icon(mark, 32, None, 0.9)
+    favicon32.save(PUBLIC / 'favicon-32.png')
 
-    share_image().save(PUBLIC / 'og.png', optimize=True)
-    print('wrote:', sorted(p.name for p in PUBLIC.glob('*.png')) + ['favicon.ico'])
+    # iOS adds its own mask and paints transparency black, so this one needs a
+    # background.
+    square_icon(mark, 180, WHITE).save(PUBLIC / 'apple-touch-icon.png')
+
+    # PWA: full-bleed white so `purpose: any maskable` can crop without clipping.
+    square_icon(mark, 192, WHITE).save(PUBLIC / 'icon-192.png')
+    square_icon(mark, 512, WHITE).save(PUBLIC / 'icon-512.png')
+
+    # .ico carries several sizes in one file; Windows picks per context.
+    favicon32.save(PUBLIC / 'favicon.ico', sizes=[(16, 16), (32, 32), (48, 48)])
+
+    # In-app lockup: the trimmed wordmark, so the header mark is the brand rather
+    # than a letterform that only resembles it.
+    fit(mark, 512).save(PUBLIC / 'logo-wordmark.png')
+
+    # Share card: the wordmark plus a latin line, because the artwork itself is
+    # Arabic and a link preview may be read by someone who does not know it.
+    og = Image.new('RGBA', (1200, 630), WHITE)
+    draw = ImageDraw.Draw(og)
+    big = fit(mark, 520)
+    og.alpha_composite(big, ((1200 - big.width) // 2, 180))
+    draw.text((600, 400), 'Tilawa Admin', font=font(56, bold=True), fill=INK, anchor='mm')
+    draw.text(
+        (600, 468),
+        'Quran audio distribution: seeders, TURN, torrents and reciters',
+        font=font(26),
+        fill=GREY,
+        anchor='mm',
+    )
+    og.convert('RGB').save(PUBLIC / 'og.png')
+
+    print(
+        'wrote:',
+        ', '.join(
+            sorted(
+                name.name
+                for name in PUBLIC.glob('*')
+                if name.suffix in {'.png', '.ico'} and name.name != 'logo.png'
+            )
+        ),
+    )
 
 
 if __name__ == '__main__':

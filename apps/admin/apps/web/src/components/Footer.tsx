@@ -10,7 +10,7 @@ export function Footer(): ReactElement {
     <footer className="site-footer">
       <div className="site-footer__grid">
         <div className="site-footer__brandblock">
-          <FeatherMark className="site-footer__mark" />
+          <FeatherMark className="site-footer__mark" label="Tilawa Admin" />
           <h3>{t('app.brand')}</h3>
           <p className="site-footer__tagline">{t('app.tagline')}</p>
         </div>
