@@ -99,6 +99,9 @@ services:
       # The app must not run with development defaults (non-secure cookies, no
       # secret enforcement) in production; .env still supplies the secrets.
       NODE_ENV: production
+      # Which commit this container runs; `/health` prints it. Set GIT_SHA when
+      # deploying a release, or leave it "dev" for a working-tree build.
+      BUILD_SHA: ${GIT_SHA:-dev}
       PORT: ${ADMIN_API_PORT:-9410}
       DB_PATH: /data/tilawa-admin.sqlite
       CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin-tilawa.quran.us.kg}
