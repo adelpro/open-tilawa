@@ -170,7 +170,8 @@ export const ar: Catalogue = {
   'torrents.signInRequired': 'يلزم تسجيل الدخول.',
 
   'reciters.title': 'القرّاء',
-  'reciters.lede': 'الفهرس الذي يربط كل قارئ وروايتِه بالملف الذي يحمل الإصدار.',
+  'reciters.lede':
+    'السجل الذي يربط القارئ وروايتَه بالملف الذي يحمل ذلك الإصدار. وهو الموضع الوحيد الذي يُدوَّن فيه هذا الربط: أضف القارئ هنا عند نشر إصدار ليبقى الخادم والملف والقارئ مترابطين.',
   'reciters.add': 'إضافة قارئ',
   'reciters.cancel': 'إلغاء',
   'reciters.addSubmit': 'إضافة',
@@ -233,7 +234,8 @@ export const ar: Catalogue = {
   'seeders.updateFailed': 'تعذّر تحديث خادم التوزيع.',
 
   'twofa.recoveryLink': 'استخدم رمز استعادة',
-  'twofa.recoveryLede': 'أدخل أحد أكواد الاستعادة أحادية الاستخدام التي حفظتها عند تفعيل التحقق بخطوتين.',
+  'twofa.recoveryLede':
+    'أدخل أحد أكواد الاستعادة أحادية الاستخدام التي حفظتها عند تفعيل التحقق بخطوتين.',
   'twofa.recoveryCode': 'رمز الاستعادة',
   'twofa.recoverySubmit': 'استخدم الرمز',
   'account.twofa.disableTitle': 'إيقاف التحقق بخطوتين',
@@ -242,6 +244,15 @@ export const ar: Catalogue = {
   'account.twofa.disableAction': 'أوقف التحقق بخطوتين',
   'account.twofa.disabled': 'أُوقف التحقق بخطوتين.',
   'account.twofa.disableFailed': 'تعذّر إيقاف التحقق بخطوتين.',
+
+  'turns.back': 'كل خوادم TURN',
+  'turns.detailFailed': 'تعذّر تحميل خادم TURN هذا.',
+  'turns.notFound': 'لم يعد خادم TURN هذا موجودًا.',
+  'turns.openHint': 'فتح سجل الخادم',
+  'seeders.manage': 'إدارة التورنت',
+  'torrents.backToSeeders': 'كل خوادم التوزيع',
+  'torrents.credentialsHint':
+    'هذه بيانات ADMIN_USER / ADMIN_PASS الخاصة بخادم التوزيع (في .env الجذري)، وليست حسابك في اللوحة.',
 
   'footer.copy': '© تلاوة. جميع الحقوق محفوظة.',
 

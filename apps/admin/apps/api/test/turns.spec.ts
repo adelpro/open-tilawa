@@ -102,6 +102,15 @@ describe('turns api', () => {
     expect(all).toHaveLength(2);
   });
 
+  it('serves one server for the detail route, and 404 for a ghost', async () => {
+    const { body: list } = await agent.get('/api/turns').expect(200);
+    const id = list[0].id as number;
+    const one = await agent.get(`/api/turns/${id}`).expect(200);
+    expect(one.body.id).toBe(id);
+    expect(one.body).toHaveProperty('latencyMs');
+    await agent.get('/api/turns/99999').expect(404);
+  });
+
   it('refuses to store a URL no probe could ever dial', async () => {
     await agent
       .post('/api/turns')

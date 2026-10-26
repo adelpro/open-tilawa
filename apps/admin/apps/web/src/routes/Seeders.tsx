@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
+import { navigate } from '../lib/router';
+import { bytes } from '../lib/format';
 import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
@@ -17,7 +19,7 @@ import type { Seeder } from '../lib/types-seeders';
  */
 export function Seeders(): ReactElement {
   const { user } = useSession();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [seeders, setSeeders] = useState<Seeder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -200,7 +202,7 @@ export function Seeders(): ReactElement {
                 />
               )}
             </Field>
-            <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsHint')}>
+            <Field label={t('seeders.adminUser')} hint={t('torrents.credentialsHint')}>
               {(id) => (
                 <Input
                   id={id}
@@ -313,7 +315,19 @@ export function Seeders(): ReactElement {
               </thead>
               <tbody>
                 {seeders.map((seeder) => (
-                  <tr key={seeder.id}>
+                  <tr
+                    key={seeder.id}
+                    className="table__row--clickable"
+                    tabIndex={0}
+                    role="link"
+                    onClick={() => navigate(`/torrents/${seeder.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        navigate(`/torrents/${seeder.id}`);
+                      }
+                    }}
+                  >
                     <td>
                       <span className="row__label">{seeder.name}</span>
                       <br />
@@ -343,7 +357,8 @@ export function Seeders(): ReactElement {
                       {t('seeders.peerCount', { count: String(seeder.peerCount) })}
                       <br />
                       <span className="row__meta">
-                        ↑ {seeder.uploadSpeed} · ↓ {seeder.downloadSpeed}
+                        ↑ {bytes(seeder.uploadSpeed, locale, true)} · ↓{' '}
+                        {bytes(seeder.downloadSpeed, locale, true)}
                       </span>
                     </td>
                     <td>
@@ -356,18 +371,41 @@ export function Seeders(): ReactElement {
                         <Button
                           small
                           variant="secondary"
-                          onClick={() => void poll(seeder.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void poll(seeder.id);
+                          }}
                           busy={busy === `poll-${seeder.id}`}
                         >
                           {t('seeders.probe')}
                         </Button>
-                        <Button small variant="tertiary" onClick={() => startEdit(seeder)}>
+                        <Button
+                          small
+                          variant="secondary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/torrents/${seeder.id}`);
+                          }}
+                        >
+                          {t('seeders.manage')}
+                        </Button>
+                        <Button
+                          small
+                          variant="tertiary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            startEdit(seeder);
+                          }}
+                        >
                           {t('seeders.edit')}
                         </Button>
                         <Button
                           small
                           variant="destructive"
-                          onClick={() => void remove(seeder.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void remove(seeder.id);
+                          }}
                           busy={busy === `remove-${seeder.id}`}
                         >
                           {t('seeders.remove')}

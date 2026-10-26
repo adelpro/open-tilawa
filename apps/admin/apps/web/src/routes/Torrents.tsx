@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
+import { linkProps } from '../lib/router';
+import { bytes } from '../lib/format';
 import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
@@ -15,9 +17,9 @@ import type { Seeder, SeederInventory } from '../lib/types-seeders';
  * proxy to the selected node's admin API, so what the screen shows is what the
  * node actually holds — not a second, drifting catalogue.
  */
-export function Torrents(): ReactElement {
+export function Torrents({ seederId: routeId }: { seederId?: string }): ReactElement {
   const { user } = useSession();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [seeders, setSeeders] = useState<Seeder[] | null>(null);
   const [seederId, setSeederId] = useState<number | null>(null);
   const [inventory, setInventory] = useState<SeederInventory | null>(null);
@@ -41,7 +43,7 @@ export function Torrents(): ReactElement {
       setSeeders([]);
       setError(caught instanceof Error ? caught.message : t('torrents.loadFailed'));
     }
-  }, [t]);
+  }, [t, routeId]);
 
   const loadInventory = useCallback(
     async (id: number) => {
@@ -119,6 +121,11 @@ export function Torrents(): ReactElement {
     <div className="stack">
       <header className="page-head">
         <div>
+          {routeId ? (
+            <a className="fine-print" {...linkProps('/seeders')}>
+              ← {t('torrents.backToSeeders')}
+            </a>
+          ) : null}
           <h1 className="display-lg">{t('torrents.title')}</h1>
           <p className="body muted">{t('torrents.lede')}</p>
         </div>
@@ -268,13 +275,14 @@ export function Torrents(): ReactElement {
                         <br />
                         <span className="row__id">{torrent.infoHash}</span>
                       </td>
-                      <td className="num">{formatBytes(torrent.size)}</td>
+                      <td className="num">{bytes(torrent.size, locale)}</td>
                       <td>
                         <Chip tone={torrent.done ? 'ok' : 'notice'}>{torrent.progress}%</Chip>
                       </td>
                       <td className="num">{torrent.peers}</td>
                       <td className="num">
-                        ↑ {torrent.uploadSpeed} · ↓ {torrent.downloadSpeed}
+                        ↑ {bytes(torrent.uploadSpeed, locale, true)} · ↓{' '}
+                        {bytes(torrent.downloadSpeed, locale, true)}
                       </td>
                       <td>
                         <span className="cluster cluster--end">
@@ -298,12 +306,4 @@ export function Torrents(): ReactElement {
       )}
     </div>
   );
-}
-
-function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  const value = bytes / 1024 ** exponent;
-  return `${value >= 10 || exponent === 0 ? Math.round(value) : value.toFixed(1)} ${units[exponent]}`;
 }

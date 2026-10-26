@@ -641,6 +641,46 @@
         "tags": ["Turns"]
       }
     },
+    "/api/turns/{id}": {
+      "get": {
+        "operationId": "TurnsController_one",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      },
+      "delete": {
+        "operationId": "TurnsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      }
+    },
     "/api/turns/{id}/history": {
       "get": {
         "operationId": "TurnsController_history",
@@ -664,27 +704,6 @@
         ],
         "responses": {
           "200": {
-            "description": ""
-          }
-        },
-        "tags": ["Turns"]
-      }
-    },
-    "/api/turns/{id}": {
-      "delete": {
-        "operationId": "TurnsController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
             "description": ""
           }
         },

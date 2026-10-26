@@ -391,6 +391,15 @@
 .table tr:hover td {
   background: var(--canvas-parchment);
 }
+
+/* A row that opens a screen says so with the pointer and a focus ring. */
+.table__row--clickable {
+  cursor: pointer;
+}
+.table__row--clickable:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
 .table .num {
   text-align: end;
   font: var(--code);
@@ -2657,7 +2666,7 @@ select:focus {
     color: var(--muted, #666);
     margin-bottom: 2px;
   }
-  .table-scroll > .table td[data-label=""]::before {
+  .table-scroll > .table td[data-label='']::before {
     display: none;
   }
 }

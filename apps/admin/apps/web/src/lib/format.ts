@@ -70,6 +70,28 @@ function never(locale: FmtLocale): string {
   return locale === 'ar' ? 'أبدًا' : 'never';
 }
 
+/**
+ * Byte sizes and transfer rates: 1 234 567 → "1.2 MB"; with `perSecond` the
+ * same number is a rate ("1.2 MB/s"). Base 1024, because that is what every
+ * torrent client and the seeder itself means by a megabyte.
+ */
+export function bytes(
+  value: number | null | undefined,
+  locale: FmtLocale = 'en',
+  perSecond = false,
+): string {
+  const suffix = perSecond ? '/s' : '';
+  if (value === null || value === undefined || !Number.isFinite(value)) return `—${suffix}`;
+  if (value <= 0) return `0 B${suffix}`;
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exponent = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const scaled = value / 1024 ** exponent;
+  const number = new Intl.NumberFormat(TAG[locale], {
+    maximumFractionDigits: scaled >= 10 || exponent === 0 ? 0 : 1,
+  });
+  return `${number.format(scaled)} ${units[exponent]}${suffix}`;
+}
+
 export function duration(ms: number | null | undefined, locale: FmtLocale = 'en'): string {
   if (ms === null || ms === undefined) return '—';
   const number = new Intl.NumberFormat(TAG[locale], { maximumFractionDigits: 1 });

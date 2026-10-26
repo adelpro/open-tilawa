@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
@@ -39,6 +40,13 @@ export class TurnsController {
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
+  }
+
+  @Get(':id')
+  one(@Param('id') id: string) {
+    const turn = this.service.get(Number(id));
+    if (!turn) throw new NotFoundException('TURN server not found');
+    return turn;
   }
 
   @Get(':id/history')

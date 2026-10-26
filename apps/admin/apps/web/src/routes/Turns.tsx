@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
+import { navigate } from '../lib/router';
 import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
-import type { Turn, TurnCheck } from '../lib/types-seeders';
+import type { Turn } from '../lib/types-seeders';
 
 /**
  * TURN servers, watched rather than merely listed.
@@ -21,9 +22,8 @@ import type { Turn, TurnCheck } from '../lib/types-seeders';
  */
 export function Turns(): ReactElement {
   const { user } = useSession();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [turns, setTurns] = useState<Turn[] | null>(null);
-  const [history, setHistory] = useState<Record<number, TurnCheck[] | null>>({});
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -82,7 +82,6 @@ export function Turns(): ReactElement {
     try {
       await api(`/turns/${id}/poll`, { method: 'POST' });
       await load();
-      if (history[id] !== undefined) await openHistory(id);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('turns.pollFailed'));
     } finally {
@@ -100,23 +99,6 @@ export function Turns(): ReactElement {
       setError(caught instanceof Error ? caught.message : t('turns.pollFailed'));
     } finally {
       setBusy(null);
-    }
-  }
-
-  async function openHistory(id: number): Promise<void> {
-    if (history[id] !== undefined) {
-      setHistory((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      return;
-    }
-    try {
-      const rows = await api<TurnCheck[]>(`/turns/${id}/history?limit=20`);
-      setHistory((prev) => ({ ...prev, [id]: rows }));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('turns.historyFailed'));
     }
   }
 
@@ -198,7 +180,19 @@ export function Turns(): ReactElement {
               </thead>
               <tbody>
                 {turns.map((turn) => (
-                  <tr key={turn.id}>
+                  <tr
+                    key={turn.id}
+                    className="table__row--clickable"
+                    tabIndex={0}
+                    role="link"
+                    onClick={() => navigate(`/turns/${turn.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        navigate(`/turns/${turn.id}`);
+                      }
+                    }}
+                  >
                     <td>
                       <span className="row__label">{turn.name}</span>
                       <br />
@@ -210,24 +204,27 @@ export function Turns(): ReactElement {
                     <td className="num">
                       {turn.latencyMs === null ? t('turns.latencyUnknown') : `${turn.latencyMs} ms`}
                     </td>
-                    <td>{formatTimestamp(turn.lastSeen, locale) ?? t('turns.never')}</td>
+                    <td>{formatTimestamp(turn.lastSeen)}</td>
                     <td>
                       <span className="cluster cluster--end">
                         <Button
                           small
                           variant="secondary"
-                          onClick={() => void poll(turn.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void poll(turn.id);
+                          }}
                           busy={busy === `poll-${turn.id}`}
                         >
                           {t('turns.poll')}
                         </Button>
-                        <Button small variant="tertiary" onClick={() => void openHistory(turn.id)}>
-                          {t('turns.history')}
-                        </Button>
                         <Button
                           small
                           variant="destructive"
-                          onClick={() => void remove(turn.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void remove(turn.id);
+                          }}
                           busy={busy === `remove-${turn.id}`}
                         >
                           {t('turns.remove')}
@@ -241,65 +238,16 @@ export function Turns(): ReactElement {
           </div>
         </Panel>
       )}
-
-      {Object.entries(history).map(([id, rows]) => (
-        <Panel key={`history-${id}`} tone="parchment">
-          <h2 className="group-title">
-            {t('turns.historyFor')} {turns?.find((turn) => turn.id === Number(id))?.name ?? id}
-          </h2>
-          {rows === null ? (
-            <p className="body muted">{t('turns.historyLoading')}</p>
-          ) : rows.length === 0 ? (
-            <p className="body muted">{t('turns.historyEmpty')}</p>
-          ) : (
-            <div className="table-scroll">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th scope="col">{t('turns.checkedAt')}</th>
-                    <th scope="col">{t('turns.statusHeading')}</th>
-                    <th scope="col">{t('turns.latency')}</th>
-                    <th scope="col">{t('turns.detail')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((check, index) => (
-                    <tr key={`${check.checkedAt}-${index}`}>
-                      <td>{formatTimestamp(check.checkedAt, locale)}</td>
-                      <td>
-                        <Chip tone={check.ok ? 'ok' : 'bad'}>
-                          {t(check.ok ? 'turns.statusOnline' : 'turns.statusOffline')}
-                        </Chip>
-                      </td>
-                      <td className="num">
-                        {check.latencyMs === null
-                          ? t('turns.latencyUnknown')
-                          : `${check.latencyMs} ms`}
-                      </td>
-                      <td>{check.detail ?? t('turns.noDetail')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Panel>
-      ))}
     </div>
   );
 }
 
-/**
- * SQLite's `datetime('now')` is `YYYY-MM-DD HH:MM:SS` in UTC with no zone
- * marker; read as local time it is off by the operator's offset, so mark it UTC
- * before formatting. Falls back to the raw string if it is not a date at all.
- */
-function formatTimestamp(value: string | null, locale: string): string | null {
+function formatTimestamp(value: string | null): string | null {
   if (!value) return null;
   const iso = value.includes('T') ? value : `${value.replace(' ', 'T')}Z`;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
+  return date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
 }
 
 function statusTone(status: Turn['status']): 'ok' | 'bad' | 'notice' {

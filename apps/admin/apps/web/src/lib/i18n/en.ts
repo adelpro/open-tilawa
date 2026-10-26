@@ -166,7 +166,7 @@ export const en = {
 
   'reciters.title': 'Reciters',
   'reciters.lede':
-    'The catalogue that binds each reciter and riwaya to the torrent carrying the release.',
+    'The registry that binds a reciter and riwaya to the torrent carrying that release. It is the one place the mapping is written down: add a reciter here when a release goes live so the seeders, the torrent and the person stay linked.',
   'reciters.add': 'Add reciter',
   'reciters.cancel': 'Cancel',
   'reciters.addSubmit': 'Add',
@@ -230,7 +230,8 @@ export const en = {
   'seeders.updateFailed': 'Could not update the seeder.',
 
   'twofa.recoveryLink': 'Use a recovery code',
-  'twofa.recoveryLede': 'Enter one of the single-use recovery codes you saved when you turned 2FA on.',
+  'twofa.recoveryLede':
+    'Enter one of the single-use recovery codes you saved when you turned 2FA on.',
   'twofa.recoveryCode': 'Recovery code',
   'twofa.recoverySubmit': 'Use the code',
   'account.twofa.disableTitle': 'Turn off two-factor',
@@ -239,6 +240,15 @@ export const en = {
   'account.twofa.disableAction': 'Turn off two-factor',
   'account.twofa.disabled': 'Two-factor authentication is off.',
   'account.twofa.disableFailed': 'Could not turn off two-factor authentication.',
+
+  'turns.back': 'All TURN servers',
+  'turns.detailFailed': 'Could not load this TURN server.',
+  'turns.notFound': 'That TURN server no longer exists.',
+  'turns.openHint': 'Open the server history',
+  'seeders.manage': 'Manage torrents',
+  'torrents.backToSeeders': 'All seeders',
+  'torrents.credentialsHint':
+    'These are the seeder’s own ADMIN_USER / ADMIN_PASS (root .env), not your dashboard account.',
 
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 

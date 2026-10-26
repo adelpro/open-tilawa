@@ -23,6 +23,7 @@ import { Account } from './routes/Account';
 import { AdminConsole } from './routes/AdminConsole';
 import { Seeders } from './routes/Seeders';
 import { Turns } from './routes/Turns';
+import { TurnDetail } from './routes/TurnDetail';
 import { Torrents } from './routes/Torrents';
 import { Reciters } from './routes/Reciters';
 import { Avatar } from './components/Avatar';
@@ -276,16 +277,26 @@ function Screens(): ReactElement {
       </div>
 
       <main id="main" className="shell__main" tabIndex={-1}>
-        <Screen first={first} role={user.role} />
+        <Screen first={first} second={second} role={user.role} />
       </main>
     </div>
   );
 }
 
-function Screen({ first, role }: { first: string | undefined; role: AppRole }): ReactElement {
+function Screen({
+  first,
+  second,
+  role,
+}: {
+  first: string | undefined;
+  second: string | undefined;
+  role: AppRole;
+}): ReactElement {
   if (first === 'seeders') return <Seeders />;
-  if (first === 'turns') return <Turns />;
-  if (first === 'torrents') return <Torrents />;
+  if (first === 'turns') {
+    return second ? <TurnDetail id={Number(second)} /> : <Turns />;
+  }
+  if (first === 'torrents') return <Torrents seederId={second} />;
   if (first === 'reciters') return <Reciters />;
   if (first === 'account') return <Account />;
   if (first === 'help') return <Help />;
