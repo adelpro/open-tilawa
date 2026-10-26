@@ -105,6 +105,9 @@ export const en = {
   'seeders.pollAll': 'Probe all now',
   'seeders.probe': 'Probe',
   'seeders.remove': 'Remove',
+  'seeders.unlink': 'Unlink',
+  'seeders.unlinkHint':
+    'Removes the node from this dashboard. The node keeps running and keeps seeding.',
   'seeders.name': 'Name',
   'seeders.url': 'URL',
   'seeders.urlHint': 'Base URL of the seeder, e.g. http://192.168.1.100:8085.',
@@ -125,10 +128,15 @@ export const en = {
   'seeders.loading': 'Loading seeders',
   'seeders.empty': 'No seeders yet. Add one to start distributing.',
   'seeders.added': 'Seeder added.',
-  'seeders.removed': 'Seeder removed.',
+  'seeders.fillOnAdd': 'Add the catalogue to this node',
+  'seeders.fillOnAddHint':
+    'Queues every reciter this node is missing, right after it is registered. Nothing is removed and anything over quota is skipped.',
+  'seeders.fillQueued': '{count} reciter(s) queued for download.',
+  'seeders.fillFailed': 'The catalogue was not pushed: {error}',
+  'seeders.removed': 'Seeder unlinked. The node keeps seeding.',
   'seeders.loadFailed': 'Could not load the seeders.',
   'seeders.addFailed': 'Could not add the seeder.',
-  'seeders.removeFailed': 'Could not remove the seeder.',
+  'seeders.removeFailed': 'Could not unlink the seeder.',
   'seeders.pollFailed': 'The probe did not complete.',
   'seeders.signInRequired': 'Sign in required.',
 

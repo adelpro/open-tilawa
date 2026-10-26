@@ -30,6 +30,9 @@ export function Seeders(): ReactElement {
   const [newUrl, setNewUrl] = useState('');
   const [newUser, setNewUser] = useState('');
   const [newPass, setNewPass] = useState('');
+  // Default on: a node that is registered but empty is the usual mistake, and
+  // the push endpoint only adds what the node is missing.
+  const [newFill, setNewFill] = useState(true);
   const [editing, setEditing] = useState<Seeder | null>(null);
   const [editName, setEditName] = useState('');
   const [editUrl, setEditUrl] = useState('');
@@ -70,7 +73,26 @@ export function Seeders(): ReactElement {
       setNewUser('');
       setNewPass('');
       setShowAdd(false);
-      setMessage(t('seeders.added'));
+      // Fill at add time: the operator should not have to tick the catalogue
+      // checklist for a node they just registered.
+      let filled: string | null = null;
+      if (newFill) {
+        try {
+          const result = await api<{
+            applied: { seederId: number; added: number; error: string | null }[];
+          }>('/reciters/push', { method: 'POST', body: { nodeIds: [created.id] } });
+          const row = result.applied.find((entry) => entry.seederId === created.id);
+          filled = row?.error
+            ? t('seeders.fillFailed', { error: row.error })
+            : t('seeders.fillQueued', { count: String(row?.added ?? 0) });
+        } catch (caught) {
+          filled = t('seeders.fillFailed', {
+            error: caught instanceof Error ? caught.message : '',
+          });
+        }
+      }
+      setMessage([t('seeders.added'), filled].filter(Boolean).join(' '));
+      setNewFill(true);
       await load();
       // Next step is the node's own screen: the catalogue checklist is there,
       // already ticked for everything the new node is missing.
@@ -247,6 +269,17 @@ export function Seeders(): ReactElement {
                 />
               )}
             </Field>
+            <div className="stack">
+              <label className="cluster">
+                <input
+                  type="checkbox"
+                  checked={newFill}
+                  onChange={(event) => setNewFill(event.target.checked)}
+                />
+                <span>{t('seeders.fillOnAdd')}</span>
+              </label>
+              <p className="fine-print">{t('seeders.fillOnAddHint')}</p>
+            </div>
             <div className="cluster">
               <Button
                 onClick={() => void add()}
@@ -355,7 +388,12 @@ export function Seeders(): ReactElement {
                     }}
                   >
                     <td>
-                      <span className="row__label">{seeder.name}</span>
+                      <span className="row__label">{seeder.name}</span>{' '}
+                      <Chip tone={seeder.version ? 'ok' : 'notice'}>
+                        {seeder.version
+                          ? `v${seeder.version}`
+                          : t('seeders.versionUnknown')}
+                      </Chip>
                       <br />
                       <span className="row__id">{seeder.url}</span>
                     </td>
@@ -388,7 +426,7 @@ export function Seeders(): ReactElement {
                       </span>
                       <br />
                       <span className="row__meta">
-                        {seeder.version ? `v${seeder.version}` : t('seeders.versionUnknown')} ·{' '}
+                        {seeder.sha ? `sha ${seeder.sha} · ` : ''}
                         {t('seeders.diskFree', {
                           free: bytes(seeder.freeBytes, locale),
                           total: bytes(seeder.totalBytes, locale),
@@ -460,13 +498,14 @@ export function Seeders(): ReactElement {
                         <Button
                           small
                           variant="destructive"
+                          title={t('seeders.unlinkHint')}
                           onClick={(event) => {
                             event.stopPropagation();
                             void remove(seeder.id);
                           }}
                           busy={busy === `remove-${seeder.id}`}
                         >
-                          {t('seeders.remove')}
+                          {t('seeders.unlink')}
                         </Button>
                       </span>
                     </td>

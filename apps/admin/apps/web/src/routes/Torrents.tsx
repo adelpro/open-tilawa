@@ -282,6 +282,19 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
               </select>
             )}
           </Field>
+          {(() => {
+            const node = seeders.find((row) => row.id === seederId);
+            if (!node) return null;
+            // The node identifies its own build; nothing here is guessed.
+            return (
+              <p className="body muted">
+                <Chip tone={node.version ? 'ok' : 'notice'}>
+                  {node.version ? `v${node.version}` : t('seeders.versionUnknown')}
+                </Chip>
+                {node.sha ? <span className="row__meta"> · sha {node.sha}</span> : null}
+              </p>
+            );
+          })()}
         </Panel>
       ) : null}
 
