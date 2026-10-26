@@ -1,33 +1,19 @@
-import Image from 'next/image';
-import Link from 'next/link';
-
-import failSVG from '@/svgs/fail.svg';
+import { Link } from 'react-router-dom';
 
 export default function NotFound() {
   return (
-    <main className="mt-4 flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 text-center shadow-lg">
-        <h1 className="mt-4 text-2xl font-bold">صفحة غير موجودة</h1>
-        <Image
-          src={failSVG}
-          alt="Fail"
-          width={200}
-          height={200}
-          className="mx-auto"
-        />
-        <p className="mt-4 text-gray-600">
-          عذرًا، هذه الصفحة غير موجودة. يرجى التحقق من عنوان URL.
-        </p>
-
-        <div className="mt-6">
-          <Link
-            href="/"
-            className="inline-block w-full rounded-md bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600"
-          >
-            العودة إلى الصفحة الرئيسية
-          </Link>
-        </div>
-      </div>
-    </main>
+    <div className="flex min-h-full flex-col items-center justify-center px-6 py-20 text-center">
+      <p className="badge-tech text-ink-tertiary">404</p>
+      <h1 className="mt-3 font-display text-[40px] leading-tight">صفحة غير موجودة</h1>
+      <p className="mt-2 max-w-sm text-[13px] leading-relaxed text-ink-secondary">
+        الرابط الذي فتحته لا يشير إلى صفحة في تلاوة.
+      </p>
+      <Link
+        to="/"
+        className="mt-6 rounded-pill bg-ink px-5 py-2.5 text-[13px] font-semibold text-canvas"
+      >
+        العودة إلى المكتبة
+      </Link>
+    </div>
   );
 }

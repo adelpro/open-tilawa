@@ -113,3 +113,22 @@ Then rebuild and re-check streaming.
 - iOS Safari needs HTTPS and a first-load navigation before the worker controls
   the page; the very first play on a fresh origin may fall back to the HTTP
   source link shown in the error state.
+
+## The v2 shell (night listening room)
+
+Layout, queue and player were rebuilt around a three-column desk and a single
+audio engine. The design source of truth is
+[`docs/superpowers/specs/2026-10-26-tilawa-web-v2-design.md`](../../docs/superpowers/specs/2026-10-26-tilawa-web-v2-design.md).
+
+- `src/components/audio-engine.tsx` — the only `<audio>` element, mounted
+  outside `<Routes>`; the torrent session therefore survives navigation.
+- `src/hooks/use-player-nav.ts` — every transport action becomes a URL change.
+  The URL owns *which* surah; `src/jotai/player.ts` owns *where inside it*.
+- `src/components/queue.tsx` — fixed mushaf order, search, `التالي` / `السابق`
+  halves, shuffle that only permutes what is ahead.
+- `src/hooks/use-persistence.ts` — `open-tilawa:v2` (per-reciter positions) plus
+  a migration from the v1 `tilawa:state` / `tilawa:progress:*` keys.
+- Fonts are self-hosted (`public/fonts`, generated `src/app/fonts.css`): IBM Plex
+  Sans Arabic for UI, Amiri for surah names. Both SIL OFL 1.1.
+
+Run the logic tests with `npm test` (node:test, no extra dependencies).

@@ -1,9 +1,10 @@
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import type { TorrentFile } from "webtorrent";
 
 import { TRACKERS } from "@/constants";
 import { selectedReciterAtom, webtorrentReadyAtom } from "@/jotai/atom";
+import { retrySignalAtom } from "@/jotai/player";
 import { TorrentInfo, TrackType } from "@/types";
 import {
   getWebTorrentClient,
@@ -22,7 +23,7 @@ export default function useTorrent() {
 
   const [torrentInfo, setTorrentInfo] = useState<TorrentInfo | undefined>();
   const [error, setError] = useState<string | undefined>();
-  const [retryCount, setRetryCount] = useState(0);
+  const [retryCount, setRetryCount] = useAtom(retrySignalAtom);
 
   // The torrent outlives this hook (see utils/torrent-session): the client is a
   // module singleton and several components read the same session, so this

@@ -102,7 +102,7 @@ export default function ContactPage() {
               <input
                 type="text"
                 required
-                className="mb-4 border-b-2 border-gray-400 px-8 py-2 text-3xl ring-black focus:ring-4"
+                className="mb-4 border-b-2 border-divider px-8 py-2 text-3xl ring-ink focus:ring-4"
                 id="name"
                 placeholder="الإسم"
                 value={name}
@@ -115,7 +115,7 @@ export default function ContactPage() {
               <input
                 type="email"
                 required
-                className="mb-4 border-b-2 border-gray-400 px-8 py-2 text-3xl ring-black focus:ring-4"
+                className="mb-4 border-b-2 border-divider px-8 py-2 text-3xl ring-ink focus:ring-4"
                 id="email"
                 placeholder="البريد الإلكتروني"
                 value={email}
@@ -126,7 +126,7 @@ export default function ContactPage() {
               />
 
               <textarea
-                className="mb-4 border-b-2 border-gray-400 px-8 py-2 text-3xl ring-black focus:ring-4"
+                className="mb-4 border-b-2 border-divider px-8 py-2 text-3xl ring-ink focus:ring-4"
                 id="message"
                 rows={3}
                 required
@@ -154,7 +154,7 @@ export default function ContactPage() {
                   event.preventDefault();
                   validateAndSend();
                 }}
-                className="hover:scale-101 mb-4 flex transform items-center justify-center rounded bg-blue-500 px-2 py-4 text-gray-100 duration-200 ease-in-out hover:opacity-90 dark:bg-blue-200 dark:text-gray-500"
+                className="hover:scale-101 mb-4 flex transform items-center justify-center rounded bg-ink px-2 py-4 text-canvas duration-200 ease-in-out hover:opacity-90"
                 disabled={loading}
               >
                 {buttonContent}

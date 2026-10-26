@@ -17,7 +17,7 @@ export default defineConfig({
       // needs the ServiceWorkerRegistration object, so it cannot be auto-injected.
       injectRegister: null,
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
       manifest: {
@@ -29,8 +29,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#1f4d78',
+        background_color: '#000000',
+        theme_color: '#000000',
         icons: [
           {
             src: '/images/logo.png',

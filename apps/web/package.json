@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types test/queue.test.ts test/persistence.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

@@ -7,55 +7,57 @@ const config: Config = {
   mode: 'jit',
   darkMode: 'class',
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        background: 'var(--canvas)',
-        foreground: 'var(--ink)',
         canvas: 'var(--canvas)',
-        'canvas-parchment': 'var(--canvas-parchment)',
-        'surface-pearl': 'var(--surface-pearl)',
-        'canvas-cream': 'var(--canvas-cream)',
+        surface: 'var(--surface-1)',
+        'surface-2': 'var(--surface-2)',
+        divider: 'var(--divider)',
         ink: 'var(--ink)',
         'ink-secondary': 'var(--ink-secondary)',
-        primary: 'var(--primary)',
-        'primary-hover': 'var(--primary-hover)',
-        support: 'var(--support)',
-        hairline: 'var(--hairline)',
+        'ink-tertiary': 'var(--ink-tertiary)',
+        accent: 'var(--accent)',
         error: 'var(--error)',
         success: 'var(--success)',
-        'tint-selected': 'var(--tint-selected)',
-        'gauge-buffered': 'var(--gauge-buffered)',
+        /* Legacy aliases kept so untouched pages (about/privacy/contact) resolve. */
+        background: 'var(--canvas)',
+        foreground: 'var(--ink)',
+        'canvas-parchment': 'var(--surface-1)',
+        'surface-pearl': 'var(--surface-1)',
+        primary: 'var(--accent)',
+        hairline: 'var(--divider)',
       },
-    },
-    keyframes: {
-      slideIn: {
-        '0%': { transform: 'translateY(-100%)' },
-        '100%': { transform: 'translateY(0)' },
+      fontFamily: {
+        sans: ['"IBM Plex Sans Arabic"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['Amiri', '"IBM Plex Sans Arabic"', 'serif'],
       },
-      fadeIn: {
-        '0%': { opacity: '0' },
-        '100%': { opacity: '1' },
+      borderRadius: {
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        pill: 'var(--radius-pill)',
       },
-      appear: {
-        from: {
-          opacity: '0',
-          transform: 'translateY(4rem)',
+      transitionTimingFunction: {
+        quiet: 'cubic-bezier(0.2, 0, 0.2, 1)',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         },
-        to: {
-          opacity: '1',
-          transform: 'translateY(0%)',
+        sheetUp: {
+          '0%': { transform: 'translateY(2%)', opacity: '0.4' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },
-    },
-    animation: {
-      slideIn: 'slideIn 0.2s ease-out',
-      fadeIn: 'fadeIn 0.4s ease-out',
-      slideInWithFade: 'slideIn 0.2s ease-out, fadeIn 0.5s ease-out',
+      animation: {
+        fadeIn: 'fadeIn 200ms ease-out',
+        sheetUp: 'sheetUp 240ms cubic-bezier(0.2, 0, 0.2, 1)',
+      },
     },
   },
   plugins: [forms, animated, typography],

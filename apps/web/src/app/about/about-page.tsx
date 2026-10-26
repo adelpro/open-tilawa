@@ -8,14 +8,14 @@ export default function AboutPage() {
   return (
     <div
       dir="rtl"
-      className="mt-10 flex w-full flex-col items-center justify-center bg-background text-foreground"
+      className="flex w-full flex-col items-center justify-center px-5 py-12"
     >
       <div className="mx-auto w-full max-w-2xl">
-        <h1 className="mb-6 text-center text-3xl font-bold">
+        <h1 className="mb-6 text-center font-display text-[34px] font-normal leading-tight">
           حول تطبيق Open Tilawa
         </h1>
 
-        <div className="m-1 space-y-4 rounded p-2 ps-4 text-lg md:m-2 md:border md:border-gray-200 md:p-8 md:shadow-sm md:dark:border-gray-700">
+        <div className="m-1 space-y-4 rounded p-2 ps-4 text-lg md:m-2 md:border md:border-divider md:p-8">
           <p>
             Open Tilawa هو تطبيق قرآن مفتوح المصدر صمم لتوفير تجربة استماع مثالية
             عبر مختلف المنصات. بُني التطبيق باستخدام تقنيات ويب حديثة لضمان:
@@ -37,7 +37,7 @@ export default function AboutPage() {
             الحفاظ على أعلى معايير الجودة التقنية والتصميمية.
           </p>
         </div>
-        <div className="mt-5 flex w-full max-w-2xl items-center justify-center text-sm text-gray-600">
+        <div className="mt-5 flex w-full max-w-2xl items-center justify-center text-sm text-ink-secondary">
           <p>
             <span>
               جميع الحقوق محفوظة &copy; {currentYear} - v{packageJson.version}

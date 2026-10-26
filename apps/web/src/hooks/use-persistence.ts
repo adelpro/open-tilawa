@@ -1,92 +1,187 @@
-'use client';
+/**
+ * Local persistence, v2.
+ *
+ * The v1 shape was flat (`{ reciterId, surahIndex, position }`) and every write
+ * clobbered the previous reciter's position. v2 keeps a small map instead, so
+ * "continue listening" works across reciters, and it migrates the v1 keys
+ * rather than orphaning them.
+ */
 
-import { useCallback, useEffect, useRef } from 'react';
+export const STORAGE_KEY = 'open-tilawa:v2';
+const LEGACY_KEY = 'tilawa:state';
+const LEGACY_PROGRESS_PREFIX = 'tilawa:progress:';
+const MAX_POSITIONS = 10;
 
-const STATE_KEY = 'tilawa:state';
+export type RepeatMode = 'off' | 'one';
 
-export type PersistedState = {
+export type StoredPosition = {
+  /** 1–114. Note: v1 stored a 0-based playlist index; the migration shifts it. */
+  surahId: number;
+  position: number;
+  updatedAt: number;
+};
+
+export type StoredState = {
+  version: 2;
+  reciterId?: number;
+  positions: Record<string, StoredPosition>;
+  repeat: RepeatMode;
+  shuffle: boolean;
+  rate: number;
+  theme: 'dark' | 'light';
+  updatedAt: number;
+};
+
+export const DEFAULT_STATE: StoredState = {
+  version: 2,
+  positions: {},
+  repeat: 'off',
+  shuffle: false,
+  rate: 1,
+  theme: 'dark',
+  updatedAt: 0,
+};
+
+type LegacyState = {
   reciterId?: number;
   surahIndex?: number;
   position?: number;
   updatedAt?: number;
 };
 
-export function loadState(): PersistedState {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = window.localStorage.getItem(STATE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as PersistedState;
-  } catch {
-    return {};
-  }
-}
-
-export function saveState(patch: Partial<PersistedState>) {
-  if (typeof window === 'undefined') return;
-  try {
-    const current = loadState();
-    const next = { ...current, ...patch, updatedAt: Date.now() };
-    window.localStorage.setItem(STATE_KEY, JSON.stringify(next));
-  } catch {
-    // private mode / quota — degrade gracefully
-  }
+function toPosition(surahIndex: number, position: number, updatedAt: number): StoredPosition {
+  return { surahId: surahIndex + 1, position: Math.max(0, position || 0), updatedAt };
 }
 
 /**
- * Hook that saves the current surah index + playback position for a reciter.
- * Call from AudioPlayer with the reciter id, current track index, and audio ref.
+ * Pure migration so it can be tested: given whatever the browser holds, return
+ * a valid v2 state. Unknown shapes degrade to defaults — never throw.
  */
-export function usePlaybackPersistence(
-  reciterId: number | undefined,
-  currentTrackIndex: number,
-  audioRef: React.RefObject<HTMLAudioElement | null>
-) {
-  const lastSave = useRef(0);
-  const save = useCallback(() => {
-    if (reciterId === undefined) return;
-    const audio = audioRef.current;
-    const position = audio ? audio.currentTime : 0;
-    saveState({ reciterId, surahIndex: currentTrackIndex, position });
-    // also keep a per-reciter key for future multi-reciter resume
-    try {
-      window.localStorage.setItem(
-        `tilawa:progress:${reciterId}`,
-        JSON.stringify({ surahIndex: currentTrackIndex, position, updatedAt: Date.now() })
-      );
-    } catch {
-      // ignore
+export function migrateLegacy(
+  legacy: LegacyState | null,
+  progress: Record<string, { surahIndex?: number; position?: number; updatedAt?: number }>,
+): StoredState {
+  const positions: Record<string, StoredPosition> = {};
+
+  for (const [reciterId, entry] of Object.entries(progress)) {
+    if (typeof entry?.surahIndex !== 'number') continue;
+    positions[reciterId] = toPosition(
+      entry.surahIndex,
+      entry.position ?? 0,
+      entry.updatedAt ?? 0,
+    );
+  }
+
+  const reciterId = legacy?.reciterId;
+  if (typeof reciterId === 'number' && typeof legacy?.surahIndex === 'number') {
+    positions[String(reciterId)] = toPosition(
+      legacy.surahIndex,
+      legacy.position ?? 0,
+      legacy.updatedAt ?? 0,
+    );
+  }
+
+  return {
+    ...DEFAULT_STATE,
+    reciterId: typeof reciterId === 'number' ? reciterId : undefined,
+    positions,
+    updatedAt: Math.max(legacy?.updatedAt ?? 0, 0),
+  };
+}
+
+export function isStoredState(value: unknown): value is StoredState {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<StoredState>;
+  return candidate.version === 2 && typeof candidate.positions === 'object';
+}
+
+export function loadState(): StoredState {
+  if (typeof window === 'undefined') return { ...DEFAULT_STATE };
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (isStoredState(parsed)) return { ...DEFAULT_STATE, ...parsed };
     }
-  }, [reciterId, currentTrackIndex, audioRef]);
 
-  // Save on track change
-  useEffect(() => {
-    save();
-  }, [currentTrackIndex, save]);
+    const legacyRaw = window.localStorage.getItem(LEGACY_KEY);
+    const legacy: LegacyState | null = legacyRaw ? JSON.parse(legacyRaw) : null;
 
-  // Save periodically during playback (every 5s)
-  useEffect(() => {
-    const id = setInterval(() => {
-      const audio = audioRef.current;
-      if (!audio || audio.paused) return;
-      const now = Date.now();
-      if (now - lastSave.current < 4000) return;
-      lastSave.current = now;
-      save();
-    }, 5000);
-    return () => clearInterval(id);
-  }, [save, audioRef]);
+    const progress: Record<string, { surahIndex?: number; position?: number; updatedAt?: number }> = {};
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (!key?.startsWith(LEGACY_PROGRESS_PREFIX)) continue;
+      const id = key.slice(LEGACY_PROGRESS_PREFIX.length);
+      try {
+        progress[id] = JSON.parse(window.localStorage.getItem(key) || '{}');
+      } catch {
+        // one corrupt entry must not lose the rest
+      }
+    }
 
-  // Save on unmount / page hide
-  useEffect(() => {
-    const handler = () => save();
-    window.addEventListener('pagehide', handler);
-    window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') save();
-    });
-    return () => {
-      window.removeEventListener('pagehide', handler);
-      save();
-    };
-  }, [save]);
+    if (!legacy && Object.keys(progress).length === 0) return { ...DEFAULT_STATE };
+
+    const migrated = migrateLegacy(legacy, progress);
+    saveState(migrated);
+    window.localStorage.removeItem(LEGACY_KEY);
+    for (const key of Object.keys(progress)) {
+      window.localStorage.removeItem(`${LEGACY_PROGRESS_PREFIX}${key}`);
+    }
+    return migrated;
+  } catch {
+    return { ...DEFAULT_STATE };
+  }
+}
+
+export function saveState(next: StoredState): StoredState {
+  if (typeof window === 'undefined') return next;
+  try {
+    const trimmed = trimPositions(next);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    return trimmed;
+  } catch {
+    // private mode / quota — degrade gracefully
+    return next;
+  }
+}
+
+/** Keep the newest MAX_POSITIONS entries so the map cannot grow forever. */
+export function trimPositions(state: StoredState): StoredState {
+  const entries = Object.entries(state.positions);
+  if (entries.length <= MAX_POSITIONS) return state;
+  entries.sort((a, b) => b[1].updatedAt - a[1].updatedAt);
+  return { ...state, positions: Object.fromEntries(entries.slice(0, MAX_POSITIONS)) };
+}
+
+export function patchState(patch: Partial<Omit<StoredState, 'version'>>): StoredState {
+  const current = loadState();
+  return saveState({ ...current, ...patch, version: 2, updatedAt: Date.now() });
+}
+
+export function getPosition(reciterId: number | undefined): StoredPosition | undefined {
+  if (!reciterId) return undefined;
+  return loadState().positions[String(reciterId)];
+}
+
+export function setPosition(
+  reciterId: number | undefined,
+  surahId: number,
+  position: number,
+): void {
+  if (!reciterId) return;
+  const current = loadState();
+  const positions = {
+    ...current.positions,
+    [String(reciterId)]: { surahId, position: Math.max(0, position), updatedAt: Date.now() },
+  };
+  saveState({ ...current, positions, reciterId });
+}
+
+export function clearState(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
 }

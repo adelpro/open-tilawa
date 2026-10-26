@@ -390,3 +390,28 @@ The web app has **no test harness today** — no test script, no spec files.
 | Speed control | Shipped, in overflow, default 1× | Useful for memorisation, sensitive enough to stay opt-in |
 | Language switcher | Deleted | It only flipped local state; there is no i18n |
 | Duration in queue | Size (or real duration when known), never estimated | Honesty: torrents expose bytes, not time |
+
+## 14. Implementation notes (what actually shipped)
+
+Small deviations, all deliberate:
+
+1. **Light is explicit only.** `prefers-color-scheme` is ignored: dark is the
+   identity, so a light OS does not override it. Light comes from the sidebar
+   toggle and is stored in `open-tilawa:v2`.
+2. **The mobile Now Playing screen is the route**, not an overlay:
+   `/reciter/:id/:surah` *is* the full player, and the browser back button is
+   the collapse gesture. The queue is the bottom sheet. This is one fewer piece
+   of state and makes "share what you are hearing" work for free.
+3. **Surah metadata** ships `ayahCount`, `juz` and `page` (verified against the
+   Quran search engine catalogue on 2026-10-26). `revelation` was dropped rather
+   than guessed.
+4. **`--ink-tertiary` is `#7a7a7a`** (4.9:1 on black; `#767676` on white) rather
+   than the reference's `#5C5C5C`, which fails AA at 11px.
+5. **The PWA update prompt was removed.** It was wired to a `window.wb` shim
+   that nothing ever populated, so it could never fire. `registerType:
+   'autoUpdate'` + `skipWaiting`/`clientsClaim` still delivers updates on the
+   next load.
+6. **Progress writes** happen every 5 seconds while playing, on seek, and on
+   `pagehide`. Before a surah switch the outgoing position is parked under the
+   *outgoing* surah id — writing it under the new one would resume the next
+   surah at the previous surah's timestamp.

@@ -1,112 +1,195 @@
+@import './fonts.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Uslub v2 token set — see DESIGN.md */
+/*
+ * Open Tilawa web v2 — "Night Listening Room".
+ * See docs/superpowers/specs/2026-10-26-tilawa-web-v2-design.md.
+ *
+ * Dark is the identity and the default; light is an explicit, tonal inversion.
+ * Elevation is a tonal step, never a shadow. One chromatic accent (cyan) and it
+ * means exactly one thing: where the audio comes from.
+ */
 :root {
-  --canvas: #ffffff;
-  --canvas-parchment: #f5f5f7;
-  --surface-pearl: #fafafc;
-  --canvas-cream: #ffefc4;
-  --ink: #1d1d1f;
-  --ink-secondary: #6e6e73;
-  --primary: #086288;
-  --primary-hover: #065273;
-  --support: #4d8dba;
-  --hairline: #e0e0e0;
-  --divider-soft: rgba(0,0,0,0.04);
-  --error: #d70015;
-  --success: #0f7b3f;
-  --tint-selected: rgba(8,98,136,0.24);
-  --gauge-buffered: rgba(110,110,115,0.20);
-  --focus: #086288;
-  --radius-sm: 8px;
+  --canvas: #000000;
+  --surface-1: #0a0a0a;
+  --surface-2: #1a1a1a;
+  --divider: #262626;
+  --ink: #ffffff;
+  --ink-secondary: #9a9a9a;
+  --ink-tertiary: #7a7a7a;
+  --accent: #00ffff;
+  --accent-pressed: #00cccc;
+  --accent-wash: rgba(0, 255, 255, 0.12);
+  --error: #ff453a;
+  --success: #32d74b;
+  --selection: rgba(255, 255, 255, 0.16);
+  --focus: #ffffff;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --radius-lg: 18px;
-  --shadow-premium:
-    inset 0 1px 0 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 0 rgba(0,0,0,0.06),
-    0 1px 2px 0 rgba(0,0,0,0.06),
-    0 4px 12px -2px rgba(0,0,0,0.12);
-  --motion-press: 160ms;
+  --radius-pill: 999px;
+
+  --motion-fast: 160ms;
+  --motion-base: 200ms;
+  --motion-sheet: 240ms;
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --canvas: #000000;
-    --canvas-parchment: #1c1c1e;
-    --surface-pearl: #272729;
-    --canvas-cream: #ffefc4;
-    --ink: #f5f5f7;
-    --ink-secondary: #8e8e93;
-    --primary: #97d7ff;
-    --primary-hover: #b8e2ff;
-    --support: #4d8dba;
-    --hairline: #2c2c2e;
-    --divider-soft: rgba(255,255,255,0.04);
-    --error: #ff453a;
-    --success: #32d74b;
-    --tint-selected: rgba(151,215,255,0.24);
-  --gauge-buffered: rgba(142,142,147,0.25);
-    --focus: #97d7ff;
-    --shadow-premium:
-      inset 0 1px 0 0 rgba(255,255,255,0.06),
-      inset 0 -1px 0 0 rgba(0,0,0,0.12),
-      0 1px 2px 0 rgba(0,0,0,0.24),
-      0 4px 12px -2px rgba(0,0,0,0.32);
+[data-theme='light'] {
+  --canvas: #ffffff;
+  --surface-1: #f7f7f7;
+  --surface-2: #efefef;
+  --divider: #e0e0e0;
+  --ink: #0a0a0a;
+  --ink-secondary: #55555a;
+  --ink-tertiary: #767676;
+  /* Cyan is illegible on white; this darker teal is the only permitted swap. */
+  --accent: #007a8a;
+  --accent-pressed: #006271;
+  --accent-wash: rgba(0, 122, 138, 0.1);
+  --error: #d70015;
+  --success: #0f7b3f;
+  --selection: rgba(0, 0, 0, 0.12);
+  --focus: #0a0a0a;
+  color-scheme: light;
+}
+
+html {
+  background: var(--canvas);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Arabic diacritics need air; never copy the reference's 1.15 display leading. */
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input[type='search']::-webkit-search-cancel-button {
+  filter: invert(1);
+  opacity: 0.5;
+}
+
+[data-theme='light'] input[type='search']::-webkit-search-cancel-button {
+  filter: none;
+}
+
+/* Thin, quiet scrollbars — the void should not grow furniture. */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--divider) transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--divider);
+  border-radius: var(--radius-pill);
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.font-display {
+  font-family: 'Amiri', 'IBM Plex Sans Arabic', serif;
+  letter-spacing: 0;
+}
+
+/* Technical voice: Latin only, tracked out. Arabic never gets this treatment. */
+.badge-tech {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes eq-bar {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
   }
 }
 
-[data-theme='dark'] {
-  --canvas: #000000;
-  --canvas-parchment: #1c1c1e;
-  --surface-pearl: #272729;
-  --canvas-cream: #ffefc4;
-  --ink: #f5f5f7;
-  --ink-secondary: #8e8e93;
-  --primary: #97d7ff;
-  --primary-hover: #b8e2ff;
-  --support: #4d8dba;
-  --hairline: #2c2c2e;
-  --divider-soft: rgba(255,255,255,0.04);
-  --error: #ff453a;
-  --success: #32d74b;
-  --tint-selected: rgba(151,215,255,0.24);
-  --gauge-buffered: rgba(142,142,147,0.25);
-  --focus: #97d7ff;
-  --shadow-premium:
-    inset 0 1px 0 0 rgba(255,255,255,0.06),
-    inset 0 -1px 0 0 rgba(0,0,0,0.12),
-    0 1px 2px 0 rgba(0,0,0,0.24),
-    0 4px 12px -2px rgba(0,0,0,0.32);
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }
 
-[data-theme='light'] { /* defeats media query */ }
-
-body {
-  color: var(--ink);
-  background: var(--canvas);
-  font-family: system-ui, -apple-system, sans-serif;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.square-thumb::-webkit-slider-thumb {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='blue'%3E%3Cpath d='M6 4h4v16H6V4zm8 0h4v16h-4V4z'/%3E%3C/svg%3E");
-  background-size: 50%;
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
-
-.square-thumb::-moz-range-thumb {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='blue'%3E%3Cpath d='M6 4h4v16H6V4zm8 0h4v16h-4V4z'/%3E%3C/svg%3E");
-  background-size: 50%;
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer;
+@keyframes sheet-up {
+  from {
+    transform: translateY(2%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

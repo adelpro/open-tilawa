@@ -4,17 +4,17 @@ export default function PrivacyPageAr() {
   return (
     <div
       dir="rtl"
-      className="flex w-full flex-col items-center justify-center bg-background text-foreground md:p-6 md:ps-10"
+      className="flex w-full flex-col items-center justify-center px-5 py-12 md:ps-10"
     >
       <div className="w-full max-w-2xl p-2 ps-6">
         {/* Title Section */}
         <div className="border-b pb-6">
-          <h1 className="text-3xl font-bold">سياسة خصوصية Open Tilawa</h1>
-          <p className="mt-2 text-gray-600">تاريخ السريان: 14 فبراير 2025</p>
+          <h1 className="font-display text-[34px] font-normal leading-tight">سياسة خصوصية Open Tilawa</h1>
+          <p className="mt-2 text-ink-secondary">تاريخ السريان: 14 فبراير 2025</p>
         </div>
 
         {/* Content Sections */}
-        <div className="space-y-8 border-gray-200 p-2 ps-6 text-lg dark:border-gray-700 md:rounded md:border md:p-6 md:ps-10 md:shadow-sm">
+        <div className="space-y-8 border-divider p-2 ps-6 text-[15px] leading-relaxed md:rounded md:border md:p-6 md:ps-10">
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold">خصوصيتك مهمة بالنسبة لنا</h2>
             <p>
@@ -95,7 +95,7 @@ export default function PrivacyPageAr() {
               إذا كانت لديك أي أسئلة حول هذه السياسة، فلا تتردد في الاتصال بنا
               على:
               <br />
-              <span className="mt-2 inline-block font-semibold text-blue-600">
+              <span className="mt-2 inline-block font-semibold text-accent">
                 contact@opentilawa.us.kg
               </span>
             </p>
