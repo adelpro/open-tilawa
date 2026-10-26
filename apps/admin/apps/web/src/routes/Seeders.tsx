@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
@@ -9,8 +10,14 @@ import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import type { Seeder } from '../lib/types-seeders';
 
+/**
+ * Seeder nodes. The URL is public (its `/health` is); the admin credentials are
+ * stored on the row and used server-side only — the API never returns them, so
+ * this screen can only say whether they are set.
+ */
 export function Seeders(): ReactElement {
   const { user } = useSession();
+  const { t } = useI18n();
   const [seeders, setSeeders] = useState<Seeder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -18,6 +25,8 @@ export function Seeders(): ReactElement {
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
+  const [newUser, setNewUser] = useState('');
+  const [newPass, setNewPass] = useState('');
 
   const load = useCallback(async () => {
     setError(null);
@@ -25,132 +34,240 @@ export function Seeders(): ReactElement {
       setSeeders(await api<Seeder[]>('/seeders'));
     } catch (caught) {
       setSeeders([]);
-      setError(caught instanceof Error ? caught.message : 'Failed to load seeders');
+      setError(caught instanceof Error ? caught.message : t('seeders.loadFailed'));
     }
-  }, []);
+  }, [t]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  async function add() {
+  async function add(): Promise<void> {
     if (!newName.trim() || !newUrl.trim()) return;
     setBusy('add');
+    setError(null);
     try {
-      await api('/seeders', { method: 'POST', body: { name: newName.trim(), url: newUrl.trim() } });
+      await api('/seeders', {
+        method: 'POST',
+        body: {
+          name: newName.trim(),
+          url: newUrl.trim(),
+          adminUser: newUser.trim() || undefined,
+          adminPass: newPass || undefined,
+        },
+      });
       setNewName('');
       setNewUrl('');
+      setNewUser('');
+      setNewPass('');
       setShowAdd(false);
-      setMessage('Seeder added');
+      setMessage(t('seeders.added'));
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to add');
+      setError(caught instanceof Error ? caught.message : t('seeders.addFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  async function remove(id: number) {
+  async function remove(id: number): Promise<void> {
     setBusy(`remove-${id}`);
     try {
       await api(`/seeders/${id}`, { method: 'DELETE' });
-      setMessage('Seeder removed');
+      setMessage(t('seeders.removed'));
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to remove');
+      setError(caught instanceof Error ? caught.message : t('seeders.removeFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  async function poll(id: number) {
+  async function poll(id: number): Promise<void> {
     setBusy(`poll-${id}`);
     try {
       await api(`/seeders/${id}/poll`, { method: 'POST' });
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Poll failed');
+      setError(caught instanceof Error ? caught.message : t('seeders.pollFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  async function pollAll() {
+  async function pollAll(): Promise<void> {
     setBusy('poll-all');
     try {
       await api('/seeders/poll-all', { method: 'POST' });
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Poll all failed');
+      setError(caught instanceof Error ? caught.message : t('seeders.pollFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  if (!user) return <div className="p-6">Sign in required</div>;
+  if (!user) return <p className="body muted">{t('seeders.signInRequired')}</p>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Seeders</h1>
-        <div className="flex gap-2">
-          <Button onClick={pollAll} busy={busy === 'poll-all'}>Poll all</Button>
+    <div className="stack">
+      <header className="page-head">
+        <div>
+          <h1 className="display-lg">{t('seeders.title')}</h1>
+          <p className="body muted">{t('seeders.lede')}</p>
+        </div>
+        <div className="cluster">
+          <Button variant="secondary" onClick={() => void pollAll()} busy={busy === 'poll-all'}>
+            {t('seeders.pollAll')}
+          </Button>
           <Button onClick={() => setShowAdd(!showAdd)}>
-            {showAdd ? 'Cancel' : 'Add Seeder'}
+            {showAdd ? t('seeders.cancel') : t('seeders.add')}
           </Button>
         </div>
-      </div>
+      </header>
 
-      {error && <Notice tone="bad">{error}</Notice>}
-      {message && <Notice tone="info">{message}</Notice>}
+      {error ? <Notice tone="bad">{error}</Notice> : null}
+      {message ? <Notice tone="ok">{message}</Notice> : null}
 
-      {showAdd && (
-        <Panel className="mb-6 p-4">
-          <div className="flex flex-col gap-3">
-            <Field label="Name">
-              {(id) => <Input id={id} value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Seeder 1" />}
+      {showAdd ? (
+        <Panel>
+          <div className="stack">
+            <Field label={t('seeders.name')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newName}
+                  onChange={(event) => setNewName(event.target.value)}
+                />
+              )}
             </Field>
-            <Field label="URL">
-              {(id) => <Input id={id} value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="http://192.168.1.100:8085" />}
+            <Field label={t('seeders.url')} hint={t('seeders.urlHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newUrl}
+                  onChange={(event) => setNewUrl(event.target.value)}
+                  placeholder="http://192.168.1.100:8085"
+                />
+              )}
             </Field>
-            <Button onClick={add} busy={busy === 'add'} disabled={!newName.trim() || !newUrl.trim()}>Add</Button>
+            <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newUser}
+                  onChange={(event) => setNewUser(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('seeders.adminPass')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  type="password"
+                  value={newPass}
+                  onChange={(event) => setNewPass(event.target.value)}
+                />
+              )}
+            </Field>
+            <div className="cluster">
+              <Button
+                onClick={() => void add()}
+                busy={busy === 'add'}
+                disabled={!newName.trim() || !newUrl.trim()}
+              >
+                {t('seeders.addSubmit')}
+              </Button>
+            </div>
           </div>
         </Panel>
-      )}
+      ) : null}
 
       {seeders === null ? (
-        <SkeletonRows rows={4} label="Loading" />
+        <SkeletonRows rows={3} label={t('seeders.loading')} />
       ) : seeders.length === 0 ? (
-        <Panel className="p-8 text-center text-gray-500">
-          No seeders yet. Click "Add Seeder" to get started.
+        <Panel>
+          <p className="body muted">{t('seeders.empty')}</p>
         </Panel>
       ) : (
-        <div className="grid gap-4">
-          {seeders.map((s) => (
-            <Panel key={s.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">{s.name}</span>
-                    <Chip tone={s.status === 'online' ? 'ok' : 'bad'}>{s.status}</Chip>
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">{s.url}</div>
-                  {s.status === 'online' && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      {s.torrentCount} torrents · {s.peerCount} peers · ↑{s.uploadSpeed} ↓{s.downloadSpeed}
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button small onClick={() => poll(s.id)} disabled={busy === `poll-${s.id}`}>
-                    {busy === `poll-${s.id}` ? '...' : 'Poll'}
-                  </Button>
-                  <Button small variant="destructive" onClick={() => remove(s.id)} disabled={busy === `remove-${s.id}`}>
-                    {busy === `remove-${s.id}` ? '...' : 'Remove'}
-                  </Button>
-                </div>
-              </div>
-            </Panel>
-          ))}
-        </div>
+        <Panel>
+          <div className="table-scroll">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th scope="col">{t('seeders.name')}</th>
+                  <th scope="col">{t('seeders.statusHeading')}</th>
+                  <th scope="col">{t('seeders.traffic')}</th>
+                  <th scope="col">{t('seeders.credentials')}</th>
+                  <th scope="col">{t('seeders.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {seeders.map((seeder) => (
+                  <tr key={seeder.id}>
+                    <td>
+                      <span className="row__label">{seeder.name}</span>
+                      <br />
+                      <span className="row__id">{seeder.url}</span>
+                    </td>
+                    <td>
+                      <Chip
+                        tone={
+                          seeder.status === 'online'
+                            ? 'ok'
+                            : seeder.status === 'offline'
+                              ? 'bad'
+                              : 'notice'
+                        }
+                      >
+                        {t(
+                          seeder.status === 'online'
+                            ? 'seeders.statusOnline'
+                            : seeder.status === 'offline'
+                              ? 'seeders.statusOffline'
+                              : 'seeders.statusUnknown',
+                        )}
+                      </Chip>
+                    </td>
+                    <td>
+                      {t('seeders.torrentCount', { count: String(seeder.torrentCount) })} ·{' '}
+                      {t('seeders.peerCount', { count: String(seeder.peerCount) })}
+                      <br />
+                      <span className="row__meta">
+                        ↑ {seeder.uploadSpeed} · ↓ {seeder.downloadSpeed}
+                      </span>
+                    </td>
+                    <td>
+                      {seeder.hasCredentials
+                        ? t('seeders.credentialsSet')
+                        : t('seeders.credentialsMissing')}
+                    </td>
+                    <td>
+                      <span className="cluster cluster--end">
+                        <Button
+                          small
+                          variant="secondary"
+                          onClick={() => void poll(seeder.id)}
+                          busy={busy === `poll-${seeder.id}`}
+                        >
+                          {t('seeders.probe')}
+                        </Button>
+                        <Button
+                          small
+                          variant="destructive"
+                          onClick={() => void remove(seeder.id)}
+                          busy={busy === `remove-${seeder.id}`}
+                        >
+                          {t('seeders.remove')}
+                        </Button>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
@@ -18,8 +19,14 @@ interface Reciter {
   createdAt: string;
 }
 
+/**
+ * The reciter catalogue: who is published, in which riwaya, and the torrent that
+ * carries the release. It binds a person to an infohash so the seeders and this
+ * page agree on what a reciter's audio actually is.
+ */
 export function Reciters(): ReactElement {
   const { user } = useSession();
+  const { t } = useI18n();
   const [reciters, setReciters] = useState<Reciter[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -37,103 +44,190 @@ export function Reciters(): ReactElement {
       setReciters(await api<Reciter[]>('/reciters'));
     } catch (caught) {
       setReciters([]);
-      setError(caught instanceof Error ? caught.message : 'Failed to load reciters');
+      setError(caught instanceof Error ? caught.message : t('reciters.loadFailed'));
     }
-  }, []);
+  }, [t]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  async function add() {
+  async function add(): Promise<void> {
     if (!newName.trim() || !newInfohash.trim()) return;
     setBusy('add');
+    setError(null);
     try {
-      await api('/reciters', { method: 'POST', body: { name: newName.trim(), riwaya: newRiwaya, infohash: newInfohash.trim(), magnet: newMagnet.trim(), fileCount: Number(newFileCount) || 0 } });
-      setNewName(''); setNewInfohash(''); setNewMagnet(''); setNewFileCount('114');
+      await api('/reciters', {
+        method: 'POST',
+        body: {
+          name: newName.trim(),
+          riwaya: newRiwaya,
+          infohash: newInfohash.trim(),
+          magnet: newMagnet.trim(),
+          fileCount: Number(newFileCount) || 0,
+        },
+      });
+      setNewName('');
+      setNewInfohash('');
+      setNewMagnet('');
+      setNewFileCount('114');
       setShowAdd(false);
-      setMessage('Reciter added');
+      setMessage(t('reciters.added'));
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to add');
+      setError(caught instanceof Error ? caught.message : t('reciters.addFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  async function remove(id: number) {
+  async function remove(id: number): Promise<void> {
     setBusy(`remove-${id}`);
+    setError(null);
     try {
       await api(`/reciters/${id}`, { method: 'DELETE' });
-      setMessage('Reciter removed');
+      setMessage(t('reciters.removed'));
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to remove');
+      setError(caught instanceof Error ? caught.message : t('reciters.removeFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  if (!user) return <div className="p-6">Sign in required</div>;
+  if (!user) return <p className="body muted">{t('reciters.signInRequired')}</p>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Reciters</h1>
-        <Button onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Cancel' : 'Add Reciter'}
-        </Button>
-      </div>
+    <div className="stack">
+      <header className="page-head">
+        <div>
+          <h1 className="display-lg">{t('reciters.title')}</h1>
+          <p className="body muted">{t('reciters.lede')}</p>
+        </div>
+        <div className="cluster">
+          <Button onClick={() => setShowAdd(!showAdd)}>
+            {showAdd ? t('reciters.cancel') : t('reciters.add')}
+          </Button>
+        </div>
+      </header>
 
-      {error && <Notice tone="bad">{error}</Notice>}
-      {message && <Notice tone="info">{message}</Notice>}
+      {error ? <Notice tone="bad">{error}</Notice> : null}
+      {message ? <Notice tone="ok">{message}</Notice> : null}
 
-      {showAdd && (
-        <Panel className="mb-6 p-4">
-          <div className="flex flex-col gap-3">
-            <Field label="Name">
-              {(id) => <Input id={id} value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Saad Al-Ghamdi" />}
+      {showAdd ? (
+        <Panel>
+          <div className="stack">
+            <Field label={t('reciters.name')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newName}
+                  onChange={(event) => setNewName(event.target.value)}
+                />
+              )}
             </Field>
-            <Field label="Riwaya">
-              {(id) => <Input id={id} value={newRiwaya} onChange={(e) => setNewRiwaya(e.target.value)} placeholder="Hafs" />}
+            <Field label={t('reciters.riwaya')} hint={t('reciters.riwayaHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newRiwaya}
+                  onChange={(event) => setNewRiwaya(event.target.value)}
+                  placeholder="Hafs"
+                />
+              )}
             </Field>
-            <Field label="Infohash">
-              {(id) => <Input id={id} value={newInfohash} onChange={(e) => setNewInfohash(e.target.value)} placeholder="abc123..." />}
+            <Field label={t('reciters.infohash')} hint={t('reciters.infohashHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newInfohash}
+                  onChange={(event) => setNewInfohash(event.target.value)}
+                />
+              )}
             </Field>
-            <Field label="Magnet (optional)">
-              {(id) => <Input id={id} value={newMagnet} onChange={(e) => setNewMagnet(e.target.value)} placeholder="magnet:?xt=urn:btih:..." />}
+            <Field label={t('reciters.magnet')} hint={t('reciters.magnetHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newMagnet}
+                  onChange={(event) => setNewMagnet(event.target.value)}
+                  placeholder="magnet:?xt=urn:btih:…"
+                />
+              )}
             </Field>
-            <Field label="File Count">
-              {(id) => <Input id={id} value={newFileCount} onChange={(e) => setNewFileCount(e.target.value)} placeholder="114" />}
+            <Field label={t('reciters.fileCount')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newFileCount}
+                  onChange={(event) => setNewFileCount(event.target.value)}
+                  inputMode="numeric"
+                />
+              )}
             </Field>
-            <Button onClick={add} busy={busy === 'add'} disabled={!newName.trim() || !newInfohash.trim()}>Add</Button>
+            <div className="cluster">
+              <Button
+                onClick={() => void add()}
+                busy={busy === 'add'}
+                disabled={!newName.trim() || !newInfohash.trim()}
+              >
+                {t('reciters.addSubmit')}
+              </Button>
+            </div>
           </div>
         </Panel>
-      )}
+      ) : null}
 
       {reciters === null ? (
-        <SkeletonRows rows={4} label="Loading" />
+        <SkeletonRows rows={3} label={t('reciters.loading')} />
       ) : reciters.length === 0 ? (
-        <Panel className="p-8 text-center text-gray-500">
-          No reciters yet. Click "Add Reciter" to get started.
+        <Panel>
+          <p className="body muted">{t('reciters.empty')}</p>
         </Panel>
       ) : (
-        <div className="grid gap-4">
-          {reciters.map((r) => (
-            <Panel key={r.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">{r.name}</span>
-                    <Chip tone="info">{r.riwaya}</Chip>
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">{r.fileCount} files · {r.infohash.slice(0, 16)}...</div>
-                </div>
-                <Button small variant="destructive" onClick={() => remove(r.id)} disabled={busy === `remove-${r.id}`}>
-                  {busy === `remove-${r.id}` ? '...' : 'Remove'}
-                </Button>
-              </div>
-            </Panel>
-          ))}
-        </div>
+        <Panel>
+          <div className="table-scroll">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th scope="col">{t('reciters.name')}</th>
+                  <th scope="col">{t('reciters.riwaya')}</th>
+                  <th scope="col">{t('reciters.infohash')}</th>
+                  <th scope="col">{t('reciters.fileCount')}</th>
+                  <th scope="col">{t('reciters.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reciters.map((reciter) => (
+                  <tr key={reciter.id}>
+                    <td>
+                      <span className="row__label">{reciter.name}</span>
+                    </td>
+                    <td>
+                      <Chip tone="info">{reciter.riwaya}</Chip>
+                    </td>
+                    <td>
+                      <span className="row__id">{reciter.infohash.slice(0, 16)}…</span>
+                    </td>
+                    <td className="num">{reciter.fileCount}</td>
+                    <td>
+                      <span className="cluster cluster--end">
+                        <Button
+                          small
+                          variant="destructive"
+                          onClick={() => void remove(reciter.id)}
+                          busy={busy === `remove-${reciter.id}`}
+                        >
+                          {t('reciters.remove')}
+                        </Button>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
       )}
     </div>
   );

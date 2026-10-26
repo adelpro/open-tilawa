@@ -533,6 +533,96 @@
         "tags": ["Seeders"]
       }
     },
+    "/api/seeders/{id}/torrents": {
+      "get": {
+        "operationId": "SeedersController_torrents",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      },
+      "post": {
+        "operationId": "SeedersController_addTorrent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
+    "/api/seeders/{id}/torrents/{infoHash}": {
+      "delete": {
+        "operationId": "SeedersController_removeTorrent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "infoHash",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
+    "/api/seeders/{id}/files": {
+      "get": {
+        "operationId": "SeedersController_files",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
     "/api/turns": {
       "get": {
         "operationId": "TurnsController_list",
@@ -636,49 +726,6 @@
           }
         },
         "tags": ["Turns"]
-      }
-    },
-    "/api/torrents": {
-      "get": {
-        "operationId": "TorrentsController_list",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["Torrents"]
-      },
-      "post": {
-        "operationId": "TorrentsController_add",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": ["Torrents"]
-      }
-    },
-    "/api/torrents/{id}": {
-      "delete": {
-        "operationId": "TorrentsController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "tags": ["Torrents"]
       }
     },
     "/api/reciters": {

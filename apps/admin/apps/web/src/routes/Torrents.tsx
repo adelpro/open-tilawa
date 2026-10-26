@@ -2,127 +2,308 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
-import { Notice } from '../components/Chip';
+import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
+import type { Seeder, SeederInventory } from '../lib/types-seeders';
 
-interface Torrent {
-  id: number;
-  name: string;
-  infohash: string;
-  magnet: string;
-  createdAt: string;
-}
-
+/**
+ * Torrents live on the seeders, not in this database: everything here is a
+ * proxy to the selected node's admin API, so what the screen shows is what the
+ * node actually holds — not a second, drifting catalogue.
+ */
 export function Torrents(): ReactElement {
   const { user } = useSession();
-  const [torrents, setTorrents] = useState<Torrent[] | null>(null);
+  const { t } = useI18n();
+  const [seeders, setSeeders] = useState<Seeder[] | null>(null);
+  const [seederId, setSeederId] = useState<number | null>(null);
+  const [inventory, setInventory] = useState<SeederInventory | null>(null);
+  const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newInfohash, setNewInfohash] = useState('');
-  const [newMagnet, setNewMagnet] = useState('');
+  const [mode, setMode] = useState<'magnet' | 'file'>('magnet');
+  const [magnet, setMagnet] = useState('');
+  const [torrentPath, setTorrentPath] = useState('');
 
-  const load = useCallback(async () => {
-    setError(null);
+  const loadSeeders = useCallback(async () => {
     try {
-      setTorrents(await api<Torrent[]>('/torrents'));
+      const rows = await api<Seeder[]>('/seeders');
+      setSeeders(rows);
+      setSeederId(
+        (current) => current ?? rows.find((s) => s.hasCredentials)?.id ?? rows[0]?.id ?? null,
+      );
     } catch (caught) {
-      setTorrents([]);
-      setError(caught instanceof Error ? caught.message : 'Failed to load torrents');
+      setSeeders([]);
+      setError(caught instanceof Error ? caught.message : t('torrents.loadFailed'));
+    }
+  }, [t]);
+
+  const loadInventory = useCallback(
+    async (id: number) => {
+      setError(null);
+      try {
+        setInventory(await api<SeederInventory>(`/seeders/${id}/torrents`));
+      } catch (caught) {
+        setInventory(null);
+        setError(caught instanceof Error ? caught.message : t('torrents.loadFailed'));
+      }
+    },
+    [t],
+  );
+
+  const loadFiles = useCallback(async (id: number) => {
+    try {
+      setFiles((await api<{ files: string[] }>(`/seeders/${id}/files`)).files);
+    } catch {
+      setFiles([]);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    void loadSeeders();
+  }, [loadSeeders]);
 
-  async function add() {
-    if (!newName.trim() || !newInfohash.trim()) return;
+  useEffect(() => {
+    if (seederId === null) return;
+    void loadInventory(seederId);
+    void loadFiles(seederId);
+  }, [seederId, loadInventory, loadFiles]);
+
+  async function addTorrent(): Promise<void> {
+    if (seederId === null) return;
+    const body = mode === 'magnet' ? { magnet: magnet.trim() } : { torrentPath };
+    if (mode === 'magnet' && !body.magnet) return;
+    if (mode === 'file' && !torrentPath) return;
     setBusy('add');
+    setError(null);
     try {
-      await api('/torrents', { method: 'POST', body: { name: newName.trim(), infohash: newInfohash.trim(), magnet: newMagnet.trim() } });
-      setNewName(''); setNewInfohash(''); setNewMagnet('');
+      const result = await api<{ name?: string }>(`/seeders/${seederId}/torrents`, {
+        method: 'POST',
+        body,
+      });
+      setMagnet('');
+      setTorrentPath('');
       setShowAdd(false);
-      setMessage('Torrent added');
-      await load();
+      setMessage(t('torrents.added', { name: result.name ?? '' }));
+      await loadInventory(seederId);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to add');
+      setError(caught instanceof Error ? caught.message : t('torrents.addFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  async function remove(id: number) {
-    setBusy(`remove-${id}`);
+  async function removeTorrent(infoHash: string): Promise<void> {
+    if (seederId === null) return;
+    setBusy(`remove-${infoHash}`);
+    setError(null);
     try {
-      await api(`/torrents/${id}`, { method: 'DELETE' });
-      setMessage('Torrent removed');
-      await load();
+      await api(`/seeders/${seederId}/torrents/${infoHash}`, { method: 'DELETE' });
+      setMessage(t('torrents.removed'));
+      await loadInventory(seederId);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to remove');
+      setError(caught instanceof Error ? caught.message : t('torrents.removeFailed'));
     } finally {
       setBusy(null);
     }
   }
 
-  if (!user) return <div className="p-6">Sign in required</div>;
+  if (!user) return <p className="body muted">{t('torrents.signInRequired')}</p>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Torrent Files</h1>
-        <Button onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Cancel' : 'Add Torrent'}
-        </Button>
-      </div>
+    <div className="stack">
+      <header className="page-head">
+        <div>
+          <h1 className="display-lg">{t('torrents.title')}</h1>
+          <p className="body muted">{t('torrents.lede')}</p>
+        </div>
+        <div className="cluster">
+          <Button
+            variant="secondary"
+            onClick={() => seederId !== null && void loadInventory(seederId)}
+            busy={busy === 'refresh'}
+          >
+            {t('torrents.refresh')}
+          </Button>
+          <Button
+            onClick={() => {
+              setShowAdd(!showAdd);
+              if (seederId !== null) void loadFiles(seederId);
+            }}
+          >
+            {showAdd ? t('torrents.cancel') : t('torrents.add')}
+          </Button>
+        </div>
+      </header>
 
-      {error && <Notice tone="bad">{error}</Notice>}
-      {message && <Notice tone="info">{message}</Notice>}
+      {error ? <Notice tone="bad">{error}</Notice> : null}
+      {message ? <Notice tone="ok">{message}</Notice> : null}
 
-      {showAdd && (
-        <Panel className="mb-6 p-4">
-          <div className="flex flex-col gap-3">
-            <Field label="Name">
-              {(id) => <Input id={id} value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Reciter Name" />}
-            </Field>
-            <Field label="Infohash">
-              {(id) => <Input id={id} value={newInfohash} onChange={(e) => setNewInfohash(e.target.value)} placeholder="abc123..." />}
-            </Field>
-            <Field label="Magnet (optional)">
-              {(id) => <Input id={id} value={newMagnet} onChange={(e) => setNewMagnet(e.target.value)} placeholder="magnet:?xt=urn:btih:..." />}
-            </Field>
-            <Button onClick={add} busy={busy === 'add'} disabled={!newName.trim() || !newInfohash.trim()}>Add</Button>
+      {seeders !== null && seeders.length === 0 ? (
+        <Panel>
+          <p className="body muted">{t('torrents.noSeeders')}</p>
+        </Panel>
+      ) : null}
+
+      {seeders !== null && seeders.length > 0 ? (
+        <Panel>
+          <Field label={t('torrents.node')} hint={t('torrents.nodeHint')}>
+            {(id) => (
+              <select
+                id={id}
+                className="field__select"
+                value={seederId ?? ''}
+                onChange={(event) => setSeederId(Number(event.target.value))}
+              >
+                {seeders.map((seeder) => (
+                  <option key={seeder.id} value={seeder.id}>
+                    {seeder.name} — {seeder.url}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        </Panel>
+      ) : null}
+
+      {showAdd && seederId !== null ? (
+        <Panel>
+          <div className="stack">
+            <div className="cluster" role="tablist" aria-label={t('torrents.addMode')}>
+              <Button
+                small
+                variant={mode === 'magnet' ? 'primary' : 'secondary'}
+                onClick={() => setMode('magnet')}
+              >
+                {t('torrents.magnet')}
+              </Button>
+              <Button
+                small
+                variant={mode === 'file' ? 'primary' : 'secondary'}
+                onClick={() => setMode('file')}
+              >
+                {t('torrents.file')}
+              </Button>
+            </div>
+            {mode === 'magnet' ? (
+              <Field label={t('torrents.magnet')} hint={t('torrents.magnetHint')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    value={magnet}
+                    onChange={(event) => setMagnet(event.target.value)}
+                    placeholder="magnet:?xt=urn:btih:…"
+                  />
+                )}
+              </Field>
+            ) : (
+              <Field label={t('torrents.file')} hint={t('torrents.fileHint')}>
+                {(id) => (
+                  <select
+                    id={id}
+                    className="field__select"
+                    value={torrentPath}
+                    onChange={(event) => setTorrentPath(event.target.value)}
+                  >
+                    <option value="">{t('torrents.filePlaceholder')}</option>
+                    {files.map((file) => (
+                      <option key={file} value={file}>
+                        {file}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+            )}
+            <div className="cluster">
+              <Button
+                onClick={() => void addTorrent()}
+                busy={busy === 'add'}
+                disabled={mode === 'magnet' ? !magnet.trim() : !torrentPath}
+              >
+                {t('torrents.addSubmit')}
+              </Button>
+            </div>
           </div>
         </Panel>
-      )}
+      ) : null}
 
-      {torrents === null ? (
-        <SkeletonRows rows={4} label="Loading" />
-      ) : torrents.length === 0 ? (
-        <Panel className="p-8 text-center text-gray-500">
-          No torrents yet. Click "Add Torrent" to get started.
-        </Panel>
+      {inventory === null ? (
+        seederId === null ? null : (
+          <SkeletonRows rows={3} label={t('torrents.loading')} />
+        )
       ) : (
-        <div className="grid gap-4">
-          {torrents.map((t) => (
-            <Panel key={t.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-semibold">{t.name}</span>
-                  <div className="text-xs text-gray-400 mt-1 font-mono">{t.infohash}</div>
-                  <div className="text-xs text-gray-400 mt-1">{t.createdAt}</div>
-                </div>
-                <Button small variant="destructive" onClick={() => remove(t.id)} disabled={busy === `remove-${t.id}`}>
-                  {busy === `remove-${t.id}` ? '...' : 'Remove'}
-                </Button>
-              </div>
-            </Panel>
-          ))}
-        </div>
+        <Panel>
+          <p className="body muted">
+            {t('torrents.summary', {
+              count: String(inventory.stats.totalTorrents),
+              peers: String(inventory.stats.totalPeers),
+            })}
+          </p>
+          {inventory.torrents.length === 0 ? (
+            <p className="body muted">{t('torrents.empty')}</p>
+          ) : (
+            <div className="table-scroll">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('torrents.name')}</th>
+                    <th scope="col">{t('torrents.size')}</th>
+                    <th scope="col">{t('torrents.progress')}</th>
+                    <th scope="col">{t('torrents.peers')}</th>
+                    <th scope="col">{t('torrents.speed')}</th>
+                    <th scope="col">{t('torrents.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventory.torrents.map((torrent) => (
+                    <tr key={torrent.infoHash}>
+                      <td>
+                        <span className="row__label">{torrent.name}</span>
+                        <br />
+                        <span className="row__id">{torrent.infoHash}</span>
+                      </td>
+                      <td className="num">{formatBytes(torrent.size)}</td>
+                      <td>
+                        <Chip tone={torrent.done ? 'ok' : 'notice'}>{torrent.progress}%</Chip>
+                      </td>
+                      <td className="num">{torrent.peers}</td>
+                      <td className="num">
+                        ↑ {torrent.uploadSpeed} · ↓ {torrent.downloadSpeed}
+                      </td>
+                      <td>
+                        <span className="cluster cluster--end">
+                          <Button
+                            small
+                            variant="destructive"
+                            onClick={() => void removeTorrent(torrent.infoHash)}
+                            busy={busy === `remove-${torrent.infoHash}`}
+                          >
+                            {t('torrents.remove')}
+                          </Button>
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
       )}
     </div>
   );
+}
+
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / 1024 ** exponent;
+  return `${value >= 10 || exponent === 0 ? Math.round(value) : value.toFixed(1)} ${units[exponent]}`;
 }
