@@ -23,6 +23,9 @@ const config: Config = {
         accent: 'var(--accent)',
         error: 'var(--error)',
         success: 'var(--success)',
+        muted: 'var(--muted)',
+        line: 'var(--line)',
+        invert: 'var(--invert)',
         /* Legacy aliases kept so untouched pages (about/privacy/contact) resolve. */
         background: 'var(--canvas)',
         foreground: 'var(--ink)',

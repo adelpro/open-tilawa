@@ -28,6 +28,11 @@
   --selection: rgba(255, 255, 255, 0.16);
   --focus: #ffffff;
 
+  /* Minimal player palette (see 2026-10-26-tilawa-web-minimal-player-design). */
+  --muted: #6b6b6b;
+  --line: #e8e8e8;
+  --invert: #ffffff;
+
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 18px;
