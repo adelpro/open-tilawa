@@ -18,11 +18,23 @@ import PlaylistDialog from './playlist-dialog';
 import Range from './range';
 import TrackInfo from './track-info';
 
-interface MusicPlayerProps {
+interface AudioPlayerProps {
   playlist: TrackType[];
 }
 
-export default function MusicPlayer({ playlist }: MusicPlayerProps) {
+/**
+ * `streamURL` is a getter that throws when no WebTorrent server exists (e.g. the
+ * service worker could not be registered), so read it defensively.
+ */
+function getStreamURL(file: any): string | undefined {
+  try {
+    return typeof file?.streamURL === 'string' ? file.streamURL : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export default function AudioPlayer({ playlist }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -30,12 +42,14 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const [currentTrack, setCurrentTrack] = useState<number>(0);
   const selectedReciter = useAtomValue(selectedReciterAtom);
   const reciterId = selectedReciter?.id;
-  const [seedIndex, setSeedIndex] = useState<number>(0);
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+  // Torrent file currently selected for download, so the previous surah stops
+  // competing for pieces when the track changes.
+  const selectedFileRef = useRef<any>(null);
   usePlaybackPersistence(reciterId, currentTrack, audioRef);
 
   const shufflePlaylist = useCallback(() => {
@@ -60,10 +74,6 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   }, [reciterId, playlist.length]);
 
   useEffect(() => {
-    setSeedIndex(0);
-  }, [currentTrack]);
-
-  useEffect(() => {
     const audio = audioRef.current;
     if (!audio || playlist.length === 0) return;
     const track = playlist[currentTrack];
@@ -77,57 +87,55 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
       // ignore
     }
 
-    if (track.link && seedIndex === 0) {
+    const file = track.file as any;
+    const streamURL = getStreamURL(file);
+
+    if (file !== selectedFileRef.current) {
+      try {
+        selectedFileRef.current?.deselect?.();
+      } catch {
+        // ignore
+      }
+      selectedFileRef.current = null;
+    }
+
+    if (streamURL) {
+      // The service worker serves range requests straight from the torrent, so
+      // playback starts on the first pieces instead of after the whole file.
+      try {
+        file.select?.();
+      } catch {
+        // ignore
+      }
+      selectedFileRef.current = file;
+      audio.src = streamURL;
+      audio.load();
+    } else if (track.link) {
+      // HTTP fallback (Itqan-hosted reciters, or P2P streaming unavailable).
       audio.src = track.link;
       audio.load();
-    } else if (track.file && typeof track.file.createReadStream === 'function') {
-      const file = track.file as any;
-      if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg')) {
-        const ms = new MediaSource();
-        const url = URL.createObjectURL(ms);
-        audio.src = url;
-        ms.addEventListener('sourceopen', async () => {
-          const sb = ms.addSourceBuffer('audio/mpeg');
-          const reader = file.createReadStream();
-          const pump = async () => {
-            for await (const chunk of reader) {
-              await new Promise<void>((resolve) => {
-                if (sb.updating) {
-                  sb.addEventListener('updateend', () => resolve(), { once: true });
-                } else {
-                  resolve();
-                }
-              });
-              try { sb.appendBuffer(chunk as unknown as ArrayBuffer); } catch { /* ignore */ }
-              // Update buffered progress from SourceBuffer
-              if (sb.buffered.length > 0 && audio.duration > 0) {
-                const end = sb.buffered.end(sb.buffered.length - 1);
-                setBuffered(end / audio.duration);
-              }
-            }
-            try { if (!sb.updating) ms.endOfStream(); } catch { /* ignore */ }
-          };
-          pump().catch((e) => console.error('MediaSource pump failed:', e));
-        }, { once: true });
-        audio.load();
-      } else {
-        const chunks: Uint8Array[] = [];
-        const reader = file.createReadStream();
-        (async () => {
-          for await (const c of reader) chunks.push(c);
-          const blob = new Blob(chunks as BlobPart[], { type: file.type || 'audio/mpeg' });
-          const u = URL.createObjectURL(blob);
-          audio.src = u;
-          audio.load();
-          if (isPlaying) audio.play().catch(() => {});
-        })().catch((e) => console.error('P2P load failed:', e));
-      }
     }
 
     if (isPlaying) {
       audio.play().catch(() => {});
     }
-  }, [currentTrack, playlist, isPlaying, seedIndex]);
+    // `isPlaying` is deliberately not in the deps: toggling play/pause must not
+    // re-assign `src`, or every resume would restart the surah from zero.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTrack, playlist]);
+
+  // Stop pulling the current surah when the player goes away.
+  useEffect(
+    () => () => {
+      try {
+        selectedFileRef.current?.deselect?.();
+      } catch {
+        // ignore
+      }
+      selectedFileRef.current = null;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (audioRef.current && isPlaying) {
@@ -158,21 +166,24 @@ export default function MusicPlayer({ playlist }: MusicPlayerProps) {
   const handleDownload = () => {
     const track = playlist[currentTrack];
     if (!track) return;
-    if (track.file && typeof track.file.createReadStream === 'function') {
-      const chunks: Uint8Array[] = [];
-      const reader = (track.file as any).createReadStream();
-      (async () => {
-        for await (const c of reader) chunks.push(c);
-        const blob = new Blob(chunks as BlobPart[], { type: 'audio/mpeg' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = (track.file && track.file.name) || `surah-${track.surahId}.mp3`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      })().catch(() => {});
+    const streamURL = getStreamURL(track.file);
+    if (streamURL) {
+      // Pull the whole file through the streaming server, then save it.
+      fetch(streamURL)
+        .then((resp) =>
+          resp.ok ? resp.blob() : Promise.reject(new Error(`HTTP ${resp.status}`)),
+        )
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = track.file?.name || `surah-${track.surahId}.mp3`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        })
+        .catch((e) => console.error('P2P download failed:', e));
     } else if (track.link) {
       const a = document.createElement('a');
       a.href = track.link;

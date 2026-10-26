@@ -35,7 +35,7 @@ export function saveState(patch: Partial<PersistedState>) {
 
 /**
  * Hook that saves the current surah index + playback position for a reciter.
- * Call from MusicPlayer with the reciter id, current track index, and audio ref.
+ * Call from AudioPlayer with the reciter id, current track index, and audio ref.
  */
 export function usePlaybackPersistence(
   reciterId: number | undefined,

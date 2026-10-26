@@ -5,7 +5,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
 import { ReactNode } from 'react';
 
-import MusicPlayer from '@/components/music-player';
+import AudioPlayer from '@/components/audio-player';
 import useTorrent from '@/hooks/use-torrent';
 import { selectedReciterAtom, webtorrentReadyAtom } from '@/jotai/atom';
 
@@ -156,7 +156,7 @@ export default function TorrentPlayer() {
     <div className="flex flex-col gap-2">
       {torrentInfo?.files.length ? (
         <div className="flex flex-col gap-5">
-          <MusicPlayer playlist={torrentInfo.files} />
+          <AudioPlayer playlist={torrentInfo.files} />
           {torrentInfo.ready && (
             <p className="text-center text-xs text-gray-400">
               peers: {torrentInfo.peers} · ↓ {formatSpeed(torrentInfo.downloadSpeed)} · ↑ {formatSpeed(torrentInfo.uploadSpeed)} ·{' '}
