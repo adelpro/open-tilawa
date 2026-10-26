@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 
 import type { TorrentInfo } from '@/types';
+import type { Visualiser } from '@/utils/visualiser-models';
 
 /**
  * Playback state. There is one screen, so this is the whole model:
@@ -19,6 +20,8 @@ export const durationAtom = atom(0);
 export const rateAtom = atom(1);
 /** In-session only: a muted start would look like a broken player tomorrow. */
 export const mutedAtom = atom(false);
+/** Which shape the spectrum takes; a taste, so it is remembered. */
+export const visualiserAtom = atom<Visualiser>('bars');
 
 export const torrentAtom = atom<TorrentInfo | undefined>(undefined);
 export const torrentErrorAtom = atom<string | undefined>(undefined);

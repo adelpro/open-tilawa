@@ -17,6 +17,7 @@ import {
   isPlayingAtom,
   mutedAtom,
   positionAtom,
+  visualiserAtom,
   rateAtom,
   retrySignalAtom,
   torrentAtom,
@@ -25,6 +26,7 @@ import {
 import type { Reciter } from '@/types';
 import { seekBy } from '@/utils/clamp';
 import { surahIdOf } from '@/utils/surah-id';
+import { normaliseVisualiser } from '@/utils/visualiser-models';
 
 /**
  * The site is this screen. There is no navigation: the two sheets are the only
@@ -42,6 +44,7 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
   const position = useAtomValue(positionAtom);
   const [rate, setRate] = useAtom(rateAtom);
   const [muted, setMuted] = useAtom(mutedAtom);
+  const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const torrent = useAtomValue(torrentAtom);
   const { surahId, duration, ready, track, selectSurah, playSurah, seekTo, next, previous } =
     usePlayerNav();
@@ -64,6 +67,7 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
     const saved = reciters.find((candidate) => candidate.id === stored.reciterId) ?? reciters[0];
     setReciter(saved);
     setRate(stored.rate ?? 1);
+    setVisualiser(normaliseVisualiser(stored.visualiser));
     restoreFor(saved);
   }, [reciters, restoreFor, setReciter]);
 
@@ -113,7 +117,7 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
               space above the scrubber belongs to what the speaker is doing. */}
           <h1 className="sr-only">{surah?.name ?? `سورة ${surahId}`}</h1>
           <div className="flex justify-center">
-            <Visualiser playing={isPlaying} />
+            <Visualiser playing={isPlaying} model={visualiser} />
           </div>
 
           <div className="mt-10">

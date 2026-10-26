@@ -11,7 +11,8 @@ import { useHashRoute } from './hooks/use-hash-route';
 import { useSleepTimer } from './hooks/use-sleep-timer';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
-import { isPlayingAtom, rateAtom } from './jotai/player';
+import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
+import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom } from './jotai/atom';
 import { patchState } from './hooks/use-persistence';
 
@@ -24,6 +25,12 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const setIsPlaying = useSetAtom(isPlayingAtom);
   const [rate, setRate] = useAtom(rateAtom);
+  const [visualiser, setVisualiser] = useAtom(visualiserAtom);
+
+  const chooseVisualiser = (next: ReturnType<typeof normaliseVisualiser>) => {
+    setVisualiser(next);
+    patchState({ visualiser: next });
+  };
   const reciter = useAtomValue(selectedReciterAtom);
 
   const chooseRate = (next: number) => {
@@ -58,6 +65,8 @@ export default function App() {
           onSleep={sleep.start}
           rate={rate}
           onRate={chooseRate}
+          visualiser={visualiser}
+          onVisualiser={chooseVisualiser}
           onClose={() => setMenuOpen(false)}
           onNavigate={go}
         />

@@ -5,6 +5,11 @@ import Sheet from '@/components/sheet';
 import type { Route } from '@/hooks/use-hash-route';
 import { cn } from '@/utils/cn';
 import { formatCountdown, SLEEP_OPTIONS } from '@/utils/sleep-timer';
+import { type Visualiser, VISUALISER_LABELS, VISUALISERS } from '@/utils/visualiser-models';
+
+const chip = 'h-8 shrink-0 rounded-full border px-3 text-[13px] transition-colors';
+const chipOn = 'border-ink bg-ink font-semibold text-invert';
+const chipOff = 'border-line text-ink hover:border-ink/40';
 
 function Disclosure({
   label,
@@ -56,6 +61,8 @@ export default function NavSheet({
   onSleep,
   rate,
   onRate,
+  visualiser,
+  onVisualiser,
   onClose,
   onNavigate,
 }: {
@@ -66,11 +73,14 @@ export default function NavSheet({
   onSleep: (minutes: number) => void;
   rate: number;
   onRate: (rate: number) => void;
+  visualiser: Visualiser;
+  onVisualiser: (visualiser: Visualiser) => void;
   onClose: () => void;
   onNavigate: (route: Route) => void;
 }) {
   const [showSleep, setShowSleep] = useState(false);
   const [showSpeed, setShowSpeed] = useState(false);
+  const [showShape, setShowShape] = useState(false);
 
   return (
     <Sheet title="القائمة" open={open} onClose={onClose} size="auto">
@@ -124,6 +134,27 @@ export default function NavSheet({
               )}
             >
               {Number(value.toFixed(2))}x
+            </button>
+          ))}
+        </div>
+      </Disclosure>
+
+      <Disclosure
+        label="شكل الطيف"
+        value={VISUALISER_LABELS[visualiser]}
+        open={showShape}
+        onToggle={() => setShowShape((v) => !v)}
+      >
+        <div className="flex flex-wrap gap-1.5 px-5">
+          {VISUALISERS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onVisualiser(value)}
+              aria-pressed={visualiser === value}
+              className={cn(chip, visualiser === value ? chipOn : chipOff)}
+            >
+              {VISUALISER_LABELS[value]}
             </button>
           ))}
         </div>

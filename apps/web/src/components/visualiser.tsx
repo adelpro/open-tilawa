@@ -1,24 +1,28 @@
 import { useEffect, useRef } from 'react';
 
 import { getAnalyser } from '@/utils/audio-analyser';
+import { downsample, type Visualiser as Model } from '@/utils/visualiser-models';
 
 const BARS = 28;
 const HEIGHT = 64;
 const GAP = 3;
+/** Waterfall history: one column per frame bucket, newest at the reading edge. */
+const HISTORY = 56;
 
 /**
- * The analyser draws what the speaker is doing: bars rising from the baseline,
- * band 0 at the reading edge (right) because the page is RTL.
+ * The spectrum, in five shapes. Everything is ink on transparent, bottom-anchored,
+ * and mirrored so band 0 sits at the reading edge (right) in this RTL page.
  *
- * When playback pauses the bars keep their last shape at a quarter opacity —
- * the layout does not jump, and the difference between listening and not is
- * visible without a label. With no analyser (a browser that refused the graph,
- * or before the first play) it draws a flat shelf, so the block never collapses.
+ * Paused, the last shape stays at a quarter opacity: the block does not jump and
+ * "not listening" is legible without a label.
  */
-export default function Visualiser({ playing }: { playing: boolean }) {
+export default function Visualiser({ playing, model }: { playing: boolean; model: Model }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const levels = useRef<number[]>(new Array(BARS).fill(0.08));
+  const peaks = useRef<number[]>(new Array(BARS).fill(0.08));
+  const history = useRef<number[][]>([]);
+  const wave = useRef<Float32Array>(new Float32Array(BARS * 4));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,21 +44,79 @@ export default function Visualiser({ playing }: { playing: boolean }) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
+    /** Index 0 at the right edge, so the voice starts where the eye starts. */
+    const xFor = (index: number, step = barWidth + GAP) => width - barWidth - index * step;
+
+    const drawBars = () => {
+      levels.current.forEach((level, index) => {
+        const height = Math.max(2, level * HEIGHT);
+        ctx.fillRect(xFor(index), HEIGHT - height, barWidth, height);
+      });
+    };
+
+    const drawPeaks = () => {
+      drawBars();
+      peaks.current.forEach((level, index) => {
+        const y = HEIGHT - Math.max(3, level * HEIGHT);
+        ctx.fillRect(xFor(index), y - 2, barWidth, 1.5);
+      });
+    };
+
+    const drawDots = () => {
+      const step = width / BARS;
+      levels.current.forEach((level, index) => {
+        const radius = 1.2 + level * 6;
+        const x = width - step / 2 - index * step;
+        ctx.beginPath();
+        ctx.arc(x, HEIGHT - 8, radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    };
+
+    const drawRibbon = () => {
+      const data = wave.current;
+      const points = data.length;
+      const step = width / points;
+      ctx.beginPath();
+      ctx.moveTo(width, HEIGHT);
+      for (let i = 0; i < points; i += 1) {
+        const value = (data[i] - 128) / 128;
+        const x = width - i * step;
+        ctx.lineTo(x, HEIGHT - Math.abs(value) * (HEIGHT - 6));
+      }
+      ctx.lineTo(0, HEIGHT);
+      ctx.closePath();
+      ctx.fill();
+    };
+
+    const drawWaterfall = () => {
+      const columns = history.current;
+      const step = width / HISTORY;
+      columns.forEach((column, age) => {
+        const x = width - (age + 1) * step;
+        if (x < -step) return;
+        column.forEach((level, band) => {
+          const height = Math.max(1, level * HEIGHT);
+          const y = HEIGHT - height;
+          const bandHeight = (HEIGHT / column.length) * 1.1;
+          ctx.fillRect(x, y, step - 1, Math.min(bandHeight, height));
+        });
+      });
+    };
+
     const draw = () => {
       ctx.clearRect(0, 0, width, HEIGHT);
       ctx.fillStyle = ink;
-      levels.current.forEach((level, index) => {
-        const height = Math.max(2, level * HEIGHT);
-        const x = width - barWidth - index * (barWidth + GAP);
-        ctx.fillRect(x, HEIGHT - height, barWidth, height);
-      });
+      if (model === 'peaks') drawPeaks();
+      else if (model === 'dots') drawDots();
+      else if (model === 'ribbon') drawRibbon();
+      else if (model === 'waterfall') drawWaterfall();
+      else drawBars();
     };
 
     measure();
     draw();
 
-    // The column is fluid (phone, rotation, desktop), so the canvas re-measures
-    // instead of baking in the width from the first paint.
     const observer = new ResizeObserver(() => {
       measure();
       draw();
@@ -65,24 +127,32 @@ export default function Visualiser({ playing }: { playing: boolean }) {
       return () => observer.disconnect();
     }
 
-    // The engine creates the analyser in its own play effect; this one may run
-    // first, so the loop starts regardless and picks it up when it exists.
     const bins = new Uint8Array(128);
+    const time = new Uint8Array(128);
+    let frame = 0;
+
     const tick = () => {
       const analyser = getAnalyser();
       if (analyser && !reduced) {
         analyser.getByteFrequencyData(bins);
-        const usable = Math.floor(bins.length * 0.6);
-        for (let i = 0; i < BARS; i += 1) {
-          const start = Math.floor(((i / BARS) ** 1.4) * usable);
-          const end = Math.max(start + 1, Math.floor((((i + 1) / BARS) ** 1.4) * usable));
-          let peak = 0;
-          for (let j = start; j < end && j < bins.length; j += 1) peak = Math.max(peak, bins[j]);
-          const target = Math.max(0.06, peak / 255);
-          levels.current[i] += (target - levels.current[i]) * 0.35;
+        const bands = downsample(bins, BARS);
+        bands.forEach((target, index) => {
+          levels.current[index] += (Math.max(0.06, target) - levels.current[index]) * 0.35;
+          peaks.current[index] = Math.max(levels.current[index], peaks.current[index] - 0.008);
+        });
+
+        if (model === 'ribbon') {
+          analyser.getByteTimeDomainData(time);
+          wave.current = new Float32Array(time);
+        }
+
+        if (model === 'waterfall' && frame % 2 === 0) {
+          history.current.unshift(downsample(bins, 10));
+          history.current.length = Math.min(history.current.length, HISTORY);
         }
       }
       draw();
+      frame += 1;
       frameRef.current = requestAnimationFrame(tick);
     };
 
@@ -92,7 +162,7 @@ export default function Visualiser({ playing }: { playing: boolean }) {
       cancelAnimationFrame(frameRef.current);
       observer.disconnect();
     };
-  }, [playing]);
+  }, [playing, model]);
 
   return (
     <canvas
