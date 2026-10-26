@@ -805,6 +805,30 @@
         "tags": ["Reciters"]
       }
     },
+    "/api/reciters/push/plan": {
+      "post": {
+        "operationId": "RecitersController_plan",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      }
+    },
+    "/api/reciters/push": {
+      "post": {
+        "operationId": "RecitersController_apply",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      }
+    },
     "/api/reciters/{id}": {
       "delete": {
         "operationId": "RecitersController_remove",

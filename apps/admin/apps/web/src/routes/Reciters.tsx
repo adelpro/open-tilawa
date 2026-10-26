@@ -2,12 +2,30 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
-import { useI18n } from '../lib/i18n';
+import { useI18n, type MessageKey } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
+import { bytes } from '../lib/format';
+import type { Seeder } from '../lib/types-seeders';
+
+interface PushNodePlan {
+  seederId: number;
+  name: string;
+  url: string;
+  toAdd: { infohash: string; name: string }[];
+  present: number;
+  skipReason: 'offline' | 'no_credentials' | 'low_space' | 'unreachable' | null;
+  detail: string | null;
+}
+
+interface PushPlan {
+  catalogue: number;
+  nodes: PushNodePlan[];
+  applied?: { seederId: number; added: number; error: string | null }[];
+}
 
 interface Reciter {
   id: number;
@@ -26,7 +44,7 @@ interface Reciter {
  */
 export function Reciters(): ReactElement {
   const { user } = useSession();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [reciters, setReciters] = useState<Reciter[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -37,6 +55,11 @@ export function Reciters(): ReactElement {
   const [newInfohash, setNewInfohash] = useState('');
   const [newMagnet, setNewMagnet] = useState('');
   const [newFileCount, setNewFileCount] = useState('114');
+  const [pushing, setPushing] = useState(false);
+  const [nodes, setNodes] = useState<Seeder[] | null>(null);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [plan, setPlan] = useState<PushPlan | null>(null);
+  const [pushBusy, setPushBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -81,6 +104,56 @@ export function Reciters(): ReactElement {
     }
   }
 
+  async function openPush(): Promise<void> {
+    setPushing(true);
+    setPlan(null);
+    setPushBusy('load');
+    setError(null);
+    try {
+      const rows = await api<Seeder[]>('/seeders');
+      setNodes(rows);
+      setSelected(
+        rows.filter((row) => row.hasCredentials && row.status !== 'offline').map((row) => row.id),
+      );
+    } catch (caught) {
+      setNodes([]);
+      setError(caught instanceof Error ? caught.message : t('reciters.pushFailed'));
+    } finally {
+      setPushBusy(null);
+    }
+  }
+
+  async function previewPush(): Promise<void> {
+    setPushBusy('plan');
+    setError(null);
+    try {
+      setPlan(
+        await api<PushPlan>('/reciters/push/plan', { method: 'POST', body: { nodeIds: selected } }),
+      );
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.pushFailed'));
+    } finally {
+      setPushBusy(null);
+    }
+  }
+
+  async function applyPush(): Promise<void> {
+    setPushBusy('apply');
+    setError(null);
+    try {
+      const result = await api<PushPlan>('/reciters/push', {
+        method: 'POST',
+        body: { nodeIds: selected },
+      });
+      setPlan(result);
+      setMessage(t('reciters.pushDone'));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.pushFailed'));
+    } finally {
+      setPushBusy(null);
+    }
+  }
+
   async function remove(id: number): Promise<void> {
     setBusy(`remove-${id}`);
     setError(null);
@@ -105,6 +178,9 @@ export function Reciters(): ReactElement {
           <p className="body muted">{t('reciters.lede')}</p>
         </div>
         <div className="cluster">
+          <Button variant="secondary" onClick={() => void openPush()} busy={pushBusy === 'load'}>
+            {t('reciters.push')}
+          </Button>
           <Button onClick={() => setShowAdd(!showAdd)}>
             {showAdd ? t('reciters.cancel') : t('reciters.add')}
           </Button>
@@ -113,6 +189,116 @@ export function Reciters(): ReactElement {
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
+
+      {pushing ? (
+        <Panel tone="parchment">
+          <h2 className="group-title">{t('reciters.pushTitle')}</h2>
+          <p className="body muted">{t('reciters.pushLede')}</p>
+          {nodes === null ? (
+            <SkeletonRows rows={2} label={t('reciters.loading')} />
+          ) : nodes.length === 0 ? (
+            <p className="body muted">{t('torrents.noSeeders')}</p>
+          ) : (
+            <div className="stack">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('reciters.pushNode')}</th>
+                    <th scope="col">{t('seeders.statusHeading')}</th>
+                    <th scope="col">{t('reciters.pushFree')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nodes.map((node) => (
+                    <tr key={node.id}>
+                      <td>
+                        <label className="cluster" style={{ cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={selected.includes(node.id)}
+                            onChange={(event) =>
+                              setSelected((current) =>
+                                event.target.checked
+                                  ? [...current, node.id]
+                                  : current.filter((id) => id !== node.id),
+                              )
+                            }
+                          />
+                          <span className="row__label">{node.name}</span>
+                        </label>
+                        <br />
+                        <span className="row__id">{node.url}</span>
+                      </td>
+                      <td>
+                        <Chip tone={node.status === 'online' ? 'ok' : 'notice'}>
+                          {t(
+                            node.status === 'online'
+                              ? 'seeders.statusOnline'
+                              : 'seeders.statusOffline',
+                          )}
+                        </Chip>
+                      </td>
+                      <td className="num">{bytes(node.freeBytes, locale)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {plan ? (
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{t('reciters.pushNode')}</th>
+                      <th scope="col">{t('reciters.pushPlan')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plan.nodes.map((node) => {
+                      const applied = plan.applied?.find(
+                        (entry) => entry.seederId === node.seederId,
+                      );
+                      return (
+                        <tr key={`plan-${node.seederId}`}>
+                          <td>{node.name}</td>
+                          <td>
+                            {node.skipReason
+                              ? t(`reciters.skip.${node.skipReason}` as MessageKey)
+                              : applied
+                                ? t('reciters.pushAdded', { count: String(applied.added) })
+                                : t('reciters.pushToAdd', { count: String(node.toAdd.length) })}
+                            {node.detail ? ` — ${node.detail}` : ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : null}
+
+              <div className="cluster">
+                <Button
+                  variant="secondary"
+                  onClick={() => void previewPush()}
+                  busy={pushBusy === 'plan'}
+                  disabled={selected.length === 0}
+                >
+                  {t('reciters.pushPreview')}
+                </Button>
+                <Button
+                  onClick={() => void applyPush()}
+                  busy={pushBusy === 'apply'}
+                  disabled={!plan || selected.length === 0}
+                >
+                  {t('reciters.pushApply')}
+                </Button>
+                <Button variant="tertiary" onClick={() => setPushing(false)}>
+                  {t('reciters.pushClose')}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Panel>
+      ) : null}
 
       {showAdd ? (
         <Panel>

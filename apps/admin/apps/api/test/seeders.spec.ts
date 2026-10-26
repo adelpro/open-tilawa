@@ -317,4 +317,77 @@ describe('seeder proxy', () => {
     expect(res.body.message).toContain('SEEDER_UPDATE');
     await agent.post('/api/seeders/9999/update').set('x-csrf-token', csrf).expect(404);
   });
+
+  it('plans and applies a catalogue push without removing anything', async () => {
+    // abc123 is already on the fake node; def456 is not.
+    for (const [name, infohash] of [
+      ['Al-Fatiha', 'abc123'],
+      ['Al-Baqara', 'def456'],
+    ]) {
+      await agent
+        .post('/api/reciters')
+        .set('x-csrf-token', csrf)
+        .send({
+          name,
+          riwaya: 'Hafs',
+          infohash,
+          magnet: `magnet:?xt=urn:btih:${infohash}`,
+          fileCount: 114,
+        })
+        .expect(201);
+    }
+
+    const plan = await agent
+      .post('/api/reciters/push/plan')
+      .set('x-csrf-token', csrf)
+      .send({ nodeIds: [seederId] })
+      .expect(200);
+    expect(plan.body.catalogue).toBe(2);
+    const node = plan.body.nodes[0];
+    expect(node.seederId).toBe(seederId);
+    expect(node.skipReason).toBeNull();
+    expect(node.toAdd.map((r: { infohash: string }) => r.infohash)).toEqual(['def456']);
+
+    const applied = await agent
+      .post('/api/reciters/push')
+      .set('x-csrf-token', csrf)
+      .send({ nodeIds: [seederId] })
+      .expect(202);
+    expect(applied.body.applied[0].added).toBe(1);
+    // The add reached the node with the catalogue's magnet.
+    expect(fake.seen.some((entry) => entry.includes('magnet:?xt=urn:btih:def456'))).toBe(true);
+  });
+
+  it('skips an offline node and reports why', async () => {
+    const { body } = await agent
+      .post('/api/seeders')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'node-offline', url: 'http://127.0.0.1:2', adminUser: 'a', adminPass: 'b' })
+      .expect(201);
+    await agent.post(`/api/seeders/${body.id}/poll`).set('x-csrf-token', csrf).expect(201);
+
+    const plan = await agent
+      .post('/api/reciters/push/plan')
+      .set('x-csrf-token', csrf)
+      .send({ nodeIds: [body.id] })
+      .expect(200);
+    expect(plan.body.nodes[0].skipReason).toBe('offline');
+    expect(plan.body.nodes[0].toAdd).toEqual([]);
+  });
+
+  it('skips a node that has too little free space', async () => {
+    const previous = process.env.CATALOGUE_PUSH_MIN_FREE_BYTES;
+    process.env.CATALOGUE_PUSH_MIN_FREE_BYTES = String(10 * 1024 ** 4);
+    try {
+      const plan = await agent
+        .post('/api/reciters/push/plan')
+        .set('x-csrf-token', csrf)
+        .send({ nodeIds: [seederId] })
+        .expect(200);
+      expect(plan.body.nodes[0].skipReason).toBe('low_space');
+    } finally {
+      if (previous === undefined) delete process.env.CATALOGUE_PUSH_MIN_FREE_BYTES;
+      else process.env.CATALOGUE_PUSH_MIN_FREE_BYTES = previous;
+    }
+  });
 });

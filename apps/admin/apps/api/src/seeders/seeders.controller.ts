@@ -11,6 +11,7 @@ import {
   UseGuards,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
@@ -54,7 +55,11 @@ export class SeedersController {
         adminPass: body.adminPass,
       });
     } catch (err) {
-      throw new BadRequestException((err as Error).message);
+      const message = (err as Error).message;
+      if (/UNIQUE constraint failed/i.test(message)) {
+        throw new ConflictException('a seeder with that URL is already registered');
+      }
+      throw new BadRequestException(message);
     }
   }
 

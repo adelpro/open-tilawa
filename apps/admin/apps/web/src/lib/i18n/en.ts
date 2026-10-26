@@ -283,6 +283,25 @@ export const en = {
   'seeders.updateConfirm': 'Update and restart',
   'seeders.updatedSoftware': 'Node updated — now running {version}.',
 
+  'reciters.push': 'Push to nodes',
+  'reciters.pushTitle': 'Push the catalogue',
+  'reciters.pushLede':
+    'Adds every reciter a node is missing. Nothing is removed — extra torrents on a node stay put.',
+  'reciters.pushNode': 'Node',
+  'reciters.pushFree': 'Free space',
+  'reciters.pushPlan': 'Plan',
+  'reciters.pushPreview': 'Preview',
+  'reciters.pushApply': 'Push now',
+  'reciters.pushClose': 'Close',
+  'reciters.pushToAdd': '{count} to add',
+  'reciters.pushAdded': '{count} added',
+  'reciters.pushDone': 'Catalogue pushed.',
+  'reciters.pushFailed': 'Could not reach the nodes.',
+  'reciters.skip.offline': 'Offline — not pushed',
+  'reciters.skip.no_credentials': 'No credentials stored',
+  'reciters.skip.low_space': 'Not enough free space',
+  'reciters.skip.unreachable': 'Unreachable',
+
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 
   'help.title': 'Help',

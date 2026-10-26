@@ -13,16 +13,35 @@ import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RecitersService } from './reciters.service';
+import { CataloguePushService } from './catalogue-push.service';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 @UseGuards(JWTAuthGuard, RoleGuard)
 @Roles('admin')
 @Controller('reciters')
 export class RecitersController {
-  constructor(private readonly service: RecitersService) {}
+  constructor(
+    private readonly service: RecitersService,
+    private readonly push: CataloguePushService,
+  ) {}
 
   @Get()
   list() {
     return this.service.list();
+  }
+
+  /** What a push would do, without touching a node. */
+  @Post('push/plan')
+  @HttpCode(HttpStatus.OK)
+  plan(@Body() body: { nodeIds?: number[] }) {
+    return this.push.plan(body?.nodeIds);
+  }
+
+  /** Add every catalogue reciter a node is missing. Never removes. */
+  @Post('push')
+  @HttpCode(HttpStatus.ACCEPTED)
+  apply(@Body() body: { nodeIds?: number[] }, @CurrentUser('id') actorId: string | number) {
+    return this.push.apply(body?.nodeIds, Number(actorId));
   }
 
   @Post()

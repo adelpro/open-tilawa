@@ -286,6 +286,25 @@ export const ar: Catalogue = {
   'seeders.updateConfirm': 'حدّث وأعد التشغيل',
   'seeders.updatedSoftware': 'حُدّث الخادم — يعمل الآن بالإصدار {version}.',
 
+  'reciters.push': 'أرسل إلى الخوادم',
+  'reciters.pushTitle': 'أرسل الفهرس',
+  'reciters.pushLede':
+    'يضيف كل قارئ يفتقده الخادم. لا يحذف شيئًا — الملفات الإضافية على الخادم تبقى كما هي.',
+  'reciters.pushNode': 'الخادم',
+  'reciters.pushFree': 'المساحة المتاحة',
+  'reciters.pushPlan': 'الخطة',
+  'reciters.pushPreview': 'معاينة',
+  'reciters.pushApply': 'أرسل الآن',
+  'reciters.pushClose': 'إغلاق',
+  'reciters.pushToAdd': '{count} للإضافة',
+  'reciters.pushAdded': 'أُضيف {count}',
+  'reciters.pushDone': 'أُرسل الفهرس.',
+  'reciters.pushFailed': 'تعذّر الوصول إلى الخوادم.',
+  'reciters.skip.offline': 'غير متصل — لم يُرسل',
+  'reciters.skip.no_credentials': 'لا بيانات اعتماد مخزّنة',
+  'reciters.skip.low_space': 'المساحة المتاحة لا تكفي',
+  'reciters.skip.unreachable': 'تعذّر الوصول',
+
   'footer.copy': '© تلاوة. جميع الحقوق محفوظة.',
 
   'help.title': 'مساعدة',
