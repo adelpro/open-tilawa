@@ -2,6 +2,7 @@
 # Tilawa Node Deployment Script
 # Usage: curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder
 #   or:  bash deploy-node.sh --type turn --port 3478
+#   or:  bash deploy-node.sh --type seeder --disk 500 --upload-kbps 20000 --watchtower
 set -euo pipefail
 
 # Defaults
@@ -12,6 +13,12 @@ ADMIN_PASS="${ADMIN_PASS:-}"
 TURN_REALM="${TURN_REALM:-turn.quran.us.kg}"
 TURN_USER="${TURN_USER:-opentilawa}"
 TURN_PASS="${TURN_PASS:-}"
+# Empty means "no cap": the node reports its headroom and the dashboard plans
+# against it. A number caps the node at that many gigabytes.
+DISK_GB="${DISK_GB:-}"
+UPLOAD_KBPS="${UPLOAD_KBPS:-0}"
+DOWNLOAD_KBPS="${DOWNLOAD_KBPS:-0}"
+ADMIN_UI="${ADMIN_UI:-1}"
 
 # Parse args
 while [[ $# -gt 0 ]]; do
@@ -23,6 +30,11 @@ while [[ $# -gt 0 ]]; do
     --turn-realm) TURN_REALM="$2"; shift 2 ;;
     --turn-user) TURN_USER="$2"; shift 2 ;;
     --turn-pass) TURN_PASS="$2"; shift 2 ;;
+    --disk) DISK_GB="$2"; shift 2 ;;
+    --upload-kbps) UPLOAD_KBPS="$2"; shift 2 ;;
+    --download-kbps) DOWNLOAD_KBPS="$2"; shift 2 ;;
+    --admin-ui) ADMIN_UI="$2"; shift 2 ;;
+    --watchtower) WATCHTOWER=1; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -61,7 +73,27 @@ case "$TYPE" in
   seeder)
     echo ""
     echo "=== Deploying Seeder Node ==="
-    mkdir -p /opt/tilawa-seeder/data
+    DATA_ROOT="/opt/tilawa-seeder"
+    mkdir -p "$DATA_ROOT/data" "$DATA_ROOT/downloads"
+
+    # Quota: unlimited unless the operator asks for a cap. A cap larger than the
+    # disk is not a policy choice, so that is the one case worth refusing.
+    FREE_GB="$(df -BG --output=avail "$DATA_ROOT" | tail -1 | tr -dc '0-9')"
+    if [[ -n "$DISK_GB" ]]; then
+      if ! [[ "$DISK_GB" =~ ^[0-9]+$ ]] || (( DISK_GB < 1 )); then
+        echo "--disk expects a whole number of gigabytes (got '$DISK_GB')" >&2
+        exit 1
+      fi
+      if (( DISK_GB > FREE_GB )); then
+        echo "--disk ${DISK_GB} GB exceeds the ${FREE_GB} GB free on ${DATA_ROOT}" >&2
+        exit 1
+      fi
+      QUOTA_LINE="Disk quota: ${DISK_GB} GB of ${FREE_GB} GB free"
+    else
+      DISK_GB=0
+      QUOTA_LINE="Disk quota: unlimited — ${FREE_GB} GB free, the node will fill the disk"
+    fi
+
     cat > /opt/tilawa-seeder/docker-compose.yml <<EOF
 services:
   seeder:
@@ -73,13 +105,18 @@ services:
       ADMIN_PORT: 8085
       ADMIN_USER: ${ADMIN_USER}
       ADMIN_PASS: ${ADMIN_PASS}
+      # Torrents and audio are two volumes: a .torrent is metadata the node can
+      # rebuild, the audio is gigabytes it cannot re-fetch cheaply. Both live
+      # outside the container so a recreate (or a Watchtower update) keeps them.
+      DOWNLOAD_PATH: /data/downloads
       # 0 = unlimited; the node enforces whatever is set here, before it downloads.
-      DISK_QUOTA_GB: ${DISK_QUOTA_GB:-0}
-      UPLOAD_LIMIT_KBPS: ${UPLOAD_LIMIT_KBPS:-0}
-      DOWNLOAD_LIMIT_KBPS: ${DOWNLOAD_LIMIT_KBPS:-0}
-      ADMIN_UI: ${ADMIN_UI:-1}
+      DISK_QUOTA_GB: ${DISK_GB}
+      UPLOAD_LIMIT_KBPS: ${UPLOAD_KBPS}
+      DOWNLOAD_LIMIT_KBPS: ${DOWNLOAD_KBPS}
+      ADMIN_UI: ${ADMIN_UI}
     volumes:
-      - /opt/tilawa-seeder/data:/data/torrents
+      - ${DATA_ROOT}/data:/data/torrents
+      - ${DATA_ROOT}/downloads:/data/downloads
     restart: unless-stopped
     labels:
       com.centurylinklabs.watchtower.enable: "true"
@@ -108,6 +145,11 @@ fi
     echo "Health:    http://$(hostname -I | awk '{print $1}'):${PORT}/health"
     echo "Username:  ${ADMIN_USER}"
     echo "Password:  ${ADMIN_PASS}"
+    echo "${QUOTA_LINE}"
+    if (( DISK_GB == 0 )); then
+      echo "Cap it later: edit DISK_QUOTA_GB in /opt/tilawa-seeder/docker-compose.yml, then:"
+      echo "  cd /opt/tilawa-seeder && docker compose up -d"
+    fi
     echo ""
     echo "=== Next step ==="
     echo "Add this seeder to your dashboard:"
