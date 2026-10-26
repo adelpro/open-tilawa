@@ -85,6 +85,8 @@ docker compose -f docker-compose.turn.yml up -d
 
 Endpoints (local): Edge `http://127.0.0.1:8084/`, Tracker stats `http://127.0.0.1:8084/stats`, Health `http://127.0.0.1:8084/health`.
 
+Versioning, tags and the order to deploy in: [docs/RELEASING.md](docs/RELEASING.md).
+
 ### Related repos
 
 - `adelpro/open-quran` — frontend/app repo (external for now)
@@ -111,11 +113,31 @@ Run on any Ubuntu/Debian server:
 curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder --port 8085 --admin-user admin --admin-pass YOUR_PASSWORD
 ```
 
+Add a disk cap (recommended on a shared host) and follow image releases:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh \
+  | bash -s -- --type seeder --disk 500 --upload-kbps 20000 --watchtower
+```
+
+Without `--disk` the node reports its free space and accepts anything that fits;
+with it, the node refuses a magnet whose length would cross the cap. The script
+refuses a cap larger than the disk it is installing onto. The generated compose
+publishes the admin port and the peer port `6881` (TCP+UDP) and keeps
+`/data/torrents` and `/data/downloads` on separate host volumes, so a recreate or
+a Watchtower update never discards downloaded audio.
+
 Then add to dashboard:
 1. Go to https://admin-tilawa.quran.us.kg
 2. Navigate to **Seeders** → **Add Seeder**
 3. Name: server hostname
 4. URL: `http://<server-ip>:8085`
+5. Leave *Add the catalogue to this node* ticked to queue every reciter the node
+   is missing as soon as it is registered
+
+The node's version, build SHA, disk, quota and headroom appear on the seeders
+screen after the first probe. **Unlink** removes the node from the dashboard only;
+the node keeps seeding.
 
 ### TURN Server (Native)
 
@@ -137,6 +159,11 @@ Then add to dashboard:
 | PORT | 8085 | Seeder admin port |
 | ADMIN_USER | admin | Seeder admin username |
 | ADMIN_PASS | change-me-in-prod | Seeder admin password |
+| DISK_GB (`--disk`) | unlimited | Cap on what the node holds, in gigabytes |
+| UPLOAD_KBPS / DOWNLOAD_KBPS | 0 (unlimited) | Bandwidth caps for the seeding client |
+| ADMIN_UI | 1 | `0` keeps the admin API and hides the browsable page |
+| PEER_PORT (`--peer-port`) | 6881 | Inbound peer port, published TCP+UDP |
+| WATCHTOWER (`--watchtower`) | 0 | `1` adds a label-scoped Watchtower to follow image releases |
 | TURN_REALM | turn.quran.us.kg | TURN realm |
 | TURN_USER | opentilawa | TURN username |
 | TURN_PASS | (auto-generated) | TURN password |

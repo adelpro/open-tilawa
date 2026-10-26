@@ -56,7 +56,13 @@ each piece does, which port it listens on, and how data moves between them.
 - **Image:** `ghcr.io/adelpro/open-tilawa-seeder` (multi-arch), built from
   `apps/seeder`. Runs `seed-all.mjs`.
 - **What it holds:** the `.torrent` files and the audio in the `/data` volume —
-  nothing is baked into the image.
+  nothing is baked into the image. Two volumes, not one: `/data/torrents`
+  (metadata, rebuildable) and `/data/downloads` (gigabytes, not cheap to
+  re-fetch), so recreating the container keeps both.
+- **Peer port:** the node binds `TORRENT_PORT` (default 6881) and both compose
+  files publish it TCP+UDP. Without that the client asks the OS for a random
+  port and only ever dials out, so peers that cannot reach it see one fewer
+  seeder for the same content.
 - **Admin API:** Basic auth on `:8085`; `/health` is public. The node **refuses
   to start** without a real `ADMIN_PASS` (the compose placeholder counts as
   none).
@@ -102,6 +108,13 @@ each piece does, which port it listens on, and how data moves between them.
 - **What it manages:** seeder nodes (status, version, disk/quota/headroom,
   credentials, torrents, software update), TURN servers (status/latency/history),
   the reciter catalogue, the tracker list, and a torrent ↔ magnet tool.
+- **Adding a node:** the add form can queue the whole catalogue immediately
+  (`POST /reciters/push { nodeIds }`, on by default); the push only ever adds and
+  skips what will not fit. The row then shows the node's reported version and
+  build SHA, so "is this the release I published?" needs no shell.
+- **Unlinking:** the Remove action is called **Unlink** because that is all it
+  does — `DELETE /api/seeders/:id` drops the dashboard row, and the node keeps
+  running and seeding. Node-side data is removed per torrent, deliberately.
 - **Software updates:** `POST /api/seeders/:id/update` runs a fixed compose pair
   against the host daemon through a mounted socket. It is admin-only,
   CSRF-guarded, audited, and only works for the **local** node. Remote nodes
@@ -156,7 +169,10 @@ Root `.env` (seeder + tracker + turn): `ADMIN_USER`, `ADMIN_PASS`,
 
 - **Deploy:** `docker compose build <service> && docker compose up -d <service>`.
   Rebuild **every** service whose code changed — a partial deploy is how a stale
-  image survives.
+  image survives. Versions, tags and branch alignment: [RELEASING.md](RELEASING.md).
+- **New node:** `bash deploy-node.sh --type seeder [--disk GB] [--upload-kbps N]
+  [--download-kbps N] [--peer-port N] [--admin-ui 0] [--watchtower]`. No cap is
+  the default; a cap larger than the free disk is refused.
 - **Backup:** SQLite backup through the API container's `better-sqlite3`
   (`db.backup()`), stored inside the `admin_data` volume or copied out.
 - **Rollback:** restore the backup, then run the previous image tag. Migrations
