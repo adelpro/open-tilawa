@@ -13,6 +13,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['"IBM Plex Sans Arabic"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['Amiri', '"IBM Plex Sans Arabic"', 'serif'],
       },
     },
   },

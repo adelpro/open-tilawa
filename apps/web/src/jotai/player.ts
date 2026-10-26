@@ -15,6 +15,8 @@ export const currentSurahIdAtom = atom(1);
 export const isPlayingAtom = atom(false);
 export const positionAtom = atom(0);
 export const durationAtom = atom(0);
+/** Playback speed; persisted, because it is a listener preference. */
+export const rateAtom = atom(1);
 
 export const torrentAtom = atom<TorrentInfo | undefined>(undefined);
 export const torrentErrorAtom = atom<string | undefined>(undefined);

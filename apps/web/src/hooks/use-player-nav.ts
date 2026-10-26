@@ -1,15 +1,17 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
-import { getPosition } from '@/hooks/use-persistence';
+import { getPosition, patchState } from '@/hooks/use-persistence';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
   currentSurahIdAtom,
   durationAtom,
   isPlayingAtom,
   positionAtom,
+  rateAtom,
   torrentAtom,
 } from '@/jotai/player';
+import { nextRate } from '@/utils/rate';
 import { surahIdOf } from '@/utils/surah-id';
 import { audioRef } from '@/utils/audio-ref';
 
@@ -28,6 +30,7 @@ export function usePlayerNav() {
   const setPositionAtom = useSetAtom(positionAtom);
   const setIsPlaying = useSetAtom(isPlayingAtom);
   const duration = useAtomValue(durationAtom);
+  const [rate, setRate] = useAtom(rateAtom);
 
   const files = torrent?.files ?? [];
   const track = useMemo(
@@ -64,6 +67,12 @@ export function usePlayerNav() {
     [setPositionAtom],
   );
 
+  const cycleRate = useCallback(() => {
+    const value = nextRate(rate);
+    setRate(value);
+    patchState({ rate: value });
+  }, [rate, setRate]);
+
   const next = useCallback(() => playSurah(surahId + 1), [playSurah, surahId]);
   const previous = useCallback(() => playSurah(surahId - 1), [playSurah, surahId]);
 
@@ -72,6 +81,8 @@ export function usePlayerNav() {
     track,
     surahId,
     duration,
+    rate,
+    cycleRate,
     /** Play is meaningful once the surah has a file behind it. */
     ready: Boolean(track),
     selectSurah,

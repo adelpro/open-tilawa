@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types test/clamp.test.ts test/persistence.test.ts"
+    "test": "node --test --experimental-strip-types test/arabic-count.test.ts test/clamp.test.ts test/format-bytes.test.ts test/persistence.test.ts test/rate.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

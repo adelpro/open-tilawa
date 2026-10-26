@@ -19,10 +19,15 @@ export type StoredPosition = {
   updatedAt: number;
 };
 
+export type Theme = 'light' | 'dark';
+
 export type StoredState = {
   version: 2;
   reciterId?: number;
   positions: Record<string, StoredPosition>;
+  /** Optional so a blob written by the chrome-less build stays valid. */
+  theme?: Theme;
+  rate?: number;
   updatedAt: number;
 };
 
@@ -92,12 +97,16 @@ export function loadState(): StoredState {
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
       if (isStoredState(parsed)) {
-        // Pick the known fields: an older build's `theme`/`repeat`/`rate` keys
-        // must not be carried forward forever.
+        // Pick the known fields only, so a build that stored repeat/shuffle
+        // cannot keep resurrecting them.
+        const theme = (parsed as { theme?: unknown }).theme;
+        const rate = (parsed as { rate?: unknown }).rate;
         return {
           version: 2,
           reciterId: typeof parsed.reciterId === 'number' ? parsed.reciterId : undefined,
           positions: parsed.positions ?? {},
+          theme: theme === 'light' || theme === 'dark' ? theme : undefined,
+          rate: typeof rate === 'number' && Number.isFinite(rate) ? rate : undefined,
           updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0,
         };
       }

@@ -20,6 +20,16 @@
   color-scheme: light;
 }
 
+/* The night palette from v2, available but never the default. */
+[data-theme='dark'] {
+  --bg: #000000;
+  --ink: #ffffff;
+  --muted: #9a9a9a;
+  --line: #262626;
+  --invert: #000000;
+  color-scheme: dark;
+}
+
 html {
   background: var(--bg);
   -webkit-text-size-adjust: 100%;
@@ -43,7 +53,6 @@ body {
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
-  border-radius: 2px;
 }
 
 button,
@@ -57,20 +66,21 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
-/* Tall enough to breathe in the middle; short, it starts at the top and
-   scrolls instead of clipping the transport. */
-.player-screen {
+/* Top bar, player, bottom bar: the page is a column of three, and only the
+   middle one is allowed to grow. */
+.app-shell {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   min-height: 100dvh;
-  padding: 48px 24px calc(48px + env(safe-area-inset-bottom));
+  flex-direction: column;
 }
 
-@media (min-height: 620px) {
-  .player-screen {
-    justify-content: center;
-  }
+.player-screen {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
 
 /* Bottom sheet, on a native <dialog>: the platform supplies the backdrop, the

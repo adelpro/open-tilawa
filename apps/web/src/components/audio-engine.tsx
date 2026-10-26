@@ -10,6 +10,7 @@ import {
   durationAtom,
   isPlayingAtom,
   positionAtom,
+  rateAtom,
   torrentAtom,
   torrentErrorAtom,
 } from '@/jotai/player';
@@ -72,6 +73,7 @@ export default function AudioEngine() {
 
   const reciter = useAtomValue(selectedReciterAtom);
   const surahId = useAtomValue(currentSurahIdAtom);
+  const rate = useAtomValue(rateAtom);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
@@ -165,6 +167,12 @@ export default function AudioEngine() {
 
     restoredForRef.current = null;
   }, [surahId, link, magnetURI, fileCount, reciter]);
+
+  /** Speed is a listener preference, so it outlives the surah. */
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) audio.playbackRate = rate;
+  }, [rate, surahId, fileCount]);
 
   /** Play / pause. Deliberately does not re-assign src. */
   useEffect(() => {
