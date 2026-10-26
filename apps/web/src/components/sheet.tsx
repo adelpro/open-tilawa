@@ -7,6 +7,7 @@ import type { Reciter } from '@/types';
 import { cn } from '@/utils/cn';
 import { ayahCountLabel } from '@/utils/arabic-count';
 import { formatBytes } from '@/utils/format-bytes';
+import { riwayaLabel } from '@/utils/riwaya';
 import { filterReciters, filterSurahs } from '@/utils/search';
 
 type SheetProps = {
@@ -329,7 +330,7 @@ export function ReciterSheet({
                       {reciter.name}
                     </span>
                     <span className="mt-0.5 block text-[11.5px] text-muted">
-                      {reciter.riwaya ?? 'حفص'} · {reciter.complet ? 'كامل' : 'جزئي'}
+                      {riwayaLabel(reciter.riwaya)} · {reciter.complet ? 'كامل' : 'جزئي'}
                     </span>
                   </span>
                   <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[10.5px] text-muted">
