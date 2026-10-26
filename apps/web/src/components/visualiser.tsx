@@ -4,14 +4,16 @@ import { getAnalyser } from '@/utils/audio-analyser';
 
 const BARS = 28;
 const HEIGHT = 64;
+const GAP = 3;
 
 /**
- * The analyser draws what the speaker is doing. When playback pauses the bars
- * keep their last shape at a quarter opacity: the layout does not jump, and the
- * difference between listening and not listening is visible without a label.
+ * The analyser draws what the speaker is doing: bars rising from the baseline,
+ * band 0 at the reading edge (right) because the page is RTL.
  *
- * With no analyser (a browser that refused the graph, or before the first play)
- * it draws a flat shelf, so the block never collapses.
+ * When playback pauses the bars keep their last shape at a quarter opacity —
+ * the layout does not jump, and the difference between listening and not is
+ * visible without a label. With no analyser (a browser that refused the graph,
+ * or before the first play) it draws a flat shelf, so the block never collapses.
  */
 export default function Visualiser({ playing }: { playing: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -20,73 +22,83 @@ export default function Visualiser({ playing }: { playing: boolean }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const width = canvas.clientWidth || 260;
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(HEIGHT * dpr);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.scale(dpr, dpr);
-
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     const ink = getComputedStyle(document.body).color || '#111111';
-    const gap = 3;
-    const barWidth = Math.max(2, (width - gap * (BARS - 1)) / BARS);
+
+    let width = 0;
+    let barWidth = 2;
+
+    const measure = () => {
+      width = canvas.clientWidth || 260;
+      barWidth = Math.max(2, (width - GAP * (BARS - 1)) / BARS);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(HEIGHT * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
 
     const draw = () => {
       ctx.clearRect(0, 0, width, HEIGHT);
       ctx.fillStyle = ink;
       levels.current.forEach((level, index) => {
         const height = Math.max(2, level * HEIGHT);
-        const x = index * (barWidth + gap);
-        // Bottom-anchored: these are levels rising from the floor, not a
-        // symmetric shape around a centre line.
-        const y = HEIGHT - height;
-        ctx.fillRect(x, y, barWidth, height);
+        const x = width - barWidth - index * (barWidth + GAP);
+        ctx.fillRect(x, HEIGHT - height, barWidth, height);
       });
     };
 
+    measure();
     draw();
-    if (!playing) return;
+
+    // The column is fluid (phone, rotation, desktop), so the canvas re-measures
+    // instead of baking in the width from the first paint.
+    const observer = new ResizeObserver(() => {
+      measure();
+      draw();
+    });
+    observer.observe(canvas);
+
+    if (!playing) {
+      return () => observer.disconnect();
+    }
 
     // The engine creates the analyser in its own play effect; this one may run
-    // first. So the loop starts regardless and picks the analyser up when it
-    // exists, instead of drawing a flat shelf for the whole session.
+    // first, so the loop starts regardless and picks it up when it exists.
     const bins = new Uint8Array(128);
     const tick = () => {
       const analyser = getAnalyser();
-      if (!analyser || reduced) {
-        draw();
-        frameRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      analyser.getByteFrequencyData(bins);
-      // Low bins carry the voice; skip the top of the spectrum, which is hiss.
-      const usable = Math.floor(bins.length * 0.6);
-      for (let i = 0; i < BARS; i += 1) {
-        const start = Math.floor((i / BARS) ** 1.4 * usable);
-        const end = Math.max(start + 1, Math.floor(((i + 1) / BARS) ** 1.4 * usable));
-        let peak = 0;
-        for (let j = start; j < end && j < bins.length; j += 1) peak = Math.max(peak, bins[j]);
-        const target = Math.max(0.06, peak / 255);
-        levels.current[i] += (target - levels.current[i]) * 0.35;
+      if (analyser && !reduced) {
+        analyser.getByteFrequencyData(bins);
+        const usable = Math.floor(bins.length * 0.6);
+        for (let i = 0; i < BARS; i += 1) {
+          const start = Math.floor(((i / BARS) ** 1.4) * usable);
+          const end = Math.max(start + 1, Math.floor((((i + 1) / BARS) ** 1.4) * usable));
+          let peak = 0;
+          for (let j = start; j < end && j < bins.length; j += 1) peak = Math.max(peak, bins[j]);
+          const target = Math.max(0.06, peak / 255);
+          levels.current[i] += (target - levels.current[i]) * 0.35;
+        }
       }
       draw();
       frameRef.current = requestAnimationFrame(tick);
     };
 
     frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
+
+    return () => {
+      cancelAnimationFrame(frameRef.current);
+      observer.disconnect();
+    };
   }, [playing]);
 
   return (
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="h-16 w-full max-w-[260px] transition-opacity duration-300"
+      className="block h-16 w-full transition-opacity duration-300"
       style={{ opacity: playing ? 1 : 0.25 }}
     />
   );

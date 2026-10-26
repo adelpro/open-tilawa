@@ -47,7 +47,9 @@ export default function PlayerFooter({
   const ring = 2 * Math.PI * 20;
   return (
     <footer className="shrink-0 border-t border-line pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto flex h-14 w-full max-w-[520px] items-center gap-0.5 px-2">
+      {/* Same 16px gutter as the top bar: the ring should sit as far from the
+          edge as the mark does, or it reads as pushed to the corner. */}
+      <div className="mx-auto flex h-14 w-full max-w-[520px] items-center gap-0.5 px-4">
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Both rows start with an icon: the same shape means the same thing,
               so neither row reads as a caption. */}
