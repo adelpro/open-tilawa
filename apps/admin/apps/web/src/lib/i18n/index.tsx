@@ -26,7 +26,7 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 };
 
 const CATALOGUES: Record<Locale, Catalogue> = { en, ar };
-const STORAGE_KEY = 'uslub.locale';
+const STORAGE_KEY = 'tilawa.locale';
 
 /** Text direction is a property of the language, never a user choice. */
 export function directionOf(locale: Locale): 'ltr' | 'rtl' {

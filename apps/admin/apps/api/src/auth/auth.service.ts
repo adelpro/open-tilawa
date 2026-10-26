@@ -94,7 +94,7 @@ export class AuthService {
 
   private async equaliseTiming(password: string): Promise<void> {
     if (!this.dummyHash) {
-      this.dummyHash = await argonHash('uslub-timing-equaliser', argonConfig);
+      this.dummyHash = await argonHash('tilawa-timing-equaliser', argonConfig);
     }
     await argonVerify(this.dummyHash, password, argonConfig).catch(() => false);
   }

@@ -2,7 +2,7 @@
   "name": "@tilawa-admin/api",
   "version": "1.20.0",
   "private": true,
-  "description": "Uslub API — accounts, profiles, keys, usage and admin for the browser.",
+  "description": "Tilawa Admin API — accounts, TURN, seeders, torrents, reciters and admin.",
   "license": "MIT",
   "scripts": {
     "build": "nest build && tsc-alias -p tsconfig.build.json",

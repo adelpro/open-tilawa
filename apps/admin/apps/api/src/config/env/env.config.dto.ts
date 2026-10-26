@@ -2,7 +2,7 @@ import { IsEnum, IsNumberString, IsOptional, IsString, Matches } from 'class-val
 import { Enveronements } from './types';
 
 /**
- * The environment surface Uslub actually reads.
+ * The environment surface Tilawa Admin actually reads.
  *
  * Dropped from the ported DTO, with reasons: `MONGODB_URI` (SQLite now),
  * `TRACE_*` (OpenTelemetry is gone), the Google/GitHub/Facebook client ids
@@ -21,7 +21,7 @@ export class EnvConfigDTO {
 
   @IsString()
   @IsOptional()
-  APP_NAME = 'Uslub';
+  APP_NAME = 'Tilawa Admin';
 
   @IsString()
   @IsOptional()
@@ -38,7 +38,7 @@ export class EnvConfigDTO {
 
   @IsString()
   @IsOptional()
-  DB_PATH = './data/uslub.sqlite';
+  DB_PATH = './data/tilawa-admin.sqlite';
 
   @IsString()
   @IsOptional()
@@ -59,7 +59,7 @@ export class EnvConfigDTO {
   /** Peppers API-key hashing: sha256(pepper + key). Required in production. */
   @IsString()
   @IsOptional()
-  USLUB_PEPPER?: string;
+  TILAWA_PEPPER?: string;
 
   @IsString()
   @IsOptional()

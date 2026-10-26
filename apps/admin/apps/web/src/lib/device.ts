@@ -5,7 +5,7 @@
  * privacy-violating sense: the server only uses it to remember which devices have
  * passed a 2FA challenge. Losing it costs one extra code, nothing more.
  */
-const KEY = 'uslub.device';
+const KEY = 'tilawa.device';
 
 export function deviceId(): string {
   let id = window.localStorage.getItem(KEY);

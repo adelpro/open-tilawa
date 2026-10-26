@@ -17,7 +17,7 @@ export class HealthController {
   health(): Record<string, unknown> {
     return {
       status: 'ok',
-      service: 'uslub-api',
+      service: 'tilawa-admin-api',
       version: process.env.APP_VERSION ?? '0.1.0',
       sha: process.env.BUILD_SHA ?? 'dev',
       uptimeMs: Date.now() - startedAt,

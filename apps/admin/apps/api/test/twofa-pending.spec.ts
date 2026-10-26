@@ -146,7 +146,7 @@ describe('pending-2FA grant (audit fixes)', () => {
   });
 
   it('says nothing and sends nothing for an account without a second factor', async () => {
-    const plainEmail = 'plain@uslub.test';
+    const plainEmail = 'plain@tilawa.test';
     const plainPassword = 'Plain-p4ss-2026';
     const plainId = await h.seedUser({ name: 'Plain', email: plainEmail, password: plainPassword });
 
@@ -201,7 +201,7 @@ describe('pending-2FA grant (audit fixes)', () => {
   it('redeems a recovery code once and regenerates the set with a password', async () => {
     const recoveryOwner = {
       name: 'Recovery Owner',
-      email: 'recovery-owner@uslub.test',
+      email: 'recovery-owner@tilawa.test',
       password: 'Recovery-p4ss-2026',
     };
     await h.seedUser(recoveryOwner);

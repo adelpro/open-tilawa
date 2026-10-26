@@ -11,7 +11,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
  * runs therefore skip the bucket, and no other environment does.
  */
 @Injectable()
-export class UslubThrottlerGuard extends ThrottlerGuard {
+export class TilawaThrottlerGuard extends ThrottlerGuard {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     if (process.env.NODE_ENV === 'test') {
       return true;

@@ -37,8 +37,8 @@ export class SetupService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     if (this.setupRequired()) {
       const token = this.generateToken();
-      const target = this.config.get<string>('USLUB_SETUP_EMAIL');
-      const baseUrl = this.config.get<string>('USLUB_PUBLIC_URL');
+      const target = this.config.get<string>('TILAWA_SETUP_EMAIL');
+      const baseUrl = this.config.get<string>('TILAWA_PUBLIC_URL');
       if (target) {
         try {
           await this.mailer.sendSetupToken(target, token, baseUrl);
@@ -62,7 +62,7 @@ export class SetupService implements OnModuleInit {
         if (baseUrl)
           this.logger.warn(`Setup link: ${baseUrl.replace(/\/$/, '')}/setup?token=${token}`);
         this.logger.warn(
-          'Visit /setup and enter the token plus your credentials. Set USLUB_SETUP_EMAIL to deliver it by mail instead.',
+          'Visit /setup and enter the token plus your credentials. Set TILAWA_SETUP_EMAIL to deliver it by mail instead.',
         );
       }
     }
@@ -76,7 +76,7 @@ export class SetupService implements OnModuleInit {
   }
 
   private pepper(): string {
-    return this.config.get<string>('USLUB_PEPPER') ?? '';
+    return this.config.get<string>('TILAWA_PEPPER') ?? '';
   }
 
   /** Mint a token, store its hash, return the plaintext (shown once). */

@@ -343,34 +343,34 @@ export function Account(): ReactElement {
         <>
           <h2 className="group-title">{t('account.group.profile')}</h2>
 
-      <Panel tone="parchment">
-        <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
-          {t('prefs.title')}
-        </h3>
-        <div className="stack stack--tight">
-          <Field label={t('prefs.language')} hint={t('prefs.languageHint')}>
-            {(id) => (
-              <select
-                id={id}
-                className="input"
-                value={locale}
-                disabled={saving}
-                onChange={(event) => void setLocale(event.target.value as Locale)}
-                // `lang` on the control keeps each name in its own language even while
-                // it is listed inside the other one.
-              >
-                {LOCALES.map((option) => (
-                  <option key={option} value={option} lang={option}>
-                    {LOCALE_NAMES[option]}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
-          <Field label={t('prefs.theme')}>{() => <ThemeToggle />}</Field>
-        </div>
-      </Panel>
-      </>
+          <Panel tone="parchment">
+            <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
+              {t('prefs.title')}
+            </h3>
+            <div className="stack stack--tight">
+              <Field label={t('prefs.language')} hint={t('prefs.languageHint')}>
+                {(id) => (
+                  <select
+                    id={id}
+                    className="input"
+                    value={locale}
+                    disabled={saving}
+                    onChange={(event) => void setLocale(event.target.value as Locale)}
+                    // `lang` on the control keeps each name in its own language even while
+                    // it is listed inside the other one.
+                  >
+                    {LOCALES.map((option) => (
+                      <option key={option} value={option} lang={option}>
+                        {LOCALE_NAMES[option]}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+              <Field label={t('prefs.theme')}>{() => <ThemeToggle />}</Field>
+            </div>
+          </Panel>
+        </>
       ) : null}
 
       {tab === 'master' ? (
@@ -378,90 +378,90 @@ export function Account(): ReactElement {
           <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
             {t('prefs.master.title')}
           </h3>
-        <div className="stack">
-          <p className="fine-print">{t('prefs.master.hint')}</p>
-          <Field label={t('prefs.master.name')}>
-            {(id) => (
-              <Input
-                id={id}
-                name="master-name"
-                autoComplete="off"
-                value={masterName}
-                onChange={(event) => setMasterName(event.target.value)}
-              />
-            )}
-          </Field>
-          <Field label={t('prefs.master.body')} hint={t('prefs.master.bodyHint')}>
-            {(id) => (
-              <TextArea
-                id={id}
-                name="master-body"
-                rows={7}
-                value={masterBody}
-                onChange={(event) => setMasterBody(event.target.value)}
-              />
-            )}
-          </Field>
-          <div className="cluster">
-            <AsyncButton onClick={() => saveMaster()}>{t('prefs.master.save')}</AsyncButton>
-            {user?.masterName || user?.masterBody ? (
-              <Button variant="tertiary" onClick={() => void clearMaster()}>
-                {t('prefs.master.clear')}
-              </Button>
-            ) : null}
+          <div className="stack">
+            <p className="fine-print">{t('prefs.master.hint')}</p>
+            <Field label={t('prefs.master.name')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  name="master-name"
+                  autoComplete="off"
+                  value={masterName}
+                  onChange={(event) => setMasterName(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('prefs.master.body')} hint={t('prefs.master.bodyHint')}>
+              {(id) => (
+                <TextArea
+                  id={id}
+                  name="master-body"
+                  rows={7}
+                  value={masterBody}
+                  onChange={(event) => setMasterBody(event.target.value)}
+                />
+              )}
+            </Field>
+            <div className="cluster">
+              <AsyncButton onClick={() => saveMaster()}>{t('prefs.master.save')}</AsyncButton>
+              {user?.masterName || user?.masterBody ? (
+                <Button variant="tertiary" onClick={() => void clearMaster()}>
+                  {t('prefs.master.clear')}
+                </Button>
+              ) : null}
+            </div>
+            {masterMessage ? <Notice tone="ok">{masterMessage}</Notice> : null}
           </div>
-          {masterMessage ? <Notice tone="ok">{masterMessage}</Notice> : null}
-        </div>
-      </Panel>
+        </Panel>
       ) : null}
 
       {tab === 'photo' ? (
-      <Panel>
-        <div className="spread" style={{ marginBottom: 'var(--space-4)' }}>
-          <h3 className="display-sm">{t('account.photo.title')}</h3>
-          {user ? (
-            <Chip tone="info">
-              {user.avatarUpdatedAt ? t('account.photo.uploaded') : t('account.photo.fallback')}
-            </Chip>
-          ) : null}
-        </div>
-        <div className="avatar-drop">
-          {user ? (
-            <Avatar
-              userId={user.id}
-              name={user.name}
-              email={user.email}
-              avatarUpdatedAt={user.avatarUpdatedAt}
-              size={64}
-            />
-          ) : null}
-          <div className="cluster">
-            <Button variant="secondary" onClick={() => fileInput.current?.click()}>
-              {t('account.photo.choose')}
-            </Button>
-            {user?.avatarUpdatedAt ? (
-              <Button variant="tertiary" onClick={() => void removeAvatar()}>
-                {t('account.photo.remove')}
-              </Button>
+        <Panel>
+          <div className="spread" style={{ marginBottom: 'var(--space-4)' }}>
+            <h3 className="display-sm">{t('account.photo.title')}</h3>
+            {user ? (
+              <Chip tone="info">
+                {user.avatarUpdatedAt ? t('account.photo.uploaded') : t('account.photo.fallback')}
+              </Chip>
             ) : null}
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              hidden
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = '';
-                if (file) void uploadAvatar(file);
-              }}
-            />
           </div>
-        </div>
-        <p className="fine-print" style={{ marginTop: 'var(--space-4)' }}>
-          {t('account.photo.note')}
-        </p>
-        {avatarMessage ? <Notice tone="ok">{avatarMessage}</Notice> : null}
-      </Panel>
+          <div className="avatar-drop">
+            {user ? (
+              <Avatar
+                userId={user.id}
+                name={user.name}
+                email={user.email}
+                avatarUpdatedAt={user.avatarUpdatedAt}
+                size={64}
+              />
+            ) : null}
+            <div className="cluster">
+              <Button variant="secondary" onClick={() => fileInput.current?.click()}>
+                {t('account.photo.choose')}
+              </Button>
+              {user?.avatarUpdatedAt ? (
+                <Button variant="tertiary" onClick={() => void removeAvatar()}>
+                  {t('account.photo.remove')}
+                </Button>
+              ) : null}
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  if (file) void uploadAvatar(file);
+                }}
+              />
+            </div>
+          </div>
+          <p className="fine-print" style={{ marginTop: 'var(--space-4)' }}>
+            {t('account.photo.note')}
+          </p>
+          {avatarMessage ? <Notice tone="ok">{avatarMessage}</Notice> : null}
+        </Panel>
       ) : null}
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
@@ -473,79 +473,85 @@ export function Account(): ReactElement {
             <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
               {t('account.profile.title')}
             </h3>
-        <div className="stack">
-          <Field label={t('common.name')}>
-            {(id) => (
-              <Input
-                id={id}
-                name="name"
-                autoComplete="name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            )}
-          </Field>
-          <Field label={t('account.profile.about')} hint={t('account.profile.aboutHint')}>
-            {(id) => (
-              <Input
-                id={id}
-                name="about"
-                autoComplete="off"
-                value={about}
-                onChange={(event) => setAbout(event.target.value)}
-              />
-            )}
-          </Field>
-          <div>
-            <AsyncButton onClick={() => saveProfile()}>{t('common.save')}</AsyncButton>
-          </div>
-        </div>
-      </Panel>
-
-      <Panel>
-        <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
-          {t('account.signin.title')}
-        </h3>
-        <div className="stack">
-          <p className="body">
-            {user?.passwordSet === false ? (
-              <>
-                <strong>{t('account.signin.noPasswordLead')}</strong>{' '}
-                {t('account.signin.noPasswordBody')}
-              </>
-            ) : (
-              t('account.signin.hasPassword')
-            )}
-          </p>
-
-          {identities.map((identity) => (
-            <div key={identity.provider} className="spread">
-              <span className="body">
-                <code>{identity.provider}</code> <span className="muted">{identity.email}</span>
-              </span>
-              <Button variant="tertiary" small onClick={() => void disconnect(identity.provider)}>
-                {t('account.signin.disconnect')}
-              </Button>
+            <div className="stack">
+              <Field label={t('common.name')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    name="name"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                )}
+              </Field>
+              <Field label={t('account.profile.about')} hint={t('account.profile.aboutHint')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    name="about"
+                    autoComplete="off"
+                    value={about}
+                    onChange={(event) => setAbout(event.target.value)}
+                  />
+                )}
+              </Field>
+              <div>
+                <AsyncButton onClick={() => saveProfile()}>{t('common.save')}</AsyncButton>
+              </div>
             </div>
-          ))}
+          </Panel>
 
-          {providers
-            .filter((provider) => !identities.some((entry) => entry.provider === provider))
-            .map((provider) => (
-              <a
-                key={provider}
-                className="btn btn--secondary btn--sm"
-                href={`/api/auth/${provider}/link`}
-              >
-                {t('account.signin.connect', { provider })}
-              </a>
-            ))}
+          <Panel>
+            <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
+              {t('account.signin.title')}
+            </h3>
+            <div className="stack">
+              <p className="body">
+                {user?.passwordSet === false ? (
+                  <>
+                    <strong>{t('account.signin.noPasswordLead')}</strong>{' '}
+                    {t('account.signin.noPasswordBody')}
+                  </>
+                ) : (
+                  t('account.signin.hasPassword')
+                )}
+              </p>
 
-          {signInMessage ? <Notice tone="ok">{signInMessage}</Notice> : null}
-          {providers.length === 0 ? <p className="fine-print">{t('account.signin.none')}</p> : null}
-        </div>
-      </Panel>
-      </>
+              {identities.map((identity) => (
+                <div key={identity.provider} className="spread">
+                  <span className="body">
+                    <code>{identity.provider}</code> <span className="muted">{identity.email}</span>
+                  </span>
+                  <Button
+                    variant="tertiary"
+                    small
+                    onClick={() => void disconnect(identity.provider)}
+                  >
+                    {t('account.signin.disconnect')}
+                  </Button>
+                </div>
+              ))}
+
+              {providers
+                .filter((provider) => !identities.some((entry) => entry.provider === provider))
+                .map((provider) => (
+                  <a
+                    key={provider}
+                    className="btn btn--secondary btn--sm"
+                    href={`/api/auth/${provider}/link`}
+                  >
+                    {t('account.signin.connect', { provider })}
+                  </a>
+                ))}
+
+              {signInMessage ? <Notice tone="ok">{signInMessage}</Notice> : null}
+              {providers.length === 0 ? (
+                <p className="fine-print">{t('account.signin.none')}</p>
+              ) : null}
+            </div>
+          </Panel>
+        </>
       ) : null}
 
       <h2 className="group-title">{t('account.group.security')}</h2>
@@ -555,132 +561,132 @@ export function Account(): ReactElement {
           <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
             {t('account.password.title')}
           </h3>
-        <div className="stack">
-          {user?.passwordSet === false ? (
-            <div className="stack">
-              <p className="body">{t('account.password.noPassword')}</p>
-              <div>
-                <Button
-                  onClick={() => {
-                    void api('/reset-password/send-email', {
-                      method: 'POST',
-                      body: { email: user?.email },
-                    })
-                      .then(() => setPasswordMessage(t('account.password.checkEmail')))
-                      .catch((caught: unknown) =>
-                        setError(
-                          caught instanceof Error
-                            ? caught.message
-                            : t('account.password.sendFailed'),
-                        ),
-                      );
+          <div className="stack">
+            {user?.passwordSet === false ? (
+              <div className="stack">
+                <p className="body">{t('account.password.noPassword')}</p>
+                <div>
+                  <Button
+                    onClick={() => {
+                      void api('/reset-password/send-email', {
+                        method: 'POST',
+                        body: { email: user?.email },
+                      })
+                        .then(() => setPasswordMessage(t('account.password.checkEmail')))
+                        .catch((caught: unknown) =>
+                          setError(
+                            caught instanceof Error
+                              ? caught.message
+                              : t('account.password.sendFailed'),
+                          ),
+                        );
+                    }}
+                  >
+                    {t('account.password.sendLink')}
+                  </Button>
+                </div>
+                {passwordMessage ? <Notice tone="ok">{passwordMessage}</Notice> : null}
+              </div>
+            ) : (
+              <>
+                <PasswordField
+                  label={t('account.password.current')}
+                  value={oldPassword}
+                  onChange={setOldPassword}
+                  autoComplete="current-password"
+                  required
+                />
+                <PasswordField
+                  label={t('reset.newPassword')}
+                  hint={t('account.password.newHint')}
+                  value={newPassword}
+                  onChange={setNewPassword}
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                  showStrength
+                />
+                <PasswordField
+                  label={t('signup.confirmPassword')}
+                  hint={t('signup.confirmHint')}
+                  value={confirmPassword}
+                  onChange={(next) => {
+                    setConfirmPassword(next);
+                    if (passwordMismatch && next === newPassword) {
+                      setPasswordMismatch(null);
+                    }
                   }}
-                >
-                  {t('account.password.sendLink')}
-                </Button>
-              </div>
-              {passwordMessage ? <Notice tone="ok">{passwordMessage}</Notice> : null}
-            </div>
-          ) : (
-            <>
-              <PasswordField
-                label={t('account.password.current')}
-                value={oldPassword}
-                onChange={setOldPassword}
-                autoComplete="current-password"
-                required
-              />
-              <PasswordField
-                label={t('reset.newPassword')}
-                hint={t('account.password.newHint')}
-                value={newPassword}
-                onChange={setNewPassword}
-                autoComplete="new-password"
-                required
-                minLength={8}
-                showStrength
-              />
-              <PasswordField
-                label={t('signup.confirmPassword')}
-                hint={t('signup.confirmHint')}
-                value={confirmPassword}
-                onChange={(next) => {
-                  setConfirmPassword(next);
-                  if (passwordMismatch && next === newPassword) {
-                    setPasswordMismatch(null);
-                  }
-                }}
-                autoComplete="new-password"
-                required
-              />
-              {passwordMismatch ? <Notice tone="bad">{passwordMismatch}</Notice> : null}
-              {passwordMessage ? <Notice tone="ok">{passwordMessage}</Notice> : null}
-              <div>
-                <Button
-                  onClick={() => void changePassword()}
-                  disabled={!oldPassword || !newPassword || !confirmPassword}
-                >
-                  {t('account.password.change')}
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </Panel>
+                  autoComplete="new-password"
+                  required
+                />
+                {passwordMismatch ? <Notice tone="bad">{passwordMismatch}</Notice> : null}
+                {passwordMessage ? <Notice tone="ok">{passwordMessage}</Notice> : null}
+                <div>
+                  <Button
+                    onClick={() => void changePassword()}
+                    disabled={!oldPassword || !newPassword || !confirmPassword}
+                  >
+                    {t('account.password.change')}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </Panel>
       ) : null}
 
       {tab === 'email' ? (
-      <Panel tone="parchment">
-        <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
-          {t('account.email.title')}
-        </h3>
-        <p className="body muted">{t('account.email.body')}</p>
-        <div className="stack">
-          <Field label={t('account.email.new')}>
-            {(id) => (
-              <Input
-                id={id}
-                name="newEmail"
-                type="email"
-                autoComplete="email"
-                value={newEmail}
-                onChange={(event) => setNewEmail(event.target.value)}
-              />
-            )}
-          </Field>
-          <PasswordField
-            label={t('account.password.current')}
-            value={emailPassword}
-            onChange={setEmailPassword}
-            autoComplete="current-password"
-            required
-          />
-          {user?.isTwoFAEnabled ? (
-            <Field label={t('account.owner.transferTotp')}>
+        <Panel tone="parchment">
+          <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
+            {t('account.email.title')}
+          </h3>
+          <p className="body muted">{t('account.email.body')}</p>
+          <div className="stack">
+            <Field label={t('account.email.new')}>
               {(id) => (
                 <Input
                   id={id}
-                  name="email-totp"
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoComplete="one-time-code"
-                  value={emailTotp}
-                  onChange={(event) => setEmailTotp(event.target.value)}
+                  name="newEmail"
+                  type="email"
+                  autoComplete="email"
+                  value={newEmail}
+                  onChange={(event) => setNewEmail(event.target.value)}
                 />
               )}
             </Field>
-          ) : null}
-          {emailMessage ? <Notice tone="ok">{emailMessage}</Notice> : null}
-          <div>
-            <Button
-              onClick={() => void requestEmailChange()}
-              disabled={!newEmail || !emailPassword}
-            >
-              {t('account.email.send')}
-            </Button>
+            <PasswordField
+              label={t('account.password.current')}
+              value={emailPassword}
+              onChange={setEmailPassword}
+              autoComplete="current-password"
+              required
+            />
+            {user?.isTwoFAEnabled ? (
+              <Field label={t('account.owner.transferTotp')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    name="email-totp"
+                    inputMode="numeric"
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                    value={emailTotp}
+                    onChange={(event) => setEmailTotp(event.target.value)}
+                  />
+                )}
+              </Field>
+            ) : null}
+            {emailMessage ? <Notice tone="ok">{emailMessage}</Notice> : null}
+            <div>
+              <Button
+                onClick={() => void requestEmailChange()}
+                disabled={!newEmail || !emailPassword}
+              >
+                {t('account.email.send')}
+              </Button>
+            </div>
           </div>
-        </div>
-      </Panel>
+        </Panel>
       ) : null}
 
       {user?.isOwner ? (

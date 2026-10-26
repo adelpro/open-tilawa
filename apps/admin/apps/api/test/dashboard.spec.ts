@@ -46,7 +46,7 @@ describe('dashboard api', () => {
       expect(res.body.token).toMatch(/^[0-9a-f]{64}$/);
       expect(res.body.header).toBe('x-csrf-token');
       const cookie = res.headers['set-cookie']?.[0] ?? '';
-      expect(cookie).toContain('uslub_csrf=');
+      expect(cookie).toContain('tilawa_csrf=');
       // Readable by the client on purpose: it has to echo it.
       expect(cookie).not.toContain('HttpOnly');
     });

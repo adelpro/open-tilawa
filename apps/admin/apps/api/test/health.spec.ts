@@ -16,12 +16,11 @@ describe('health', () => {
   let dir: string;
 
   beforeAll(async () => {
-    dir = mkdtempSync(join(tmpdir(), 'uslub-api-'));
+    dir = mkdtempSync(join(tmpdir(), 'tilawa-admin-api-'));
     process.env.DB_PATH = join(dir, 'test.sqlite');
     process.env.COOKIE_JWT_SECRET = 'test-cookie-secret';
     process.env.TEMP_JWT_SECRET = 'test-temp-secret';
-    process.env.USLUB_VENDOR_DIR = join(__dirname, '..', '..', '..', 'vendor');
-
+  
     // Dynamic on purpose: `ConfigModule.forRoot` freezes the environment when
     // `AppModule` is first evaluated, so a static import would ignore the
     // `DB_PATH` set just above and run against the development database.
@@ -40,7 +39,7 @@ describe('health', () => {
   it('reports ok without authentication', async () => {
     const res = await request(app.getHttpServer()).get('/api/health').expect(200);
     expect(res.body.status).toBe('ok');
-    expect(res.body.service).toBe('uslub-api');
+    expect(res.body.service).toBe('tilawa-admin-api');
     expect(typeof res.body.uptimeMs).toBe('number');
     expect(res.body.dbPath).toBe(join(dir, 'test.sqlite'));
   });

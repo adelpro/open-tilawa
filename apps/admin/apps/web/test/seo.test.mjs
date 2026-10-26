@@ -18,7 +18,7 @@ const data = JSON.parse(readFileSync(join(WEB, 'seo', 'pages.json'), 'utf-8'));
 
 /** A stand-in for what `vite build` leaves behind: a shell with one script and one link. */
 function stubDist() {
-  const dir = mkdtempSync(join(tmpdir(), 'uslub-seo-'));
+  const dir = mkdtempSync(join(tmpdir(), 'tilawa-seo-'));
   writeFileSync(
     join(dir, 'index.html'),
     '<!doctype html><html><head><link rel="stylesheet" href="/assets/x.css"></head>' +

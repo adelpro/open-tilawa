@@ -5,7 +5,7 @@ import { useSession } from './session';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-const STORAGE_KEY = 'uslub.theme';
+const STORAGE_KEY = 'tilawa.theme';
 
 /** `null` means this device has not answered the question yet. */
 function readStored(): Theme | null {

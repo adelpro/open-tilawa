@@ -20,7 +20,7 @@ import { Enveronements } from './types';
 const REQUIRED_IN_PRODUCTION = [
   'COOKIE_JWT_SECRET',
   'TEMP_JWT_SECRET',
-  'USLUB_PEPPER',
+  'TILAWA_PEPPER',
   'EMAIL',
   'EMAIL_APP_SPECIFIC_PASS',
 ] as const;

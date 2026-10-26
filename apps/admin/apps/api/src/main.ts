@@ -45,16 +45,15 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(
     app,
     new DocumentBuilder()
-      .setTitle('Uslub API')
+      .setTitle('Tilawa Admin API')
       .setDescription(
-        'The HTTP API behind the Uslub web app and the MCP server. ' +
-          'Authentication is a session cookie (POST /api/auth/local/signin) or a Bearer API key ' +
-          '(Authorization: Bearer uslub_...). Every route except /api/health and the auth ' +
-          'entry points requires one of the two.',
+        'The HTTP API behind the Tilawa Admin dashboard. Authentication is a ' +
+          'session cookie (POST /api/auth/local/signin). Every route except /api/health ' +
+          'and the auth entry points requires one.',
       )
-      .setVersion('1.18.0')
+      .setVersion('1.21.0')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'API key' }, 'apiKey')
-      .addCookieAuth('uslub_session')
+      .addCookieAuth('token')
       .build(),
   );
   SwaggerModule.setup('api/docs', app, document, {
@@ -65,7 +64,7 @@ async function bootstrap(): Promise<void> {
 
   const port = Number(config.get<string>('PORT') ?? process.env.PORT ?? 9310);
   await app.listen(port, '0.0.0.0');
-  new Logger('bootstrap').log(`uslub-api listening on ${port}`);
+  new Logger('bootstrap').log(`tilawa-admin-api listening on ${port}`);
 }
 
 void bootstrap();

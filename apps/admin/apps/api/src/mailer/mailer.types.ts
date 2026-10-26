@@ -34,4 +34,4 @@ export class MailNotConfiguredError extends Error {
 }
 
 /** Injection token: tests override it with a recorder to read the messages. */
-export const MAIL_TRANSPORT = 'USLUB_MAIL_TRANSPORT';
+export const MAIL_TRANSPORT = 'TILAWA_MAIL_TRANSPORT';

@@ -34,22 +34,17 @@ export const en = {
   'nav.closeMenu': 'Close',
 
   'auth.signIn.title': 'Sign in.',
-  'auth.signIn.lede': 'Your voice, wherever you write.',
+  'auth.signIn.lede': 'Run the Quran audio distribution from one console.',
   'auth.signIn.submit': 'Sign in',
   'auth.signIn.forgot': 'Forgot password',
   'auth.signIn.noAccount': 'No account?',
   'auth.signIn.createOne': 'Create one',
-  'auth.signIn.providerGoogle': 'Continue with Google',
-  'auth.signIn.providerGitHub': 'Continue with GitHub',
-  'auth.signIn.providerOther': 'Continue with {provider}',
-  'auth.signIn.signingIn': 'Signing in…',
-  'auth.signIn.or': 'or',
   'setup.title': 'Initial setup',
   'setup.lede':
     'Create the Owner account for this instance. The Owner appoints super admins and cannot be deleted.',
   'setup.token': 'Setup token',
   'setup.tokenHint':
-    'Minted by the API when it boots with no super admin - it is printed to the API logs (docker logs uslub-api) and expires within the hour.',
+    'Minted by the API when it boots with no super admin - it is printed to the API logs (docker logs tilawa-admin-api) and expires within the hour.',
   'setup.saving': 'Creating…',
   'setup.submit': 'Create Owner',
   'setup.failed': 'Setup failed.',
@@ -57,22 +52,45 @@ export const en = {
   'setup.signin': 'Sign in',
   'setup.doneTitle': 'Owner created',
   'setup.doneBody': 'You can now sign in. This account owns the instance.',
-  'footer.navLabel': 'Site',
   'footer.about': 'About',
   'footer.privacy': 'Privacy',
   'footer.terms': 'Terms',
   'footer.contact': 'Contact',
   'footer.copy': '© Tilawa Admin. All rights reserved.',
+
+  'help.title': 'Help',
+  'help.lede': 'Documentation for every section of the dashboard.',
+  'help.seeders.title': 'Seeders',
+  'help.seeders.body':
+    'Register seeder nodes with their host, port and Basic-auth credentials. The dashboard lists each node and can proxy its torrent inventory: add by magnet or infohash, drop what is no longer needed, or sync a reciter release in one action.',
+  'help.turns.title': 'TURN servers',
+  'help.turns.body':
+    'Register TURN servers and keep an eye on them: the dashboard probes each one over STUN every five minutes, records status and latency, and keeps the recent history so an outage is visible at a glance.',
+  'help.torrents.title': 'Torrents',
+  'help.torrents.body':
+    'Torrent work happens from the Torrents section: see what a seeder already holds, add new files for a release, and remove them when a release retires. Actions talk to the seeder directly — nothing to install client-side.',
+  'help.reciters.title': 'Reciters',
+  'help.reciters.body':
+    'The reciter catalogue binds each reciter (and riwaya) to its torrent. Updating a reciter keeps the mapping between the reciter page and what the seeders distribute.',
+  'help.account.title': 'Account',
+  'help.account.body':
+    'Name, language and theme, password, two-factor enrolment, trusted devices, and account deletion. Two steps of verification protect the account and every device that has signed in is listed.',
+  'help.admin.title': 'Admin / Super admin console',
+  'help.admin.body':
+    'Search users, disable or enable them, and read the audit trail. Role changes and deletion are super-admin only; the last active super admin cannot be removed.',
+  'help.setup.title': 'Setup and recovery',
+  'help.setup.body':
+    'First sign-in uses a setup token printed in the API log. Recovery: password reset by email, the 2FA email code, or single-use recovery codes.',
   'footer.product': 'Product',
 
   'about.title': 'About Tilawa Admin',
   'about.version': 'About — v1.0',
   'about.what.heading': 'What it is',
   'about.what.body':
-    'Uslub is a writing-profile service. It keeps how you sound — and what you refuse to sound like — and serves that profile to the agents and editors you already use, over MCP. No browser extension, no second editor: one endpoint, one key.',
+    'Tilawa Admin is the operations console for Quran audio distribution: it manages seeder nodes, TURN servers, the torrent catalogue and the reciters library from one dashboard.',
   'about.who.heading': 'Who builds it',
   'about.who.body':
-    'Uslub is built by Adel Benyahia. Questions, feedback, or partnership inquiries are welcome.',
+    'Tilawa Admin is built by Adel Benyahia. Questions, feedback, or partnership inquiries are welcome.',
   'about.contact.heading': 'Contact',
   'about.contact.body': 'contact@adelpro.us.kg',
 
@@ -80,10 +98,10 @@ export const en = {
   'privacy.version': 'Privacy Policy — v1.0',
   'privacy.collect.heading': 'What we collect',
   'privacy.collect.body':
-    'When you create an account we store your name, email address, and a hashed password. When you use the service we store the writing profiles you create, the API keys you issue, and standard request logs (IP address, timestamp, endpoint).',
+    'When you create an account we store your name, email address, and a hashed password. When you use the service we store the infrastructure you register (seeders, TURN servers, torrents, reciters), your sessions, and standard request logs (IP address, timestamp, endpoint).',
   'privacy.use.heading': 'How we use it',
   'privacy.use.body':
-    'Your data is used to run the service: authenticate you, serve your profiles over MCP, and send transactional email (activation, password reset, two-factor codes). We do not sell your data. We do not share it with any person or organisation. We do not use your writing samples, profiles, or drafts to train AI models.',
+    'Your data is used to run the service: authenticate you, monitor the health and latency of the nodes you register, and send transactional email (activation, password reset, two-factor codes). We do not sell your data. We do not share it with any person or organisation.',
   'privacy.exceptions.heading': 'Exceptions',
   'privacy.exceptions.body':
     'We may use aggregated, anonymised usage data for analytics. We may disclose data when required by law, by a court order, or to protect against security incidents and abuse. In those cases we share only what is legally required.',
@@ -92,7 +110,7 @@ export const en = {
     'Data is stored on a single server with encryption at rest. Passwords are hashed with Argon2. Sessions use httpOnly cookies. We do not use third-party analytics or tracking scripts.',
   'privacy.rights.heading': 'Your rights',
   'privacy.rights.body':
-    'You can view, edit, or delete your account and all associated data at any time from the Account screen. Deletion is permanent and immediate. You can export your profiles as JSON at any time.',
+    'You can view, edit, or delete your account and all associated data at any time from the Account screen. Deletion is permanent and immediate.',
   'privacy.contact.heading': 'Contact',
   'privacy.contact.body': 'contact@adelpro.us.kg (subject: Privacy).',
 
@@ -100,16 +118,16 @@ export const en = {
   'terms.version': 'Terms of Service — v1.0',
   'terms.service.heading': 'The service',
   'terms.service.body':
-    'Uslub provides a writing-profile API and dashboard. You use it at your own discretion. The service is provided "as is" without warranty of any kind.',
+    'Tilawa Admin provides a dashboard for Quran audio distribution infrastructure. You use it at your own discretion. The service is provided "as is" without warranty of any kind.',
   'terms.account.heading': 'Your account',
   'terms.account.body':
-    'You are responsible for keeping your credentials secure. You must not share your API keys. One account per person.',
+    'You are responsible for keeping your credentials secure. One account per person.',
   'terms.use.heading': 'Acceptable use',
   'terms.use.body':
-    "You may not use Uslub to store or transmit unlawful content, to attempt to access other users' data, or to abuse the API (rate-limit evasion, scraping). We may suspend accounts that violate these terms.",
+    "You may not use Tilawa Admin to store or transmit unlawful content, to attempt to access other users' data, or to abuse the service. We may suspend accounts that violate these terms.",
   'terms.content.heading': 'Your content',
   'terms.content.body':
-    'You retain ownership of everything you write and every profile you create. We claim no rights over your content. You grant us a limited licence to store and serve it back to you and your authorised clients.',
+    'You retain ownership of everything you register: reciter details, torrent metadata and node configuration. We claim no rights over it. We store it and serve it back to you only.',
   'terms.data.heading': 'Data',
   'terms.data.body':
     'See the Privacy Policy (v1.0). Your data is not sold, not shared, and not used to train AI.',
@@ -126,24 +144,12 @@ export const en = {
   'prefs.theme.dark': 'Dark',
   'prefs.theme.system': 'System',
   'auth.signIn.failed': 'Sign-in failed.',
-  'auth.signIn.notActivated': 'Your account is not activated yet.',
   'auth.signIn.resendActivation': 'Resend the activation email',
   'auth.signIn.resendSent': 'If that address needs activation, a new link has been sent.',
   'auth.signIn.resendFailed': 'Could not resend the activation email.',
 
-  'auth.error.account_exists':
-    'An account with that email already exists. Sign in with your password, then connect the provider from Account.',
-  'auth.error.unverified_email':
-    'The provider did not confirm that email address, so it cannot be used to sign in here.',
-  'auth.error.identity_taken':
-    'That provider account is already connected to a different Uslub account.',
-  'auth.error.account_disabled': 'This account is disabled.',
-  'auth.error.state_invalid': 'The sign-in request expired or was tampered with. Try again.',
-  'auth.error.provider_disabled': 'That sign-in method is not enabled on this server.',
-  'auth.error.provider_error': 'The provider could not complete the sign-in. Try again.',
-
   'signup.title': 'Create an account.',
-  'signup.lede': 'Your writing voice, in every client you write in.',
+  'signup.lede': 'One account to run the tilawa infrastructure.',
   'common.showPassword': 'Show password',
   'common.hidePassword': 'Hide password',
   'signup.confirmPassword': 'Repeat password',
@@ -161,7 +167,6 @@ export const en = {
   'strength.rule.common': 'Not a common password',
   'signup.passwordHint': 'At least 8 characters.',
   'signup.submit': 'Create account',
-  'signup.creating': 'Creating…',
   'signup.failed': 'Sign-up failed.',
   'signup.haveOne': 'Already have one?',
   'signup.signin': 'Sign in',
@@ -310,7 +315,6 @@ export const en = {
   'account.devices.device': 'Device',
   'account.devices.signedIn': 'Signed in',
   'account.devices.actions': 'Actions',
-  'account.devices.signOut': 'Sign out',
   'account.devices.delete': 'Delete device',
   'account.devices.thisDevice': 'This device',
   'account.devices.trusted': '2FA trusted',
@@ -339,109 +343,14 @@ export const en = {
   'account.delete.action': 'Delete account permanently',
 
   'common.save': 'Save',
-  'common.saving': 'Saving…',
   'common.cancel': 'Cancel',
-  'common.retry': 'Try again',
-
-  'bootstrap.title': 'Get your profile from your agent',
-  'bootstrap.lede':
-    'Copy the prompt into an agent you already use. It answers from what it already knows about your writing and hands back JSON you paste below — no interview.',
-  'bootstrap.tabPaste': 'I do not have a key',
-  'bootstrap.tabMcp': 'I use the MCP server',
-  'bootstrap.copied': 'Copied',
-  'bootstrap.privacy':
-    'What to include: published writing, or samples you are happy to send. They are used to derive a profile and are not stored as documents unless you store them. Do not paste anything confidential.',
-  'bootstrap.pasteLabel': 'Paste the reply',
-  'bootstrap.pasteHint':
-    'One JSON object. Code fences and the sentences around them are fine; the first object is read.',
-  'bootstrap.notJson':
-    'That reply is not JSON. Paste your agent’s last message — if it asked you something, answer that first, then paste the final answer.',
-  'bootstrap.warningsTitle': 'Read, with notes',
-  'bootstrap.check': 'Check it',
-  'bootstrap.checkFailed': 'Could not read the reply',
-  'bootstrap.checked': 'Read as “{name}”',
-  'bootstrap.nameTaken': '“{name}” already exists on your account',
-  'bootstrap.save': 'Save profile',
-  'bootstrap.saveFailed': 'Could not save the profile',
-  'bootstrap.excludedTitle':
-    'These lines read as instruction rather than voice. Edit the reply and check again, or delete them.',
-  'bootstrap.loadFailed': 'Could not load the prompt',
-
-  'editor.loadFailed': 'Could not load the profile.',
-  'editor.tabs': 'Profile sections',
-  'editor.tab.general': 'General',
-  'editor.tab.toolchain': 'Toolchain',
-  'editor.tab.voice': 'Voice',
-  'editor.jsonNote':
-    'Both fields are JSON. The editor checks the syntax here; the server checks the shape before it writes.',
-  'editor.manifestInvalid': 'The manifest is not valid JSON.',
-  'editor.houseStyleInvalid': 'The house style is not valid JSON.',
-  'editor.unsaved': 'Unsaved changes',
-  'editor.discard': 'Discard changes',
-  'editor.saveChanges': 'Save changes',
-  'editor.manifest': 'Manifest',
-  'editor.manifestHint': 'The artefact clients read: name, version, languages, skills.',
-  'editor.houseStyle': 'House style',
-  'editor.houseStyleHint': 'Rules the gates apply: spelling, register, banned patterns.',
-  'editor.voiceCard': 'Voice card',
-  'editor.voiceCardHint': 'What a client shows when it loads this profile. Read-only here.',
-  'editor.noVoiceCard': 'No voice card was generated for this profile.',
-
-  'editor.chain.title': 'Steps in the chain',
-  'editor.chain.hint':
-    'Runs top to bottom. Gates check the draft; prompt steps are instructions the client model applies; the master composes them at the end.',
-  'editor.chain.empty': 'No steps yet. Add a prompt step or switch on a built-in.',
-  'editor.chain.add': 'Add step',
-  'editor.chain.addTitle': 'New prompt step',
-  'editor.chain.editTitle': 'Edit step',
-  'editor.chain.name': 'Name',
-  'editor.chain.body': 'Instructions',
-  'editor.chain.bodyHint':
-    'Markdown the client model applies while revising. Never executed on the server.',
-  'editor.chain.save': 'Save step',
-  'editor.chain.edit': 'Edit',
-  'editor.chain.remove': 'Remove',
-  'editor.chain.up': 'Move up',
-  'editor.chain.down': 'Move down',
-  'editor.chain.limit': 'The chain holds 12 steps, built-ins included.',
-  'editor.chain.bundled': 'Bundled',
-  'editor.chain.last': 'Runs after the chain',
-  'editor.chain.available': 'Available built-ins',
-  'editor.chain.availableHint':
-    'Shipped with the app and kept up to date by it. Removing one only takes it out of this chain.',
-  'editor.chain.noneAvailable': 'Every built-in is in the chain.',
-  'editor.kind.gate': 'Gate',
-  'editor.kind.prompt': 'Prompt',
   'editor.kind.master': 'Master',
-  'editor.step.nameRequired': 'A name of 1–40 characters is required.',
-  'editor.step.bodyRequired': 'Instructions cannot be empty.',
-  'editor.step.bodyLong': 'Keep the instructions under 4,000 characters.',
-  'editor.step.lengthHint': 'Up to 40 characters for the name, 4,000 for the instructions.',
-  'editor.master.title': 'Master step',
-  'editor.master.hint':
-    'Runs once, after every other step. It proposes a revision; it never replaces the text without acceptance.',
-  'editor.master.none': 'None',
-  'editor.master.noneHint': 'This profile has no master of its own.',
-  'editor.master.bundled': 'Bundled voice-tune',
-  'editor.master.bundledHint':
-    'The voice-tune pass that ships with the app — updated when the app updates.',
-  'editor.master.custom': 'My own',
-  'editor.master.customHint':
-    'One name and one text field. The acceptance rule is added automatically.',
-  'editor.master.name': 'Name',
-  'editor.master.body': 'Master instructions',
-  'editor.master.bodyHint': 'What the master does with the findings above, in your voice.',
-  'editor.master.accountNamed':
-    'No master here — your account default “{name}” runs instead. Change it in Account.',
-  'editor.master.accountNone': 'No master runs — neither this profile nor your account has one.',
-
   'admin.title': 'Admin.',
   'admin.owner': 'Owner',
   'admin.lede':
     'Search accounts, disable or enable them, and read gate health and audit. Roles and deletion are super-admin only.',
   'admin.tabs': 'Admin sections',
   'admin.tab.users': 'Users',
-  'admin.tab.health': 'Gate health',
   'admin.tab.audit': 'Audit',
   'admin.actions': 'Actions',
   'admin.you': 'you',
@@ -458,22 +367,6 @@ export const en = {
   'admin.roleConfirm': 'Change {email} to {role}? The change takes effect immediately.',
   'admin.refused': 'That action was refused.',
   'admin.loadFailed': 'Could not load users.',
-  'admin.gateHealth': 'Gate health',
-  'admin.healthy': 'healthy',
-  'admin.degraded': 'degraded',
-  'admin.gate': 'Gate',
-  'admin.present': 'Present',
-  'admin.version': 'Version',
-  'admin.filesDrifted': 'Files drifted',
-  'admin.yes': 'yes',
-  'admin.no': 'no',
-  'admin.python': 'Python: {value}',
-  'admin.vendor': 'vendor {dir}',
-  'admin.mismatches': '{count} mismatch(es)',
-  'admin.prompts': 'Prompts: {list}',
-  'admin.promptDrift': '(drift)',
-  'admin.promptMissing': '(missing)',
-  'admin.unavailable': 'Not available to this account.',
   'admin.recent': 'Recent admin and account actions',
   'admin.nothing': 'Nothing recorded yet.',
 
@@ -483,8 +376,7 @@ export const en = {
   'super.makeAdmin': 'Make admin',
   'super.makeUser': 'Make user',
   'super.deleteTitle': 'Delete {email}',
-  'super.deleteBody':
-    'Their profiles, keys, sessions and audit rows go with the account. This cannot be undone.',
+  'super.deleteBody': 'Their sessions and audit rows go with the account. This cannot be undone.',
   'super.deleteConfirmLabel': 'Type {email} to confirm',
   'super.deleteAction': 'Delete permanently',
 

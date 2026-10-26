@@ -19,7 +19,7 @@ describe('store', () => {
   let devices: TrustedDevicesRepository;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'uslub-store-'));
+    dir = mkdtempSync(join(tmpdir(), 'tilawa-admin-store-'));
     db = openDatabase(join(dir, 'test.sqlite'));
     users = new UsersRepository(db);
     sessions = new SessionsRepository(db);
@@ -46,7 +46,7 @@ describe('store', () => {
     // applied-set check moved inside the write lock, both read "003 pending", the
     // first committed, and the second hit "duplicate column name" and refused to
     // boot — which is exactly what happened on the first P4 deploy.
-    const raceDir = mkdtempSync(join(tmpdir(), 'uslub-migrate-race-'));
+    const raceDir = mkdtempSync(join(tmpdir(), 'tilawa-admin-migrate-race-'));
     const racePath = join(raceDir, 'race.sqlite');
     const core = join(__dirname, '..', 'dist', 'index.js');
     const child = `const c = require(${JSON.stringify(core)}); c.openDatabase(process.argv[1]).close();`;

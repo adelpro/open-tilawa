@@ -84,7 +84,7 @@ export interface Harness {
 
 export async function bootHarness(options: { claimed?: boolean } = {}): Promise<Harness> {
   const claimed = options.claimed ?? true;
-  const dir = mkdtempSync(join(tmpdir(), 'uslub-auth-'));
+  const dir = mkdtempSync(join(tmpdir(), 'tilawa-admin-auth-'));
   const dbPath = join(dir, 'test.sqlite');
 
   process.env.NODE_ENV = 'test';
@@ -93,9 +93,8 @@ export async function bootHarness(options: { claimed?: boolean } = {}): Promise<
   process.env.TEMP_JWT_SECRET = 'test-temp-secret';
   process.env.TEMP_JWT_TTL_MS = '900000';
   process.env.COOKIE_JWT_TTL_MS = '604800000';
-  process.env.USLUB_PEPPER = 'test-pepper';
-  process.env.USLUB_VENDOR_DIR = join(__dirname, '..', '..', '..', 'vendor');
-  process.env.APP_NAME = 'Uslub';
+  process.env.TILAWA_PEPPER = 'test-pepper';
+  process.env.APP_NAME = 'Tilawa Admin';
   process.env.WEBSITE = 'http://localhost:9320';
   // Providers are "configured" only when both halves of the credential exist, so the
   // harness sets them: without them `/auth/providers` is empty and every callback
@@ -123,7 +122,7 @@ export async function bootHarness(options: { claimed?: boolean } = {}): Promise<
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(MAIL_TRANSPORT)
     .useValue(mail.transport)
-    // Throttling is skipped by `UslubThrottlerGuard` when NODE_ENV is `test`;
+    // Throttling is skipped by `TilawaThrottlerGuard` when NODE_ENV is `test`;
     // the override below is belt-and-braces for the same intent.
     .overrideProvider(APP_GUARD)
     .useValue({ canActivate: () => true })

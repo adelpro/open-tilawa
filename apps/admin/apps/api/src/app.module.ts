@@ -2,7 +2,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { UslubThrottlerGuard } from './config/throttler.guard';
+import { TilawaThrottlerGuard } from './config/throttler.guard';
 
 import { CsrfModule } from './csrf/csrf.module';
 import { CsrfMiddleware } from './csrf/csrf.middleware';
@@ -45,7 +45,7 @@ import { envValidate } from './config/env/env.validate';
   ],
   controllers: [HealthController],
   providers: [
-    { provide: APP_GUARD, useClass: UslubThrottlerGuard },
+    { provide: APP_GUARD, useClass: TilawaThrottlerGuard },
     CsrfMiddleware,
   ],
 })

@@ -7,7 +7,7 @@
  * part an attacker cannot forge without reading the cookie, so the pair is what
  * makes the mutation trustworthy.
  */
-export const CSRF_COOKIE = 'uslub_csrf';
+export const CSRF_COOKIE = 'tilawa_csrf';
 export const CSRF_HEADER = 'x-csrf-token';
 
 /** Methods that change state. Everything else is exempt: a GET must never mutate. */
