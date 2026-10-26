@@ -1,8 +1,45 @@
+import { useState } from 'react';
+
 import Icon from '@/components/icons';
 import Sheet from '@/components/sheet';
 import type { Route } from '@/hooks/use-hash-route';
 import { cn } from '@/utils/cn';
 import { formatCountdown, SLEEP_OPTIONS } from '@/utils/sleep-timer';
+
+function Disclosure({
+  label,
+  value,
+  open,
+  onToggle,
+  children,
+}: {
+  label: string;
+  value: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border-b border-line last:border-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex h-11 w-full items-center justify-between px-5 text-start text-[15px] text-ink transition-colors hover:bg-line active:bg-line"
+      >
+        <span className="flex items-center gap-2">
+          <Icon
+            name="chevron-left"
+            className={cn('h-3.5 w-3.5 text-muted transition-transform', open && '-rotate-90')}
+          />
+          {label}
+        </span>
+        <span className="tnum text-[13px] font-semibold text-muted">{value}</span>
+      </button>
+      {open && <div className="pb-3">{children}</div>}
+    </div>
+  );
+}
 
 const ITEMS: { route: Route; label: string }[] = [
   { route: '/', label: 'الاستماع' },
@@ -32,18 +69,18 @@ export default function NavSheet({
   onClose: () => void;
   onNavigate: (route: Route) => void;
 }) {
+  const [showSleep, setShowSleep] = useState(false);
+  const [showSpeed, setShowSpeed] = useState(false);
+
   return (
     <Sheet title="القائمة" open={open} onClose={onClose} size="auto">
-      <div className="border-b border-line pb-3">
-        <div className="flex h-9 items-center justify-between px-5">
-          <span className="text-[13px] text-muted">مؤقّت النوم</span>
-          {sleepActive && (
-            <span className="tnum text-[13px] font-semibold text-ink">
-              {formatCountdown(sleepRemaining)}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-1.5 px-5 pt-0.5">
+      <Disclosure
+        label="مؤقّت النوم"
+        value={sleepActive ? formatCountdown(sleepRemaining) : 'إيقاف'}
+        open={showSleep}
+        onToggle={() => setShowSleep((v) => !v)}
+      >
+        <div className="flex flex-wrap gap-1.5 px-5">
           {SLEEP_OPTIONS.map((minutes) => {
             const active = (minutes === 0 && !sleepActive) || (minutes > 0 && sleepActive);
             return (
@@ -64,13 +101,15 @@ export default function NavSheet({
             );
           })}
         </div>
-      </div>
+      </Disclosure>
 
-      <div className="border-b border-line pb-3">
-        <div className="flex h-9 items-center px-5">
-          <span className="text-[13px] text-muted">السرعة</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5 px-5 pt-0.5">
+      <Disclosure
+        label="السرعة"
+        value={`${Number(rate.toFixed(2))}x`}
+        open={showSpeed}
+        onToggle={() => setShowSpeed((v) => !v)}
+      >
+        <div className="flex flex-wrap gap-1.5 px-5">
           {[0.75, 1, 1.25, 1.5, 2].map((value) => (
             <button
               key={value}
@@ -88,7 +127,7 @@ export default function NavSheet({
             </button>
           ))}
         </div>
-      </div>
+      </Disclosure>
 
       <div className="pb-3">
         {ITEMS.map((item) => {

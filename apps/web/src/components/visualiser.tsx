@@ -41,7 +41,9 @@ export default function Visualiser({ playing }: { playing: boolean }) {
       levels.current.forEach((level, index) => {
         const height = Math.max(2, level * HEIGHT);
         const x = index * (barWidth + gap);
-        const y = (HEIGHT - height) / 2;
+        // Bottom-anchored: these are levels rising from the floor, not a
+        // symmetric shape around a centre line.
+        const y = HEIGHT - height;
         ctx.fillRect(x, y, barWidth, height);
       });
     };

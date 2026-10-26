@@ -16,7 +16,6 @@ function rowsFor(source: StreamSource, torrent: TorrentInfo | undefined): Row[] 
   if (source === 'http') return [];
 
   return [
-    { label: 'المصدر', value: SOURCE_LABEL[source] },
     { label: 'الأقران', value: `${torrent?.peers ?? 0}` },
     { label: 'التنزيل', value: formatSpeed(torrent?.downloadSpeed) },
     { label: 'الرفع', value: formatSpeed(torrent?.uploadSpeed) },
@@ -44,6 +43,15 @@ export default function StreamSheet({
   return (
     <Sheet title="تفاصيل البث" open={open} onClose={onClose} size="auto">
       <div className="px-5 py-4">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="rounded-full border border-line px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink">
+            {SOURCE_LABEL[source]}
+          </span>
+          <span className="text-[12px] text-muted">
+            {source === 'http' ? 'من خادم القارئ' : 'من الشبكة الندّية'}
+          </span>
+        </div>
+
         {source === 'http' ? (
           <div className="space-y-1 text-[13px] leading-relaxed text-muted">
             <p className="text-[15px] font-semibold text-ink">HTTP</p>
