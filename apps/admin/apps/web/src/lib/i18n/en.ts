@@ -189,6 +189,38 @@ export const en = {
   'reciters.removeFailed': 'Could not remove the reciter.',
   'reciters.signInRequired': 'Sign in required.',
 
+  'help.copy': 'Copy',
+  'help.tutorials.title': 'Node tutorials',
+  'help.tutorials.lede':
+    'Bringing a seeder or a TURN server online, and publishing a release once it is.',
+  'help.seeder.title': 'Tutorial — a seeder node',
+  'help.seeder.step1':
+    'Start from a checkout of this repository on the machine that will hold the audio. The seeder is built locally, not pulled from a registry.',
+  'help.seeder.step2':
+    'Set the admin port and Basic-auth credentials in the root .env. The dashboard uses these for torrent operations; nothing else needs them.',
+  'help.seeder.step3': 'Build and start the seeder container.',
+  'help.seeder.step4':
+    'Confirm the node answers its health check — it needs no credentials, so a plain curl is enough.',
+  'help.seeder.step5':
+    'Then register it under Seeders with the same URL and credentials. The status chip turns online within a minute, and the Torrents screen can read and change what the node holds.',
+  'help.turn.title': 'Tutorial — a TURN server',
+  'help.turn.step1':
+    'Set the realm, credentials and public IP in the root .env. The realm is what the server calls itself; the IP is how peers outside your network reach it.',
+  'help.turn.step2': 'Start coturn with the dedicated compose file.',
+  'help.turn.step3':
+    'Open the signalling port and the relay range on the firewall: 3478 UDP and TCP for STUN/TURN, 5349 for TLS, and 49160–49200 UDP for relays.',
+  'help.turn.step4':
+    'Register it under TURN servers as turn:<host>:3478. The dashboard probes it over STUN every five minutes and records latency, so "online" here means the UDP path answered — not just that a port was open.',
+  'help.publish.title': 'Tutorial — publishing a release',
+  'help.publish.step1':
+    'Create the .torrent for the folder of audio (any torrent client can do it) and keep the folder where the seeder can read it.',
+  'help.publish.step2':
+    'Put the .torrent on the node: either copy it into the torrents volume, or paste its magnet link on the Torrents screen.',
+  'help.publish.step3':
+    'In Torrents, pick the node, add by file or magnet, and confirm progress reaches 100%. Removing a file there removes it from that node, not from the catalogue.',
+  'help.publish.step4':
+    'Finally add the reciter with the same infohash in Reciters — that is the link between the page a listener sees and the torrent the seeders carry.',
+
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 
   'help.title': 'Help',
