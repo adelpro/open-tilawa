@@ -392,20 +392,6 @@ export const en = {
   'prefs.languageHint':
     'Menus, buttons and messages. Your writing stays in whatever language you write in.',
   'prefs.saved': 'Saved.',
-  'prefs.master.title': 'Default master step',
-  'prefs.master.hint':
-    'Used only when a profile has no master of its own. It runs after that profile’s chain and proposes a revision; it never replaces the text.',
-  'prefs.master.name': 'Name',
-  'prefs.master.body': 'Instructions',
-  'prefs.master.bodyHint':
-    'What the master does with the findings, in your voice. The acceptance rule is added automatically.',
-  'prefs.master.save': 'Save master step',
-  'prefs.master.clear': 'Clear',
-  'prefs.master.saved': 'Master step saved.',
-  'prefs.master.cleared': 'No default master step.',
-  'prefs.master.saveFailed': 'Could not save the master step.',
-  'prefs.master.pairRequired':
-    'A master step needs both a name and instructions — fill both, or clear both.',
 
   'account.group.profile': 'Profile',
   'account.group.security': 'Security',
@@ -428,17 +414,6 @@ export const en = {
   'account.profile.about': 'About',
   'account.profile.aboutHint': 'One line, shown to nobody but you.',
   'account.profile.saveFailed': 'Could not save.',
-
-  'account.signin.title': 'Sign-in methods',
-  'account.signin.noPasswordLead': 'No password on this account.',
-  'account.signin.noPasswordBody':
-    'It signs in with a provider. To be able to sign in without one — and to disconnect it safely — set a password from the Password panel below; the link arrives by email.',
-  'account.signin.hasPassword': 'This account signs in with a password.',
-  'account.signin.disconnect': 'Disconnect',
-  'account.signin.connect': 'Connect {provider}',
-  'account.signin.disconnected': '{provider} disconnected.',
-  'account.signin.disconnectFailed': 'Could not disconnect.',
-  'account.signin.none': 'No provider sign-in is configured on this server.',
 
   'account.password.title': 'Password',
   'account.password.noPassword':
@@ -486,21 +461,6 @@ export const en = {
   'account.devices.deleteCurrentConfirm': 'Delete this device? You will be signed out.',
   'account.owner': 'Owner',
   'account.owner.deleteHint': 'Transfer ownership before deleting this account.',
-  'account.email.title': 'Email address',
-  'account.email.body':
-    'A confirmation link goes to the new address. The address does not change until you open it.',
-  'account.email.new': 'New email address',
-  'account.email.send': 'Send confirmation link',
-  'account.email.sent': 'If that address is available, a confirmation link has been sent to it.',
-  'account.email.failed': 'Could not request the change.',
-  'account.owner.transferTitle': 'Transfer ownership',
-  'account.owner.transferBody':
-    'The new Owner must already be an active super admin. They accept from their mailbox; both of you are signed out when ownership moves.',
-  'account.owner.transferEmail': 'New Owner email',
-  'account.owner.transferTotp': 'Authenticator code (if enabled)',
-  'account.owner.transferAction': 'Send transfer invitation',
-  'account.owner.transferSent': 'Invitation sent. The new Owner must accept it from their email.',
-
   'account.delete.title': 'Delete this account',
   'account.delete.body':
     'Every profile, key and audit row goes with it. This cannot be undone, and there is no export afterwards.',
@@ -509,7 +469,6 @@ export const en = {
 
   'common.save': 'Save',
   'common.cancel': 'Cancel',
-  'editor.kind.master': 'Master',
   'admin.title': 'Admin.',
   'admin.owner': 'Owner',
   'admin.lede':

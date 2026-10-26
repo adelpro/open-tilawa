@@ -11,7 +11,7 @@ import type { Session } from '../lib/types';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { AsyncButton } from '../components/AsyncButton';
-import { Field, Input, TextArea } from '../components/Field';
+import { Field, Input } from '../components/Field';
 import { PasswordField } from '../components/fields';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
@@ -28,14 +28,11 @@ export function Account(): ReactElement {
   const { user, refresh, signOut } = useSession();
   const { t, locale, setLocale, saving } = useI18n();
   const [name, setName] = useState(user?.name ?? '');
-  type AccountTab = 'profile' | 'master' | 'photo' | 'password' | 'email';
+  type AccountTab = 'profile' | 'photo' | 'password';
   const [tab, setTab] = useState<AccountTab>('profile');
   const [about, setAbout] = useState(user?.about ?? '');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [masterName, setMasterName] = useState('');
-  const [masterBody, setMasterBody] = useState('');
-  const [masterMessage, setMasterMessage] = useState<string | null>(null);
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -49,22 +46,11 @@ export function Account(): ReactElement {
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [confirmEmail, setConfirmEmail] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [emailPassword, setEmailPassword] = useState('');
-  const [emailTotp, setEmailTotp] = useState('');
-  const [emailMessage, setEmailMessage] = useState<string | null>(null);
-  const [transferEmail, setTransferEmail] = useState('');
-  const [transferPassword, setTransferPassword] = useState('');
-  const [transferTotp, setTransferTotp] = useState('');
-  const [transferMessage, setTransferMessage] = useState<string | null>(null);
   const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
-  const [identities, setIdentities] = useState<{ provider: string; email: string }[]>([]);
-  const [providers, setProviders] = useState<string[]>([]);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [recoveryBusy, setRecoveryBusy] = useState(false);
-  const [signInMessage, setSignInMessage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -75,74 +61,7 @@ export function Account(): ReactElement {
         // A failed device list is not worth an error banner: the rest of the page works.
       }
     })();
-
-    void (async () => {
-      try {
-        const [linked, available] = await Promise.all([
-          api<{ identities: { provider: string; email: string }[] }>('/me/identities'),
-          api<{ providers: string[] }>('/auth/providers'),
-        ]);
-        setIdentities(linked.identities);
-        setProviders(available.providers);
-      } catch {
-        // Same reasoning: the rest of the page still works without this section.
-      }
-    })();
   }, []);
-
-  const disconnect = async (provider: string): Promise<void> => {
-    setSignInMessage(null);
-    try {
-      await api(`/me/identities/${provider}`, { method: 'DELETE' });
-      setIdentities((current) => current.filter((entry) => entry.provider !== provider));
-      setSignInMessage(t('account.signin.disconnected', { provider }));
-    } catch (caught) {
-      // The refusal is the useful part: "set a password first" is an instruction.
-      setSignInMessage(
-        caught instanceof Error ? caught.message : t('account.signin.disconnectFailed'),
-      );
-    }
-  };
-
-  // Follow the account, not the first render: the session may still be loading when
-  // this screen mounts, and a save elsewhere should not leave a stale copy here.
-  useEffect(() => {
-    setMasterName(user?.masterName ?? '');
-    setMasterBody(user?.masterBody ?? '');
-  }, [user?.masterName, user?.masterBody]);
-
-  const saveMaster = async (): Promise<void> => {
-    setError(null);
-    setMasterMessage(null);
-    const name = masterName.trim();
-    const body = masterBody.trim();
-    // The API refuses half a pair; say so before the round trip.
-    if ((name && !body) || (!name && body)) {
-      setError(t('prefs.master.pairRequired'));
-      return;
-    }
-    try {
-      await api('/me', { method: 'PATCH', body: { user: { masterName, masterBody } } });
-      await refresh();
-      setMasterMessage(name ? t('prefs.master.saved') : t('prefs.master.cleared'));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('prefs.master.saveFailed'));
-    }
-  };
-
-  const clearMaster = async (): Promise<void> => {
-    setError(null);
-    setMasterMessage(null);
-    try {
-      await api('/me', { method: 'PATCH', body: { user: { masterName: '', masterBody: '' } } });
-      setMasterName('');
-      setMasterBody('');
-      await refresh();
-      setMasterMessage(t('prefs.master.cleared'));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('prefs.master.saveFailed'));
-    }
-  };
 
   const saveProfile = async (): Promise<void> => {
     setError(null);
@@ -176,44 +95,6 @@ export function Account(): ReactElement {
       setPasswordMessage(t('account.password.changed'));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('account.password.changeFailed'));
-    }
-  };
-
-  const requestEmailChange = async (): Promise<void> => {
-    setError(null);
-    setEmailMessage(null);
-    try {
-      const result = await api<{ message: string }>('/me/email-change', {
-        method: 'POST',
-        body: { newEmail, password: emailPassword, totp: emailTotp.trim() || undefined },
-      });
-      setNewEmail('');
-      setEmailPassword('');
-      setEmailTotp('');
-      setEmailMessage(result.message || t('account.email.sent'));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('account.email.failed'));
-    }
-  };
-
-  const transferOwnership = async (): Promise<void> => {
-    setError(null);
-    setTransferMessage(null);
-    try {
-      const result = await api<{ message: string }>('/me/owner-transfer', {
-        method: 'POST',
-        body: {
-          email: transferEmail,
-          password: transferPassword,
-          totp: transferTotp.trim() || undefined,
-        },
-      });
-      setTransferEmail('');
-      setTransferPassword('');
-      setTransferTotp('');
-      setTransferMessage(result.message || t('account.owner.transferSent'));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('account.owner.transferSent'));
     }
   };
 
@@ -329,10 +210,8 @@ export function Account(): ReactElement {
       <Tabs
         items={[
           { id: 'profile', label: t('account.profile.title') },
-          { id: 'master', label: t('editor.kind.master') },
           { id: 'photo', label: t('account.photo.title') },
           { id: 'password', label: t('account.password.title') },
-          { id: 'email', label: t('account.email.title') },
         ]}
         active={tab}
         onChange={setTab}
@@ -371,48 +250,6 @@ export function Account(): ReactElement {
             </div>
           </Panel>
         </>
-      ) : null}
-
-      {tab === 'master' ? (
-        <Panel tone="parchment">
-          <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
-            {t('prefs.master.title')}
-          </h3>
-          <div className="stack">
-            <p className="fine-print">{t('prefs.master.hint')}</p>
-            <Field label={t('prefs.master.name')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  name="master-name"
-                  autoComplete="off"
-                  value={masterName}
-                  onChange={(event) => setMasterName(event.target.value)}
-                />
-              )}
-            </Field>
-            <Field label={t('prefs.master.body')} hint={t('prefs.master.bodyHint')}>
-              {(id) => (
-                <TextArea
-                  id={id}
-                  name="master-body"
-                  rows={7}
-                  value={masterBody}
-                  onChange={(event) => setMasterBody(event.target.value)}
-                />
-              )}
-            </Field>
-            <div className="cluster">
-              <AsyncButton onClick={() => saveMaster()}>{t('prefs.master.save')}</AsyncButton>
-              {user?.masterName || user?.masterBody ? (
-                <Button variant="tertiary" onClick={() => void clearMaster()}>
-                  {t('prefs.master.clear')}
-                </Button>
-              ) : null}
-            </div>
-            {masterMessage ? <Notice tone="ok">{masterMessage}</Notice> : null}
-          </div>
-        </Panel>
       ) : null}
 
       {tab === 'photo' ? (
@@ -501,56 +338,6 @@ export function Account(): ReactElement {
               </div>
             </div>
           </Panel>
-
-          <Panel>
-            <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
-              {t('account.signin.title')}
-            </h3>
-            <div className="stack">
-              <p className="body">
-                {user?.passwordSet === false ? (
-                  <>
-                    <strong>{t('account.signin.noPasswordLead')}</strong>{' '}
-                    {t('account.signin.noPasswordBody')}
-                  </>
-                ) : (
-                  t('account.signin.hasPassword')
-                )}
-              </p>
-
-              {identities.map((identity) => (
-                <div key={identity.provider} className="spread">
-                  <span className="body">
-                    <code>{identity.provider}</code> <span className="muted">{identity.email}</span>
-                  </span>
-                  <Button
-                    variant="tertiary"
-                    small
-                    onClick={() => void disconnect(identity.provider)}
-                  >
-                    {t('account.signin.disconnect')}
-                  </Button>
-                </div>
-              ))}
-
-              {providers
-                .filter((provider) => !identities.some((entry) => entry.provider === provider))
-                .map((provider) => (
-                  <a
-                    key={provider}
-                    className="btn btn--secondary btn--sm"
-                    href={`/api/auth/${provider}/link`}
-                  >
-                    {t('account.signin.connect', { provider })}
-                  </a>
-                ))}
-
-              {signInMessage ? <Notice tone="ok">{signInMessage}</Notice> : null}
-              {providers.length === 0 ? (
-                <p className="fine-print">{t('account.signin.none')}</p>
-              ) : null}
-            </div>
-          </Panel>
         </>
       ) : null}
 
@@ -631,114 +418,6 @@ export function Account(): ReactElement {
                 </div>
               </>
             )}
-          </div>
-        </Panel>
-      ) : null}
-
-      {tab === 'email' ? (
-        <Panel tone="parchment">
-          <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
-            {t('account.email.title')}
-          </h3>
-          <p className="body muted">{t('account.email.body')}</p>
-          <div className="stack">
-            <Field label={t('account.email.new')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  name="newEmail"
-                  type="email"
-                  autoComplete="email"
-                  value={newEmail}
-                  onChange={(event) => setNewEmail(event.target.value)}
-                />
-              )}
-            </Field>
-            <PasswordField
-              label={t('account.password.current')}
-              value={emailPassword}
-              onChange={setEmailPassword}
-              autoComplete="current-password"
-              required
-            />
-            {user?.isTwoFAEnabled ? (
-              <Field label={t('account.owner.transferTotp')}>
-                {(id) => (
-                  <Input
-                    id={id}
-                    name="email-totp"
-                    inputMode="numeric"
-                    maxLength={6}
-                    autoComplete="one-time-code"
-                    value={emailTotp}
-                    onChange={(event) => setEmailTotp(event.target.value)}
-                  />
-                )}
-              </Field>
-            ) : null}
-            {emailMessage ? <Notice tone="ok">{emailMessage}</Notice> : null}
-            <div>
-              <Button
-                onClick={() => void requestEmailChange()}
-                disabled={!newEmail || !emailPassword}
-              >
-                {t('account.email.send')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
-      ) : null}
-
-      {user?.isOwner ? (
-        <Panel>
-          <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
-            {t('account.owner.transferTitle')}
-          </h3>
-          <p className="body muted">{t('account.owner.transferBody')}</p>
-          <div className="stack">
-            <Field label={t('account.owner.transferEmail')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  name="transferEmail"
-                  type="email"
-                  autoComplete="email"
-                  value={transferEmail}
-                  onChange={(event) => setTransferEmail(event.target.value)}
-                />
-              )}
-            </Field>
-            <PasswordField
-              label={t('account.password.current')}
-              value={transferPassword}
-              onChange={setTransferPassword}
-              autoComplete="current-password"
-              required
-            />
-            {user?.isTwoFAEnabled ? (
-              <Field label={t('account.owner.transferTotp')}>
-                {(id) => (
-                  <Input
-                    id={id}
-                    name="transfer-totp"
-                    inputMode="numeric"
-                    maxLength={6}
-                    autoComplete="one-time-code"
-                    value={transferTotp}
-                    onChange={(event) => setTransferTotp(event.target.value)}
-                  />
-                )}
-              </Field>
-            ) : null}
-            {transferMessage ? <Notice tone="ok">{transferMessage}</Notice> : null}
-            <div>
-              <Button
-                onClick={() => void transferOwnership()}
-                disabled={!transferEmail || !transferPassword}
-              >
-                {t('account.owner.transferAction')}
-              </Button>
-            </div>
           </div>
         </Panel>
       ) : null}

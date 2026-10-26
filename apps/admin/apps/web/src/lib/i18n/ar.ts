@@ -390,20 +390,6 @@ export const ar: Catalogue = {
   'prefs.language': 'اللغة',
   'prefs.languageHint': 'القوائم والأزرار والرسائل. أما كتابتك فتبقى باللغة التي تكتب بها.',
   'prefs.saved': 'تم الحفظ.',
-  'prefs.master.title': 'الخطوة الرئيسية الافتراضية',
-  'prefs.master.hint':
-    'تُستخدم فقط حين لا تكون للملف خطوة رئيسية خاصة به. تُنفَّذ بعد سلسلة ذلك الملف وتقترح مراجعة، ولا تستبدل النص.',
-  'prefs.master.name': 'الاسم',
-  'prefs.master.body': 'التعليمات',
-  'prefs.master.bodyHint':
-    'ما تفعله الخطوة الرئيسية بنتائج الفحص، بصوتك. تُضاف قاعدة القبول تلقائيًا.',
-  'prefs.master.save': 'حفظ الخطوة الرئيسية',
-  'prefs.master.clear': 'مسح',
-  'prefs.master.saved': 'حُفظت الخطوة الرئيسية.',
-  'prefs.master.cleared': 'لا خطوة رئيسية افتراضية.',
-  'prefs.master.saveFailed': 'تعذّر حفظ الخطوة الرئيسية.',
-  'prefs.master.pairRequired':
-    'تحتاج الخطوة الرئيسية إلى اسم وتعليمات معًا؛ املأ الحقلين أو امسحهما.',
 
   'account.group.profile': 'الملف',
   'account.group.security': 'الأمان',
@@ -426,17 +412,6 @@ export const ar: Catalogue = {
   'account.profile.about': 'نبذة',
   'account.profile.aboutHint': 'سطر واحد لا يراه غيرك.',
   'account.profile.saveFailed': 'تعذّر الحفظ.',
-
-  'account.signin.title': 'طرق تسجيل الدخول',
-  'account.signin.noPasswordLead': 'لا توجد كلمة مرور لهذا الحساب.',
-  'account.signin.noPasswordBody':
-    'فهو يسجّل الدخول عبر مزوّد. ولكي تتمكن من الدخول بدونه — ومن فصله بأمان — عيّن كلمة مرور من لوحة كلمة المرور أدناه، ويصلك الرابط بالبريد.',
-  'account.signin.hasPassword': 'هذا الحساب يسجّل الدخول بكلمة مرور.',
-  'account.signin.disconnect': 'فصل',
-  'account.signin.connect': 'اربط {provider}',
-  'account.signin.disconnected': 'تم فصل {provider}.',
-  'account.signin.disconnectFailed': 'تعذّر الفصل.',
-  'account.signin.none': 'لا توجد طريقة دخول عبر مزوّد مفعّلة على هذا الخادم.',
 
   'account.password.title': 'كلمة المرور',
   'account.password.noPassword':
@@ -483,20 +458,6 @@ export const ar: Catalogue = {
   'account.devices.deleteCurrentConfirm': 'حذف هذا الجهاز؟ سيُسجَّل خروجك.',
   'account.owner': 'المالك',
   'account.owner.deleteHint': 'انقل الملكية قبل حذف هذا الحساب.',
-  'account.email.title': 'عنوان البريد',
-  'account.email.body': 'يُرسل رابط تأكيد إلى العنوان الجديد. لا يتغيّر العنوان حتى تفتح الرابط.',
-  'account.email.new': 'عنوان البريد الجديد',
-  'account.email.send': 'إرسال رابط التأكيد',
-  'account.email.sent': 'إذا كان العنوان متاحًا، فقد أُرسل إليه رابط تأكيد.',
-  'account.email.failed': 'تعذّر طلب التغيير.',
-  'account.owner.transferTitle': 'نقل الملكية',
-  'account.owner.transferBody':
-    'يجب أن يكون المالك الجديد مشرفًا عامًّا نشطًا. يقبل من بريده، وتُسجَّل خروجكما معًا عند نقل الملكية.',
-  'account.owner.transferEmail': 'بريد المالك الجديد',
-  'account.owner.transferTotp': 'رمز تطبيق المصادقة (إن كان مفعّلًا)',
-  'account.owner.transferAction': 'إرسال دعوة النقل',
-  'account.owner.transferSent': 'أُرسلت الدعوة. على المالك الجديد قبولها من بريده.',
-
   'account.delete.title': 'حذف هذا الحساب',
   'account.delete.body': 'يُحذف معه كل ملف ومفتاح وسجل. لا يمكن التراجع، ولا يوجد تصدير بعد الحذف.',
   'account.delete.confirm': 'اكتب {email} للتأكيد',
@@ -504,7 +465,6 @@ export const ar: Catalogue = {
 
   'common.save': 'حفظ',
   'common.cancel': 'إلغاء',
-  'editor.kind.master': 'رئيسية',
   'admin.title': 'الإدارة.',
   'admin.owner': 'المالك',
   'admin.lede':
