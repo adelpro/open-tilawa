@@ -295,7 +295,7 @@ export function ReciterSheet({
             {[
               { key: 'all', label: 'الكل' },
               { key: 'http', label: 'HTTP' },
-              ...riwayas.map((name) => ({ key: name, label: name })),
+              ...riwayas.map((name) => ({ key: name, label: riwayaLabel(name) })),
             ].map((item) => (
               <button
                 key={item.key}
