@@ -1,8 +1,8 @@
 {
   "name": "tilawa-admin",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "private": true,
-  "description": "Tilawa Admin Dashboard — manage seeders, TURN, torrents, reciters, trackers",
+  "description": "Tilawa Admin Dashboard \u2014 manage seeders, TURN, torrents, reciters, trackers",
   "license": "MIT",
   "author": {
     "name": "Adel Ben Yahia",

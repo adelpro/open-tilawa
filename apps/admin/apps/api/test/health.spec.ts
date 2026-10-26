@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { INestApplication } from '@nestjs/common';
@@ -20,7 +20,7 @@ describe('health', () => {
     process.env.DB_PATH = join(dir, 'test.sqlite');
     process.env.COOKIE_JWT_SECRET = 'test-cookie-secret';
     process.env.TEMP_JWT_SECRET = 'test-temp-secret';
-  
+
     // Dynamic on purpose: `ConfigModule.forRoot` freezes the environment when
     // `AppModule` is first evaluated, so a static import would ignore the
     // `DB_PATH` set just above and run against the development database.
@@ -42,6 +42,14 @@ describe('health', () => {
     expect(res.body.service).toBe('tilawa-admin-api');
     expect(typeof res.body.uptimeMs).toBe('number');
     expect(res.body.dbPath).toBe(join(dir, 'test.sqlite'));
+  });
+
+  it('reports the package version, not a stale env default', async () => {
+    const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')) as {
+      version: string;
+    };
+    const res = await request(app.getHttpServer()).get('/api/health').expect(200);
+    expect(res.body.version).toBe(pkg.version);
   });
 
   it('refuses to serve a protected route without a token', async () => {
