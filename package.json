@@ -1,0 +1,11 @@
+{
+  "name": "open-tilawa",
+  "version": "1.4.0",
+  "private": true,
+  "description": "Tilawa — Qur'an recitations distributed as torrents, played peer-to-peer in the browser.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adelpro/open-tilawa.git"
+  }
+}

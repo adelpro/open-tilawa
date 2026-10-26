@@ -1,5 +1,21 @@
 # Releasing
 
+## Repo version
+
+The root `package.json` carries the release coordinate for the repository as a
+whole (`open-tilawa`, private). It is deliberately **not** a workspace root: no
+app reads it, and each app keeps its own version and its own build. Its job is to
+answer "what was in that repo release?" without diffing branches.
+
+| Repo | web | admin | seeder |
+|---|---|---|---|
+| 1.4.0 | 1.3.5 | 1.23.2 | 1.3.3 |
+
+Bump the root version when you tag a repo release, and name the three app
+versions in the tag notes.
+
+## App versions
+
 Three apps ship independently and carry their own version:
 
 | App | Package | Version also in |
@@ -29,6 +45,10 @@ git tag -a web-v1.3.2   -m "web 1.3.2 — …"
 git tag -a admin-v1.23.1 -m "Tilawa Admin 1.23.1 — …"
 git tag -a seeder-v1.3.2 -m "seeder 1.3.2 — …"
 ```
+
+A repo release is tagged with the root version and no prefix: `v1.4.0`. It marks
+the commit that carries all three app versions listed above; the per-app tags
+still point at the commits that actually changed each app.
 
 Earlier tags are plain `v1.x` and are therefore ambiguous when two apps share a
 number — `v1.3.2` is the seeder release, `v1.3.0` the web one. Do not reuse an
