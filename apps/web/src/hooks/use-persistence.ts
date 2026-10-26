@@ -12,8 +12,6 @@ const LEGACY_KEY = 'tilawa:state';
 const LEGACY_PROGRESS_PREFIX = 'tilawa:progress:';
 const MAX_POSITIONS = 10;
 
-export type RepeatMode = 'off' | 'one';
-
 export type StoredPosition = {
   /** 1–114. Note: v1 stored a 0-based playlist index; the migration shifts it. */
   surahId: number;
@@ -25,20 +23,12 @@ export type StoredState = {
   version: 2;
   reciterId?: number;
   positions: Record<string, StoredPosition>;
-  repeat: RepeatMode;
-  shuffle: boolean;
-  rate: number;
-  theme: 'dark' | 'light';
   updatedAt: number;
 };
 
 export const DEFAULT_STATE: StoredState = {
   version: 2,
   positions: {},
-  repeat: 'off',
-  shuffle: false,
-  rate: 1,
-  theme: 'dark',
   updatedAt: 0,
 };
 
@@ -101,7 +91,16 @@ export function loadState(): StoredState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
-      if (isStoredState(parsed)) return { ...DEFAULT_STATE, ...parsed };
+      if (isStoredState(parsed)) {
+        // Pick the known fields: an older build's `theme`/`repeat`/`rate` keys
+        // must not be carried forward forever.
+        return {
+          version: 2,
+          reciterId: typeof parsed.reciterId === 'number' ? parsed.reciterId : undefined,
+          positions: parsed.positions ?? {},
+          updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0,
+        };
+      }
     }
 
     const legacyRaw = window.localStorage.getItem(LEGACY_KEY);

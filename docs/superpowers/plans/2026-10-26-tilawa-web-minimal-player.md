@@ -297,3 +297,63 @@ docker compose build web && docker compose up -d web
 - [ ] **Step 3: Report**
 
 State the commit, the container that changed, what was verified, and the rollback command from the spec.
+
+## Execution ledger (2026-10-26)
+
+Deviations from the task order, with the reason each was necessary.
+
+1. **Order: 2 → 3 → (1 + 4 + 5 + 6 in one commit).** Removing the v2 atoms
+   breaks the old shell's imports, and rewriting `use-player-nav` breaks the
+   queue and mini-player. Tasks 1, 4, 5 and 6 could only land together for the
+   tree to stay type-clean; the new primitives (transport, scrubber, sheets)
+   landed first because they depend on nothing old.
+2. **`currentIndexAtom` → `currentSurahIdAtom`.** An index into
+   `torrentAtom.files` cannot represent a choice made before the file list
+   exists, and the plan requires a pick made during metadata fetch to survive.
+   The engine now finds its track by surah id, so no index sync is needed.
+3. **`selectSurah` vs `playSurah`.** Boot restore used the play path and started
+   audio for ~3 s before pausing (measured live: stored 4.87 s, resumed at 8 s).
+   Selecting a surah no longer implies playing it; only the play button, a sheet
+   pick and the transport do that.
+4. **Reciter pick resumes that reciter.** The spec says a reciter pick lands on
+   الفاتحة; it now restores that reciter's stored surah and offset, paused, which
+   is the same rule as cold start and keeps `positions` meaningful.
+5. **No drag-to-close on the sheet.** Close button, Escape and backdrop only —
+   no grabber affordance that does not actually drag.
+6. **Scrubber is RTL.** Elapsed on the right, duration on the left, fill from the
+   right, because the transport beside it puts "previous" on the right. A
+   left-filling bar next to right-hand rewind reads as a contradiction.
+7. **Digits are Latin** in `سورة 1 من 114` and the list numbering, per the
+   project constraint, although the spec's wireframe showed Arabic-Indic.
+8. **Tailwind colour is named `canvas`, the CSS var is `--bg`** — a `bg-bg`
+   utility would be unreadable in the components.
+9. **WebTorrent bundle URL is absolute, with a classic-script fallback.** The
+   relative `import()` inside `new Function` resolved against a stale origin
+   (`:3000`) in the production build and left the play button permanently
+   disabled; the failure was silent because the loader swallowed the error.
+10. **Pruned with the shell:** `utils/index.ts` reduced to live modules;
+    `src/shims`, `src/svgs`, `src/assets` deleted; `react-router-dom`,
+    `jotai-devtools` and the three Tailwind plugins uninstalled.
+11. **Error copy is Arabic** ("تعذّر تشغيل هذا القارئ." + retry); the raw
+    technical string lives in the `title` attribute instead of the UI.
+12. **Fonts:** Amiri and the 700 weight removed with their woff2 files;
+    `public/fonts/OFL.txt` added.
+
+### Verification evidence
+
+- `npm test` 10/10, `npx tsc --noEmit` clean, `npm run build` clean,
+  placeholder grep clean (only torrent-session's internal promise queue and the
+  vendored worker match).
+- Production build on `vite preview` at 1440×900 and 390×844:
+  - boot: الفاتحة, first reciter, paused, play disabled until the reciter's file
+    list exists;
+  - sheets: 114 rows and 11 rows, current row scrolled into view and in bold,
+    Escape and backdrop close, focus trapped inside;
+  - playing continues while a sheet is open;
+  - scrubber mid-click lands at 0.50 of the file (23.4 s / 46.9 s);
+    `+15` / `−15` move exactly 15 s and clamp at both ends;
+  - next at 114 does nothing, previous moves to 113 (الفلق);
+  - reload: same reciter, same surah, paused, resumed at the stored offset;
+  - no horizontal overflow at either width; 390×600 fits without scrolling.
+- P2P playback is verified on the live domain below, because the magnet's `xs`
+  is same-origin and cannot be fetched from localhost.

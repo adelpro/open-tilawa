@@ -114,21 +114,26 @@ Then rebuild and re-check streaming.
   the page; the very first play on a fresh origin may fall back to the HTTP
   source link shown in the error state.
 
-## The v2 shell (night listening room)
+## The player screen
 
-Layout, queue and player were rebuilt around a three-column desk and a single
-audio engine. The design source of truth is
-[`docs/superpowers/specs/2026-10-26-tilawa-web-v2-design.md`](../../docs/superpowers/specs/2026-10-26-tilawa-web-v2-design.md).
+The site is one screen. There is no router, no shell, no queue column: the page
+*is* the player, and the surah and reciter lists are bottom sheets over it. The
+design source of truth is
+[`docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md`](../../docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md).
 
-- `src/components/audio-engine.tsx` — the only `<audio>` element, mounted
-  outside `<Routes>`; the torrent session therefore survives navigation.
-- `src/hooks/use-player-nav.ts` — every transport action becomes a URL change.
-  The URL owns *which* surah; `src/jotai/player.ts` owns *where inside it*.
-- `src/components/queue.tsx` — fixed mushaf order, search, `التالي` / `السابق`
-  halves, shuffle that only permutes what is ahead.
+- `src/app/player-page.tsx` — the whole surface: reciter line, surah name,
+  scrubber, five transport controls, one line of error text when a torrent
+  cannot start.
+- `src/components/audio-engine.tsx` — the only `<audio>` element, mounted beside
+  the page. It owns the torrent session and the stored position, nothing else.
+- `src/components/sheet.tsx` — both lists, on native `<dialog>` (focus trap,
+  backdrop, Escape and focus return come from the platform).
+- `src/hooks/use-player-nav.ts` — the only path from "play this surah" to a
+  state change; previous/next clamp at 1 and 114 instead of wrapping.
 - `src/hooks/use-persistence.ts` — `open-tilawa:v2` (per-reciter positions) plus
-  a migration from the v1 `tilawa:state` / `tilawa:progress:*` keys.
+  a migration from the v1 `tilawa:state` / `tilawa:progress:*` keys. Cold start
+  restores the last reciter and surah, paused, and never autoplays.
 - Fonts are self-hosted (`public/fonts`, generated `src/app/fonts.css`): IBM Plex
-  Sans Arabic for UI, Amiri for surah names. Both SIL OFL 1.1.
+  Sans Arabic 400/600 only, SIL OFL 1.1 (see `public/fonts/OFL.txt`).
 
 Run the logic tests with `npm test` (node:test, no extra dependencies).

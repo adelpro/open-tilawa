@@ -9,21 +9,17 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types test/queue.test.ts test/persistence.test.ts"
+    "test": "node --test --experimental-strip-types test/clamp.test.ts test/persistence.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
     "jotai": "^2.11.1",
-    "jotai-devtools": "^0.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^6.28.0",
     "tailwind-merge": "^2.6.0",
     "webtorrent": "^3.0.21"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.11",
-    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^20",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
@@ -32,7 +28,6 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "tailwindcss-animated": "^2.1.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
     "vite-plugin-pwa": "^0.21.1"

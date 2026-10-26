@@ -1,65 +1,83 @@
-import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useMemo } from 'react';
 
+import { getPosition } from '@/hooks/use-persistence';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
-  currentIndexAtom,
+  currentSurahIdAtom,
+  durationAtom,
   isPlayingAtom,
-  shuffleAtom,
-  shuffleOrderAtom,
+  positionAtom,
   torrentAtom,
 } from '@/jotai/player';
-import type { TrackType } from '@/types';
-import { nextIndex, playOrder, previousIndex } from '@/utils/queue';
+import { surahIdOf } from '@/utils/surah-id';
+import { audioRef } from '@/utils/audio-ref';
 
-/** The surah id a file plays, falling back to its position for odd filenames. */
-export function surahIdOf(track: TrackType | undefined, index: number): number {
-  if (!track) return index + 1;
-  return track.surahId > 0 ? track.surahId : index + 1;
-}
+export const FIRST_SURAH = 1;
+export const LAST_SURAH = 114;
 
 /**
- * One place that turns "play index N" into a URL change. Every transport
- * button, queue row and mini-player in the app goes through here, so no
- * component is allowed to invent its own way of changing the track.
+ * The only path from "play this surah" to a state change. Transport buttons,
+ * sheet rows and the lock-screen handlers all come through here, so nothing can
+ * invent its own idea of what "next" means.
  */
 export function usePlayerNav() {
-  const navigate = useNavigate();
   const reciter = useAtomValue(selectedReciterAtom);
   const torrent = useAtomValue(torrentAtom);
-  const index = useAtomValue(currentIndexAtom);
-  const shuffle = useAtomValue(shuffleAtom);
-  const order = useAtomValue(shuffleOrderAtom);
+  const [surahId, setSurahId] = useAtom(currentSurahIdAtom);
+  const setPositionAtom = useSetAtom(positionAtom);
   const setIsPlaying = useSetAtom(isPlayingAtom);
+  const duration = useAtomValue(durationAtom);
 
   const files = torrent?.files ?? [];
-  const walk = playOrder(files.length, shuffle, order);
-
-  const playIndex = useCallback(
-    (nextAt: number) => {
-      const track = files[nextAt];
-      if (!reciter || !track) return;
-      navigate(`/reciter/${reciter.id}/${surahIdOf(track, nextAt)}`);
-      setIsPlaying(true);
-    },
-    [files, navigate, reciter, setIsPlaying],
+  const track = useMemo(
+    () => files.find((file, index) => surahIdOf(file, index) === surahId),
+    [files, surahId],
   );
 
-  const playSurahId = useCallback(
-    (surahId: number) => {
-      const at = files.findIndex((track, i) => surahIdOf(track, i) === surahId);
-      if (at >= 0) playIndex(at);
+  /** Select a surah and its stored offset. Selecting never starts playback. */
+  const selectSurah = useCallback(
+    (target: number, forReciterId?: number) => {
+      if (!Number.isInteger(target) || target < FIRST_SURAH || target > LAST_SURAH) return false;
+      const stored = getPosition(forReciterId ?? reciter?.id);
+      setPositionAtom(stored && stored.surahId === target ? stored.position : 0);
+      setSurahId(target);
+      return true;
     },
-    [files, playIndex],
+    [reciter?.id, setPositionAtom, setSurahId],
   );
+
+  const playSurah = useCallback(
+    (target: number) => {
+      if (selectSurah(target)) setIsPlaying(true);
+    },
+    [selectSurah, setIsPlaying],
+  );
+
+  const seekTo = useCallback(
+    (seconds: number) => {
+      const audio = audioRef.current;
+      if (!audio || !Number.isFinite(seconds)) return;
+      audio.currentTime = seconds;
+      setPositionAtom(seconds);
+    },
+    [setPositionAtom],
+  );
+
+  const next = useCallback(() => playSurah(surahId + 1), [playSurah, surahId]);
+  const previous = useCallback(() => playSurah(surahId - 1), [playSurah, surahId]);
 
   return {
     files,
-    walk,
-    playIndex,
-    playSurahId,
-    next: () => playIndex(nextIndex(index, walk)),
-    previous: () => playIndex(previousIndex(index, walk)),
+    track,
+    surahId,
+    duration,
+    /** Play is meaningful once the surah has a file behind it. */
+    ready: Boolean(track),
+    selectSurah,
+    playSurah,
+    seekTo,
+    next,
+    previous,
   };
 }

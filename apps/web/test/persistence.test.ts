@@ -30,9 +30,12 @@ test('migrateLegacy never throws on junk and falls back to defaults', () => {
   const state = migrateLegacy(null, { '9': {} as never });
   assert.equal(state.version, 2);
   assert.deepEqual(state.positions, {});
-  assert.equal(state.repeat, 'off');
-  assert.equal(state.rate, 1);
-  assert.equal(state.theme, 'dark');
+  assert.equal(state.updatedAt, 0);
+});
+
+test('stored state keeps only what the player reads', () => {
+  const state = migrateLegacy({ reciterId: 3, surahIndex: 17, position: 42, updatedAt: 10 }, {});
+  assert.deepEqual(Object.keys(state).sort(), ['positions', 'reciterId', 'updatedAt', 'version']);
 });
 
 test('migrateLegacy keeps the legacy position when it is negative', () => {

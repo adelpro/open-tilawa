@@ -11,9 +11,10 @@ type Props = {
 };
 
 /**
- * Elapsed, rail, remaining. The rail is 3px; the input on top of it is 44px so
- * a thumb is never the thing you have to hit. No buffered layer — on a torrent
- * that number moves for reasons the listener cannot act on.
+ * Elapsed, rail, remaining — right to left, like the transport beside it. The
+ * rail is 3px; the input on top of it is 44px tall so a thumb is never the
+ * thing you have to hit. No buffered layer: on a torrent that number moves for
+ * reasons the listener cannot act on.
  */
 export default function Scrubber({
   position,
@@ -26,20 +27,22 @@ export default function Scrubber({
   const progress = safeDuration > 0 ? Math.min(100, (position / safeDuration) * 100) : 0;
 
   return (
-    <div dir="ltr" className={cn('flex w-full items-center gap-3', className)}>
-      <span className="tnum w-11 shrink-0 text-start text-xs text-muted">
-        {formatTime(position)}
+    <div className={cn('flex w-full items-center gap-3', className)}>
+      <span className="tnum w-11 shrink-0 text-xs text-muted">
+        <span dir="ltr" className="inline-block">
+          {formatTime(position)}
+        </span>
       </span>
 
       <div className="group relative flex h-11 flex-1 items-center">
         <div className="relative h-[3px] w-full rounded-full bg-line">
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-ink"
+            className="absolute inset-y-0 right-0 rounded-full bg-ink"
             style={{ width: `${progress}%` }}
           />
           <div
-            className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100"
-            style={{ left: `${progress}%` }}
+            className="absolute top-1/2 h-2.5 w-2.5 rounded-full bg-ink opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+            style={{ right: `${progress}%`, transform: 'translate(50%, -50%)' }}
           />
         </div>
         <input
@@ -59,8 +62,10 @@ export default function Scrubber({
         />
       </div>
 
-      <span className="tnum w-11 shrink-0 text-end text-xs text-muted">
-        {formatTime(safeDuration)}
+      <span className="tnum w-11 shrink-0 text-xs text-muted">
+        <span dir="ltr" className="inline-block">
+          {formatTime(safeDuration)}
+        </span>
       </span>
     </div>
   );

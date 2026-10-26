@@ -29,8 +29,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#000000',
-        theme_color: '#000000',
+        background_color: '#ffffff',
+        theme_color: '#ffffff',
         icons: [
           {
             src: '/images/logo.png',
@@ -61,12 +61,6 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@svgs': path.resolve(__dirname, 'src/svgs'),
       '@hooks': path.resolve(__dirname, 'src/hooks'),
-      'next/image': path.resolve(__dirname, 'src/shims/image.tsx'),
-      'next/link': path.resolve(__dirname, 'src/shims/link.tsx'),
-      'next/navigation': path.resolve(__dirname, 'src/shims/navigation.ts'),
-      'next/dynamic': path.resolve(__dirname, 'src/shims/dynamic.tsx'),
-      'next/script': path.resolve(__dirname, 'src/shims/script.tsx'),
-      'next/font/google': path.resolve(__dirname, 'src/shims/font.ts'),
     },
   },
   server: { port: 3000, host: true },

@@ -1,18 +1,15 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useRef } from 'react';
 
-import { usePlayerNav, surahIdOf } from '@/hooks/use-player-nav';
+import { usePlayerNav } from '@/hooks/use-player-nav';
 import { getPosition, setPosition } from '@/hooks/use-persistence';
 import useTorrent from '@/hooks/use-torrent';
 import { selectedReciterAtom, webtorrentReadyAtom } from '@/jotai/atom';
 import {
-  bufferedAtom,
-  currentIndexAtom,
+  currentSurahIdAtom,
   durationAtom,
   isPlayingAtom,
   positionAtom,
-  rateAtom,
-  repeatAtom,
   torrentAtom,
   torrentErrorAtom,
 } from '@/jotai/player';
@@ -20,11 +17,11 @@ import { surahById } from '@/constants/surah';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
 
 /**
- * The only <audio> element in the app, mounted once outside <Routes> so that
- * playback and the torrent session survive navigation (design doc §7).
+ * The only <audio> element in the app, mounted once next to the page.
  *
- * It owns nothing about *which* surah is selected — the route does — and
- * writes nothing to the URL except when a track ends and the queue advances.
+ * It owns nothing about *which* surah is selected — `currentSurahIdAtom` does —
+ * and writes nothing except the stored position. Everything it publishes (the
+ * element, the position, the duration) is read by the one screen above it.
  */
 
 function getStreamURL(file: unknown): string | undefined {
@@ -36,6 +33,37 @@ function getStreamURL(file: unknown): string | undefined {
   }
 }
 
+/**
+ * WebTorrent is a UMD bundle served from `public/`, not something Vite can
+ * bundle. The URL is absolute so resolution never depends on the document's
+ * base, and the classic-script fallback covers engines that refuse to parse a
+ * UMD file as a module.
+ */
+async function loadWebTorrent(): Promise<void> {
+  if ((window as any).WebTorrent) return;
+  const url = new URL(`${import.meta.env.BASE_URL}webtorrent.min.js`, window.location.origin).href;
+
+  try {
+    const mod: any = await import(/* @vite-ignore */ url);
+    const ctor = mod?.default ?? mod;
+    if (typeof ctor === 'function') {
+      (window as any).WebTorrent = ctor;
+      return;
+    }
+  } catch {
+    // fall through to the script tag
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = url;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('webtorrent bundle failed to load'));
+    document.head.appendChild(script);
+  });
+}
+
 export default function AudioEngine() {
   const { torrentInfo, error } = useTorrent();
   const setTorrent = useSetAtom(torrentAtom);
@@ -43,28 +71,24 @@ export default function AudioEngine() {
   const setWebtorrentReady = useSetAtom(webtorrentReadyAtom);
 
   const reciter = useAtomValue(selectedReciterAtom);
-  const torrent = useAtomValue(torrentAtom);
-  const index = useAtomValue(currentIndexAtom);
+  const surahId = useAtomValue(currentSurahIdAtom);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
-  const repeat = useAtomValue(repeatAtom);
-  const rate = useAtomValue(rateAtom);
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
-  const setBuffered = useSetAtom(bufferedAtom);
 
-  const { next, previous } = usePlayerNav();
+  const { track, files, next, previous } = usePlayerNav();
   const audioRef = useRef<HTMLAudioElement>(null);
   const selectedFileRef = useRef<any>(null);
   const restoredForRef = useRef<number | null>(null);
   const lastSurahRef = useRef<number | undefined>(undefined);
-  const trackRef = useRef(torrent?.files[index]);
-  trackRef.current = torrent?.files[index];
+  const trackRef = useRef(track);
+  trackRef.current = track;
 
-  const files = torrent?.files ?? [];
-  const track = files[index];
-  const surahId = track ? surahIdOf(track, index) : undefined;
+  const fileCount = files.length;
+  const link = track?.link ?? '';
+  const magnetURI = torrentInfo?.magnetURI ?? '';
 
-  /** Mirror the torrent hook into atoms so the queue and the desk can read it. */
+  /** Mirror the torrent hook into atoms so the page can read it. */
   useEffect(() => {
     setTorrent(torrentInfo);
   }, [torrentInfo, setTorrent]);
@@ -75,27 +99,23 @@ export default function AudioEngine() {
 
   /** Load WebTorrent from the static bundle once. */
   useEffect(() => {
-    if ((window as any).WebTorrent) {
-      setWebtorrentReady(true);
-      return;
-    }
     let cancelled = false;
     (async () => {
       try {
-        const mod: any = await new Function('return import("/webtorrent.min.js")')();
-        if (cancelled) return;
-        (window as any).WebTorrent = mod?.default || mod;
-        setWebtorrentReady(true);
+        await loadWebTorrent();
+        if (!cancelled) setWebtorrentReady(true);
       } catch {
-        if (!cancelled) setWebtorrentReady(false);
+        if (cancelled) return;
+        setWebtorrentReady(false);
+        setTorrentError('تعذّر تحميل محرّك البث. تحقق من اتصالك ثم أعد المحاولة.');
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [setWebtorrentReady]);
+  }, [setTorrentError, setWebtorrentReady]);
 
-  /** Swap the source when the surah changes. */
+  /** Swap the source when the surah changes (or its file finally lands). */
   useEffect(() => {
     const audio = audioRef.current;
     const current = trackRef.current;
@@ -144,21 +164,15 @@ export default function AudioEngine() {
     }
 
     restoredForRef.current = null;
-  }, [surahId, (track as any)?.link, torrent?.magnetURI]);
+  }, [surahId, link, magnetURI, fileCount, reciter]);
 
   /** Play / pause. Deliberately does not re-assign src. */
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !trackRef.current) return;
     if (isPlaying) audio.play().catch(() => setIsPlaying(false));
     else audio.pause();
-  }, [isPlaying, surahId, setIsPlaying]);
-
-  /** Speed lives in the overflow menu; default 1. */
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) audio.playbackRate = rate;
-  }, [rate, surahId]);
+  }, [isPlaying, surahId, fileCount, setIsPlaying]);
 
   /** Persist the position while playing, when paused, and before the tab dies. */
   const persist = () => {
@@ -180,7 +194,7 @@ export default function AudioEngine() {
       window.removeEventListener('beforeunload', persist);
       window.removeEventListener('pagehide', persist);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // `persist` closes over reciter/surahId, which are the deps that matter.
   }, [reciter, surahId]);
 
   /** Publish the element for the scrubber, and clear it on unmount. */
@@ -209,19 +223,6 @@ export default function AudioEngine() {
     if (!audio) return;
     if (!Number.isNaN(audio.duration)) setDuration(audio.duration);
     if (!Number.isNaN(audio.currentTime)) setPositionAtom(audio.currentTime);
-    if (audio.buffered.length > 0 && audio.duration > 0) {
-      setBuffered(audio.buffered.end(audio.buffered.length - 1) / audio.duration);
-    }
-  };
-
-  const handleEnded = () => {
-    const audio = audioRef.current;
-    if (repeat === 'one' && audio) {
-      audio.currentTime = 0;
-      audio.play().catch(() => setIsPlaying(false));
-      return;
-    }
-    next();
   };
 
   const restorePosition = () => {
@@ -259,11 +260,11 @@ export default function AudioEngine() {
       navigator.mediaSession.setActionHandler('nexttrack', null);
       navigator.mediaSession.setActionHandler('previoustrack', null);
     };
-  }, [surahId, reciter, next, setIsPlaying]);
+  }, [surahId, reciter, next, previous, setIsPlaying]);
 
   /** The tab title is the one place a listener sees the surah while elsewhere. */
   useEffect(() => {
-    const surah = surahId ? surahById(surahId) : undefined;
+    const surah = surahById(surahId);
     document.title = surah ? `${surah.name} — Open Tilawa` : 'Open Tilawa';
   }, [surahId]);
 
@@ -274,7 +275,7 @@ export default function AudioEngine() {
       onDurationChange={handleTimeUpdate}
       onLoadedMetadata={restorePosition}
       onSeeked={persist}
-      onEnded={handleEnded}
+      onEnded={() => next()}
       onError={() => console.error('Audio playback error')}
       className="hidden"
       preload="metadata"
