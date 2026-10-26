@@ -116,24 +116,38 @@ Then rebuild and re-check streaming.
 
 ## The player screen
 
-The site is one screen. There is no router, no shell, no queue column: the page
-*is* the player, and the surah and reciter lists are bottom sheets over it. The
-design source of truth is
-[`docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md`](../../docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md).
+Three edges and no router: a top bar (wordmark + menu), the player column, and
+a bottom bar (list, speed, stream status). Lists, settings and the two
+informational pages are bottom sheets on native `<dialog>`. The design source of
+truth is
+[`docs/superpowers/specs/2026-10-26-tilawa-web-player-chrome-design.md`](../../docs/superpowers/specs/2026-10-26-tilawa-web-player-chrome-design.md),
+on top of the minimal-player spec it extends.
 
-- `src/app/player-page.tsx` — the whole surface: reciter line, surah name,
-  scrubber, five transport controls, one line of error text when a torrent
-  cannot start.
+- `src/app/player-page.tsx` — the whole surface: reciter chip, surah name in
+  Amiri, scrubber, five transport controls, one line of error text.
+- `src/components/top-bar.tsx` — wordmark and the one `⋯` that opens settings.
+- `src/components/bottom-bar.tsx` — current surah + list button, playback speed,
+  and the signal button. `details-popover.tsx` is v1's stream readout (peers,
+  download/upload, downloaded, progress, files, source).
+- `src/components/sheet.tsx` — surah rows (verses, juz, file size once the
+  torrent knows it) and reciter rows (source host, completeness, P2P/HTTP), on
+  native `<dialog>`: focus trap, backdrop, Escape and focus return are the
+  platform's job.
 - `src/components/audio-engine.tsx` — the only `<audio>` element, mounted beside
-  the page. It owns the torrent session and the stored position, nothing else.
-- `src/components/sheet.tsx` — both lists, on native `<dialog>` (focus trap,
-  backdrop, Escape and focus return come from the platform).
+  the page. It owns the torrent session, the stored position and the playback
+  rate, nothing else.
 - `src/hooks/use-player-nav.ts` — the only path from "play this surah" to a
   state change; previous/next clamp at 1 and 114 instead of wrapping.
-- `src/hooks/use-persistence.ts` — `open-tilawa:v2` (per-reciter positions) plus
-  a migration from the v1 `tilawa:state` / `tilawa:progress:*` keys. Cold start
-  restores the last reciter and surah, paused, and never autoplays.
+- `src/hooks/use-persistence.ts` — `open-tilawa:v2` (per-reciter positions,
+  `theme`, `rate`) plus a migration from the v1 keys. Cold start restores the
+  last reciter and surah, paused, and never autoplays.
+- **Theme**: white is the identity and the default; `[data-theme="dark"]` is
+  v2's night palette, applied before the first paint in `main.tsx`.
+- **Language**: Arabic only in this phase. The menu shows the row with English
+  marked "قريباً"; the copy table, English names and `dir` flipping are a
+  separate spec.
 - Fonts are self-hosted (`public/fonts`, generated `src/app/fonts.css`): IBM Plex
-  Sans Arabic 400/600 only, SIL OFL 1.1 (see `public/fonts/OFL.txt`).
+  Sans Arabic 400/600 for UI and Amiri 400 for surah names and the wordmark,
+  SIL OFL 1.1 (see `public/fonts/OFL.txt`).
 
 Run the logic tests with `npm test` (node:test, no extra dependencies).
