@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types test/clamp.test.ts test/persistence.test.ts"
+    "test": "node --experimental-strip-types --import ./test/alias-register.mjs --test test/clamp.test.ts test/persistence.test.ts test/reciter-merge.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
