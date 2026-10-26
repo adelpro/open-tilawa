@@ -53,6 +53,18 @@ select {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The mark ships as a navy raster. The page is greys only, so it is drained of
+   colour at rest and inverted on the night palette — same file, one treatment. */
+.brand-mark {
+  filter: grayscale(1) brightness(0.15);
+  opacity: 0.85;
+}
+
+[data-theme='dark'] .brand-mark {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.9;
+}
+
 .tnum {
   font-variant-numeric: tabular-nums;
 }

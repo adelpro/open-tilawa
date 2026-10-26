@@ -267,8 +267,9 @@ export function ReciterSheet({
   const rows = useMemo(() => {
     const searched = filterReciters(query, reciters);
     if (filter === 'all') return searched;
-    if (filter === 'p2p') return searched.filter((r) => r.magnet);
-    if (filter === 'http') return searched.filter((r) => !r.magnet);
+    if (filter === 'http') {
+      return searched.filter((r) => !r.magnet || Boolean(r.itqanPlaylist?.length));
+    }
     return searched.filter((r) => (r.riwaya ?? 'حفص') === filter);
   }, [query, reciters, filter]);
 
@@ -293,7 +294,6 @@ export function ReciterSheet({
           <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5">
             {[
               { key: 'all', label: 'الكل' },
-              { key: 'p2p', label: 'P2P' },
               { key: 'http', label: 'HTTP' },
               ...riwayas.map((name) => ({ key: name, label: name })),
             ].map((item) => (
@@ -333,9 +333,17 @@ export function ReciterSheet({
                       {riwayaLabel(reciter.riwaya)} · {reciter.complet ? 'كامل' : 'جزئي'}
                     </span>
                   </span>
-                  <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[10.5px] text-muted">
-                    {reciter.magnet ? 'P2P' : 'HTTP'}
-                  </span>
+                  {/* Every catalogue reciter is seeded over P2P, so a P2P badge
+                      says nothing. The HTTP chip marks the ones that can also
+                      play without peers. */}
+                  {(reciter.itqanPlaylist?.length || !reciter.magnet) && (
+                    <span
+                      title="يتوفّر بديل HTTP"
+                      className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[10.5px] text-muted"
+                    >
+                      HTTP
+                    </span>
+                  )}
                 </button>
               </li>
             );
