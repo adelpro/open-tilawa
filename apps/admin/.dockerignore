@@ -1,0 +1,15 @@
+# Build context hygiene: the images only need sources, package manifests and edge
+# templates. Everything below was being uploaded to the daemon on every build —
+# node_modules alone makes the context hundreds of megabytes.
+node_modules
+**/node_modules
+dist
+**/dist
+data
+backup
+docs
+coverage
+*.tsbuildinfo
+.git
+.env
+Dockerfile*

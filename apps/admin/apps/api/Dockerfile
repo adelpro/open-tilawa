@@ -1,10 +1,9 @@
-# Uslub API — Nest app serving /api and /health.
-# Python is present because profile generation runs the vendored gate engine (T3.4).
+# Tilawa Admin API — Nest app serving /api and /health.
 
 # --- build ---
 FROM node:22-alpine AS build
 WORKDIR /app
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache make g++
 RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY apps/api/package.json ./apps/api/package.json
@@ -25,14 +24,12 @@ RUN yarn workspace @tilawa-admin/core build && yarn workspace @tilawa-admin/api 
 FROM node:22-alpine
 ENV NODE_ENV=production
 WORKDIR /app
-RUN apk add --no-cache python3
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/libs/core/package.json ./libs/core/package.json
 COPY --from=build /app/libs/core/dist ./libs/core/dist
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build /app/apps/api/dist ./apps/api/dist
-COPY vendor ./vendor
 USER node
 EXPOSE 9310
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
