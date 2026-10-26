@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai";
-import { useEffect, useRef, useState } from "react";
-import type { Torrent, TorrentFile } from "webtorrent";
+import { useEffect, useState } from "react";
+import type { TorrentFile } from "webtorrent";
 
 import { TRACKERS } from "@/constants";
 import { selectedReciterAtom, webtorrentReadyAtom } from "@/jotai/atom";
@@ -11,6 +11,7 @@ import {
   parseMagnet,
   updateMagnetURI,
 } from "@/utils";
+import { closeTorrentSession, openTorrentSession } from "@/utils/torrent-session";
 
 const TORRENT_READY_TIMEOUT = 10_000;
 
@@ -23,9 +24,9 @@ export default function useTorrent() {
   const [error, setError] = useState<string | undefined>();
   const [retryCount, setRetryCount] = useState(0);
 
-  // The client is a shared singleton (see utils/webtorrent-client); only the
-  // torrent is owned by this effect and destroyed when it is replaced.
-  const torrentRef = useRef<Torrent | undefined>(undefined);
+  // The torrent outlives this hook (see utils/torrent-session): the client is a
+  // module singleton and several components read the same session, so this
+  // effect attaches listeners rather than owning an add.
 
   // Add torrent when client is ready and a valid magnet URI exists
   useEffect(() => {
@@ -37,6 +38,8 @@ export default function useTorrent() {
     // No torrent yet (e.g. Itqan-sourced reciter): build the playlist directly
     // from the reciter's Itqan MP3 links so playback works without peers.
     if (!magnetURI) {
+      // An HTTP-only reciter needs no torrent; drop the one still seeding.
+      void closeTorrentSession();
       const itqanPlaylist = selectedReciterValue?.itqanPlaylist;
       if (itqanPlaylist && itqanPlaylist.length > 0) {
         setTorrentInfo({
@@ -64,6 +67,7 @@ export default function useTorrent() {
     let cancelled = false;
     let torrent: any = null;
     let readyTimeout: ReturnType<typeof setTimeout>;
+    let detach: (() => void) | undefined;
 
     const run = async () => {
       if (cancelled) return;
@@ -88,30 +92,19 @@ export default function useTorrent() {
         return;
       }
 
-      const updatedMagnetURI = updateMagnetURI(magnetURI);
-      const infoHash = parsedMagnet.infoHash;
-      const torrentFileUrl = "/torrents/" + infoHash + ".torrent";
+      // The session owns the torrent. Three components call this hook and the
+      // WebTorrent client is a singleton, so adding here per component is what
+      // produced "Cannot add duplicate torrent": the add is keyed by infohash
+      // instead, and `force` is the retry button rebuilding the same hash.
+      const session = await openTorrentSession(localClient, {
+        infoHash: parsedMagnet.infoHash,
+        magnet: updateMagnetURI(magnetURI),
+        announce: TRACKERS,
+        force: retryCount > 0,
+      });
+      if (cancelled) return;
 
-      // With `deselect`, the whole torrent (all 114 surahs) stays idle and the
-      // player selects only the surah being streamed.
-      const addOptions = { announce: TRACKERS, deselect: true };
-
-      let added = false;
-      try {
-        const resp = await fetch(torrentFileUrl);
-        if (resp.ok) {
-          const blob = await resp.blob();
-          torrent = localClient.add(blob as any, addOptions) as any;
-          added = true;
-        }
-      } catch (e) {
-        console.error("Torrent file fetch error:", e);
-      }
-      if (!added) {
-        torrent = localClient.add(updatedMagnetURI, addOptions) as any;
-      }
-
-      torrentRef.current = torrent;
+      torrent = session.torrent;
 
       const mp3Files = () =>
         (torrent.files || []).filter((file: TorrentFile) =>
@@ -147,23 +140,26 @@ export default function useTorrent() {
         );
       }, TORRENT_READY_TIMEOUT);
 
+      const onReady = () => {
+        clearTimeout(readyTimeout);
+        setError(undefined);
+        showPlaylist();
+      };
+
       if (torrent.ready) {
         clearTimeout(readyTimeout);
         setError(undefined);
         showPlaylist();
       } else {
-        torrent.on("ready", () => {
-          clearTimeout(readyTimeout);
-          setError(undefined);
-          showPlaylist();
-        });
+        torrent.on("ready", onReady);
       }
 
-      torrent.on("error", (err: any) => {
+      const onError = (err: any) => {
+        if (cancelled) return;
         console.error("Torrent error:", err?.message || err);
         setError("Torrent error: " + (err?.message || err));
-      });
-      torrent.on("download", () => {
+      };
+      const onDownload = () => {
         if (cancelled) return;
         setTorrentInfo((prev) =>
           prev
@@ -177,13 +173,27 @@ export default function useTorrent() {
               }
             : prev,
         );
-      });
-      torrent.on("wire", () => {
+      };
+      const onWire = () => {
         if (cancelled) return;
         setTorrentInfo((prev) =>
           prev ? { ...prev, peers: torrent.numPeers } : prev,
         );
-      });
+      };
+
+      torrent.on("error", onError);
+      torrent.on("download", onDownload);
+      torrent.on("wire", onWire);
+
+      // Listeners are ours; the torrent is not. It outlives this mount so a
+      // second consumer of the hook — or coming back to this screen — finds it
+      // already running instead of asking the client to add it again.
+      detach = () => {
+        torrent.off("ready", onReady);
+        torrent.off("error", onError);
+        torrent.off("download", onDownload);
+        torrent.off("wire", onWire);
+      };
     };
 
     run();
@@ -191,16 +201,7 @@ export default function useTorrent() {
     return () => {
       cancelled = true;
       if (readyTimeout) clearTimeout(readyTimeout);
-
-      const current = torrentRef.current as any;
-      torrentRef.current = undefined;
-      if (current && !current.destroyed) {
-        try {
-          current.destroy();
-        } catch (e) {
-          console.error("Torrent teardown error:", e);
-        }
-      }
+      detach?.();
     };
   }, [
     magnetURI,
