@@ -1,4 +1,4 @@
-import { cn } from '@/utils/cn';
+import { cn } from "@/utils/cn";
 
 type Props = {
   canPlay: boolean;
@@ -57,7 +57,7 @@ function PauseGlyph() {
 }
 
 const ghost =
-  'flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink focus-visible:text-ink disabled:opacity-40 disabled:hover:text-muted';
+  "flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink focus-visible:text-ink disabled:opacity-40 disabled:hover:text-muted";
 
 /**
  * Five controls, one row. In an RTL interface the row starts on the right, so
@@ -73,7 +73,7 @@ export default function Transport({
   className,
 }: Props) {
   return (
-    <div className={cn('flex items-center justify-center gap-2', className)}>
+    <div className={cn("flex items-center justify-center gap-2", className)}>
       <button
         type="button"
         className={ghost}
@@ -95,12 +95,15 @@ export default function Transport({
         </span>
       </button>
 
+      {/* The one physical control on the page: a hairline bevel at rest, a 1px
+          lift on hover, a 1px sink on press. The rules live in globals.css —
+          two comma-separated shadows are not something to express in a class. */}
       <button
         type="button"
         onClick={onPlayPause}
         disabled={!canPlay}
-        aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-        className="mx-1 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-ink text-invert transition-transform active:scale-[0.97] disabled:opacity-30 disabled:active:scale-100"
+        aria-label={isPlaying ? "إيقاف مؤقت" : "تشغيل"}
+        className="play-button mx-1 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-ink text-invert disabled:opacity-30"
       >
         {isPlaying ? <PauseGlyph /> : <PlayGlyph />}
       </button>
@@ -117,7 +120,12 @@ export default function Transport({
         </span>
       </button>
 
-      <button type="button" className={ghost} onClick={onNext} aria-label="السورة التالية">
+      <button
+        type="button"
+        className={ghost}
+        onClick={onNext}
+        aria-label="السورة التالية"
+      >
         <ChevronLeft />
       </button>
     </div>

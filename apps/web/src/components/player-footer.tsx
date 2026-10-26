@@ -1,11 +1,11 @@
-import Icon from '@/components/icons';
-import type { StreamSource } from '@/components/stream-sheet';
-import { cn } from '@/utils/cn';
+import Icon from "@/components/icons";
+import type { StreamSource } from "@/components/stream-sheet";
+import { cn } from "@/utils/cn";
 
 const SOURCE_LABEL: Record<StreamSource, string> = {
-  connected: 'متصل عبر الأقران',
-  waiting: 'بانتظار الأقران',
-  http: 'يعمل من خادم القارئ',
+  connected: "متصل عبر الأقران",
+  waiting: "بانتظار الأقران",
+  http: "يعمل من خادم القارئ",
 };
 
 /**
@@ -17,6 +17,7 @@ export default function PlayerFooter({
   surahName,
   reciterName,
   source,
+  progress = 0,
   onOpenSurahs,
   onOpenReciters,
   onOpenStream,
@@ -24,10 +25,15 @@ export default function PlayerFooter({
   surahName: string;
   reciterName: string;
   source: StreamSource;
+  /** 0–1 of the torrent this session has; drives the ring, never a second badge. */
+  progress?: number;
   onOpenSurahs: () => void;
   onOpenReciters: () => void;
   onOpenStream: () => void;
 }) {
+  const showRing = source !== "http" && progress > 0.01 && progress < 0.995;
+  const percent = Math.round(progress * 100);
+  const ring = 2 * Math.PI * 20;
   return (
     <footer className="shrink-0 border-t border-line pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto flex h-16 w-full max-w-[520px] items-center gap-1 px-2">
@@ -55,14 +61,45 @@ export default function PlayerFooter({
         <button
           type="button"
           onClick={onOpenStream}
-          aria-label={SOURCE_LABEL[source]}
+          aria-label={
+            showRing
+              ? `${SOURCE_LABEL[source]}، التنزيل ${percent}%`
+              : SOURCE_LABEL[source]
+          }
           aria-haspopup="dialog"
           className={cn(
-            'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
-            source === 'connected' ? 'text-ink' : 'text-muted',
+            "relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line",
+            source === "connected" ? "text-ink" : "text-muted",
           )}
         >
-          <Icon name={source === 'http' ? 'link' : 'wifi'} />
+          {showRing && (
+            <svg
+              viewBox="0 0 44 44"
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-11 w-11 -rotate-90 text-ink"
+            >
+              <circle
+                cx="22"
+                cy="22"
+                r="20"
+                fill="none"
+                stroke="var(--line)"
+                strokeWidth="1.5"
+              />
+              <circle
+                cx="22"
+                cy="22"
+                r="20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeDasharray={ring}
+                strokeDashoffset={ring * (1 - progress)}
+              />
+            </svg>
+          )}
+          <Icon name={source === "http" ? "link" : "wifi"} />
         </button>
       </div>
     </footer>
