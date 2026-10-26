@@ -1,4 +1,4 @@
-import { cn } from "@/utils/cn";
+import { cn } from '@/utils/cn';
 
 type Props = {
   canPlay: boolean;
@@ -57,7 +57,7 @@ function PauseGlyph() {
 }
 
 const ghost =
-  "flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink focus-visible:text-ink disabled:opacity-40 disabled:hover:text-muted";
+  'flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink focus-visible:text-ink disabled:opacity-40 disabled:hover:text-muted';
 
 /**
  * Five controls, one row. In an RTL interface the row starts on the right, so
@@ -73,13 +73,8 @@ export default function Transport({
   className,
 }: Props) {
   return (
-    <div className={cn("flex items-center justify-center gap-2", className)}>
-      <button
-        type="button"
-        className={ghost}
-        onClick={onPrevious}
-        aria-label="السورة السابقة"
-      >
+    <div className={cn('flex items-center justify-center gap-2', className)}>
+      <button type="button" className={ghost} onClick={onPrevious} aria-label="السورة السابقة">
         <ChevronRight />
       </button>
 
@@ -102,7 +97,7 @@ export default function Transport({
         type="button"
         onClick={onPlayPause}
         disabled={!canPlay}
-        aria-label={isPlaying ? "إيقاف مؤقت" : "تشغيل"}
+        aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
         className="play-button mx-1 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-ink text-invert disabled:opacity-30"
       >
         {isPlaying ? <PauseGlyph /> : <PlayGlyph />}
@@ -120,12 +115,7 @@ export default function Transport({
         </span>
       </button>
 
-      <button
-        type="button"
-        className={ghost}
-        onClick={onNext}
-        aria-label="السورة التالية"
-      >
+      <button type="button" className={ghost} onClick={onNext} aria-label="السورة التالية">
         <ChevronLeft />
       </button>
     </div>

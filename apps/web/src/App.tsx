@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import AboutPage from "./app/about-page";
-import PlayerPage from "./app/player-page";
-import PrivacyPage from "./app/privacy-page";
-import AudioEngine from "./components/audio-engine";
-import ErrorBoundary from "./components/error-boundary";
-import NavSheet from "./components/nav-sheet";
-import TopBar from "./components/top-bar";
-import { useHashRoute } from "./hooks/use-hash-route";
-import { useSleepTimer } from "./hooks/use-sleep-timer";
-import { useSetAtom } from "jotai";
+import AboutPage from './app/about-page';
+import PlayerPage from './app/player-page';
+import PrivacyPage from './app/privacy-page';
+import AudioEngine from './components/audio-engine';
+import ErrorBoundary from './components/error-boundary';
+import NavSheet from './components/nav-sheet';
+import TopBar from './components/top-bar';
+import { useHashRoute } from './hooks/use-hash-route';
+import { useSleepTimer } from './hooks/use-sleep-timer';
+import { useSetAtom } from 'jotai';
 
-import { isPlayingAtom } from "./jotai/player";
+import { isPlayingAtom } from './jotai/player';
 
 /**
  * A top bar, one routed view, and the `<audio>` element that outlives all of
@@ -31,14 +31,11 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className="app-shell">
-        <TopBar
-          menuOpen={menuOpen}
-          onToggleMenu={() => setMenuOpen((open) => !open)}
-        />
+        <TopBar menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((open) => !open)} />
 
-        {route === "/about" ? (
+        {route === '/about' ? (
           <AboutPage />
-        ) : route === "/privacy" ? (
+        ) : route === '/privacy' ? (
           <PrivacyPage />
         ) : (
           <PlayerPage />

@@ -1,8 +1,11 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { IconName } from '@/components/icons';
+import Icon from '@/components/icons';
 import { SURAHS } from '@/constants/surah';
 import type { Reciter } from '@/types';
 import { cn } from '@/utils/cn';
+import { filterReciters, filterSurahs } from '@/utils/search';
 
 type SheetProps = {
   title: string;
@@ -10,6 +13,8 @@ type SheetProps = {
   onClose: () => void;
   /** `full` claims 90dvh; `auto` hugs its rows (the route menu). */
   size?: 'full' | 'auto';
+  /** Pinned under the header, outside the scrolling body (the search field). */
+  toolbar?: ReactNode;
   children: ReactNode;
 };
 
@@ -32,7 +37,14 @@ function CloseGlyph() {
  * layer and returning focus to the trigger all come from the platform, so
  * there is no hand-rolled modal state to get wrong.
  */
-export default function Sheet({ title, open, onClose, size = 'full', children }: SheetProps) {
+export default function Sheet({
+  title,
+  open,
+  onClose,
+  size = 'full',
+  toolbar,
+  children,
+}: SheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -49,6 +61,14 @@ export default function Sheet({ title, open, onClose, size = 'full', children }:
       onClose={onClose}
       onCancel={(event) => {
         event.preventDefault();
+        onClose();
+      }}
+      // Escape while typing: a `type="search"` field consumes the key before
+      // the dialog sees it as a cancel, so the sheet would stay open.
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
         onClose();
       }}
       onClick={(event) => {
@@ -70,6 +90,8 @@ export default function Sheet({ title, open, onClose, size = 'full', children }:
             <CloseGlyph />
           </button>
         </div>
+        {toolbar}
+
         <div
           className={cn(
             'min-h-0 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]',
@@ -83,6 +105,46 @@ export default function Sheet({ title, open, onClose, size = 'full', children }:
   );
 }
 
+function SearchField({
+  value,
+  onChange,
+  placeholder,
+  label,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  label: string;
+}) {
+  return (
+    <div className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-5">
+      <Icon name="search" className="h-4 w-4 text-muted" />
+      <input
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        aria-label={label}
+        className="h-11 w-full min-w-0 bg-transparent text-[15px] text-ink placeholder:text-muted focus:outline-none"
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          aria-label="مسح البحث"
+          className="-me-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
+        >
+          <Icon name="close" className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function Empty() {
+  return <p className="px-5 py-10 text-center text-[13px] text-muted">لا نتائج</p>;
+}
+
 const row =
   'flex h-14 w-full items-center gap-3 px-5 text-start text-[16px] text-ink transition-colors hover:bg-line active:bg-line';
 
@@ -91,73 +153,128 @@ export function SurahSheet({
   open,
   current,
   onPick,
+  onClose,
 }: {
   open: boolean;
   current: number;
   onPick: (surahId: number) => void;
+  onClose: () => void;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
+  const [query, setQuery] = useState('');
+  const rows = useMemo(() => filterSurahs(query), [query]);
+
+  useEffect(() => {
+    if (open) return;
+    setQuery('');
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const frame = requestAnimationFrame(() => {
-      listRef.current
-        ?.querySelector('[data-current="true"]')
-        ?.scrollIntoView({ block: 'center' });
+      listRef.current?.querySelector('[data-current="true"]')?.scrollIntoView({ block: 'center' });
     });
     return () => cancelAnimationFrame(frame);
   }, [open]);
 
   return (
-    <ul ref={listRef}>
-      {SURAHS.map((surah) => {
-        const isCurrent = surah.id === current;
-        return (
-          <li key={surah.id}>
-            <button
-              type="button"
-              onClick={() => onPick(surah.id)}
-              aria-current={isCurrent ? 'true' : undefined}
-              data-current={isCurrent}
-              className={cn(row, isCurrent && 'font-semibold')}
-            >
-              <span className="tnum w-8 shrink-0 text-xs text-muted">{surah.id}</span>
-              <span>{surah.name}</span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+    <Sheet
+      title="السور"
+      open={open}
+      onClose={onClose}
+      toolbar={
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder="ابحث باسم السورة أو رقمها"
+          label="بحث في السور"
+        />
+      }
+    >
+      {rows.length === 0 ? (
+        <Empty />
+      ) : (
+        <ul ref={listRef}>
+          {rows.map((surah) => {
+            const isCurrent = surah.id === current;
+            return (
+              <li key={surah.id}>
+                <button
+                  type="button"
+                  onClick={() => onPick(surah.id)}
+                  aria-current={isCurrent ? 'true' : undefined}
+                  data-current={isCurrent}
+                  className={cn(row, isCurrent && 'font-semibold')}
+                >
+                  <span className="tnum w-8 shrink-0 text-xs text-muted">{surah.id}</span>
+                  <span>{surah.name}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Sheet>
   );
 }
 
 /** One row per reciter, catalogue order, with the current one in bold. */
 export function ReciterSheet({
+  open,
   reciters,
   current,
   onPick,
+  onClose,
 }: {
+  open: boolean;
   reciters: Reciter[];
   current: number | undefined;
   onPick: (reciter: Reciter) => void;
+  onClose: () => void;
 }) {
+  const [query, setQuery] = useState('');
+  const rows = useMemo(() => filterReciters(query, reciters), [query, reciters]);
+
+  useEffect(() => {
+    if (open) return;
+    setQuery('');
+  }, [open]);
+
   return (
-    <ul>
-      {reciters.map((reciter) => {
-        const isCurrent = reciter.id === current;
-        return (
-          <li key={reciter.id}>
-            <button
-              type="button"
-              onClick={() => onPick(reciter)}
-              aria-current={isCurrent ? 'true' : undefined}
-              className={cn(row, isCurrent && 'font-semibold')}
-            >
-              <span>{reciter.name}</span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+    <Sheet
+      title="القرّاء"
+      open={open}
+      onClose={onClose}
+      toolbar={
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder="ابحث باسم القارئ"
+          label="بحث في القرّاء"
+        />
+      }
+    >
+      {rows.length === 0 ? (
+        <Empty />
+      ) : (
+        <ul>
+          {rows.map((reciter) => {
+            const isCurrent = reciter.id === current;
+            return (
+              <li key={reciter.id}>
+                <button
+                  type="button"
+                  onClick={() => onPick(reciter)}
+                  aria-current={isCurrent ? 'true' : undefined}
+                  className={cn(row, isCurrent && 'font-semibold')}
+                >
+                  <span>{reciter.name}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Sheet>
   );
 }
