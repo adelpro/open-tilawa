@@ -536,7 +536,7 @@ export function Account(): ReactElement {
                 fontSize: '0.9rem',
                 lineHeight: 1.8,
                 padding: 'var(--space-3)',
-                background: 'var(--color-surface-sunken, #f5f5f7)',
+                background: 'var(--canvas-parchment)',
                 borderRadius: 'var(--radius-sm, 8px)',
                 whiteSpace: 'pre-wrap',
               }}

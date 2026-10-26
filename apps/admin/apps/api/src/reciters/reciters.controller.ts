@@ -102,6 +102,7 @@ export class RecitersController {
     @Body()
     body: {
       name?: string;
+      nameAr?: string | null;
       riwaya?: string;
       infohash?: string;
       magnet?: string;

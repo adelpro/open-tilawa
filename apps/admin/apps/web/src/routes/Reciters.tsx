@@ -31,6 +31,7 @@ interface PushPlan {
 interface Reciter {
   id: number;
   name: string;
+  nameAr: string | null;
   riwaya: string;
   infohash: string;
   magnet: string;
@@ -53,6 +54,7 @@ export function Reciters(): ReactElement {
   const [busy, setBusy] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newNameAr, setNewNameAr] = useState('');
   const [newRiwaya, setNewRiwaya] = useState('Hafs');
   const [newInfohash, setNewInfohash] = useState('');
   const [newMagnet, setNewMagnet] = useState('');
@@ -60,6 +62,7 @@ export function Reciters(): ReactElement {
   const [newSizeGb, setNewSizeGb] = useState('');
   const [editing, setEditing] = useState<Reciter | null>(null);
   const [editName, setEditName] = useState('');
+  const [editNameAr, setEditNameAr] = useState('');
   const [editRiwaya, setEditRiwaya] = useState('');
   const [editInfohash, setEditInfohash] = useState('');
   const [editMagnet, setEditMagnet] = useState('');
@@ -116,6 +119,7 @@ export function Reciters(): ReactElement {
         method: 'POST',
         body: {
           name: newName.trim(),
+          nameAr: newNameAr.trim() || null,
           riwaya: newRiwaya,
           infohash: newInfohash.trim(),
           magnet: newMagnet.trim(),
@@ -124,6 +128,7 @@ export function Reciters(): ReactElement {
         },
       });
       setNewName('');
+      setNewNameAr('');
       setNewInfohash('');
       setNewMagnet('');
       setNewFileCount('114');
@@ -141,6 +146,7 @@ export function Reciters(): ReactElement {
   function startEdit(reciter: Reciter): void {
     setEditing(reciter);
     setEditName(reciter.name);
+    setEditNameAr(reciter.nameAr ?? '');
     setEditRiwaya(reciter.riwaya);
     setEditInfohash(reciter.infohash);
     setEditMagnet(reciter.magnet);
@@ -157,6 +163,7 @@ export function Reciters(): ReactElement {
         method: 'PATCH',
         body: {
           name: editName.trim(),
+          nameAr: editNameAr.trim() || null,
           riwaya: editRiwaya,
           infohash: editInfohash.trim(),
           magnet: editMagnet.trim(),
@@ -333,12 +340,24 @@ export function Reciters(): ReactElement {
             {t('reciters.editTitle')} — {editing.name}
           </h2>
           <div className="stack">
-            <Field label={t('reciters.name')}>
+            <Field label={t('reciters.nameAr')} hint={t('reciters.nameArHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editNameAr}
+                  onChange={(event) => setEditNameAr(event.target.value)}
+                  dir="rtl"
+                  placeholder="ماهر المعيقلي"
+                />
+              )}
+            </Field>
+            <Field label={t('reciters.name')} hint={t('reciters.nameHint')}>
               {(id) => (
                 <Input
                   id={id}
                   value={editName}
                   onChange={(event) => setEditName(event.target.value)}
+                  dir="ltr"
                 />
               )}
             </Field>
@@ -529,12 +548,24 @@ export function Reciters(): ReactElement {
       {showAdd ? (
         <Panel>
           <div className="stack">
-            <Field label={t('reciters.name')}>
+            <Field label={t('reciters.name')} hint={t('reciters.nameHint')}>
               {(id) => (
                 <Input
                   id={id}
                   value={newName}
                   onChange={(event) => setNewName(event.target.value)}
+                  dir="ltr"
+                />
+              )}
+            </Field>
+            <Field label={t('reciters.nameAr')} hint={t('reciters.nameArHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={newNameAr}
+                  onChange={(event) => setNewNameAr(event.target.value)}
+                  dir="rtl"
+                  placeholder="ماهر المعيقلي"
                 />
               )}
             </Field>
@@ -650,7 +681,12 @@ export function Reciters(): ReactElement {
                 {reciters.map((reciter) => (
                   <tr key={reciter.id}>
                     <td>
-                      <span className="row__label">{reciter.name}</span>
+                      <span className="row__label">{reciter.nameAr ?? reciter.name}</span>
+                      {reciter.nameAr ? (
+                        <span className="row__id" dir="ltr">
+                          {reciter.name}
+                        </span>
+                      ) : null}
                     </td>
                     <td>
                       <Chip tone="info">{reciter.riwaya}</Chip>

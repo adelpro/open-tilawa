@@ -18,6 +18,7 @@ export class PublicRecitersController {
     return {
       reciters: this.reciters.list().map((reciter) => ({
         name: reciter.name,
+        nameAr: reciter.nameAr,
         riwaya: reciter.riwaya,
         infohash: reciter.infohash,
         magnet: reciter.magnet,
