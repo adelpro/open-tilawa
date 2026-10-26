@@ -63,18 +63,27 @@ export function stunProbe(input: {
     const timer = setTimeout(() => finish(false, 'timeout'), input.timeoutMs);
 
     socket.on('message', (msg: Buffer) => {
-      const type = msg.readUInt16BE(0);
-      if (type !== STUN_BINDING_SUCCESS) {
-        finish(false, `unexpected STUN message type ${type}`);
-        return;
+      // A listener that throws is an uncaught exception — the process dies, and
+      // a cron makes that a crash loop. A reply that is not a STUN message is
+      // ignored: the timeout owns the outcome, so junk cannot end the probe
+      // early with a misleading verdict either.
+      try {
+        if (msg.length < 20) return;
+        const type = msg.readUInt16BE(0);
+        if (type !== STUN_BINDING_SUCCESS) {
+          finish(false, `unexpected STUN message type ${type}`);
+          return;
+        }
+        // The response must echo the transaction id — the identity proof that
+        // *someone* answering is the server we asked.
+        if (!msg.subarray(8, 20).equals(txid)) {
+          finish(false, 'transaction id mismatch');
+          return;
+        }
+        finish(true, null, readXorMapped(msg));
+      } catch (err) {
+        finish(false, `malformed STUN reply: ${(err as Error).message}`);
       }
-      // The response must echo the transaction id — the identity proof that
-      // *someone* answering is the server we asked.
-      if (!msg.subarray(8, 20).equals(txid)) {
-        finish(false, 'transaction id mismatch');
-        return;
-      }
-      finish(true, null, readXorMapped(msg));
     });
 
     socket.on('error', (err) => finish(false, err.message));
@@ -99,11 +108,30 @@ function readXorMapped(msg: Buffer): { ip: string; port: number } | null {
   while (off + 4 <= msg.length) {
     const attrType = msg.readUInt16BE(off);
     const attrLen = msg.readUInt16BE(off + 2);
+    // A truncated attribute is where the parser would otherwise run off the end.
+    if (off + 4 + attrLen > msg.length) return null;
     if (attrType === ATTR_XOR_MAPPED && attrLen >= 8) {
-      const xport = msg.readUInt16BE(off + 4) ^ (MAGIC_COOKIE >>> 16);
-      const ip4 = Buffer.alloc(4);
-      ip4.writeUInt32BE(msg.readUInt32BE(off + 8) ^ MAGIC_COOKIE, 0);
-      return { ip: `${ip4[0]}.${ip4[1]}.${ip4[2]}.${ip4[3]}`, port: xport };
+      // attr: [reserved 1][family 1][x-port 2][address n]
+      const family = msg[off + 5];
+      const xport = msg.readUInt16BE(off + 6) ^ (MAGIC_COOKIE >>> 16);
+      if (family === 0x01) {
+        const ip4 = Buffer.alloc(4);
+        ip4.writeUInt32BE(msg.readUInt32BE(off + 8) ^ MAGIC_COOKIE, 0);
+        return { ip: `${ip4[0]}.${ip4[1]}.${ip4[2]}.${ip4[3]}`, port: xport };
+      }
+      if (family === 0x02 && attrLen >= 20) {
+        // IPv6: the first 4 bytes XOR the magic cookie, the next 12 XOR the
+        // transaction id. The probe dials udp4, but a reply that does arrive
+        // should be decoded rather than reported as garbage.
+        const raw = Buffer.alloc(16);
+        const cookie = Buffer.from([0x21, 0x12, 0xa4, 0x42]);
+        for (let i = 0; i < 4; i++) raw[i] = msg[off + 8 + i] ^ cookie[i];
+        for (let i = 0; i < 12; i++) raw[4 + i] = msg[off + 12 + i];
+        const groups = raw.toString('hex').match(/.{4}/g) ?? [];
+        return { ip: groups.join(':'), port: xport };
+      }
+      // Any other family is unspecified by RFC 5389; reachability still stands.
+      return null;
     }
     off += 4 + attrLen + ((4 - (attrLen % 4)) % 4);
   }

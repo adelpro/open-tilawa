@@ -9,6 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { TempLinksService } from '@/temp-links/temp-links.service';
+import type { TempLinkPurpose } from '@/temp-links/temp-links.service';
 import { MAIL_TRANSPORT, MailMessage, MailNotConfiguredError, MailTransport } from './mailer.types';
 import type { Locale } from '@tilawa-admin/core';
 import * as path from 'path';
@@ -52,18 +53,10 @@ export class MailerService {
   private readonly activationEmailTemplate: string;
   private readonly resetPasswordEmailTemplate: string;
   private readonly otpEmailTemplate: string;
-  private readonly emailChangeEmailTemplate: string;
-  private readonly emailChangedNoticeEmailTemplate: string;
-  private readonly ownerTransferEmailTemplate: string;
-  private readonly ownerTransferCompleteEmailTemplate: string;
   private readonly registrationEmailTemplateAr: string;
   private readonly activationEmailTemplateAr: string;
   private readonly resetPasswordEmailTemplateAr: string;
   private readonly otpEmailTemplateAr: string;
-  private readonly emailChangeEmailTemplateAr: string;
-  private readonly emailChangedNoticeEmailTemplateAr: string;
-  private readonly ownerTransferEmailTemplateAr: string;
-  private readonly ownerTransferCompleteEmailTemplateAr: string;
 
   constructor(
     @Inject(MAIL_TRANSPORT) private readonly transport: MailTransport,
@@ -75,12 +68,6 @@ export class MailerService {
     this.activationEmailTemplate = this.load('activation.email.template.html');
     this.resetPasswordEmailTemplate = this.load('reset.password.email.template.html');
     this.otpEmailTemplate = this.load('otp.email.template.html');
-    this.emailChangeEmailTemplate = this.load('email-change.email.template.html');
-    this.emailChangedNoticeEmailTemplate = this.load('email-changed-notice.email.template.html');
-    this.ownerTransferEmailTemplate = this.load('owner-transfer.email.template.html');
-    this.ownerTransferCompleteEmailTemplate = this.load(
-      'owner-transfer-complete.email.template.html',
-    );
     // The Arabic variants are loaded here too, not lazily: a missing translation is
     // then a boot failure like a missing template, instead of an Arabic account
     // receiving English the first time it asks for a reset link.
@@ -88,14 +75,6 @@ export class MailerService {
     this.activationEmailTemplateAr = this.load('activation.email.template.ar.html');
     this.resetPasswordEmailTemplateAr = this.load('reset.password.email.template.ar.html');
     this.otpEmailTemplateAr = this.load('otp.email.template.ar.html');
-    this.emailChangeEmailTemplateAr = this.load('email-change.email.template.ar.html');
-    this.emailChangedNoticeEmailTemplateAr = this.load(
-      'email-changed-notice.email.template.ar.html',
-    );
-    this.ownerTransferEmailTemplateAr = this.load('owner-transfer.email.template.ar.html');
-    this.ownerTransferCompleteEmailTemplateAr = this.load(
-      'owner-transfer-complete.email.template.ar.html',
-    );
   }
 
   /** The template for the recipient's language. */
@@ -158,7 +137,7 @@ export class MailerService {
   private async temporaryToken(
     id: number | string,
     email: string,
-    purpose: 'activation' | 'reset' | 'email_change' | 'owner_transfer',
+    purpose: TempLinkPurpose,
     options: { ttlMs?: number; extra?: Record<string, unknown> } = {},
   ): Promise<string> {
     const ttlMs =
@@ -247,136 +226,6 @@ export class MailerService {
           token,
           name: recipient.name,
           email: recipient.email,
-        },
-      ),
-    });
-  }
-
-  /**
-   * Ask the new address to confirm. The token is bound to that address in its
-   * own signature, so a link forwarded to someone else still names the address
-   * it would move the account to — and the account itself stays on the old
-   * address until this is redeemed.
-   */
-  async sendEmailChangeConfirmation(
-    recipient: MailRecipient,
-    newEmail: string,
-  ): Promise<{ messageId: string }> {
-    const token = await this.temporaryToken(recipient.id, newEmail, 'email_change');
-    return this.deliver({
-      to: newEmail,
-      subject: this.subject(
-        recipient.locale,
-        `Confirm your new ${this.appName} email address`,
-        `تأكيد عنوان بريدك الجديد في ${this.appName}`,
-      ),
-      html: this.fill(
-        this.template(
-          recipient.locale,
-          this.emailChangeEmailTemplate,
-          this.emailChangeEmailTemplateAr,
-        ),
-        {
-          APP_NAME: this.appName,
-          website: this.website,
-          token,
-          name: recipient.name,
-          email: newEmail,
-        },
-      ),
-    });
-  }
-
-  /** Tell the old address what changed, after it has changed. */
-  async sendEmailChangedNotice(
-    recipient: MailRecipient,
-    newEmail: string,
-  ): Promise<{ messageId: string }> {
-    return this.deliver({
-      to: recipient.email,
-      subject: this.subject(
-        recipient.locale,
-        `Your ${this.appName} email address was changed`,
-        `تم تغيير عنوان بريدك في ${this.appName}`,
-      ),
-      html: this.fill(
-        this.template(
-          recipient.locale,
-          this.emailChangedNoticeEmailTemplate,
-          this.emailChangedNoticeEmailTemplateAr,
-        ),
-        {
-          APP_NAME: this.appName,
-          name: recipient.name,
-          email: recipient.email,
-          newEmail,
-        },
-      ),
-    });
-  }
-
-  /**
-   * Ownership transfer: the invitation names the current Owner and the target
-   * in the signed token, so the acceptance link cannot be replayed against a
-   * different account.
-   */
-  async sendOwnerTransferInvite(
-    owner: MailRecipient,
-    target: MailRecipient,
-  ): Promise<{ messageId: string }> {
-    const token = await this.temporaryToken(owner.id, target.email, 'owner_transfer', {
-      ttlMs: 60 * 60 * 1000,
-      extra: { fromId: Number(owner.id), toId: Number(target.id) },
-    });
-    return this.deliver({
-      to: target.email,
-      subject: this.subject(
-        target.locale,
-        `You are invited to own ${this.appName}`,
-        `دعوة لامتلاك ${this.appName}`,
-      ),
-      html: this.fill(
-        this.template(
-          target.locale,
-          this.ownerTransferEmailTemplate,
-          this.ownerTransferEmailTemplateAr,
-        ),
-        {
-          APP_NAME: this.appName,
-          website: this.website,
-          token,
-          name: target.name,
-          email: target.email,
-          ownerName: owner.name,
-        },
-      ),
-    });
-  }
-
-  /** Tells both accounts that ownership moved and their sessions were revoked. */
-  async sendOwnerTransferComplete(
-    recipient: MailRecipient,
-    newOwnerName: string,
-  ): Promise<{ messageId: string }> {
-    return this.deliver({
-      to: recipient.email,
-      subject: this.subject(
-        recipient.locale,
-        `Ownership of ${this.appName} has moved`,
-        `انتقلت ملكية ${this.appName}`,
-      ),
-      html: this.fill(
-        this.template(
-          recipient.locale,
-          this.ownerTransferCompleteEmailTemplate,
-          this.ownerTransferCompleteEmailTemplateAr,
-        ),
-        {
-          APP_NAME: this.appName,
-          website: this.website,
-          name: recipient.name,
-          email: recipient.email,
-          newOwnerName,
         },
       ),
     });

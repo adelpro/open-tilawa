@@ -1,4 +1,4 @@
-# Uslub web — static SPA, rendered by the nginx image's envsubst step.
+# Tilawa Admin web — static SPA, rendered by the nginx image's envsubst step.
 # PORT is the only variable; it defaults to 9320 in compose.
 server {
   listen ${PORT};

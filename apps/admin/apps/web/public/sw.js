@@ -1,6 +1,6 @@
 /* eslint-disable */
-/* Uslub service worker — app-shell cache, network-first for API. */
-const CACHE = 'uslub-shell-v1';
+/* Tilawa Admin service worker — app-shell cache, network-first for API. */
+const CACHE = 'tilawa-admin-shell-v1';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.ico'];
 
 self.addEventListener('install', (event) => {

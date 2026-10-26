@@ -17,13 +17,14 @@ import { Enveronements } from './types';
  *    and two JWT secrets to run the suite. Production refuses to start without
  *    them, which is the case where the check earns its keep.
  */
-const REQUIRED_IN_PRODUCTION = [
-  'COOKIE_JWT_SECRET',
-  'TEMP_JWT_SECRET',
-  'TILAWA_PEPPER',
-  'EMAIL',
-  'EMAIL_APP_SPECIFIC_PASS',
-] as const;
+const REQUIRED_IN_PRODUCTION = ['COOKIE_JWT_SECRET', 'TEMP_JWT_SECRET', 'TILAWA_PEPPER'] as const;
+
+/**
+ * Mail is a capability, not a boot requirement: an instance whose operator has
+ * not configured a provider must still serve sign-in and the dashboard, and the
+ * mailer already refuses loudly (503 + a warning) on the routes that need it.
+ */
+const MAIL_KEYS = ['EMAIL', 'EMAIL_APP_SPECIFIC_PASS'] as const;
 
 const logger = new Logger('envValidate');
 
@@ -50,6 +51,11 @@ export function envValidate(config: Record<string, unknown>): EnvConfigDTO {
       throw new Error(
         `Refusing to start in production without: ${missing.join(', ')}. ` +
           'Set them in .env (see .env.example).',
+      );
+    }
+    if (MAIL_KEYS.some((key) => !config[key])) {
+      logger.warn(
+        'mail is not configured (EMAIL, EMAIL_APP_SPECIFIC_PASS): activation, password reset and email 2FA will answer 503',
       );
     }
   } else {

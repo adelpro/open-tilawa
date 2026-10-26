@@ -27,6 +27,11 @@ export function Seeders(): ReactElement {
   const [newUrl, setNewUrl] = useState('');
   const [newUser, setNewUser] = useState('');
   const [newPass, setNewPass] = useState('');
+  const [editing, setEditing] = useState<Seeder | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editUrl, setEditUrl] = useState('');
+  const [editUser, setEditUser] = useState('');
+  const [editPass, setEditPass] = useState('');
 
   const load = useCallback(async () => {
     setError(null);
@@ -65,6 +70,50 @@ export function Seeders(): ReactElement {
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.addFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function startEdit(seeder: Seeder): void {
+    setEditing(seeder);
+    setEditName(seeder.name);
+    setEditUrl(seeder.url);
+    setEditUser('');
+    setEditPass('');
+    setError(null);
+  }
+
+  async function saveEdit(): Promise<void> {
+    if (!editing) return;
+    setBusy('edit');
+    setError(null);
+    try {
+      // Omitted credentials keep what is stored; that is how a name or URL edit
+      // never silently wipes a working password.
+      const body: Record<string, string> = { name: editName.trim(), url: editUrl.trim() };
+      if (editUser.trim()) body.adminUser = editUser.trim();
+      if (editPass) body.adminPass = editPass;
+      await api(`/seeders/${editing.id}`, { method: 'PATCH', body });
+      setEditing(null);
+      setMessage(t('seeders.updated'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function clearCredentials(id: number): Promise<void> {
+    setBusy(`clear-${id}`);
+    setError(null);
+    try {
+      await api(`/seeders/${id}`, { method: 'PATCH', body: { adminUser: null, adminPass: null } });
+      setMessage(t('seeders.credentialsCleared'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
     } finally {
       setBusy(null);
     }
@@ -183,6 +232,66 @@ export function Seeders(): ReactElement {
         </Panel>
       ) : null}
 
+      {editing ? (
+        <Panel tone="parchment">
+          <h2 className="group-title">
+            {t('seeders.editTitle')} — {editing.name}
+          </h2>
+          <div className="stack">
+            <Field label={t('seeders.name')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('seeders.url')} hint={t('seeders.urlHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editUrl}
+                  onChange={(event) => setEditUrl(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsKeepHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editUser}
+                  onChange={(event) => setEditUser(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('seeders.adminPass')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  type="password"
+                  value={editPass}
+                  onChange={(event) => setEditPass(event.target.value)}
+                />
+              )}
+            </Field>
+            <div className="cluster">
+              <Button onClick={() => void saveEdit()} busy={busy === 'edit'}>
+                {t('common.save')}
+              </Button>
+              <Button variant="tertiary" onClick={() => setEditing(null)}>
+                {t('seeders.cancel')}
+              </Button>
+              {editing.hasCredentials ? (
+                <Button variant="destructive" onClick={() => void clearCredentials(editing.id)}>
+                  {t('seeders.clearCredentials')}
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </Panel>
+      ) : null}
+
       {seeders === null ? (
         <SkeletonRows rows={3} label={t('seeders.loading')} />
       ) : seeders.length === 0 ? (
@@ -251,6 +360,9 @@ export function Seeders(): ReactElement {
                           busy={busy === `poll-${seeder.id}`}
                         >
                           {t('seeders.probe')}
+                        </Button>
+                        <Button small variant="tertiary" onClick={() => startEdit(seeder)}>
+                          {t('seeders.edit')}
                         </Button>
                         <Button
                           small

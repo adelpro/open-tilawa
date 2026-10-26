@@ -11,7 +11,6 @@ import type { Db } from './db';
 export interface AuditEntry {
   id: number;
   user_id: number | null;
-  key_id: number | null;
   actor_id: number | null;
   action: string;
   target: string | null;
@@ -46,12 +45,10 @@ export interface AuditStats {
   latency: { avgMs: number | null; maxMs: number | null };
   errorRate: number;
   total: number;
-  activeKeys: number;
 }
 
 export interface RecordAuditInput {
   userId?: number | null;
-  keyId?: number | null;
   actorId?: number | null;
   action: string;
   target?: string | null;
@@ -69,12 +66,11 @@ export class AuditRepository {
   record(input: RecordAuditInput): number {
     const info = this.db
       .prepare(
-        `INSERT INTO audit_log (user_id, key_id, actor_id, action, target, before_json, after_json, tool, status, ms, ip)
-         VALUES (@user_id, @key_id, @actor_id, @action, @target, @before_json, @after_json, @tool, @status, @ms, @ip)`,
+        `INSERT INTO audit_log (user_id, actor_id, action, target, before_json, after_json, tool, status, ms, ip)
+         VALUES (@user_id, @actor_id, @action, @target, @before_json, @after_json, @tool, @status, @ms, @ip)`,
       )
       .run({
         user_id: input.userId ?? null,
-        key_id: input.keyId ?? null,
         actor_id: input.actorId ?? null,
         action: input.action,
         target: input.target ?? null,
@@ -149,12 +145,11 @@ export class AuditRepository {
     const totals = this.db
       .prepare(
         `SELECT COUNT(*) AS total,
-                SUM(CASE WHEN status != 'ok' THEN 1 ELSE 0 END) AS fails,
-                COUNT(DISTINCT key_id) AS activeKeys
+                SUM(CASE WHEN status != 'ok' THEN 1 ELSE 0 END) AS fails
          FROM audit_log
          WHERE user_id = ? AND created_at >= ?`,
       )
-      .get(userId, from) as { total: number; fails: number | null; activeKeys: number };
+      .get(userId, from) as { total: number; fails: number | null };
 
     return {
       range,
@@ -163,7 +158,6 @@ export class AuditRepository {
       latency: { avgMs: latency.avgMs ?? null, maxMs: latency.maxMs ?? null },
       errorRate: totals.total === 0 ? 0 : (totals.fails ?? 0) / totals.total,
       total: totals.total,
-      activeKeys: totals.activeKeys ?? 0,
     };
   }
 

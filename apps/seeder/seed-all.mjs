@@ -3,6 +3,7 @@ import events from 'events';
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
+import crypto from 'crypto';
 import WebTorrent from 'webtorrent';
 
 const TORRENT_DIR = process.env.TORRENT_DIR || '/data/torrents';
@@ -63,7 +64,14 @@ const server = http.createServer((req, res) => {
     const [user, pass] = decoded.split(':');
     const adminUser = process.env.ADMIN_USER || 'admin';
     const adminPass = process.env.ADMIN_PASS || 'change-me';
-    if (user !== adminUser || pass !== adminPass) {
+    // Constant-time comparison: hashing first gives both sides the same length,
+    // which timingSafeEqual requires, and removes the byte-by-byte early exit.
+    const equal = (a, b) =>
+      crypto.timingSafeEqual(
+        crypto.createHash('sha256').update(a ?? '').digest(),
+        crypto.createHash('sha256').update(b ?? '').digest(),
+      );
+    if (!equal(user, adminUser) || !equal(pass, adminPass)) {
       res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Seeder Admin"' });
       res.end('Unauthorized');
       return;

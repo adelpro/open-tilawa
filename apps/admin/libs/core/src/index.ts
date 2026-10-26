@@ -1,7 +1,7 @@
 /**
  * tilawa-admin core — the SQLite store and the migrations, consumed by the API.
  *
- * The uslub engine (profiles, gates, keys, documents) was removed with the
+ * The writing-profile engine (profiles, gates, keys, documents) was removed with the
  * fork-only cleanup: the dashboard's own features (TURN, seeders, torrents,
  * reciters) do not use it.
  */

@@ -22,13 +22,13 @@ import { Notice } from '../components/Chip';
 export function TwoFactor(): ReactElement {
   const { refresh } = useSession();
   const { t } = useI18n();
-  const [mode, setMode] = useState<'authenticator' | 'email'>('authenticator');
+  const [mode, setMode] = useState<'authenticator' | 'email' | 'recovery'>('authenticator');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const switchTo = (next: 'authenticator' | 'email'): void => {
+  const switchTo = (next: 'authenticator' | 'email' | 'recovery'): void => {
     setMode(next);
     setCode('');
     setError(null);
@@ -65,6 +65,21 @@ export function TwoFactor(): ReactElement {
     }
   };
 
+  const submitRecovery = async (event: FormEvent): Promise<void> => {
+    event.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      await api('/2fa/recovery', { method: 'POST', body: { code: code.trim() } });
+      await refresh();
+      navigate('/');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('twofa.failed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const sendEmailCode = async (): Promise<void> => {
     setError(null);
     setBusy(true);
@@ -85,7 +100,13 @@ export function TwoFactor(): ReactElement {
       <div className="auth__card stack">
         <div>
           <h1 className="display-lg">{t('twofa.title')}</h1>
-          <p className="body muted">{mode === 'email' ? t('twofa.emailLede') : t('twofa.lede')}</p>
+          <p className="body muted">
+            {mode === 'email'
+              ? t('twofa.emailLede')
+              : mode === 'recovery'
+                ? t('twofa.recoveryLede')
+                : t('twofa.lede')}
+          </p>
         </div>
 
         {error ? <Notice tone="bad">{error}</Notice> : null}
@@ -112,6 +133,27 @@ export function TwoFactor(): ReactElement {
             <Button variant="tertiary" busy={busy} onClick={() => void sendEmailCode()}>
               {t('twofa.emailLink')}
             </Button>
+            <Button variant="tertiary" onClick={() => switchTo('recovery')}>
+              {t('twofa.recoveryLink')}
+            </Button>
+          </form>
+        ) : mode === 'recovery' ? (
+          <form className="stack" onSubmit={(event) => void submitRecovery(event)}>
+            <CodeField
+              label={t('twofa.recoveryCode')}
+              value={code}
+              onChange={setCode}
+              required
+              maxLength={16}
+            />
+            <div className="cluster">
+              <Button type="submit" busy={busy}>
+                {busy ? t('twofa.checking') : t('twofa.recoverySubmit')}
+              </Button>
+              <Button variant="tertiary" onClick={() => switchTo('authenticator')}>
+                {t('twofa.emailBack')}
+              </Button>
+            </div>
           </form>
         ) : (
           <form className="stack" onSubmit={(event) => void submitEmailCode(event)}>

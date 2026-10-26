@@ -224,6 +224,25 @@ export const ar: Catalogue = {
   'help.publish.step4':
     'وأخيرًا أضف القارئ بالبصمة نفسها في صفحة القرّاء — فهو الرابط بين الصفحة التي يراها المستمع والملف الذي تحمله خوادم التوزيع.',
 
+  'seeders.edit': 'تعديل',
+  'seeders.editTitle': 'تعديل خادم التوزيع',
+  'seeders.credentialsKeepHint': 'اترك الحقلين فارغين للإبقاء على كلمة المرور المخزّنة.',
+  'seeders.clearCredentials': 'مسح بيانات الاعتماد',
+  'seeders.credentialsCleared': 'مُسحت بيانات الاعتماد.',
+  'seeders.updated': 'حُدّث خادم التوزيع.',
+  'seeders.updateFailed': 'تعذّر تحديث خادم التوزيع.',
+
+  'twofa.recoveryLink': 'استخدم رمز استعادة',
+  'twofa.recoveryLede': 'أدخل أحد أكواد الاستعادة أحادية الاستخدام التي حفظتها عند تفعيل التحقق بخطوتين.',
+  'twofa.recoveryCode': 'رمز الاستعادة',
+  'twofa.recoverySubmit': 'استخدم الرمز',
+  'account.twofa.disableTitle': 'إيقاف التحقق بخطوتين',
+  'account.twofa.disableBody':
+    'يلزم إثباتان: كلمة المرور ورمز حالي من تطبيق المصادقة. وتتوقف أكواد الاستعادة عن العمل.',
+  'account.twofa.disableAction': 'أوقف التحقق بخطوتين',
+  'account.twofa.disabled': 'أُوقف التحقق بخطوتين.',
+  'account.twofa.disableFailed': 'تعذّر إيقاف التحقق بخطوتين.',
+
   'footer.copy': '© تلاوة. جميع الحقوق محفوظة.',
 
   'help.title': 'مساعدة',
@@ -388,7 +407,7 @@ export const ar: Catalogue = {
 
   'prefs.title': 'التفضيلات',
   'prefs.language': 'اللغة',
-  'prefs.languageHint': 'القوائم والأزرار والرسائل. أما كتابتك فتبقى باللغة التي تكتب بها.',
+  'prefs.languageHint': 'القوائم والأزرار والرسائل — تُترجم هذه اللوحة، أما بياناتها فلا.',
   'prefs.saved': 'تم الحفظ.',
 
   'account.group.profile': 'الملف',
@@ -457,7 +476,8 @@ export const ar: Catalogue = {
   'account.devices.trusted': 'موثوق بالتحقق الثنائي',
   'account.devices.deleteCurrentConfirm': 'حذف هذا الجهاز؟ سيُسجَّل خروجك.',
   'account.owner': 'المالك',
-  'account.owner.deleteHint': 'انقل الملكية قبل حذف هذا الحساب.',
+  'account.owner.deleteHint':
+    'لا يمكن حذف حساب المالك — فهو المثيل نفسه. احذف الحسابات الأخرى أو غيّر أدوارها بدلًا من ذلك.',
   'account.delete.title': 'حذف هذا الحساب',
   'account.delete.body': 'يُحذف معه كل ملف ومفتاح وسجل. لا يمكن التراجع، ولا يوجد تصدير بعد الحذف.',
   'account.delete.confirm': 'اكتب {email} للتأكيد',

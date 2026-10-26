@@ -42,10 +42,10 @@ describe('store', () => {
   });
 
   it('survives two processes migrating the same fresh database at once', () => {
-    // The deployment starts `api` and `mcp` together against one file. Before the
-    // applied-set check moved inside the write lock, both read "003 pending", the
-    // first committed, and the second hit "duplicate column name" and refused to
-    // boot — which is exactly what happened on the first P4 deploy.
+    // Two processes can open one file at once on this deployment (the API and a
+    // CLI). Before the applied-set check moved inside the write lock, both read
+    // "004 pending", the first committed, and the second hit "duplicate column
+    // name" and refused to boot.
     const raceDir = mkdtempSync(join(tmpdir(), 'tilawa-admin-migrate-race-'));
     const racePath = join(raceDir, 'race.sqlite');
     const core = join(__dirname, '..', 'dist', 'index.js');
@@ -61,13 +61,15 @@ describe('store', () => {
         expect(run.stderr).not.toMatch(/duplicate column name/);
       }
 
-      // and the column exists exactly once, with the migration recorded
+      // and the column exists exactly once, with the migration recorded. The
+      // column must come from a migration that is still in the repository:
+      // asserting a deleted one passes only on machines with a stale dist.
       const check = openDatabase(racePath);
       const columns = check
-        .prepare('PRAGMA table_info(profiles)')
+        .prepare('PRAGMA table_info(users)')
         .all()
         .map((row) => (row as { name: string }).name);
-      expect(columns.filter((name) => name === 'skill_md')).toHaveLength(1);
+      expect(columns.filter((name) => name === 'locale')).toHaveLength(1);
       expect(appliedMigrations(check)).toEqual(
         expect.arrayContaining(['001_init.sql', '002_auth.sql', '004_avatar.sql', '013_owner.sql']),
       );

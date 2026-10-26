@@ -173,11 +173,7 @@ describe('admin console', () => {
     const res = await root.get('/api/admin/audit?limit=50').expect(200);
     const actions = res.body.map((row: { action: string }) => row.action);
     expect(actions).toEqual(
-      expect.arrayContaining([
-        'admin:role_change',
-        'admin:user_disable',
-        'admin:user_create',
-      ]),
+      expect.arrayContaining(['admin:role_change', 'admin:user_disable', 'admin:user_create']),
     );
   });
 });

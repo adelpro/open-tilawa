@@ -113,10 +113,14 @@ describe('seeder proxy', () => {
   let seederId: number;
   let fake: Awaited<ReturnType<typeof fakeSeeder>>;
   let fakeB: Awaited<ReturnType<typeof fakeSeeder>>;
+  let fakeHtml: Awaited<ReturnType<typeof fakeSeeder>>;
+  let fakeC: Awaited<ReturnType<typeof fakeSeeder>>;
 
   beforeAll(async () => {
     fake = await fakeSeeder();
     fakeB = await fakeSeeder();
+    fakeHtml = await fakeSeeder();
+    fakeC = await fakeSeeder();
     h = await bootHarness();
     agent = h.agent();
     csrf = (await agent.get('/api/csrf').expect(200)).body.token as string;
@@ -137,6 +141,8 @@ describe('seeder proxy', () => {
   afterAll(async () => {
     fake.server.close();
     fakeB.server.close();
+    fakeHtml.server.close();
+    fakeC.server.close();
     await h.close();
   });
 
@@ -194,5 +200,92 @@ describe('seeder proxy', () => {
       .send({ name: 'node-3', url: 'http://127.0.0.1:1', adminUser: 'a', adminPass: 'b' })
       .expect(201);
     await agent.get(`/api/seeders/${body.id}/torrents`).expect(502);
+  });
+
+  it('adds credentials to a row that has none, then clears them again', async () => {
+    // Register without credentials, as the pre-upgrade production row was.
+    const { body } = await agent
+      .post('/api/seeders')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'node-4', url: fakeC.url })
+      .expect(201);
+    expect(body.hasCredentials).toBe(false);
+
+    const refused = await agent.get(`/api/seeders/${body.id}/torrents`).expect(502);
+    expect(refused.body.message).toContain('no credentials stored');
+
+    const patched = await agent
+      .patch(`/api/seeders/${body.id}`)
+      .set('x-csrf-token', csrf)
+      .send({ adminUser: 'adm', adminPass: 'secret-pass' })
+      .expect(200);
+    expect(patched.body.hasCredentials).toBe(true);
+    // And the proxy now works — no delete-and-recreate needed.
+    await agent.get(`/api/seeders/${body.id}/torrents`).expect(200);
+
+    const cleared = await agent
+      .patch(`/api/seeders/${body.id}`)
+      .set('x-csrf-token', csrf)
+      .send({ adminUser: null, adminPass: null })
+      .expect(200);
+    expect(cleared.body.hasCredentials).toBe(false);
+  });
+
+  it('refuses a URL that is not http(s)', async () => {
+    await agent
+      .post('/api/seeders')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'junk', url: 'file:///etc/passwd' })
+      .expect(400);
+  });
+
+  it('refuses to patch a row that does not exist', async () => {
+    await agent
+      .patch('/api/seeders/9999')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'ghost' })
+      .expect(404);
+  });
+
+  it('answers a non-JSON upstream with a gateway error, not a 500', async () => {
+    const { body } = await agent
+      .post('/api/seeders')
+      .set('x-csrf-token', csrf)
+      .send({
+        name: 'node-html',
+        url: `${fakeHtml.url}/html`,
+        adminUser: 'adm',
+        adminPass: 'secret-pass',
+      })
+      .expect(201);
+    const res = await agent.get(`/api/seeders/${body.id}/torrents`).expect(502);
+    expect(res.body.message).toContain('non-JSON');
+  });
+
+  it('refuses a proxy mutation that carries no CSRF header', async () => {
+    await agent
+      .post(`/api/seeders/${seederId}/torrents`)
+      .send({ magnet: 'magnet:?xt=urn:btih:def456' })
+      .expect(403);
+  });
+
+  it('refuses the ops surface to a plain user account', async () => {
+    await h.seedUser({
+      name: 'Viewer',
+      email: 'viewer@example.com',
+      password: 'Password123',
+      role: 'user',
+    });
+    const viewer = h.agent();
+    const token = (await viewer.get('/api/csrf').expect(200)).body.token as string;
+    await viewer
+      .post('/api/auth/local/signin')
+      .set('x-csrf-token', token)
+      .set('X-Fingerprint', 'viewer-a')
+      .send({ user: { email: 'viewer@example.com', password: 'Password123' } })
+      .expect(200);
+    await viewer.get('/api/seeders').expect(403);
+    await viewer.get('/api/turns').expect(403);
+    await viewer.get('/api/reciters').expect(403);
   });
 });

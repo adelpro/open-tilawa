@@ -220,29 +220,6 @@
         "tags": ["Auth"]
       }
     },
-    "/api/auth/local/confirm-email-change": {
-      "post": {
-        "operationId": "AuthController_confirmEmailChange",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Email changed and a fresh session started"
-          },
-          "401": {
-            "description": "Invalid or expired token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDTO"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Confirm an email change with the emailed token",
-        "tags": ["Auth"]
-      }
-    },
     "/api/auth/local/resend-activation": {
       "post": {
         "operationId": "AuthController_resendActivation",
@@ -480,6 +457,25 @@
       }
     },
     "/api/seeders/{id}": {
+      "patch": {
+        "operationId": "SeedersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      },
       "delete": {
         "operationId": "SeedersController_remove",
         "parameters": [
@@ -849,6 +845,28 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TwoFaRecoveryDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["TwoFa"]
+      }
+    },
+    "/api/2fa/disable": {
+      "post": {
+        "operationId": "TwoFaController_disable",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFaDisableDTO"
               }
             }
           }
@@ -1318,6 +1336,21 @@
           }
         },
         "required": ["code"]
+      },
+      "TwoFaDisableDTO": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "The account password, as proof of presence"
+          },
+          "TOTP": {
+            "type": "string",
+            "example": "123456",
+            "description": "A current authenticator code"
+          }
+        },
+        "required": ["password", "TOTP"]
       },
       "TwoFaRegenerateDTO": {
         "type": "object",

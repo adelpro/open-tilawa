@@ -4,7 +4,7 @@
  * __dirname at runtime. Copy them next to the compiled output, or a fresh
  * container starts with an empty database and a confusing error.
  */
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,6 +17,10 @@ if (!existsSync(from)) {
   process.exit(1);
 }
 
+// Prune first: without this a deleted migration keeps running from `dist` on
+// every developer machine, so a test that passes locally can depend on a file
+// that no longer exists in the repository.
+rmSync(to, { recursive: true, force: true });
 mkdirSync(to, { recursive: true });
 cpSync(from, to, { recursive: true });
 console.log(`copy-assets: migrations -> ${to}`);

@@ -130,26 +130,6 @@ export class AuthController {
     };
   }
 
-  @Throttle({ default: { limit: 10, ttl: 900_000 } })
-  @Post('local/confirm-email-change')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Confirm an email change with the emailed token' })
-  @ApiResponse({ status: 200, description: 'Email changed and a fresh session started' })
-  @ApiResponse({ status: 401, description: 'Invalid or expired token', type: ErrorResponseDTO })
-  async confirmEmailChange(
-    @Res({ passthrough: true }) response: Response,
-    @Body('token') token: string,
-    @Fingerprint() fingerprint: FingerprintObj,
-  ): Promise<{ message: string; email: string }> {
-    const {
-      message,
-      email,
-      token: sessionToken,
-    } = await this.authService.confirmEmailChange(token, fingerprint);
-    response.cookie('token', sessionToken, this.authService.getCookieOptions());
-    return { message, email };
-  }
-
   @Throttle({ default: { limit: 5, ttl: 900_000 } })
   @Post('local/resend-activation')
   @HttpCode(HttpStatus.ACCEPTED)

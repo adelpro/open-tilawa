@@ -68,10 +68,10 @@ def share_image() -> Image.Image:
     small = ImageFont.truetype(REGULAR, 26)
 
     x = 560
-    draw.text((x, 190), 'Uslub', font=title, fill=INK)
+    draw.text((x, 190), 'Tilawa Admin', font=title, fill=INK)
     draw.text((x, 310), 'Your writing voice,', font=lead, fill=MUTED)
     draw.text((x, 358), 'wherever you write.', font=lead, fill=MUTED)
-    draw.text((x, 470), 'uslub.adelpro.us.kg', font=small, fill=ACCENT)
+    draw.text((x, 470), 'admin-tilawa.quran.us.kg', font=small, fill=ACCENT)
     return image
 
 

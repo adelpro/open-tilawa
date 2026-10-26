@@ -272,6 +272,71 @@ describe('pending-2FA grant (audit fixes)', () => {
       .send({ code: first })
       .expect(401);
   });
+
+  it('turns the factor off only with the password and a current code', async () => {
+    const owner = {
+      name: 'Disable Owner',
+      email: 'disable-owner@tilawa.test',
+      password: 'Disable-p4ss-2026',
+    };
+    await h.seedUser(owner);
+    const agent = h.agent();
+    await agent
+      .set('X-Fingerprint', 'disable-fp')
+      .post('/api/auth/local/signin')
+      .send({ user: owner })
+      .expect(200);
+    await agent.get('/api/2fa/enable').expect(200);
+    const { twoFASecrect } = h.db
+      .prepare('SELECT twofa_secret AS twoFASecrect FROM users WHERE email = ?')
+      .get(owner.email) as { twoFASecrect: string };
+    const enrolled = await agent
+      .set('X-Fingerprint', 'disable-fp')
+      .post('/api/2fa/verify')
+      .send({ TOTP: code(twoFASecrect) })
+      .expect(200);
+    expect(enrolled.body.enrolled).toBe(true);
+
+    await agent
+      .post('/api/2fa/disable')
+      .send({ password: 'not-the-password', TOTP: code(twoFASecrect) })
+      .expect(401);
+    await agent
+      .post('/api/2fa/disable')
+      .send({ password: owner.password, TOTP: '000000' })
+      .expect(401);
+
+    const res = await agent
+      .post('/api/2fa/disable')
+      .send({ password: owner.password, TOTP: code(twoFASecrect) })
+      .expect(200);
+    expect(res.body.message).toContain('off');
+
+    const row = h.db
+      .prepare('SELECT twofa_enabled FROM users WHERE email = ?')
+      .get(owner.email) as {
+      twofa_enabled: number;
+    };
+    expect(row.twofa_enabled).toBe(0);
+
+    // The next sign-in goes straight through — no challenge.
+    const fresh = h.agent();
+    const signin = await fresh
+      .set('X-Fingerprint', 'disable-fp2')
+      .post('/api/auth/local/signin')
+      .send({ user: owner })
+      .expect(200);
+    expect(String(signin.body.message ?? '')).not.toContain('2FA');
+
+    // And the recovery set issued at enrolment is dead.
+    const codes = enrolled.body.recoveryCodes as string[];
+    await h
+      .agent()
+      .set('X-Fingerprint', 'disable-fp3')
+      .post('/api/2fa/recovery')
+      .send({ code: codes[0] })
+      .expect(401);
+  });
 });
 
 /** A deterministic TOTP with a known secret; the harness clock is real. */

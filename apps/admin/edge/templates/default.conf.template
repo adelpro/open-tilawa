@@ -1,11 +1,11 @@
-# Uslub edge — the single door. Rendered by the nginx image's envsubst step into
-# /etc/nginx/conf.d/, which nginx includes inside its `http {}` block: a bare
-# `location` here is a startup failure ("location directive is not allowed
+# Tilawa Admin edge — the single door. Rendered by the nginx image's envsubst
+# step into /etc/nginx/conf.d/, which nginx includes inside its `http {}` block:
+# a bare `location` here is a startup failure ("location directive is not allowed
 # here"), so everything lives inside one `server {}`.
 #
 # Every upstream is addressed through a *variable* on purpose. nginx resolves a
-# literal `proxy_pass http://mcp:9300` once, at startup, and caches the address
-# for the life of the worker — so recreating `mcp` or `api` (which is exactly what
+# literal `proxy_pass http://api:9300` once, at startup, and caches the address
+# for the life of the worker — so recreating `admin-api` (which is exactly what
 # `docker compose up -d` does after a rebuild) leaves this container proxying to a
 # dead IP and the public site answering 502 until the edge is restarted. With a
 # variable, the name is resolved per request through Docker's embedded DNS, so
@@ -16,12 +16,6 @@ client_max_body_size 2m;   # avatar uploads; nginx defaults to 1m
 # 127.0.0.11 is Docker's embedded DNS server. `valid=10s` bounds the cache.
 resolver 127.0.0.11 valid=10s ipv6=off;
 
-# Server-sent events must not be buffered, or MCP looks like a hung client.
-map $http_upgrade $connection_upgrade {
-  default upgrade;
-  ''      "";
-}
-
 server {
   listen 80;
   server_name _;
@@ -31,11 +25,12 @@ server {
   # service ends up unreachable over http one day.
   add_header Strict-Transport-Security "max-age=31536000" always;
 
-  # Liveness for the deploy gate and for the tunnel check. Proxied to the API
+  # Liveness for the deploy gate and the tunnel check. Proxied to the API
   # rather than answered here: a 200 from nginx would say nothing about whether
-  # the database is reachable.
+  # the database is reachable. The service name is `admin-api` in this compose
+  # project — `api` belongs to the old standalone stack and 502s here.
   location = /health {
-    set $api_health http://api:${API_PORT}/api/health;
+    set $api_health http://admin-api:${API_PORT}/api/health;
     proxy_pass $api_health;
     proxy_http_version 1.1;
     proxy_set_header Host $host;

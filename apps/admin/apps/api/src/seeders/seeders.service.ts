@@ -6,6 +6,25 @@ import type { Db } from '@tilawa-admin/core';
 /** Seeder admin calls are bounded: a hung seeder must not hang the dashboard. */
 const SEEDER_TIMEOUT_MS = 8000;
 
+/**
+ * A seeder URL must be an http(s) origin. The dashboard makes server-side requests
+ * to it, so anything else (file:, gopher:) is a proxy primitive we do not need;
+ * private hosts are legitimate here (nodes live inside the operator's network),
+ * which is why this validates the scheme rather than the address.
+ */
+export function assertSeederUrl(raw: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error('the seeder URL must be an absolute http:// or https:// URL');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('the seeder URL must use http:// or https://');
+  }
+  return raw.replace(/\/$/, '');
+}
+
 export interface Seeder {
   id: number;
   name: string;
@@ -104,11 +123,51 @@ export class SeedersService {
       .prepare('INSERT INTO seeders (name, url, admin_user, admin_pass) VALUES (?, ?, ?, ?)')
       .run(
         input.name,
-        input.url.replace(/\/$/, ''),
+        assertSeederUrl(input.url),
         input.adminUser ?? null,
         input.adminPass ?? null,
       );
     return this.get(Number(info.lastInsertRowid))!;
+  }
+
+  /**
+   * Edits a row in place. Credentials are tri-state: omitted keeps what is
+   * stored, `null` clears it, a string replaces it. Without this, a node
+   * registered before the credentials feature (or one whose password changed)
+   * could only be fixed by deleting it and losing its state.
+   */
+  update(
+    id: number,
+    input: {
+      name?: string;
+      url?: string;
+      adminUser?: string | null;
+      adminPass?: string | null;
+    },
+  ): Seeder | null {
+    if (!this.db.prepare('SELECT id FROM seeders WHERE id = ?').get(id)) return null;
+    const sets: string[] = [];
+    const values: unknown[] = [];
+    if (input.name !== undefined) {
+      sets.push('name = ?');
+      values.push(input.name);
+    }
+    if (input.url !== undefined) {
+      sets.push('url = ?');
+      values.push(assertSeederUrl(input.url));
+    }
+    if (input.adminUser !== undefined) {
+      sets.push('admin_user = ?');
+      values.push(emptyToNull(input.adminUser));
+    }
+    if (input.adminPass !== undefined) {
+      sets.push('admin_pass = ?');
+      values.push(emptyToNull(input.adminPass));
+    }
+    if (sets.length > 0) {
+      this.db.prepare(`UPDATE seeders SET ${sets.join(', ')} WHERE id = ?`).run(...values, id);
+    }
+    return this.get(id);
   }
 
   remove(id: number): void {
@@ -167,14 +226,20 @@ export class SeedersService {
   async inventory(id: number): Promise<SeederInventory> {
     const seeder = await this.requireSeeder(id);
     const res = await this.call(seeder, '/api/torrents', { method: 'GET' });
-    return (await res.json()) as SeederInventory;
+    const body = await this.json<SeederInventory>(res);
+    // A wrong URL that happens to answer 200 (any web UI) must not reach the
+    // dashboard as a half-shaped object: the screen dereferences stats.torrents.
+    if (!Array.isArray(body.torrents) || typeof body.stats !== 'object' || body.stats === null) {
+      throw new BadGatewayException('the seeder answered, but not with a torrent inventory');
+    }
+    return body;
   }
 
   async files(id: number): Promise<string[]> {
     const seeder = await this.requireSeeder(id);
     const res = await this.call(seeder, '/api/files', { method: 'GET' });
-    const body = (await res.json()) as { files?: string[] };
-    return body.files ?? [];
+    const body = await this.json<{ files?: unknown }>(res);
+    return Array.isArray(body.files) ? (body.files as string[]) : [];
   }
 
   async addTorrent(
@@ -187,7 +252,7 @@ export class SeedersService {
       body: JSON.stringify(input),
       headers: { 'Content-Type': 'application/json' },
     });
-    return (await res.json()) as { ok: boolean; name?: string; infoHash?: string };
+    return this.json<{ ok: boolean; name?: string; infoHash?: string }>(res);
   }
 
   async removeTorrent(id: number, infoHash: string): Promise<void> {
@@ -196,6 +261,15 @@ export class SeedersService {
       method: 'DELETE',
     });
     if (res.status === 404) throw new NotFoundException('the seeder does not hold that torrent');
+  }
+
+  /** One body read that explains itself when the peer is not answering JSON. */
+  private async json<T>(res: Response): Promise<T> {
+    try {
+      return (await res.json()) as T;
+    } catch {
+      throw new BadGatewayException('the seeder answered with a non-JSON body');
+    }
   }
 
   private async requireSeeder(
@@ -222,6 +296,11 @@ export class SeedersService {
     init: RequestInit,
   ): Promise<Response> {
     const headers = new Headers(init.headers);
+    if (!seeder.adminUser || !seeder.adminPass) {
+      throw new BadGatewayException(
+        'no credentials stored for this seeder — edit the row and add the admin user and password',
+      );
+    }
     if (seeder.adminUser && seeder.adminPass) {
       headers.set(
         'Authorization',
@@ -236,7 +315,13 @@ export class SeedersService {
         signal: AbortSignal.timeout(SEEDER_TIMEOUT_MS),
       });
     } catch (err) {
-      throw new BadGatewayException(`seeder unreachable: ${(err as Error).message}`);
+      const error = err as Error;
+      const timedOut = error.name === 'TimeoutError' || error.name === 'AbortError';
+      throw new BadGatewayException(
+        timedOut
+          ? `seeder timed out after ${SEEDER_TIMEOUT_MS}ms`
+          : `seeder unreachable: ${error.message}`,
+      );
     }
     if (res.status === 401) {
       throw new BadGatewayException('the seeder refused the stored credentials');
@@ -249,6 +334,11 @@ export class SeedersService {
     }
     return res;
   }
+}
+
+function emptyToNull(value: string | null): string | null {
+  if (value === null) return null;
+  return value.trim() === '' ? null : value;
 }
 
 function mapSeeder(r: Record<string, unknown>): Seeder {

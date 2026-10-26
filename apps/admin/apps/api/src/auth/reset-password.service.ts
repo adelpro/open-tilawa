@@ -58,10 +58,7 @@ export class ResetPasswordService {
     return generic;
   }
 
-  async validate(
-    token: string,
-    password: string,
-  ): Promise<{ message: string; email: string }> {
+  async validate(token: string, password: string): Promise<{ message: string; email: string }> {
     // Signature + expiry + purpose, then the single-use ledger row: consumed
     // exactly once, atomically, so a replayed mail answers invalid (audit:
     // temp-link.replay-no-consumption-cross-flow).

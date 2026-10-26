@@ -30,21 +30,41 @@ export class RecitersService {
   }
 
   list(): Reciter[] {
-    return this.db.prepare('SELECT * FROM reciters ORDER BY id').all().map((r: any) => ({
-      id: r.id, name: r.name, riwaya: r.riwaya, infohash: r.infohash,
-      magnet: r.magnet, fileCount: r.file_count, createdAt: r.created_at,
-    }));
+    return this.db
+      .prepare('SELECT * FROM reciters ORDER BY id')
+      .all()
+      .map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        riwaya: r.riwaya,
+        infohash: r.infohash,
+        magnet: r.magnet,
+        fileCount: r.file_count,
+        createdAt: r.created_at,
+      }));
   }
 
   add(name: string, riwaya: string, infohash: string, magnet: string, fileCount: number): Reciter {
-    const info = this.db.prepare('INSERT INTO reciters (name, riwaya, infohash, magnet, file_count) VALUES (?, ?, ?, ?, ?)').run(name, riwaya, infohash, magnet, fileCount);
+    const info = this.db
+      .prepare(
+        'INSERT INTO reciters (name, riwaya, infohash, magnet, file_count) VALUES (?, ?, ?, ?, ?)',
+      )
+      .run(name, riwaya, infohash, magnet, fileCount);
     return this.get(Number(info.lastInsertRowid))!;
   }
 
   get(id: number): Reciter | null {
     const r = this.db.prepare('SELECT * FROM reciters WHERE id = ?').get(id) as any;
     if (!r) return null;
-    return { id: r.id, name: r.name, riwaya: r.riwaya, infohash: r.infohash, magnet: r.magnet, fileCount: r.file_count, createdAt: r.created_at };
+    return {
+      id: r.id,
+      name: r.name,
+      riwaya: r.riwaya,
+      infohash: r.infohash,
+      magnet: r.magnet,
+      fileCount: r.file_count,
+      createdAt: r.created_at,
+    };
   }
 
   remove(id: number): void {

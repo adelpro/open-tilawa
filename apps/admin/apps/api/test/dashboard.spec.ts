@@ -1,24 +1,13 @@
 import { bootHarness, type Harness } from './harness';
 
 /**
- * The dashboard's own surface, driven over HTTP (T6.2, T6.3, T6.7).
+ * The dashboard's own surface, driven over HTTP.
  *
- * Three things are under test here: that the CSRF pair actually refuses a
- * mutation, that profiles are per-account and never silently shareable, and that
- * a key's plaintext exists in exactly one response and nowhere after it.
+ * The point of this suite is the session plumbing every screen depends on: that
+ * the CSRF pair actually refuses a mutation, and that the endpoints the SPA
+ * calls anonymously (csrf, setup status) stay reachable while the account
+ * surface does not.
  */
-const _SAMPLE = [
-  '---',
-  'name: sample-voice',
-  'description: a short sample',
-  '---',
-  '',
-  'I write short sentences. I keep one idea per paragraph, and I name the thing',
-  'I am describing instead of pointing at it.',
-  '',
-  'Run avoid-ai-writing before you publish, then check the gate exit code.',
-  'This line is pipeline instruction, not voice.',
-].join('\n');
 
 describe('dashboard api', () => {
   let h: Harness;

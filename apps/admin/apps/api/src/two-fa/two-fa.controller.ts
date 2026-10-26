@@ -19,6 +19,7 @@ import type { FingerprintObj } from '@/auth/types/fingerprint.type';
 import { TwoFaGuard, TwoFaUser } from './guards/two-fa.guard';
 import type { TwoFaActor } from './guards/two-fa.guard';
 import {
+  TwoFaDisableDTO,
   TwoFaEmailCodeVerifyDTO,
   TwoFaRecoveryDTO,
   TwoFaRegenerateDTO,
@@ -70,7 +71,11 @@ export class TwoFaController {
     if (result.token) {
       response.cookie('token', result.token, this.authService.getCookieOptions());
     }
-    return { message: result.message, recoveryCodes: result.recoveryCodes };
+    return {
+      message: result.message,
+      enrolled: result.recoveryCodes !== undefined,
+      recoveryCodes: result.recoveryCodes,
+    };
   }
 
   /** The emailed fallback, for an authenticator that is lost. */
@@ -93,7 +98,12 @@ export class TwoFaController {
     @TwoFaUser() actor: TwoFaActor,
     @Fingerprint() fingerprint: FingerprintObj,
   ) {
-    const result = await this.twoFa.verifyEmailCode(actor.id, body.code, fingerprint, actor.pending);
+    const result = await this.twoFa.verifyEmailCode(
+      actor.id,
+      body.code,
+      fingerprint,
+      actor.pending,
+    );
     if (result.token) {
       response.cookie('token', result.token, this.authService.getCookieOptions());
     }
@@ -114,21 +124,31 @@ export class TwoFaController {
       // 430 state and only there.
       throw new UnauthorizedException('Use the authenticator code instead');
     }
-    const result = await this.twoFa.redeemRecoveryCode(actor.id, body.code, fingerprint, actor.pending);
+    const result = await this.twoFa.redeemRecoveryCode(
+      actor.id,
+      body.code,
+      fingerprint,
+      actor.pending,
+    );
     if (result.token) {
       response.cookie('token', result.token, this.authService.getCookieOptions());
     }
     return { message: result.message };
   }
 
+  /** Turning the factor off takes the password and a current code. */
+  @UseGuards(JWTAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('disable')
+  async disable(@CurrentUser('id') id: string | number, @Body() body: TwoFaDisableDTO) {
+    return this.twoFa.disable(Number(id), body.password, body.TOTP);
+  }
+
   /** A new recovery set, only with a current authenticator code in hand. */
   @UseGuards(JWTAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('recovery/regenerate')
-  async regenerate(
-    @CurrentUser('id') id: string | number,
-    @Body() body: TwoFaRegenerateDTO,
-  ) {
+  async regenerate(@CurrentUser('id') id: string | number, @Body() body: TwoFaRegenerateDTO) {
     return this.twoFa.regenerateRecoveryCodes(Number(id), body.code);
   }
 }

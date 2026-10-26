@@ -21,7 +21,7 @@ import type { Turn, TurnCheck } from '../lib/types-seeders';
  */
 export function Turns(): ReactElement {
   const { user } = useSession();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [turns, setTurns] = useState<Turn[] | null>(null);
   const [history, setHistory] = useState<Record<number, TurnCheck[] | null>>({});
   const [error, setError] = useState<string | null>(null);
@@ -210,7 +210,7 @@ export function Turns(): ReactElement {
                     <td className="num">
                       {turn.latencyMs === null ? t('turns.latencyUnknown') : `${turn.latencyMs} ms`}
                     </td>
-                    <td>{turn.lastSeen ?? t('turns.never')}</td>
+                    <td>{formatTimestamp(turn.lastSeen, locale) ?? t('turns.never')}</td>
                     <td>
                       <span className="cluster cluster--end">
                         <Button
@@ -265,7 +265,7 @@ export function Turns(): ReactElement {
                 <tbody>
                   {rows.map((check, index) => (
                     <tr key={`${check.checkedAt}-${index}`}>
-                      <td>{check.checkedAt}</td>
+                      <td>{formatTimestamp(check.checkedAt, locale)}</td>
                       <td>
                         <Chip tone={check.ok ? 'ok' : 'bad'}>
                           {t(check.ok ? 'turns.statusOnline' : 'turns.statusOffline')}
@@ -287,6 +287,19 @@ export function Turns(): ReactElement {
       ))}
     </div>
   );
+}
+
+/**
+ * SQLite's `datetime('now')` is `YYYY-MM-DD HH:MM:SS` in UTC with no zone
+ * marker; read as local time it is off by the operator's offset, so mark it UTC
+ * before formatting. Falls back to the raw string if it is not a date at all.
+ */
+function formatTimestamp(value: string | null, locale: string): string | null {
+  if (!value) return null;
+  const iso = value.includes('T') ? value : `${value.replace(' ', 'T')}Z`;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
 }
 
 function statusTone(status: Turn['status']): 'ok' | 'bad' | 'notice' {

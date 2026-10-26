@@ -41,6 +41,10 @@ export function Account(): ReactElement {
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
   const [qr, setQr] = useState<string | null>(null);
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableCode, setDisableCode] = useState('');
+  const [disableBusy, setDisableBusy] = useState(false);
+  const [disableMessage, setDisableMessage] = useState<string | null>(null);
   const [totp, setTotp] = useState('');
   const [twoFactorMessage, setTwoFactorMessage] = useState<string | null>(null);
 
@@ -62,6 +66,26 @@ export function Account(): ReactElement {
       }
     })();
   }, []);
+
+  const disableTwoFactor = async (): Promise<void> => {
+    setError(null);
+    setDisableMessage(null);
+    setDisableBusy(true);
+    try {
+      await api('/2fa/disable', {
+        method: 'POST',
+        body: { password: disablePassword, TOTP: disableCode.trim() },
+      });
+      setDisablePassword('');
+      setDisableCode('');
+      await refresh();
+      setDisableMessage(t('account.twofa.disabled'));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('account.twofa.disableFailed'));
+    } finally {
+      setDisableBusy(false);
+    }
+  };
 
   const saveProfile = async (): Promise<void> => {
     setError(null);
@@ -430,7 +454,47 @@ export function Account(): ReactElement {
           </Chip>
         </div>
         {user?.isTwoFAEnabled ? (
-          <p className="body muted">{t('account.twofa.enabledBody')}</p>
+          <div className="stack">
+            <p className="body muted">{t('account.twofa.enabledBody')}</p>
+            <details>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+                {t('account.twofa.disableTitle')}
+              </summary>
+              <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
+                <p className="fine-print">{t('account.twofa.disableBody')}</p>
+                <PasswordField
+                  label={t('account.password.current')}
+                  value={disablePassword}
+                  onChange={setDisablePassword}
+                  autoComplete="current-password"
+                  required
+                />
+                <Field label={t('account.twofa.codeLabel')}>
+                  {(id) => (
+                    <Input
+                      id={id}
+                      inputMode="numeric"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                      value={disableCode}
+                      onChange={(event) => setDisableCode(event.target.value)}
+                    />
+                  )}
+                </Field>
+                <div>
+                  <Button
+                    variant="destructive"
+                    busy={disableBusy}
+                    disabled={!disablePassword || disableCode.trim().length !== 6}
+                    onClick={() => void disableTwoFactor()}
+                  >
+                    {t('account.twofa.disableAction')}
+                  </Button>
+                </div>
+                {disableMessage ? <Notice tone="ok">{disableMessage}</Notice> : null}
+              </div>
+            </details>
+          </div>
         ) : (
           <div className="stack">
             <p className="body muted">{t('account.twofa.setupBody')}</p>

@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { DatabaseExceptionFilter } from './exceptions/database.exception.filter';
 import { ValidationExceptionFilter } from './exceptions/validation.exception.filter';
@@ -17,6 +19,19 @@ import { corsConfigs } from './config/cors.config';
  * answers 401 while sign-in still returns 200 and writes a session row. It was
  * found by running the service, not by reading it.
  */
+/**
+ * The package version, read once. Hardcoding it here made Swagger drift from
+ * `/health` and from the OpenAPI export on the next release.
+ */
+const apiVersion = (() => {
+  try {
+    const raw = readFileSync(join(__dirname, '..', 'package.json'), 'utf8');
+    return (JSON.parse(raw) as { version?: string }).version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { rawBody: true });
   const config = app.get(ConfigService);
@@ -51,8 +66,7 @@ async function bootstrap(): Promise<void> {
           'session cookie (POST /api/auth/local/signin). Every route except /api/health ' +
           'and the auth entry points requires one.',
       )
-      .setVersion('1.21.0')
-      .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'API key' }, 'apiKey')
+      .setVersion(apiVersion)
       .addCookieAuth('token')
       .build(),
   );

@@ -27,7 +27,12 @@ export class RoleGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const required = this.reflector.get<Role[]>('roles', context.getHandler());
+    // Handler first, class second: a controller can declare `@Roles('admin')`
+    // once for every route it owns, and a method can still narrow or widen it.
+    const required = this.reflector.getAllAndOverride<Role[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (!required || required.length === 0) {
       return true;
     }

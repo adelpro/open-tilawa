@@ -16,7 +16,9 @@ import { bootHarness } from './harness';
 describe('openapi', () => {
   it('matches the committed document', async () => {
     const version = (
-      JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string }
+      JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8')) as {
+        version: string;
+      }
     ).version;
     const h = await bootHarness();
     // The harness gives us the app via its internal moduleRef; rebuild the document

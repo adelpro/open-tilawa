@@ -29,12 +29,6 @@ export function navItemsFor(role: AppRole | null): NavEntry[] {
     { to: '/help', labelKey: 'nav.help', icon: 'globe', group: 'workspace' },
   ];
 
-  if (role === 'admin' || role === 'super_admin') {
-    items.push(
-      { to: '/dashboard/seeders', labelKey: 'nav.seeders', icon: 'monitor', group: 'admin' },
-      { to: '/dashboard/turns', labelKey: 'nav.turns', icon: 'globe', group: 'admin' },
-    );
-  }
   if (role === 'admin') {
     items.push({
       to: '/dashboard/admin',

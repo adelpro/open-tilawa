@@ -12,13 +12,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
+import { RoleGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { TurnsService } from './turns.service';
 
 /**
  * Every route is dashboard-only: these verbs mutate infrastructure records,
  * so an unauthenticated mutation would let a stranger register or delete them.
  */
-@UseGuards(JWTAuthGuard)
+@UseGuards(JWTAuthGuard, RoleGuard)
+@Roles('admin')
 @Controller('turns')
 export class TurnsController {
   constructor(private readonly service: TurnsService) {}

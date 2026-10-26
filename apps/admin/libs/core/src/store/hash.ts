@@ -1,4 +1,4 @@
-import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import type { FingerprintObj } from '../types';
 
 /**
@@ -7,39 +7,6 @@ import type { FingerprintObj } from '../types';
  */
 export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
-}
-
-/** API keys are hashed with a server-side pepper so a stolen DB is not a key dump. */
-export function hashApiKey(pepper: string, plaintext: string): string {
-  return sha256(`${pepper}${plaintext}`);
-}
-
-const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-
-/** Every key starts with this, so a leaked string is recognisable in a log. */
-export const API_KEY_PREFIX = 'usl_';
-
-/** How much of the key is stored for lookup: enough to index, useless to guess. */
-export const API_KEY_LOOKUP_LENGTH = 12;
-
-/**
- * `usl_` + 24 base62 characters, ~143 bits.
- *
- * `crypto.randomInt` rather than `randomBytes` mapped with `% 62`: 256 is not a
- * multiple of 62, so the modulo form favours the first eight characters of the
- * alphabet. Unbiased randomness is cheap here.
- */
-export function generateApiKey(length = 24): string {
-  let body = '';
-  for (let index = 0; index < length; index += 1) {
-    body += BASE62[randomInt(0, BASE62.length)];
-  }
-  return `${API_KEY_PREFIX}${body}`;
-}
-
-/** The lookup key: the first 12 characters, which include the prefix. */
-export function apiKeyPrefix(key: string): string {
-  return key.slice(0, API_KEY_LOOKUP_LENGTH);
 }
 
 /**

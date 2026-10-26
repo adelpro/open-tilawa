@@ -67,14 +67,11 @@ export function PasswordField({
   hint,
   error,
   required = false,
-  disabled: _disabled = false,
-  name: _name = 'password',
   autoComplete,
   showStrength = false,
   strengthVariant = 'bars',
   minLength,
 }: FieldCommon & {
-  name?: string;
   autoComplete: 'current-password' | 'new-password';
   showStrength?: boolean;
   strengthVariant?: StrengthVariant;

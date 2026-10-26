@@ -14,7 +14,6 @@ import { TempLinksService } from '@/temp-links/temp-links.service';
 import { AuthService } from '@/auth/auth.service';
 import { MailerService } from '@/mailer/mailer.service';
 import { TokensService } from '@/tokens/tokens.service';
-import { authenticator } from 'otplib';
 
 /**
  * The account half of the ported `me.service.ts`.
@@ -50,62 +49,6 @@ export class MeService {
    * mailbox. The response is deliberately the same whether or not the address
    * is taken — an account screen is not an email-availability oracle.
    */
-  async requestEmailChange(
-    id: string | number,
-    newEmail: string,
-    password: string,
-    totp?: string,
-  ): Promise<{ message: string }> {
-    const generic = {
-      message: 'If that address is available, a confirmation link has been sent to it',
-    };
-    const user = await this.userService.getUserById(id, '+password');
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (newEmail.toLowerCase() === user.email.toLowerCase()) {
-      throw new BadRequestException('The new address is the same as the current one');
-    }
-
-    const isValidPassword = user.password
-      ? await argonVerify(user.password, password, argonConfig)
-      : false;
-    if (!isValidPassword) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // With 2FA on, a password alone is not enough to redirect the account to a
-    // different mailbox — the authenticator is the second factor, same as for
-    // any other credential change.
-    if (user.isTwoFAEnabled) {
-      if (!totp) {
-        throw new BadRequestException('totp is required');
-      }
-      authenticator.options = { window: 1 };
-      if (!user.twoFASecrect || !authenticator.verify({ token: totp, secret: user.twoFASecrect })) {
-        throw new UnauthorizedException('Invalid code');
-      }
-    }
-
-    const existing = await this.userService.getUserByEmail(newEmail);
-    if (existing) {
-      // A taken address is the one thing the person requesting the change must
-      // know, and only they can reach this branch (password verified above).
-      throw new ConflictException('This email is already registered');
-    }
-
-    // A new request retires every outstanding link: only the newest mailbox can
-    // confirm the change.
-    this.tempLinks.purgeForUser(user.id, 'email_change');
-    try {
-      await this.mailerService.sendEmailChangeConfirmation(user, newEmail);
-    } catch (err) {
-      this.logger.warn(`email-change mail failed for ${user.id}: ${(err as Error).message}`);
-      throw err;
-    }
-    return generic;
-  }
-
   async updatePassword(
     id: string | number,
     oldPassword: string,

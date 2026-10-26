@@ -2,7 +2,7 @@ export interface Seeder {
   id: number;
   name: string;
   url: string;
-  status: 'online' | 'offline';
+  status: 'online' | 'offline' | 'unknown';
   lastSeen: string | null;
   torrentCount: number;
   peerCount: number;

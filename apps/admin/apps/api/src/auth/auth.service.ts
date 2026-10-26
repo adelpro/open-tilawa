@@ -1,10 +1,8 @@
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { TrustedDevicesService } from '@/trusted-devices/trusted-devices.service';
@@ -97,6 +95,16 @@ export class AuthService {
       this.dummyHash = await argonHash('tilawa-timing-equaliser', argonConfig);
     }
     await argonVerify(this.dummyHash, password, argonConfig).catch(() => false);
+  }
+
+  /**
+   * Proof of presence for a sensitive change (disabling the second factor):
+   * the same argon2 verification sign-in uses, without minting anything.
+   */
+  async checkPassword(userId: number, password: string): Promise<boolean> {
+    const user = await this.userService.getUserById(userId, '+password');
+    if (!user?.password) return false;
+    return argonVerify(user.password, password, argonConfig).catch(() => false);
   }
 
   async signinLocal(
@@ -260,51 +268,6 @@ export class AuthService {
    * event, so every session dies and this device re-authenticates with the new
    * address.
    */
-  async confirmEmailChange(
-    token: string,
-    fingerprint: FingerprintObj,
-  ): Promise<{ message: string; email: string; token: string }> {
-    const decoded = await this.tempLinks.verify(token, 'email_change');
-    const newEmail = decoded.email;
-    if (!newEmail) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-    if (!this.tempLinks.consume(decoded.jti, 'email_change')) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    const user = await this.userService.getUserById(decoded.id);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    const previousEmail = user.email;
-    const existing = await this.userService.getUserByEmail(newEmail);
-    if (existing && existing.id !== user.id) {
-      throw new ConflictException('This email is already registered');
-    }
-
-    // Explicit `isActivated: true`: `UsersService.update` deactivates an account
-    // whose email changed, because that is the right default for an admin
-    // rewrite. A confirmed change is the owner proving the new mailbox, so the
-    // account must stay usable.
-    const updated = await this.userService.update(user.id, { email: newEmail, isActivated: true });
-    this.tempLinks.purgeForUser(user.id, 'email_change');
-
-    // Every session dies: the person re-authenticates with the new address on
-    // this device, and any other device is signed out.
-    await this.tokenService.deleteAllForUser(user.id);
-    const sessionToken = await this.generateAndSaveToken(updated, fingerprint);
-
-    try {
-      await this.mailerService.sendEmailChangedNotice({ ...user, email: previousEmail }, newEmail);
-    } catch (err) {
-      // The change is done; a failed notice must not undo it.
-      this.logger.warn(`email-changed notice failed for ${user.id}: ${(err as Error).message}`);
-    }
-
-    return { message: 'Email address updated', email: updated.email, token: sessionToken };
-  }
-
   async signout(id: string | number, token: string): Promise<string> {
     await this.tokenService.deleteTokenByValue(token);
     return id.toString();

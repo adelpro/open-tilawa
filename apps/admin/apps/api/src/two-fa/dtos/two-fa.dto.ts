@@ -33,3 +33,18 @@ export class TwoFaRegenerateDTO {
   @MaxLength(12)
   readonly code!: string;
 }
+
+export class TwoFaDisableDTO {
+  @ApiProperty({ description: 'The account password, as proof of presence' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(200)
+  readonly password!: string;
+
+  @ApiProperty({ example: '123456', description: 'A current authenticator code' })
+  @IsString()
+  @Matches(/^\d+$/, { message: 'TOTP must be digits' })
+  @MinLength(6)
+  @MaxLength(12)
+  readonly TOTP!: string;
+}

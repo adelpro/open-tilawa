@@ -71,7 +71,7 @@
 }
 
 /*
- * Uslub tokens — the single source of colour, type and shape.
+ * Tilawa Admin tokens — the single source of colour, type and shape.
  * Values and rules: docs/DESIGN.md. No component may invent a colour.
  * Palette: Color Hunt 086288 4d8dba 97d7ff ffefc4 (mapped with measured contrast).
  */

@@ -1,5 +1,11 @@
 import { randomInt } from 'node:crypto';
-import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
@@ -110,7 +116,9 @@ export class TwoFaService {
       status: 'ok',
     });
     this.logger.log(`2fa.verify ok user=${userId} first=${first}`);
-    const token = pending ? await this.authService.generateAndSaveToken(user, fingerprint) : undefined;
+    const token = pending
+      ? await this.authService.generateAndSaveToken(user, fingerprint)
+      : undefined;
     return {
       message: first
         ? '2FA enabled — recovery codes shown once'
@@ -126,7 +134,10 @@ export class TwoFaService {
    * would leak which addresses have 2FA on.
    */
   async requestEmailCode(user: User): Promise<{ message: string; status: number }> {
-    const genericAnswer = { message: 'If this account has a second factor, the next step is in your inbox', status: 202 };
+    const genericAnswer = {
+      message: 'If this account has a second factor, the next step is in your inbox',
+      status: 202,
+    };
     if (!user.isTwoFAEnabled) {
       this.logger.warn(`2fa.email_code requested for an account without 2FA user=${user.id}`);
       return genericAnswer;
@@ -145,7 +156,12 @@ export class TwoFaService {
       { id: user.id, email: user.email, name: user.name, locale: user.locale ?? 'en' },
       code,
     );
-    this.audit.record({ actorId: user.id, userId: user.id, action: 'auth:2fa_email', status: 'ok' });
+    this.audit.record({
+      actorId: user.id,
+      userId: user.id,
+      action: 'auth:2fa_email',
+      status: 'ok',
+    });
     this.logger.log(`2fa.email_code sent user=${user.id}`);
     return genericAnswer;
   }
@@ -179,11 +195,14 @@ export class TwoFaService {
       throw new UnauthorizedException('Invalid or expired code');
     }
     // Single use: the loser of a race gets 401, not a second session.
-    if (!this.emailOtp.consume(record.id)) throw new UnauthorizedException('Invalid or expired code');
+    if (!this.emailOtp.consume(record.id))
+      throw new UnauthorizedException('Invalid or expired code');
 
     const user = await this.users.getUserById(userId);
     if (!user) throw new UnauthorizedException('Account not found');
-    const token = pending ? await this.authService.generateAndSaveToken(user, fingerprint) : undefined;
+    const token = pending
+      ? await this.authService.generateAndSaveToken(user, fingerprint)
+      : undefined;
     this.audit.record({
       actorId: userId,
       userId,
@@ -218,15 +237,44 @@ export class TwoFaService {
     }
     const user = await this.users.getUserById(userId);
     if (!user) throw new UnauthorizedException('Account not found');
-    const token = pending ? await this.authService.generateAndSaveToken(user, fingerprint) : undefined;
+    const token = pending
+      ? await this.authService.generateAndSaveToken(user, fingerprint)
+      : undefined;
     this.audit.record({
       actorId: userId,
       userId,
       action: 'auth:2fa_recovery',
       status: 'ok',
     });
-    this.logger.log(`2fa.recovery ok user=${userId} remaining=${this.recoveryCodes.countUnused(userId)}`);
+    this.logger.log(
+      `2fa.recovery ok user=${userId} remaining=${this.recoveryCodes.countUnused(userId)}`,
+    );
     return { message: 'Signed in with a recovery code — it cannot be used again', token };
+  }
+
+  /**
+   * Turns the second factor off. Both proofs are required — the password (who
+   * you are) and a current code (the factor itself) — because this one request
+   * removes the protection the account relies on.
+   */
+  async disable(userId: number, password: string, totp: string): Promise<{ message: string }> {
+    const user = await this.users.getUserById(userId);
+    if (!user?.isTwoFAEnabled || !user.twoFASecrect) {
+      throw new BadRequestException('2FA is not enabled for this account');
+    }
+    if (!(await this.authService.checkPassword(userId, password))) {
+      this.audit.record({ actorId: userId, userId, action: 'auth:2fa_disable', status: 'denied' });
+      throw new UnauthorizedException('Password is incorrect');
+    }
+    if (!authenticator.verify({ token: totp, secret: user.twoFASecrect })) {
+      this.audit.record({ actorId: userId, userId, action: 'auth:2fa_disable', status: 'denied' });
+      throw new UnauthorizedException('Invalid code');
+    }
+    this.users.update(userId, { isTwoFAEnabled: false, twoFASecrect: null });
+    this.recoveryCodes.invalidateAllUnused(userId);
+    this.audit.record({ actorId: userId, userId, action: 'auth:2fa_disable', status: 'ok' });
+    this.logger.log(`2fa.disable user=${userId}`);
+    return { message: 'Two-factor authentication is off' };
   }
 
   /** A fresh set, only with a current authenticator code in hand. */
@@ -240,7 +288,12 @@ export class TwoFaService {
     }
     this.recoveryCodes.invalidateAllUnused(userId);
     const codes = this.issueRecoveryCodes(userId);
-    this.audit.record({ actorId: userId, userId, action: 'auth:2fa_recovery_regenerate', status: 'ok' });
+    this.audit.record({
+      actorId: userId,
+      userId,
+      action: 'auth:2fa_recovery_regenerate',
+      status: 'ok',
+    });
     this.logger.log(`2fa.recovery regenerate user=${userId}`);
     return { codes };
   }
@@ -275,9 +328,7 @@ export class TwoFaService {
       return;
     }
     if (entry.count >= TOTP_LOCK_THRESHOLD) {
-      throw new BadRequestException(
-        'Too many wrong codes — wait 15 minutes and try again',
-      );
+      throw new BadRequestException('Too many wrong codes — wait 15 minutes and try again');
     }
   }
 

@@ -65,7 +65,10 @@ services:
       - seed_downloads:/data/downloads
       - seed_torrents:/data/torrents
     ports:
-      - "8085:8085" 
+      # Loopback only: the dashboard reaches the seeder over the compose network,
+      # so the admin API (which can add and delete torrents) has no business on
+      # every interface.
+      - "127.0.0.1:8085:8085" 
     depends_on:
       tracker:
         condition: service_healthy
@@ -85,6 +88,9 @@ services:
       - path: ./apps/admin/.env
         required: false
     environment:
+      # The app must not run with development defaults (non-secure cookies, no
+      # secret enforcement) in production; .env still supplies the secrets.
+      NODE_ENV: production
       PORT: ${ADMIN_API_PORT:-9410}
       DB_PATH: /data/tilawa-admin.sqlite
       CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin-tilawa.quran.us.kg}

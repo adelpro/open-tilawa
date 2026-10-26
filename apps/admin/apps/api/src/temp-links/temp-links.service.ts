@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { SQLITE_DB } from '@/store/store.module';
 import type { Db } from '@tilawa-admin/core';
 
-export type TempLinkPurpose = 'activation' | 'reset' | 'email_change' | 'owner_transfer';
+export type TempLinkPurpose = 'activation' | 'reset';
 
 /**
  * The ledger behind single-use email links (migration 009; audit:

@@ -1,5 +1,5 @@
 // The tilawa-admin fork's own flat ESLint config. The fork inherited the lint
-// scripts from uslub but not its root config file; this is a fresh, minimal
+// scripts from the upstream fork but not its root config file; this is a fresh, minimal
 // flat config — TypeScript recommended plus the usual JS recommended set — with
 // the same intent as the upstream rule set: real problems, not style opinions.
 import js from '@eslint/js';

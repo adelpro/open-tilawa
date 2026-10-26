@@ -221,6 +221,25 @@ export const en = {
   'help.publish.step4':
     'Finally add the reciter with the same infohash in Reciters — that is the link between the page a listener sees and the torrent the seeders carry.',
 
+  'seeders.edit': 'Edit',
+  'seeders.editTitle': 'Edit seeder',
+  'seeders.credentialsKeepHint': 'Leave both fields empty to keep the stored password.',
+  'seeders.clearCredentials': 'Clear credentials',
+  'seeders.credentialsCleared': 'Credentials cleared.',
+  'seeders.updated': 'Seeder updated.',
+  'seeders.updateFailed': 'Could not update the seeder.',
+
+  'twofa.recoveryLink': 'Use a recovery code',
+  'twofa.recoveryLede': 'Enter one of the single-use recovery codes you saved when you turned 2FA on.',
+  'twofa.recoveryCode': 'Recovery code',
+  'twofa.recoverySubmit': 'Use the code',
+  'account.twofa.disableTitle': 'Turn off two-factor',
+  'account.twofa.disableBody':
+    'Both proofs are required: your password and a current authenticator code. Recovery codes stop working.',
+  'account.twofa.disableAction': 'Turn off two-factor',
+  'account.twofa.disabled': 'Two-factor authentication is off.',
+  'account.twofa.disableFailed': 'Could not turn off two-factor authentication.',
+
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 
   'help.title': 'Help',
@@ -390,7 +409,7 @@ export const en = {
   'prefs.title': 'Preferences',
   'prefs.language': 'Language',
   'prefs.languageHint':
-    'Menus, buttons and messages. Your writing stays in whatever language you write in.',
+    'Menus, buttons and messages — this console is translated, the data it manages is not.',
   'prefs.saved': 'Saved.',
 
   'account.group.profile': 'Profile',
@@ -460,7 +479,8 @@ export const en = {
   'account.devices.trusted': '2FA trusted',
   'account.devices.deleteCurrentConfirm': 'Delete this device? You will be signed out.',
   'account.owner': 'Owner',
-  'account.owner.deleteHint': 'Transfer ownership before deleting this account.',
+  'account.owner.deleteHint':
+    'The owner account cannot be deleted — it is the instance itself. Delete or demote the other accounts instead.',
   'account.delete.title': 'Delete this account',
   'account.delete.body':
     'Every profile, key and audit row goes with it. This cannot be undone, and there is no export afterwards.',
