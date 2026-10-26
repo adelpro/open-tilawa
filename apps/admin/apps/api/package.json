@@ -1,6 +1,6 @@
 {
   "name": "@tilawa-admin/api",
-  "version": "1.23.0",
+  "version": "1.23.1",
   "private": true,
   "description": "Tilawa Admin API \u2014 accounts, TURN, seeders, torrents, reciters and admin.",
   "license": "MIT",
