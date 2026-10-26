@@ -101,6 +101,30 @@ Tag a release (`v1.21.0`) to publish `ghcr.io/adelpro/open-tilawa-seeder:1.21.0`
 (multi-arch: amd64 + arm64) through the `Publish Seeder Image` workflow; nodes
 pin `SEEDER_IMAGE` to that tag for reproducible rollbacks.
 
+## Node limits (quota and bandwidth)
+
+A node enforces its own limits — a dashboard-side cap would only be a wish:
+
+- `DISK_QUOTA_GB=150` (or `MAX_DISK_BYTES`) caps what the node holds. The check
+  runs twice: the magnet's `xl` before adding, and the real length when metadata
+  arrives. Over the cap, the torrent is destroyed before payload moves and the
+  API answers **507** with the headroom it has.
+- `UPLOAD_LIMIT_KBPS` / `DOWNLOAD_LIMIT_KBPS` throttle the WebTorrent client
+  (0 = unlimited). The node's own admin page prints the cap beside the live rate.
+- `/health` reports `quotaBytes`, `usedBytes`, `headroomBytes` and `limits`; the
+  dashboard plans pushes against that headroom and skips a node that cannot fit
+  the releases.
+- `ADMIN_UI=0` hides the browsable admin page on a community node; `/api` stays
+  available to the dashboard.
+
+## Trackers
+
+The tracker list lives in the dashboard (Reciters → **Trackers**): one `ws://` or
+`wss://` URL per line. Every magnet the dashboard builds — reciter save, catalogue
+import, the torrent tool — announces to it, and saving rewrites existing
+catalogue magnets so no row keeps an old list. `tracker.quran.us.kg` is the one
+hostname; the old `trackerf` alias is retired and answers 410.
+
 ## Publishing a release
 
 1. Create the `.torrent` and keep the audio where the seeder can read it.

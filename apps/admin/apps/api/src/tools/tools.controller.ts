@@ -4,6 +4,7 @@ import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { magnetFor, torrentInfo } from './bencode';
 import { SeedersService } from '../seeders/seeders.service';
+import { SettingsService } from '../settings/settings.service';
 
 /**
  * Two conversions an operator needs around releases:
@@ -17,7 +18,10 @@ import { SeedersService } from '../seeders/seeders.service';
 @Roles('admin')
 @Controller('tools')
 export class ToolsController {
-  constructor(private readonly seeders: SeedersService) {}
+  constructor(
+    private readonly seeders: SeedersService,
+    private readonly settings: SettingsService,
+  ) {}
 
   @Post('torrent-info')
   torrentInfo(@Body() body: { fileBase64: string }) {
@@ -30,7 +34,10 @@ export class ToolsController {
     }
     if (file.length === 0) throw new BadRequestException('the uploaded file is empty');
     try {
-      return torrentInfo(file);
+      const info = torrentInfo(file);
+      // The file's own trackers stay; the configured ones are appended, because a
+      // browser can only announce over ws(s) and these releases ship HTTP ones.
+      return { ...info, magnet: this.settings.withTrackers(info.magnet) };
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }

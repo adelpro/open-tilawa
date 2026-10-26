@@ -1,6 +1,6 @@
 {
   "name": "@tilawa-admin/core",
-  "version": "1.21.0",
+  "version": "1.22.0",
   "private": true,
   "description": "Tilawa Admin core \u2014 the SQLite store and the migrations.",
   "license": "MIT",

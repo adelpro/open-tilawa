@@ -11,7 +11,7 @@ import { bootHarness, type Harness } from './harness';
  * contract — including that the stored password is used but never returned.
  */
 function fakeSeeder(
-  options: { user?: string } = {},
+  options: { user?: string; headroom?: number } = {},
 ): Promise<{ url: string; server: Server; seen: string[] }> {
   const user = options.user ?? 'adm';
   const pass = 'secret-pass';
@@ -30,6 +30,9 @@ function fakeSeeder(
           version: '1.2.0',
           sha: 'abc123',
           disk: { free: 40 * 1024 ** 3, total: 100 * 1024 ** 3 },
+          quotaBytes: 60 * 1024 ** 3,
+          usedBytes: 20 * 1024 ** 3,
+          headroomBytes: options.headroom ?? 35 * 1024 ** 3,
           torrents: 2,
           peers: 5,
           uploadSpeed: 10,
@@ -307,6 +310,9 @@ describe('seeder proxy', () => {
     expect(row.sha).toBe('abc123');
     expect(row.freeBytes).toBe(40 * 1024 ** 3);
     expect(row.totalBytes).toBe(100 * 1024 ** 3);
+    expect(row.quotaBytes).toBe(60 * 1024 ** 3);
+    expect(row.usedBytes).toBe(20 * 1024 ** 3);
+    expect(row.headroomBytes).toBe(35 * 1024 ** 3);
   });
 
   it('refuses to update the software unless the deployment enabled it', async () => {
@@ -375,19 +381,25 @@ describe('seeder proxy', () => {
     expect(plan.body.nodes[0].toAdd).toEqual([]);
   });
 
-  it('skips a node that has too little free space', async () => {
-    const previous = process.env.CATALOGUE_PUSH_MIN_FREE_BYTES;
-    process.env.CATALOGUE_PUSH_MIN_FREE_BYTES = String(10 * 1024 ** 4);
+  it('skips a node whose own headroom is exhausted', async () => {
+    const full = await fakeSeeder({ headroom: 0 });
     try {
+      const { body } = await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-full', url: full.url, adminUser: 'adm', adminPass: 'secret-pass' })
+        .expect(201);
+      await agent.post(`/api/seeders/${body.id}/poll`).set('x-csrf-token', csrf).expect(201);
+
       const plan = await agent
         .post('/api/reciters/push/plan')
         .set('x-csrf-token', csrf)
-        .send({ nodeIds: [seederId] })
+        .send({ nodeIds: [body.id] })
         .expect(200);
       expect(plan.body.nodes[0].skipReason).toBe('low_space');
+      expect(plan.body.nodes[0].detail).toContain('0 GB headroom');
     } finally {
-      if (previous === undefined) delete process.env.CATALOGUE_PUSH_MIN_FREE_BYTES;
-      else process.env.CATALOGUE_PUSH_MIN_FREE_BYTES = previous;
+      full.server.close();
     }
   });
 

@@ -1,4 +1,5 @@
 'use client';
+import { formatSpeed } from '../utils/format-speed';
 
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
@@ -114,7 +115,7 @@ export default function TorrentPlayer() {
           )}
           {torrentInfo && (
             <p className={`text-xs ${torrentInfo.peers === 0 ? 'text-red-500' : 'text-gray-400'}`}>
-              peers: {torrentInfo.peers} · {(torrentInfo.downloadSpeed / 1024).toFixed(0)} KB/s · ↑ {(torrentInfo.uploadSpeed / 1024).toFixed(0)} KB/s
+              peers: {torrentInfo.peers} · ↓ {formatSpeed(torrentInfo.downloadSpeed)} · ↑ {formatSpeed(torrentInfo.uploadSpeed)}
             </p>
           )}
           {spinnerSeconds >= 8 && (
@@ -158,7 +159,7 @@ export default function TorrentPlayer() {
           <MusicPlayer playlist={torrentInfo.files} />
           {torrentInfo.ready && (
             <p className="text-center text-xs text-gray-400">
-              peers: {torrentInfo.peers} · ↓ {(torrentInfo.downloadSpeed / 1024).toFixed(0)} KB/s · ↑ {(torrentInfo.uploadSpeed / 1024).toFixed(0)} KB/s ·{' '}
+              peers: {torrentInfo.peers} · ↓ {formatSpeed(torrentInfo.downloadSpeed)} · ↑ {formatSpeed(torrentInfo.uploadSpeed)} ·{' '}
               {(torrentInfo.progress * 100).toFixed(1)}%
             </p>
           )}

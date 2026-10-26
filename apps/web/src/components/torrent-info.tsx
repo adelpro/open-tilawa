@@ -1,4 +1,5 @@
 import closeSVG from '@svgs/close.svg';
+import { formatBytes, formatSpeed } from '../utils/format-speed';
 import Image from 'next/image';
 import React from 'react';
 
@@ -29,22 +30,18 @@ export default function TorrentInfo({ setIsOpen }: Props) {
         <div className="m-2 flex flex-row gap-1">
           <Image src={downloadSVG} alt="Download" width={20} height={20} />
           <p className="truncate">
-            {torrentInfo?.downloadSpeed < 1024 * 1024
-              ? `${(torrentInfo?.downloadSpeed / 1024).toFixed(2)} KB/s`
-              : `${(torrentInfo?.downloadSpeed / (1024 * 1024)).toFixed(2)} MB/s`}
+            {formatSpeed(torrentInfo?.downloadSpeed)}
           </p>
         </div>
         <div className="m-2 flex flex-row gap-1">
           <Image src={uploadSVG} alt="Upload" width={20} height={20} />
           <p className="truncate">
-            {torrentInfo?.uploadSpeed < 1024 * 1024
-              ? `${(torrentInfo?.uploadSpeed / 1024).toFixed(2)} KB/s`
-              : `${(torrentInfo?.uploadSpeed / (1024 * 1024)).toFixed(2)} MB/s`}
+            {formatSpeed(torrentInfo?.uploadSpeed)}
           </p>
         </div>
         <div className="m-2 flex flex-row gap-1">
           <Image src={savedSVG} alt="Saved" width={20} height={20} />
-          <p>{`${(torrentInfo?.downloaded / 1e6).toFixed(2)}MB`}</p>
+          <p>{formatBytes(torrentInfo?.downloaded)}</p>
         </div>
       </div>
       <div className="flex flex-row gap-1">

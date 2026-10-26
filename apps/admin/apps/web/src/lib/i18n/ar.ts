@@ -373,6 +373,22 @@ export const ar: Catalogue = {
   'torrents.selectAll': 'اختر كل الناقص',
   'torrents.selectNone': 'مسح الاختيار',
 
+  'reciters.trackers': 'المتتبّعات',
+  'reciters.trackersTitle': 'قائمة المتتبّعات',
+  'reciters.trackersBody':
+    'متتبّع WebSocket في كل سطر. كل رابط مغناطيسي تنشئه اللوحة يعلن إلى هذه القائمة.',
+  'reciters.trackersLabel': 'متتبّعات wss://',
+  'reciters.trackersHint':
+    'فقط ws:// أو wss:// — لا تستطيع المتصفحات الإعلان إلى udp:// أو http://.',
+  'reciters.trackersEffect':
+    'الحفظ يعيد بناء كل روابط الفهرس من بصماتها، فلا يبقى صفٌّ على قائمة قديمة.',
+  'reciters.trackersSaved': 'حُفظت القائمة — أُعيد بناء {count} رابطًا.',
+  'reciters.trackersFailed': 'تعذّر حفظ قائمة المتتبّعات.',
+
+  'seeders.quota': '{used} من {quota} حصة',
+  'seeders.quotaUnlimited': 'بلا حصة',
+  'seeders.headroom': 'متاح {headroom}',
+
   'footer.copy': '© تلاوة. جميع الحقوق محفوظة.',
 
   'help.title': 'مساعدة',

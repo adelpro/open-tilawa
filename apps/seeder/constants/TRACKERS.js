@@ -1,6 +1,5 @@
 const TRACKERS = [
   "ws://tracker:8083",
-  'wss://trackerf.quran.us.kg',
   'wss://tracker.quran.us.kg',
   'wss://tracker.webtorrent.dev:443/announce',
   'wss://tracker.files.fm:7073/announce',

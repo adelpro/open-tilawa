@@ -63,7 +63,12 @@ services:
       TORRENT_DIR: /data/torrents
       ADMIN_PORT: ${ADMIN_PORT:-8085}
       ADMIN_USER: ${ADMIN_USER:-admin}
-      ADMIN_PASS: ${ADMIN_PASS:-change-me-in-prod}
+      ADMIN_PASS: ${ADMIN_PASS}
+      # 0 = unlimited; the node enforces its own quota and bandwidth caps.
+      DISK_QUOTA_GB: ${DISK_QUOTA_GB:-0}
+      UPLOAD_LIMIT_KBPS: ${UPLOAD_LIMIT_KBPS:-0}
+      DOWNLOAD_LIMIT_KBPS: ${DOWNLOAD_LIMIT_KBPS:-0}
+      ADMIN_UI: ${ADMIN_UI:-1}
     volumes:
       - seed_downloads:/data/downloads
       - seed_torrents:/data/torrents

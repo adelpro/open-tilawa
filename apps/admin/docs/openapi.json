@@ -938,6 +938,28 @@
         "tags": ["Reciters"]
       }
     },
+    "/api/settings/trackers": {
+      "get": {
+        "operationId": "SettingsController_getTrackers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Settings"]
+      },
+      "put": {
+        "operationId": "SettingsController_setTrackers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Settings"]
+      }
+    },
     "/api/2fa/enable": {
       "get": {
         "operationId": "TwoFaController_enable",
@@ -1301,7 +1323,7 @@
   "info": {
     "title": "Tilawa Admin API",
     "description": "",
-    "version": "1.21.0",
+    "version": "1.22.0",
     "contact": {}
   },
   "tags": [],

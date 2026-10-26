@@ -54,7 +54,16 @@ const rtcConfig = {
     },
   ],
 };
-const client = new WebTorrent({ maxConns: MAX_CONNS, dht: true, ut_pex: true, tracker: { rtcConfig } });
+const UPLOAD_LIMIT = Math.max(0, Math.floor(Number(process.env.UPLOAD_LIMIT_KBPS || 0) * 1024));
+const DOWNLOAD_LIMIT = Math.max(0, Math.floor(Number(process.env.DOWNLOAD_LIMIT_KBPS || 0) * 1024));
+const client = new WebTorrent({
+  maxConns: MAX_CONNS,
+  dht: true,
+  ut_pex: true,
+  tracker: { rtcConfig },
+  ...(UPLOAD_LIMIT > 0 ? { uploadLimit: UPLOAD_LIMIT } : {}),
+  ...(DOWNLOAD_LIMIT > 0 ? { downloadLimit: DOWNLOAD_LIMIT } : {}),
+});
 
 const semaphore = new Semaphore(MAX_CONCURRENT_DOWNLOADS);
 

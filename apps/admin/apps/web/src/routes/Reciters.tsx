@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useI18n, type MessageKey } from '../lib/i18n';
 import { Button } from '../components/Button';
-import { Field, Input } from '../components/Field';
+import { Field, Input, TextArea } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
@@ -68,6 +68,8 @@ export function Reciters(): ReactElement {
   const [purgeNodes, setPurgeNodes] = useState(false);
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
   const [fetchNode, setFetchNode] = useState<number | null>(null);
+  const [trackersOpen, setTrackersOpen] = useState(false);
+  const [trackersText, setTrackersText] = useState('');
   const [pushing, setPushing] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [plan, setPlan] = useState<PushPlan | null>(null);
@@ -166,6 +168,43 @@ export function Reciters(): ReactElement {
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('reciters.updateFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function openTrackers(): Promise<void> {
+    setTrackersOpen(true);
+    setError(null);
+    setBusy('trackers');
+    try {
+      const { trackers } = await api<{ trackers: string[] }>('/settings/trackers');
+      setTrackersText(trackers.join('\n'));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.trackersFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function saveTrackers(): Promise<void> {
+    setBusy('trackers');
+    setError(null);
+    try {
+      const result = await api<{ trackers: string[]; rewritten: number }>('/settings/trackers', {
+        method: 'PUT',
+        body: {
+          trackers: trackersText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean),
+        },
+      });
+      setTrackersOpen(false);
+      setMessage(t('reciters.trackersSaved', { count: String(result.rewritten) }));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.trackersFailed'));
     } finally {
       setBusy(null);
     }
@@ -273,6 +312,9 @@ export function Reciters(): ReactElement {
           <p className="body muted">{t('reciters.lede')}</p>
         </div>
         <div className="cluster">
+          <Button variant="tertiary" onClick={() => void openTrackers()} busy={busy === 'trackers'}>
+            {t('reciters.trackers')}
+          </Button>
           <Button variant="secondary" onClick={() => void openPush()} busy={pushBusy === 'load'}>
             {t('reciters.push')}
           </Button>
@@ -642,6 +684,34 @@ export function Reciters(): ReactElement {
           </div>
         </Panel>
       )}
+      {trackersOpen ? (
+        <Modal title={t('reciters.trackersTitle')} onClose={() => setTrackersOpen(false)}>
+          <div className="stack">
+            <p className="body muted">{t('reciters.trackersBody')}</p>
+            <Field label={t('reciters.trackersLabel')} hint={t('reciters.trackersHint')}>
+              {(id) => (
+                <TextArea
+                  id={id}
+                  rows={6}
+                  value={trackersText}
+                  onChange={(event) => setTrackersText(event.target.value)}
+                  placeholder={'wss://tracker.quran.us.kg'}
+                />
+              )}
+            </Field>
+            <p className="fine-print">{t('reciters.trackersEffect')}</p>
+            <div className="cluster cluster--end">
+              <Button variant="tertiary" onClick={() => setTrackersOpen(false)}>
+                {t('reciters.cancel')}
+              </Button>
+              <Button onClick={() => void saveTrackers()} busy={busy === 'trackers'}>
+                {t('common.save')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
+
       {deleting ? (
         <Modal title={t('reciters.deleteTitle')} onClose={() => setDeleting(null)}>
           <div className="stack">

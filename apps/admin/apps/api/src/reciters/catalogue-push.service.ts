@@ -1,10 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AuditRepository } from '@tilawa-admin/core';
 import { RecitersService } from '../reciters/reciters.service';
+import { magnetForInfo, SettingsService } from '../settings/settings.service';
 import { SeedersService } from '../seeders/seeders.service';
-
-/** Below this much free space a node is not given a new release. */
-const DEFAULT_MIN_FREE_BYTES = 5 * 1024 ** 3;
 
 export interface PushNodePlan {
   seederId: number;
@@ -43,6 +41,7 @@ export class CataloguePushService {
     private readonly reciters: RecitersService,
     private readonly seeders: SeedersService,
     private readonly audit: AuditRepository,
+    private readonly settings: SettingsService,
   ) {}
 
   plan(nodeIds?: number[]): Promise<PushPlan> {
@@ -115,7 +114,7 @@ export class CataloguePushService {
           name: torrent.name,
           riwaya: 'Hafs',
           infohash: torrent.infoHash,
-          magnet: `magnet:?xt=urn:btih:${torrent.infoHash}`,
+          magnet: magnetForInfo(torrent.infoHash, torrent.name, this.settings.getTrackers()),
           fileCount: torrent.files,
           sizeBytes: torrent.size || null,
         });
@@ -217,14 +216,6 @@ export class CataloguePushService {
         if (!seeder.hasCredentials) {
           return { ...base, skipReason: 'no_credentials', detail: null };
         }
-        if (seeder.freeBytes !== null && seeder.freeBytes < this.minFreeBytes()) {
-          return {
-            ...base,
-            skipReason: 'low_space',
-            detail: `${Math.round(seeder.freeBytes / 1024 ** 3)} GB free`,
-          };
-        }
-
         let inventory;
         try {
           inventory = await this.seeders.inventory(seeder.id);
@@ -232,9 +223,23 @@ export class CataloguePushService {
           return { ...base, skipReason: 'unreachable', detail: (err as Error).message };
         }
         const held = new Set(inventory.torrents.map((t) => t.infoHash.toLowerCase()));
-        const toAdd = catalogue
-          .filter((r) => !held.has(r.infohash.toLowerCase()))
-          .map((r) => ({ infohash: r.infohash, name: r.name }));
+        const missingRows = catalogue.filter((r) => !held.has(r.infohash.toLowerCase()));
+        const toAdd = missingRows.map((r) => ({ infohash: r.infohash, name: r.name }));
+
+        // Capacity comes from the node's own /health: its quota and disk,
+        // combined. Catalogue sizes make the decision possible before any byte
+        // moves; unknown sizes count as 0 and are left to the node, which
+        // applies the same rule after reading the metadata.
+        const needed = missingRows.reduce((sum, row) => sum + (row.sizeBytes ?? 0), 0);
+        const headroom = seeder.headroomBytes;
+        if (headroom !== null && (headroom <= 0 || needed > headroom)) {
+          return {
+            ...base,
+            present: inventory.torrents.length,
+            skipReason: 'low_space',
+            detail: `${Math.round(headroom / 1024 ** 3)} GB headroom, ${Math.round(needed / 1024 ** 3)} GB needed`,
+          };
+        }
         return {
           ...base,
           present: inventory.torrents.length,
@@ -246,10 +251,5 @@ export class CataloguePushService {
     );
 
     return { catalogue: catalogue.length, nodes };
-  }
-
-  private minFreeBytes(): number {
-    const raw = Number(process.env.CATALOGUE_PUSH_MIN_FREE_BYTES);
-    return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_MIN_FREE_BYTES;
   }
 }

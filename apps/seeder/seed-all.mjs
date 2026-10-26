@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import crypto from 'crypto';
+import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
 import { readFileSync as readFile, statfsSync } from 'fs';
 
 /**
@@ -30,6 +31,11 @@ const BUILD_SHA = process.env.BUILD_SHA || 'dev';
  * The dashboard plans assignments against this: a node with 40 GB left should
  * not be handed a 60 GB reciter. Reported as bytes so the client formats it.
  */
+/** Everything the node holds, by torrent length — the number the quota is about. */
+function usedBytes() {
+  return client.torrents.reduce((sum, torrent) => sum + (torrent.length || 0), 0);
+}
+
 function diskUsage() {
   try {
     const stats = statfsSync(DOWNLOAD_PATH);
@@ -43,7 +49,18 @@ import WebTorrent from 'webtorrent';
 const TORRENT_DIR = process.env.TORRENT_DIR || '/data/torrents';
 const DOWNLOAD_PATH = process.env.DOWNLOAD_PATH || '/app/downloads';
 const ADMIN_PORT = process.env.ADMIN_PORT || 8085;
+/** 0 = unlimited. Enforced here, on the node, because a dashboard-side cap is a promise. */
+const QUOTA_BYTES = quotaFromEnv();
+const DISK_RESERVE_BYTES = Math.floor(Number(process.env.DISK_RESERVE_GB || 1) * 1024 ** 3);
+/** A community node can keep the API and hide the browsable UI. */
+const SERVE_ADMIN_UI = process.env.ADMIN_UI !== '0';
 const MAX_CONNS = 100;
+/**
+ * Optional bandwidth caps, in KB/s. 0/absent means unthrottled. They are applied
+ * to the WebTorrent client, so every torrent on the node obeys one budget.
+ */
+const UPLOAD_LIMIT = Math.max(0, Math.floor(Number(process.env.UPLOAD_LIMIT_KBPS || 0) * 1024));
+const DOWNLOAD_LIMIT = Math.max(0, Math.floor(Number(process.env.DOWNLOAD_LIMIT_KBPS || 0) * 1024));
 
 events.EventEmitter.defaultMaxListeners = 20;
 
@@ -54,11 +71,31 @@ const log = {
   error: (msg) => console.log(chalk.red(msg)),
 };
 
+/**
+ * Refuse to run with no password (or the compose placeholder).
+ *
+ * The admin API can add and delete torrents; booting with a published default is
+ * how a node becomes someone else's. Deployments must set ADMIN_PASS.
+ */
+const ADMIN_PASS_FOR_CHECK = process.env.ADMIN_PASS;
+if (!ADMIN_PASS_FOR_CHECK || ADMIN_PASS_FOR_CHECK === 'change-me-in-prod' || ADMIN_PASS_FOR_CHECK === 'change-me') {
+  console.error(
+    'Refusing to start: set ADMIN_PASS to a real password (the admin API can add and delete torrents).',
+  );
+  process.exit(1);
+}
+
 if (!fs.existsSync(DOWNLOAD_PATH)) {
   fs.mkdirSync(DOWNLOAD_PATH, { recursive: true });
 }
 
-const client = new WebTorrent({ maxConns: MAX_CONNS, dht: true, ut_pex: true });
+const client = new WebTorrent({
+  maxConns: MAX_CONNS,
+  dht: true,
+  ut_pex: true,
+  ...(UPLOAD_LIMIT > 0 ? { uploadLimit: UPLOAD_LIMIT } : {}),
+  ...(DOWNLOAD_LIMIT > 0 ? { downloadLimit: DOWNLOAD_LIMIT } : {}),
+});
 globalThis.wtClient = client;
 
 const torrentFiles = fs.readdirSync(TORRENT_DIR).filter(f => f.endsWith('.torrent'));
@@ -86,6 +123,17 @@ const server = http.createServer((req, res) => {
       version: VERSION,
       sha: BUILD_SHA,
       disk: diskUsage(),
+      quotaBytes: QUOTA_BYTES,
+      limits: { uploadBytesPerSecond: UPLOAD_LIMIT, downloadBytesPerSecond: DOWNLOAD_LIMIT },
+      usedBytes: usedBytes(),
+      headroomBytes: fits({
+        quotaBytes: QUOTA_BYTES,
+      limits: { uploadBytesPerSecond: UPLOAD_LIMIT, downloadBytesPerSecond: DOWNLOAD_LIMIT },
+        usedBytes: usedBytes(),
+        incomingBytes: 0,
+        freeBytes: diskUsage()?.free,
+        reserveBytes: DISK_RESERVE_BYTES,
+      }).headroomBytes,
       torrents: client.torrents.length,
       peers: client.torrents.reduce((s, t) => s + t.numPeers, 0),
       uploadSpeed: client.uploadSpeed,
@@ -121,6 +169,10 @@ const server = http.createServer((req, res) => {
   }
 
   if (url.pathname === '/' || url.pathname === '/index.html') {
+    if (!SERVE_ADMIN_UI) {
+      res.writeHead(404).end('Admin UI disabled');
+      return;
+    }
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(adminHtml);
     return;
@@ -148,6 +200,8 @@ const server = http.createServer((req, res) => {
         totalPeers: client.torrents.reduce((s, t) => s + t.numPeers, 0),
         uploadSpeed: client.uploadSpeed,
         downloadSpeed: client.downloadSpeed,
+        uploadLimit: UPLOAD_LIMIT,
+        downloadLimit: DOWNLOAD_LIMIT,
       },
     }));
     return;
@@ -195,7 +249,39 @@ const server = http.createServer((req, res) => {
           answer(400, { error: 'magnet or torrentPath required' });
           return;
         }
+        const quotaCheck = (incomingBytes) =>
+          fits({
+            quotaBytes: QUOTA_BYTES,
+      limits: { uploadBytesPerSecond: UPLOAD_LIMIT, downloadBytesPerSecond: DOWNLOAD_LIMIT },
+            usedBytes: usedBytes(),
+            incomingBytes,
+            freeBytes: diskUsage()?.free,
+            reserveBytes: DISK_RESERVE_BYTES,
+          });
+        const hint = exactLengthFromMagnet(source);
+        const early = quotaCheck(hint);
+        if (!early.ok) {
+          clearTimeout(timer);
+          answer(507, {
+            error: `not enough space on this node (${early.reason})`,
+            headroomBytes: early.headroomBytes,
+          });
+          return;
+        }
         client.add(source, { path: DOWNLOAD_PATH }, (torrent) => {
+          // `xl` is a hint; the metadata length is the fact. Checking here aborts
+          // before the payload moves, which is the only place a cap can hold.
+          const settled = quotaCheck(torrent.length);
+          if (!settled.ok) {
+            torrent.destroy({ destroyStore: true }, () => {
+              clearTimeout(timer);
+              answer(507, {
+                error: `not enough space on this node (${settled.reason})`,
+                headroomBytes: settled.headroomBytes,
+              });
+            });
+            return;
+          }
           clearTimeout(timer);
           answer(200, { ok: true, name: torrent.name, infoHash: torrent.infoHash });
         });

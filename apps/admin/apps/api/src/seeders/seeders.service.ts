@@ -52,6 +52,12 @@ export interface Seeder {
   /** Disk space on the node's data volume, from its /health. */
   freeBytes: number | null;
   totalBytes: number | null;
+  /** Operator cap on this node (0 = unlimited), from its /health. */
+  quotaBytes: number | null;
+  /** What the node currently holds, by torrent length. */
+  usedBytes: number | null;
+  /** How much more the node will accept right now (quota and disk combined). */
+  headroomBytes: number | null;
 }
 
 /** One torrent as the seeder reports it. */
@@ -114,7 +120,10 @@ export class SeedersService {
         version TEXT,
         sha TEXT,
         free_bytes INTEGER,
-        total_bytes INTEGER
+        total_bytes INTEGER,
+        quota_bytes INTEGER,
+        used_bytes INTEGER,
+        headroom_bytes INTEGER
       )
     `);
     const cols = (this.db.pragma('table_info(seeders)') as { name: string }[]).map((c) => c.name);
@@ -127,6 +136,9 @@ export class SeedersService {
     add('sha', 'TEXT');
     add('free_bytes', 'INTEGER');
     add('total_bytes', 'INTEGER');
+    add('quota_bytes', 'INTEGER');
+    add('used_bytes', 'INTEGER');
+    add('headroom_bytes', 'INTEGER');
   }
 
   list(): Seeder[] {
@@ -211,6 +223,9 @@ export class SeedersService {
       version?: string;
       sha?: string;
       disk?: { free?: number; total?: number };
+      quotaBytes?: number;
+      usedBytes?: number;
+      headroomBytes?: number;
       torrents?: number;
       peers?: number;
       uploadSpeed?: number;
@@ -243,7 +258,8 @@ export class SeedersService {
       .prepare(
         `UPDATE seeders SET status = 'online', last_seen = datetime('now'),
            torrent_count = ?, peer_count = ?, upload_speed = ?, download_speed = ?,
-           version = ?, sha = ?, free_bytes = ?, total_bytes = ? WHERE id = ?`,
+           version = ?, sha = ?, free_bytes = ?, total_bytes = ?,
+           quota_bytes = ?, used_bytes = ?, headroom_bytes = ? WHERE id = ?`,
       )
       .run(
         data.torrents ?? data.stats?.totalTorrents ?? 0,
@@ -254,6 +270,9 @@ export class SeedersService {
         data.sha ?? null,
         data.disk?.free ?? null,
         data.disk?.total ?? null,
+        data.quotaBytes ?? null,
+        data.usedBytes ?? null,
+        data.headroomBytes ?? null,
         id,
       );
     return this.get(id);
@@ -473,5 +492,8 @@ function mapSeeder(r: Record<string, unknown>): Seeder {
     sha: (r.sha as string | null) ?? null,
     freeBytes: (r.free_bytes as number | null) ?? null,
     totalBytes: (r.total_bytes as number | null) ?? null,
+    quotaBytes: (r.quota_bytes as number | null) ?? null,
+    usedBytes: (r.used_bytes as number | null) ?? null,
+    headroomBytes: (r.headroom_bytes as number | null) ?? null,
   };
 }

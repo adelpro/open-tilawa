@@ -192,6 +192,9 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
     .filter((row) => picked.includes(row.infohash))
     .reduce((sum, row) => sum + (row.sizeBytes ?? 0), 0);
   const selectedNode = seeders?.find((row) => row.id === seederId) ?? null;
+  // The node's headroom is the number the add must respect: it already combines
+  // its quota with the filesystem, and the node enforces the same rule again.
+  const nodeHeadroom = selectedNode?.headroomBytes ?? selectedNode?.freeBytes ?? null;
 
   useEffect(() => {
     if (!catalogue || !inventory) return;
@@ -529,13 +532,11 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
                 <span className="fine-print">
                   {t('torrents.selectedSummary', {
                     size: bytes(pickedSize, locale),
-                    free: bytes(selectedNode?.freeBytes ?? null, locale),
+                    free: bytes(nodeHeadroom, locale),
                   })}
                 </span>
               </div>
-              {selectedNode?.freeBytes !== null &&
-              selectedNode?.freeBytes !== undefined &&
-              pickedSize > selectedNode.freeBytes ? (
+              {nodeHeadroom !== null && pickedSize > nodeHeadroom ? (
                 <Notice tone="bad">{t('torrents.diskWarn')}</Notice>
               ) : null}
             </div>

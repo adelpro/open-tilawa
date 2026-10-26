@@ -372,6 +372,21 @@ export const en = {
   'torrents.selectAll': 'Select all missing',
   'torrents.selectNone': 'Clear',
 
+  'reciters.trackers': 'Trackers',
+  'reciters.trackersTitle': 'Tracker list',
+  'reciters.trackersBody':
+    'One WebSocket tracker per line. Every magnet the dashboard builds announces to this list.',
+  'reciters.trackersLabel': 'wss:// trackers',
+  'reciters.trackersHint': 'Only ws:// or wss:// — browsers cannot announce to udp:// or http://.',
+  'reciters.trackersEffect':
+    'Saving rebuilds every catalogue magnet from its infohash, so old rows do not keep an old list.',
+  'reciters.trackersSaved': 'Tracker list saved — {count} magnets rewritten.',
+  'reciters.trackersFailed': 'Could not save the tracker list.',
+
+  'seeders.quota': '{used} of {quota} quota',
+  'seeders.quotaUnlimited': 'No quota',
+  'seeders.headroom': '{headroom} headroom',
+
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 
   'help.title': 'Help',

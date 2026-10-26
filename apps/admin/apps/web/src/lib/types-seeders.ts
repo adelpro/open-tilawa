@@ -17,6 +17,12 @@ export interface Seeder {
   /** Disk space on the node's data volume. */
   freeBytes: number | null;
   totalBytes: number | null;
+  /** Operator cap on the node (0 = unlimited). */
+  quotaBytes: number | null;
+  /** What the node holds, by torrent length. */
+  usedBytes: number | null;
+  /** How much more it will accept right now (quota and disk combined). */
+  headroomBytes: number | null;
 }
 
 export interface Turn {

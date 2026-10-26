@@ -18,6 +18,7 @@ import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RecitersService } from './reciters.service';
 import { CataloguePushService } from './catalogue-push.service';
+import { magnetForInfo, SettingsService } from '../settings/settings.service';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 @UseGuards(JWTAuthGuard, RoleGuard)
@@ -27,7 +28,20 @@ export class RecitersController {
   constructor(
     private readonly service: RecitersService,
     private readonly push: CataloguePushService,
+    private readonly settings: SettingsService,
   ) {}
+
+  /**
+   * Every stored magnet announces to the configured trackers. A magnet pasted
+   * without them keeps its own and gains ours; one with only a hash gets the
+   * name and the list.
+   */
+  private normalised(magnet: string, infohash: string, name: string): string {
+    const base = magnet?.startsWith('magnet:')
+      ? magnet
+      : magnetForInfo(infohash.trim(), name.trim(), this.settings.getTrackers());
+    return this.settings.withTrackers(base);
+  }
 
   @Get()
   list() {
@@ -73,7 +87,7 @@ export class RecitersController {
         name: body.name,
         riwaya: body.riwaya,
         infohash: body.infohash,
-        magnet: body.magnet,
+        magnet: this.normalised(body.magnet, body.infohash, body.name),
         fileCount: body.fileCount ?? 0,
         sizeBytes: body.sizeBytes ?? null,
       });
@@ -97,7 +111,21 @@ export class RecitersController {
   ) {
     let updated;
     try {
-      updated = this.service.update(Number(id), body);
+      const current = this.service.get(Number(id));
+      const patch =
+        body.magnet === undefined && current
+          ? { ...body, magnet: this.normalised(current.magnet, body.infohash ?? current.infohash, body.name ?? current.name) }
+          : body.magnet !== undefined
+            ? {
+                ...body,
+                magnet: this.normalised(
+                  body.magnet,
+                  body.infohash ?? current?.infohash ?? '',
+                  body.name ?? current?.name ?? '',
+                ),
+              }
+            : body;
+      updated = this.service.update(Number(id), patch);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }

@@ -20,7 +20,7 @@ server {
 # WebTorrent tracker — WebSocket + HTTP
 server {
   listen 80;
-  server_name trackerf.quran.us.kg;
+  server_name tracker.quran.us.kg;
 
   location / {
     proxy_pass http://tracker:${TRACKER_PORT};
@@ -42,6 +42,15 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
   }
+}
+
+# Retired tracker alias: its DNS record still resolves until it is deleted in
+# Cloudflare. Answer explicitly rather than letting the default (web) server
+# hand a torrent client an HTML page.
+server {
+  listen 80;
+  server_name trackerf.quran.us.kg;
+  return 410;
 }
 
 # Seeder admin UI

@@ -394,6 +394,19 @@ export function Seeders(): ReactElement {
                           total: bytes(seeder.totalBytes, locale),
                         })}
                       </span>
+                      <br />
+                      <span className="row__meta">
+                        {seeder.quotaBytes
+                          ? t('seeders.quota', {
+                              used: bytes(seeder.usedBytes, locale),
+                              quota: bytes(seeder.quotaBytes, locale),
+                            })
+                          : t('seeders.quotaUnlimited')}
+                        {' · '}
+                        {t('seeders.headroom', {
+                          headroom: bytes(seeder.headroomBytes, locale),
+                        })}
+                      </span>
                     </td>
                     <td>
                       {seeder.hasCredentials

@@ -8,7 +8,7 @@ set -euo pipefail
 TYPE="${TYPE:-seeder}"
 PORT="${PORT:-8085}"
 ADMIN_USER="${ADMIN_USER:-admin}"
-ADMIN_PASS="${ADMIN_PASS:-change-me-in-prod}"
+ADMIN_PASS="${ADMIN_PASS:-}"
 TURN_REALM="${TURN_REALM:-turn.quran.us.kg}"
 TURN_USER="${TURN_USER:-opentilawa}"
 TURN_PASS="${TURN_PASS:-}"
@@ -26,6 +26,14 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
+
+# The seeder refuses to start without a real password: its admin API can add and
+# delete torrents. Generate one when the operator did not supply one.
+if [[ "$TYPE" == "seeder" && -z "$ADMIN_PASS" ]]; then
+  ADMIN_PASS="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)"
+  echo "Generated ADMIN_PASS for this node: $ADMIN_PASS"
+  echo "Store it now — the dashboard needs it to manage the node."
+fi
 
 echo "=== Tilawa Node Deployer ==="
 echo "Type: $TYPE"
@@ -65,6 +73,11 @@ services:
       ADMIN_PORT: 8085
       ADMIN_USER: ${ADMIN_USER}
       ADMIN_PASS: ${ADMIN_PASS}
+      # 0 = unlimited; the node enforces whatever is set here, before it downloads.
+      DISK_QUOTA_GB: ${DISK_QUOTA_GB:-0}
+      UPLOAD_LIMIT_KBPS: ${UPLOAD_LIMIT_KBPS:-0}
+      DOWNLOAD_LIMIT_KBPS: ${DOWNLOAD_LIMIT_KBPS:-0}
+      ADMIN_UI: ${ADMIN_UI:-1}
     volumes:
       - /opt/tilawa-seeder/data:/data/torrents
     restart: unless-stopped

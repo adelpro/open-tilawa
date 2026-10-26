@@ -62,6 +62,11 @@
       return (b/Math.pow(1024,i)).toFixed(1)+' '+units[i];
     }
     function fmtSpeed(b) { return fmtBytes(b)+'/s'; }
+    // A cap is worth stating next to the number: "0.4 MB/s" means something
+    // different when the node is limited to 0.5 MB/s than when the swarm is slow.
+    function capped(value, limit) {
+      return limit > 0 ? ` <span style="font-size:0.65rem;color:#b45309">(حد ${fmtSpeed(limit)})</span>` : '';
+    }
 
     async function refresh() {
       try {
@@ -71,8 +76,8 @@
         document.getElementById('stats').innerHTML = `
           <div class="stat"><div class="stat-label">تورنتات</div><div class="stat-value">${data.stats.totalTorrents}</div></div>
           <div class="stat"><div class="stat-label">أقران</div><div class="stat-value">${data.stats.totalPeers}</div></div>
-          <div class="stat"><div class="stat-label">رفع</div><div class="stat-value">${fmtSpeed(data.stats.uploadSpeed)}</div></div>
-          <div class="stat"><div class="stat-label">تحميل</div><div class="stat-value">${fmtSpeed(data.stats.downloadSpeed)}</div></div>
+          <div class="stat"><div class="stat-label">رفع</div><div class="stat-value">${fmtSpeed(data.stats.uploadSpeed)}${capped(data.stats.uploadSpeed, data.stats.uploadLimit)}</div></div>
+          <div class="stat"><div class="stat-label">تحميل</div><div class="stat-value">${fmtSpeed(data.stats.downloadSpeed)}${capped(data.stats.downloadSpeed, data.stats.downloadLimit)}</div></div>
         `;
         // Table
         document.getElementById('torrents').innerHTML = data.torrents.map(t => `
