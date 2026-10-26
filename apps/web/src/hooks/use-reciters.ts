@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { RECITERS } from '@/constants';
+import { parseMagnet } from '@/utils/magnet';
 import { MagnetlinkSource, type Reciter } from '@/types';
 
 /**
@@ -31,8 +32,9 @@ const ADMIN_API =
 let pending: Promise<Reciter[]> | null = null;
 
 function infohashOf(magnet: string): string | null {
-  const match = magnet.match(/urn:btih:([0-9a-z]+)/i);
-  return match ? match[1].toLowerCase() : null;
+  // Decodes both the literal and the percent-encoded magnet forms; a regex over
+  // the raw string only understands the first.
+  return parseMagnet(magnet)?.infoHash ?? null;
 }
 
 /** Stable id for a catalogue-only row, so a link to it survives a reload. */

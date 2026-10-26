@@ -8,7 +8,7 @@ import { TorrentInfo, TrackType } from "@/types";
 import {
   getWebTorrentClient,
   hasStreamingServer,
-  isValidMagnetUri,
+  parseMagnet,
   updateMagnetURI,
 } from "@/utils";
 
@@ -72,7 +72,8 @@ export default function useTorrent() {
         return;
       }
 
-      if (!isValidMagnetUri(magnetURI)) {
+      const parsedMagnet = parseMagnet(magnetURI);
+      if (!parsedMagnet || parsedMagnet.trackers.length === 0) {
         setError("Invalid Magnet-URI provided.");
         return;
       }
@@ -88,29 +89,23 @@ export default function useTorrent() {
       }
 
       const updatedMagnetURI = updateMagnetURI(magnetURI);
-
-      const infoHashMatch = magnetURI.match(/btih:([a-zA-Z0-9]+)/);
-      const infoHash = infoHashMatch ? infoHashMatch[1].toLowerCase() : "";
-      const torrentFileUrl = infoHash
-        ? "/torrents/" + infoHash + ".torrent"
-        : "";
+      const infoHash = parsedMagnet.infoHash;
+      const torrentFileUrl = "/torrents/" + infoHash + ".torrent";
 
       // With `deselect`, the whole torrent (all 114 surahs) stays idle and the
       // player selects only the surah being streamed.
       const addOptions = { announce: TRACKERS, deselect: true };
 
       let added = false;
-      if (torrentFileUrl) {
-        try {
-          const resp = await fetch(torrentFileUrl);
-          if (resp.ok) {
-            const blob = await resp.blob();
-            torrent = localClient.add(blob as any, addOptions) as any;
-            added = true;
-          }
-        } catch (e) {
-          console.error("Torrent file fetch error:", e);
+      try {
+        const resp = await fetch(torrentFileUrl);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          torrent = localClient.add(blob as any, addOptions) as any;
+          added = true;
         }
+      } catch (e) {
+        console.error("Torrent file fetch error:", e);
       }
       if (!added) {
         torrent = localClient.add(updatedMagnetURI, addOptions) as any;

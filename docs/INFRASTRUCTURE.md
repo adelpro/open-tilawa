@@ -142,6 +142,14 @@ form and to power the converter.
 The tools screen reads the `.torrent` locally, hashes the exact `info` bytes, and
 appends the configured trackers. No node is involved.
 
+**Magnet encoding**
+Magnets are stored with literal `:` and `/` (`xt=urn:btih:…`, `tr=wss://…`).
+Both are legal inside a query value, and the player's parser (`magnet-uri`) does
+not percent-decode: `URLSearchParams.toString()` wrote `xt=urn%3Abtih%3A…`, which
+the client rejected as an invalid torrent identifier. `017_unescape_magnets.sql`
+repaired the rows; the player also normalises any magnet on the way in, so one
+from another source still plays.
+
 ## 7. Ports
 
 | Port | Bound to | Service | Public? |
