@@ -38,6 +38,8 @@ export default function PlayerFooter({
     <footer className="shrink-0 border-t border-line pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto flex h-16 w-full max-w-[520px] items-center gap-1 px-2">
         <div className="flex min-w-0 flex-1 flex-col">
+          {/* Both rows carry an icon at the start and a chevron at the end: the
+              same shape means the same thing, so neither reads as a caption. */}
           <button
             type="button"
             onClick={onOpenSurahs}
@@ -45,16 +47,19 @@ export default function PlayerFooter({
             className="flex h-8 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[15px] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
           >
             <Icon name="playlist" className="h-4 w-4 text-muted" />
-            <span className="truncate">{surahName}</span>
+            <span className="min-w-0 flex-1 truncate">{surahName}</span>
+            <Icon name="chevron-up" className="h-3.5 w-3.5 text-muted" />
           </button>
 
           <button
             type="button"
             onClick={onOpenReciters}
             aria-label="اختيار القارئ"
-            className="flex h-7 min-w-0 items-center rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
+            className="flex h-8 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
           >
-            <span className="truncate">{reciterName}</span>
+            <Icon name="mic" className="h-4 w-4" />
+            <span className="min-w-0 flex-1 truncate">{reciterName}</span>
+            <Icon name="chevron-up" className="h-3.5 w-3.5" />
           </button>
         </div>
 

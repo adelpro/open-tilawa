@@ -2,7 +2,14 @@ import type { ReactElement } from 'react';
 
 import { cn } from '@/utils/cn';
 
-export type IconName = 'chevron-left' | 'chevron-right' | 'playlist' | 'wifi' | 'link';
+export type IconName =
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'chevron-up'
+  | 'playlist'
+  | 'wifi'
+  | 'link'
+  | 'mic';
 
 const STROKE = {
   fill: 'none',
@@ -14,6 +21,14 @@ const STROKE = {
 
 const GLYPHS = {
   'chevron-left': <path {...STROKE} d="M15 5l-7 7 7 7" />,
+  'chevron-up': <path {...STROKE} d="M6 15l6-6 6 6" />,
+  mic: (
+    <>
+      <rect {...STROKE} x="9" y="3" width="6" height="11" rx="3" />
+      <path {...STROKE} d="M5.5 11a6.5 6.5 0 0 0 13 0" />
+      <path {...STROKE} d="M12 17.5V21" />
+    </>
+  ),
   'chevron-right': <path {...STROKE} d="M9 5l7 7-7 7" />,
   playlist: (
     <>
