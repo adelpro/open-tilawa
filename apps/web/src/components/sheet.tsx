@@ -330,9 +330,13 @@ export function ReciterSheet({
                       {reciter.name}
                     </span>
                     <span className="mt-0.5 block text-[11.5px] text-muted">
-                      {riwayaLabel(reciter.riwaya)} · {reciter.complet ? 'كامل' : 'جزئي'}
+                      {reciter.complet ? 'كامل' : 'جزئي'}
                     </span>
                   </span>
+                  <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[10.5px] text-ink">
+                    {riwayaLabel(reciter.riwaya)}
+                  </span>
+
                   {/* Every catalogue reciter is seeded over P2P, so a P2P badge
                       says nothing. The HTTP chip marks the ones that can also
                       play without peers. */}

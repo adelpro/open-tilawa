@@ -3,6 +3,7 @@ import { Inject } from '@nestjs/common';
 import { SQLITE_DB } from '../store/store.module';
 import type { Db } from '@tilawa-admin/core';
 import { RECITER_NAMES_AR } from './reciter-names';
+import { RECITER_RIWAYA } from './reciter-riwaya';
 
 export interface Reciter {
   id: number;
@@ -39,6 +40,19 @@ export class RecitersService {
     if (!cols.includes('name_ar')) this.db.exec('ALTER TABLE reciters ADD COLUMN name_ar TEXT');
 
     this.seedArabicNames();
+    this.seedRiwaya();
+  }
+
+  /**
+   * The seeder cannot know the reading, so the imported catalogue said "Hafs"
+   * for every row. The map is the source of truth for the reciters we ship;
+   * a row nobody has mapped keeps what it has.
+   */
+  private seedRiwaya(): void {
+    const update = this.db.prepare(
+      'UPDATE reciters SET riwaya = ? WHERE lower(infohash) = ? AND riwaya IS NOT ?',
+    );
+    for (const [hash, riwaya] of Object.entries(RECITER_RIWAYA)) update.run(riwaya, hash, riwaya);
   }
 
   /** Fill only the rows nobody has named yet; an edit in the console wins. */
