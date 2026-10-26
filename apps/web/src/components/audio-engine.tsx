@@ -269,7 +269,9 @@ export default function AudioEngine() {
       title: surah ? `سورة ${surah.name}` : `سورة ${surahId}`,
       artist: reciter?.name || 'Open Tilawa',
       album: 'Open Tilawa',
-      artwork: [{ src: '/images/logo.png', sizes: '1024x1024', type: 'image/png' }],
+      // The lock screen and the media notification use the square mark, not the
+      // wide wordmark raster: at thumbnail size the wordmark is a smudge.
+      artwork: [{ src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
     });
     navigator.mediaSession.setActionHandler('play', () => setIsPlaying(true));
     navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));

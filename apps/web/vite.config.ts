@@ -34,17 +34,17 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#ffffff',
+        // Square, mono, on-palette. The previous entry pointed at the wide
+        // wordmark raster, which launchers cropped into a smudge and which
+        // carried the navy brand colour into an app that is otherwise greys.
         icons: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           {
-            src: '/images/logo.png',
-            sizes: '1024x1024',
+            src: '/icons/maskable-512.png',
+            sizes: '512x512',
             type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: '/favicon.ico',
-            sizes: '64x64',
-            type: 'image/x-icon',
+            purpose: 'maskable',
           },
         ],
       },
