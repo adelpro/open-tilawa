@@ -36,11 +36,11 @@ Volumes: `seed_downloads` (seeder data), `seed_torrents` (shared with web for `.
 1. **Seeder** fetches magnet URIs (from `MAGNETS_URL` or fallback `MAGNETLINKS.js`), downloads each torrent, and saves its `.torrent` file to `/data/torrents` (shared volume → web's `/torrents/`).
 2. **Browser** loads the SPA, selects a reciter. `use-torrent.ts`:
    - Fetches `/torrents/{infohash}.torrent` (HTTP metadata, no peers needed).
-   - On 200: `client.add(torrentFileUrl, { announce: wsTrackers, urlList: webSeeds })`.
+   - On 200: `client.add(torrentBlob, { announce: wsTrackers, deselect: true })`.
    - On 404: falls back to `client.add(magnet)` (requires WebRTC peers).
 3. **Metadata** resolves → `showPlaylist()` builds a track list. Web-seed reciters use HTTP URLs (`ws + filename`); P2P-only reciters keep the `TorrentFile` reference.
-4. **Playback**: `MusicPlayer` uses `file.streamTo(audio)` (MediaSource, incremental, seekable) for P2P-only tracks; web-seed tracks use native `<audio src>` (HTTP range requests).
-5. **Fallback**: on audio error, auto-discovers alternate `ws=` mirrors from the magnet and retries.
+4. **Playback**: the app registers one service worker (`/sw.js`, PWA + WebTorrent merged), calls `client.createServer()`, and points `<audio>` at `file.streamURL`. The worker answers range requests from torrent pieces, so playback starts on the first pieces and seeking works. Itqan-sourced reciters keep a plain HTTP `<audio src>`.
+5. **Selection**: only the current surah is selected (`deselect: true` + `file.select()`), so the rest of an 114-file torrent does not compete for bandwidth.
 6. **TURN**: coturn relays WebRTC when direct P2P fails (symmetric NAT). External IP is resolved from the DDNS hostname `turn.quran.us.kg`.
 
 ### Key constraints (browser WebTorrent)
@@ -48,7 +48,17 @@ Volumes: `seed_downloads` (seeder data), `seed_torrents` (shared with web for `.
 - **WebSocket trackers only** (`wss://`/`ws://`). HTTP/UDP trackers are silently ineffective in a browser.
 - **Metadata without peers**: host `.torrent` files over HTTP (`client.add(url)`) — preferred over magnet fallback.
 - **Web seeds** (`ws=` / `urlList`): plain HTTP origin serving files; enables playback with zero peers (but only after metadata exists).
-- **Incremental vs full-file**: use `streamTo`/`appendTo` for playback; reserve `blob()` for download links.
+- **Incremental vs full-file**: stream with `file.streamURL` (service worker, range requests). `file.blob()`/`getBlobURL()` are gone in v3 and would download the whole file first.
+
+### Service worker (PWA + WebTorrent)
+
+One worker owns scope `/` and does both jobs: Workbox precaches the app shell
+and serves navigations, while a vendored copy of WebTorrent's `sw.min.js`
+answers `/webtorrent/*` range requests. It is built with
+`vite-plugin-pwa`'s `injectManifest` strategy from `apps/web/src/sw.js`.
+
+See [apps/web/README.md](apps/web/README.md) for the merge contract, the nginx
+`/sw.js` no-cache rules, and the WebTorrent version-bump procedure.
 
 ### Environment (.env)
 

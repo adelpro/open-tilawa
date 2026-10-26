@@ -7,3 +7,4 @@ export * from './is-valid-email';
 export * from './is-valid-magnet-uri';
 export * from './normalize-app-url';
 export * from './update-magnet-uri';
+export * from './webtorrent-client';

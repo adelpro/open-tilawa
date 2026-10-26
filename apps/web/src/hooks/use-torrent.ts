@@ -1,11 +1,16 @@
 import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import type { Instance, Torrent, TorrentFile } from "webtorrent";
+import type { Torrent, TorrentFile } from "webtorrent";
 
-import { rtcConfig, TRACKERS } from "@/constants";
+import { TRACKERS } from "@/constants";
 import { selectedReciterAtom, webtorrentReadyAtom } from "@/jotai/atom";
 import { TorrentInfo, TrackType } from "@/types";
-import { isValidMagnetUri, updateMagnetURI } from "@/utils";
+import {
+  getWebTorrentClient,
+  hasStreamingServer,
+  isValidMagnetUri,
+  updateMagnetURI,
+} from "@/utils";
 
 const TORRENT_READY_TIMEOUT = 10_000;
 
@@ -18,8 +23,9 @@ export default function useTorrent() {
   const [error, setError] = useState<string | undefined>();
   const [retryCount, setRetryCount] = useState(0);
 
-  // No persistent client — create a fresh one per run to avoid stale state.
-  const clientRef = useRef<Instance | undefined>(undefined);
+  // The client is a shared singleton (see utils/webtorrent-client); only the
+  // torrent is owned by this effect and destroyed when it is replaced.
+  const torrentRef = useRef<Torrent | undefined>(undefined);
 
   // Add torrent when client is ready and a valid magnet URI exists
   useEffect(() => {
@@ -66,12 +72,18 @@ export default function useTorrent() {
         return;
       }
 
-      const localClient = new (window as any).WebTorrent({
-        tracker: { rtcConfig },
-      });
-
       if (!isValidMagnetUri(magnetURI)) {
         setError("Invalid Magnet-URI provided.");
+        return;
+      }
+
+      const localClient = await getWebTorrentClient();
+      if (cancelled) return;
+
+      if (!hasStreamingServer(localClient)) {
+        setError(
+          "Streaming is unavailable: the service worker could not start (needs HTTPS or localhost). Use the source link instead.",
+        );
         return;
       }
 
@@ -83,13 +95,17 @@ export default function useTorrent() {
         ? "/torrents/" + infoHash + ".torrent"
         : "";
 
+      // With `deselect`, the whole torrent (all 114 surahs) stays idle and the
+      // player selects only the surah being streamed.
+      const addOptions = { announce: TRACKERS, deselect: true };
+
       let added = false;
       if (torrentFileUrl) {
         try {
           const resp = await fetch(torrentFileUrl);
           if (resp.ok) {
             const blob = await resp.blob();
-            torrent = localClient.add(blob as any) as any;
+            torrent = localClient.add(blob as any, addOptions) as any;
             added = true;
           }
         } catch (e) {
@@ -97,10 +113,10 @@ export default function useTorrent() {
         }
       }
       if (!added) {
-        torrent = localClient.add(updatedMagnetURI, {
-          announce: TRACKERS,
-        }) as any;
+        torrent = localClient.add(updatedMagnetURI, addOptions) as any;
       }
+
+      torrentRef.current = torrent;
 
       const mp3Files = () =>
         (torrent.files || []).filter((file: TorrentFile) =>
@@ -180,6 +196,16 @@ export default function useTorrent() {
     return () => {
       cancelled = true;
       if (readyTimeout) clearTimeout(readyTimeout);
+
+      const current = torrentRef.current as any;
+      torrentRef.current = undefined;
+      if (current && !current.destroyed) {
+        try {
+          current.destroy();
+        } catch (e) {
+          console.error("Torrent teardown error:", e);
+        }
+      }
     };
   }, [
     magnetURI,

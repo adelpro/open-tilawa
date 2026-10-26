@@ -26,10 +26,12 @@
 - [ ] Or merge its git history into open-tilawa and archive the old repo
 - [ ] Update any references (README already lists it)
 
-### 4. Frontend migration to local (future)
-- [ ] Add `apps/web/` (Next.js/Vite PWA) with Dockerfile (mirror uslub/apps/web)
-- [ ] Add `web` service to docker-compose.yml, edge routes `/` to it
-- [ ] Pin WebTorrent version, fix `getBlobURL` → v2 `blob()` API, stream instead of loading all blobs
+### 4. Frontend (apps/web)
+- [x] SPA in `apps/web/` (Vite + React), built and served by the `web` container
+- [x] WebTorrent 3.0.21 pinned; streaming via `file.streamURL` through a service
+      worker (replaced the MediaSource pump and the whole-file Blob fallback)
+- [x] PWA enabled; the PWA worker and WebTorrent's streaming worker are merged
+      into one `/sw.js` (see `apps/web/README.md`)
 - [ ] Update client rtc-config.ts to use self-hosted TURN
 
 ### 5. Further cleanup
@@ -72,4 +74,4 @@ Minimal viable experiment (when revisiting):
 4. Add hls.js + p2p-media-loader to a test page; verify sharing between two tabs.
 5. Measure whether segment sharing actually occurs at our user count.
 
-Related: keep full MP3 + streamTo + web seeds as the primary path (Phases 1-4).
+Related: keep full MP3 + `file.streamURL` (service worker range requests) + web seeds as the primary path (Phases 1-4).
