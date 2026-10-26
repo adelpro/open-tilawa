@@ -80,7 +80,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === '/api/torrents') {
+  if (url.pathname === '/api/torrents' && req.method === 'GET') {
     const torrents = client.torrents.map(t => ({
       name: t.name,
       infoHash: t.infoHash,
@@ -107,26 +107,55 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Handle POST /api/torrents (add torrent)
+  // Handle POST /api/torrents (add torrent). The inventory branch above is
+  // GET-only: without that guard every POST here was answered with a listing
+  // and the add path was unreachable over HTTP.
   if (url.pathname === '/api/torrents' && req.method === 'POST') {
     let body = '';
+    let answered = false;
+    const answer = (status, payload) => {
+      if (answered) return;
+      answered = true;
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(payload));
+    };
+    // A magnet that never resolves must fail visibly, not hang the dashboard.
+    const timer = setTimeout(() => answer(504, { error: 'timed out waiting for torrent metadata' }), 20000);
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       try {
         const { magnet, torrentPath } = JSON.parse(body);
-        const source = magnet || (torrentPath ? path.join(TORRENT_DIR, torrentPath) : null);
+        let source = null;
+        if (typeof magnet === 'string' && magnet.startsWith('magnet:')) {
+          source = magnet;
+        } else if (typeof torrentPath === 'string') {
+          // Torrent files live directly in TORRENT_DIR; a path that leaves it is
+          // a traversal attempt, not a filename.
+          const name = path.basename(torrentPath);
+          if (name !== torrentPath || !name.endsWith('.torrent')) {
+            clearTimeout(timer);
+            answer(400, { error: 'torrentPath must be a .torrent filename in the torrent directory' });
+            return;
+          }
+          source = path.join(TORRENT_DIR, name);
+          if (!fs.existsSync(source)) {
+            clearTimeout(timer);
+            answer(404, { error: 'torrent file not found' });
+            return;
+          }
+        }
         if (!source) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'magnet or torrentPath required' }));
+          clearTimeout(timer);
+          answer(400, { error: 'magnet or torrentPath required' });
           return;
         }
         client.add(source, { path: DOWNLOAD_PATH }, (torrent) => {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: true, name: torrent.name, infoHash: torrent.infoHash }));
+          clearTimeout(timer);
+          answer(200, { ok: true, name: torrent.name, infoHash: torrent.infoHash });
         });
       } catch (e) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: e.message }));
+        clearTimeout(timer);
+        answer(500, { error: e.message });
       }
     });
     return;

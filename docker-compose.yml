@@ -87,7 +87,6 @@ services:
     environment:
       PORT: ${ADMIN_API_PORT:-9410}
       DB_PATH: /data/tilawa-admin.sqlite
-      USLUB_VENDOR_DIR: /app/vendor
       CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin-tilawa.quran.us.kg}
     volumes:
       - admin_data:/data
