@@ -145,6 +145,7 @@ appends the configured trackers. No node is involved.
 
 Root `.env` (seeder + tracker + turn): `ADMIN_USER`, `ADMIN_PASS`,
 `DISK_QUOTA_GB`, `UPLOAD_LIMIT_KBPS`, `DOWNLOAD_LIMIT_KBPS`, `ADMIN_UI`,
+`TORRENT_PORT` (inbound peer port, published on the node),
 `SEEDER_IMAGE`, `TURN_*`, `TRACKER_PORT`.
 
 `apps/admin/.env` (API): `COOKIE_JWT_SECRET`, `TEMP_JWT_SECRET`,

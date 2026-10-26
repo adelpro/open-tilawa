@@ -77,6 +77,10 @@ services:
       # so the admin API (which can add and delete torrents) has no business on
       # every interface.
       - "127.0.0.1:8085:8085" 
+      # Inbound peers. Without these the node only ever dials out, so peers that
+      # cannot reach it see one fewer seeder for the same content.
+      - "6881:6881/tcp"
+      - "6881:6881/udp"
     depends_on:
       tracker:
         condition: service_healthy

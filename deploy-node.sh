@@ -19,6 +19,9 @@ DISK_GB="${DISK_GB:-}"
 UPLOAD_KBPS="${UPLOAD_KBPS:-0}"
 DOWNLOAD_KBPS="${DOWNLOAD_KBPS:-0}"
 ADMIN_UI="${ADMIN_UI:-1}"
+# Inbound peer port. Published because a node that only dials out is invisible
+# to peers that cannot reach it.
+PEER_PORT="${PEER_PORT:-6881}"
 
 # Parse args
 while [[ $# -gt 0 ]]; do
@@ -34,6 +37,7 @@ while [[ $# -gt 0 ]]; do
     --upload-kbps) UPLOAD_KBPS="$2"; shift 2 ;;
     --download-kbps) DOWNLOAD_KBPS="$2"; shift 2 ;;
     --admin-ui) ADMIN_UI="$2"; shift 2 ;;
+    --peer-port) PEER_PORT="$2"; shift 2 ;;
     --watchtower) WATCHTOWER=1; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
@@ -101,10 +105,15 @@ services:
     container_name: tilawa-seeder
     ports:
       - "0.0.0.0:${PORT}:8085"
+      # Inbound peers — the node binds TORRENT_PORT, so publishing it is what
+      # lets peers dial in instead of waiting for the node to dial them.
+      - "${PEER_PORT}:${PEER_PORT}/tcp"
+      - "${PEER_PORT}:${PEER_PORT}/udp"
     environment:
       ADMIN_PORT: 8085
       ADMIN_USER: ${ADMIN_USER}
       ADMIN_PASS: ${ADMIN_PASS}
+      TORRENT_PORT: ${PEER_PORT}
       # Torrents and audio are two volumes: a .torrent is metadata the node can
       # rebuild, the audio is gigabytes it cannot re-fetch cheaply. Both live
       # outside the container so a recreate (or a Watchtower update) keeps them.

@@ -57,6 +57,14 @@ const DISK_RESERVE_BYTES = Math.floor(Number(process.env.DISK_RESERVE_GB || 1) *
 const SERVE_ADMIN_UI = process.env.ADMIN_UI !== '0';
 const MAX_CONNS = 100;
 /**
+ * The port inbound peers dial. WebTorrent defaults to 0, which asks the OS for a
+ * random port — pointless to publish in Docker, so a node behind a published
+ * mapping could still never be dialled and seeded only outbound. Pinning it to
+ * one number is what makes `6881:6881/tcp` and `/udp` in the compose file mean
+ * anything.
+ */
+const TORRENT_PORT = Math.max(1, Math.floor(Number(process.env.TORRENT_PORT || 6881)));
+/**
  * Optional bandwidth caps, in KB/s. 0/absent means unthrottled. They are applied
  * to the WebTorrent client, so every torrent on the node obeys one budget.
  */
@@ -92,6 +100,7 @@ if (!fs.existsSync(DOWNLOAD_PATH)) {
 
 const client = new WebTorrent({
   maxConns: MAX_CONNS,
+  torrentPort: TORRENT_PORT,
   dht: true,
   ut_pex: true,
   ...(UPLOAD_LIMIT > 0 ? { uploadLimit: UPLOAD_LIMIT } : {}),
@@ -391,6 +400,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(ADMIN_PORT, () => {
   log.success(`Admin UI running on port ${ADMIN_PORT}`);
+  log.info(`Peer port ${TORRENT_PORT} (TCP+UDP) — publish it in the compose file to accept inbound peers`);
 });
 
 // Stats logging
