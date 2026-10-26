@@ -555,6 +555,35 @@
         "tags": ["Turns"]
       }
     },
+    "/api/turns/{id}/history": {
+      "get": {
+        "operationId": "TurnsController_history",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      }
+    },
     "/api/turns/{id}": {
       "delete": {
         "operationId": "TurnsController_remove",
@@ -1106,14 +1135,7 @@
             "description": "The provider used for authentication."
           }
         },
-        "required": [
-          "id",
-          "email",
-          "name",
-          "isActivated",
-          "isTwoFAEnabled",
-          "provider"
-        ]
+        "required": ["id", "email", "name", "isActivated", "isTwoFAEnabled", "provider"]
       },
       "ErrorResponseDTO": {
         "type": "object",

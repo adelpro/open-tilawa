@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Delete, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { TorrentsService } from './torrents.service';
 
+@UseGuards(JWTAuthGuard)
 @Controller('torrents')
 export class TorrentsController {
   constructor(private readonly service: TorrentsService) {}

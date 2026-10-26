@@ -1,17 +1,50 @@
-import { Controller, Get, Post, Delete, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Query,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { TurnsService } from './turns.service';
 
+/**
+ * Every route is dashboard-only: these verbs mutate infrastructure records,
+ * so an unauthenticated mutation would let a stranger register or delete them.
+ */
+@UseGuards(JWTAuthGuard)
 @Controller('turns')
 export class TurnsController {
   constructor(private readonly service: TurnsService) {}
 
   @Get()
-  list() { return this.service.list(); }
+  list() {
+    return this.service.list();
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   add(@Body() body: { name: string; url: string }) {
-    return this.service.add(body.name, body.url);
+    try {
+      return this.service.add(body.name, body.url);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+  }
+
+  @Get(':id/history')
+  history(@Param('id') id: string, @Query('limit') limit?: string) {
+    const parsed = Number.parseInt(limit ?? '', 10);
+    return this.service.history(
+      Number(id),
+      Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 288) : 50,
+    );
   }
 
   @Delete(':id')

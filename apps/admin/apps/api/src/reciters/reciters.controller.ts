@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Delete, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { RecitersService } from './reciters.service';
 
+@UseGuards(JWTAuthGuard)
 @Controller('reciters')
 export class RecitersController {
   constructor(private readonly service: RecitersService) {}

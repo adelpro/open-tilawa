@@ -14,7 +14,15 @@ export interface Turn {
   id: number;
   name: string;
   url: string;
-  status: 'online' | 'offline';
+  status: 'online' | 'offline' | 'unknown';
   lastSeen: string | null;
-  realm: string | null;
+  /** Last successful STUN round trip, milliseconds. */
+  latencyMs: number | null;
+}
+
+export interface TurnCheck {
+  checkedAt: string;
+  ok: boolean;
+  latencyMs: number | null;
+  detail: string | null;
 }
