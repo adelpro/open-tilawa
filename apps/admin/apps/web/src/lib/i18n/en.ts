@@ -250,6 +250,39 @@ export const en = {
   'torrents.credentialsHint':
     'These are the seeder’s own ADMIN_USER / ADMIN_PASS (root .env), not your dashboard account.',
 
+  'turns.host': 'Host',
+  'turns.hostHint':
+    'The DNS name or IP of the TURN server — a plain A record, not proxied through Cloudflare.',
+  'turns.port': 'Port',
+  'turns.transport': 'Transport',
+  'turns.transportPlain': 'UDP (turn)',
+  'turns.transportTls': 'TLS (turns)',
+  'turns.presetStandard': 'Standard — UDP 3478',
+  'turns.presetTls': 'TLS — 5349',
+  'turns.urlPreview': 'The dashboard will register {url}.',
+  'turns.urlPreviewEmpty': 'Fill in the host to see the address that gets registered.',
+  'turns.deployTitle': 'Need a server first? Deploy one',
+  'turns.deployHint':
+    'One script sets up coturn on a fresh Linux host. Run it there, then open the ports below.',
+  'turns.deployDns':
+    'Give the host a plain DNS A record pointing at the server — do not proxy it through Cloudflare, because TURN relay traffic is UDP and the proxy does not carry it.',
+  'turns.deployMore': 'Read the full walkthrough on the Help screen',
+
+  'turns.edit': 'Edit',
+  'turns.editTitle': 'Edit TURN server',
+  'turns.updated': 'TURN server updated.',
+  'turns.updateFailed': 'Could not update the TURN server.',
+
+  'seeders.versionUnknown': 'version unknown',
+  'seeders.diskFree': '{free} free of {total}',
+  'seeders.updateSoftware': 'Update software',
+  'seeders.updateTitle': 'Update this seeder?',
+  'seeders.updateBody':
+    'The node pulls/builds the seeder image and restarts. Torrents stay on the volume; downloads resume afterwards. The node is offline for a few seconds.',
+  'seeders.updateCurrent': 'Currently running {version}.',
+  'seeders.updateConfirm': 'Update and restart',
+  'seeders.updatedSoftware': 'Node updated — now running {version}.',
+
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 
   'help.title': 'Help',
@@ -549,9 +582,6 @@ export const en = {
   'landing.feature2.title': 'TURN, always watched',
   'landing.feature2.body':
     'The dashboard probes every TURN server over STUN every five minutes and keeps the latency history, so an outage is a fact, not a surprise.',
-  'landing.feature3.title': 'Reciters, in one catalogue',
-  'landing.feature3.body':
-    'Every reciter with its riwaya, infohash and magnet, in one catalogue the SPA and the API agree on.',
   'landing.steps.title': 'Three steps, once.',
   'landing.step1': 'Deploy a seeder or TURN node with one script.',
   'landing.step2': 'Register it in the dashboard with its address.',

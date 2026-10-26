@@ -254,6 +254,38 @@ export const ar: Catalogue = {
   'torrents.credentialsHint':
     'هذه بيانات ADMIN_USER / ADMIN_PASS الخاصة بخادم التوزيع (في .env الجذري)، وليست حسابك في اللوحة.',
 
+  'turns.host': 'المضيف',
+  'turns.hostHint': 'اسم DNS أو عنوان IP لخادم TURN — سجل A عادي غير مُمرَّر عبر Cloudflare.',
+  'turns.port': 'المنفذ',
+  'turns.transport': 'النقل',
+  'turns.transportPlain': 'UDP لـ turn',
+  'turns.transportTls': 'TLS لـ turns',
+  'turns.presetStandard': 'قياسي — UDP 3478',
+  'turns.presetTls': 'TLS — المنفذ 5349',
+  'turns.urlPreview': 'ستسجّل اللوحة {url}.',
+  'turns.urlPreviewEmpty': 'أدخل المضيف ليظهر العنوان الذي سيُسجَّل.',
+  'turns.deployTitle': 'تحتاج خادمًا أولًا؟ انشر واحدًا',
+  'turns.deployHint':
+    'نصّ واحد يثبّت coturn على خادم Linux جديد. شغّله هناك ثم افتح المنافذ أدناه.',
+  'turns.deployDns':
+    'أنشئ للخادم سجل DNS من نوع A يشير إليه مباشرة — لا تمرّره عبر Cloudflare، فحركة ترحيل TURN تعمل بـ UDP والوسيط لا يحملها.',
+  'turns.deployMore': 'اقرأ الشرح الكامل في صفحة المساعدة',
+
+  'turns.edit': 'تعديل',
+  'turns.editTitle': 'تعديل خادم TURN',
+  'turns.updated': 'حُدّث خادم TURN.',
+  'turns.updateFailed': 'تعذّر تحديث خادم TURN.',
+
+  'seeders.versionUnknown': 'الإصدار غير معروف',
+  'seeders.diskFree': 'متاح {free} من {total}',
+  'seeders.updateSoftware': 'تحديث البرنامج',
+  'seeders.updateTitle': 'أتحدّث خادم التوزيع هذا؟',
+  'seeders.updateBody':
+    'يسحب الخادم صورة التوزيع أو يبنيها ثم يعيد التشغيل. تبقى الملفات على القرص ويستأنف التنزيل بعدها. ينقطع الخادم ثوانٍ قليلة.',
+  'seeders.updateCurrent': 'يعمل الآن بالإصدار {version}.',
+  'seeders.updateConfirm': 'حدّث وأعد التشغيل',
+  'seeders.updatedSoftware': 'حُدّث الخادم — يعمل الآن بالإصدار {version}.',
+
   'footer.copy': '© تلاوة. جميع الحقوق محفوظة.',
 
   'help.title': 'مساعدة',
@@ -544,9 +576,6 @@ export const ar: Catalogue = {
   'landing.feature2.title': 'TURN تحت المراقبة دائمًا',
   'landing.feature2.body':
     'تفحص اللوحة كل خادم TURN عبر STUN كل خمس دقائق وتحفظ سجلّ التأخير، فتنقطع الخدمة معلومةً لا مفاجأة.',
-  'landing.feature3.title': 'القرّاء في فهرس واحد',
-  'landing.feature3.body':
-    'كل قارئ وروايته وملفّه التورنت، في فهرس واحد تكتبه الواجهة البرمجية وتقرؤه الواجهة على السواء.',
   'landing.steps.title': 'ثلاث خطوات، مرة واحدة.',
   'landing.step1': 'انشر خادم توزيع أو TURN بنصّ واحد.',
   'landing.step2': 'سجّله في اللوحة بعنوانه.',

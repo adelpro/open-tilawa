@@ -10,6 +10,7 @@ import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
+import { Modal } from '../components/Modal';
 import type { Seeder } from '../lib/types-seeders';
 
 /**
@@ -34,6 +35,7 @@ export function Seeders(): ReactElement {
   const [editUrl, setEditUrl] = useState('');
   const [editUser, setEditUser] = useState('');
   const [editPass, setEditPass] = useState('');
+  const [confirmingUpdate, setConfirmingUpdate] = useState<Seeder | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -113,6 +115,27 @@ export function Seeders(): ReactElement {
     try {
       await api(`/seeders/${id}`, { method: 'PATCH', body: { adminUser: null, adminPass: null } });
       setMessage(t('seeders.credentialsCleared'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function updateSoftware(seeder: Seeder): Promise<void> {
+    setConfirmingUpdate(null);
+    setBusy(`update-${seeder.id}`);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api<{ output: string; version: string | null }>(
+        `/seeders/${seeder.id}/update`,
+        { method: 'POST' },
+      );
+      setMessage(
+        t('seeders.updatedSoftware', { version: result.version ?? t('seeders.versionUnknown') }),
+      );
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
@@ -360,6 +383,14 @@ export function Seeders(): ReactElement {
                         ↑ {bytes(seeder.uploadSpeed, locale, true)} · ↓{' '}
                         {bytes(seeder.downloadSpeed, locale, true)}
                       </span>
+                      <br />
+                      <span className="row__meta">
+                        {seeder.version ? `v${seeder.version}` : t('seeders.versionUnknown')} ·{' '}
+                        {t('seeders.diskFree', {
+                          free: bytes(seeder.freeBytes, locale),
+                          total: bytes(seeder.totalBytes, locale),
+                        })}
+                      </span>
                     </td>
                     <td>
                       {seeder.hasCredentials
@@ -401,6 +432,17 @@ export function Seeders(): ReactElement {
                         </Button>
                         <Button
                           small
+                          variant="secondary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setConfirmingUpdate(seeder);
+                          }}
+                          busy={busy === `update-${seeder.id}`}
+                        >
+                          {t('seeders.updateSoftware')}
+                        </Button>
+                        <Button
+                          small
                           variant="destructive"
                           onClick={(event) => {
                             event.stopPropagation();
@@ -419,6 +461,26 @@ export function Seeders(): ReactElement {
           </div>
         </Panel>
       )}
+      {confirmingUpdate ? (
+        <Modal title={t('seeders.updateTitle')} onClose={() => setConfirmingUpdate(null)}>
+          <div className="stack">
+            <p className="body">{t('seeders.updateBody')}</p>
+            <p className="fine-print">
+              {t('seeders.updateCurrent', {
+                version: confirmingUpdate.version ?? t('seeders.versionUnknown'),
+              })}
+            </p>
+            <div className="cluster cluster--end">
+              <Button variant="tertiary" onClick={() => setConfirmingUpdate(null)}>
+                {t('seeders.cancel')}
+              </Button>
+              <Button onClick={() => void updateSoftware(confirmingUpdate)}>
+                {t('seeders.updateConfirm')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
     </div>
   );
 }

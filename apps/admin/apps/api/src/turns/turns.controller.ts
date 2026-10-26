@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -56,6 +57,18 @@ export class TurnsController {
       Number(id),
       Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 288) : 50,
     );
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: { name?: string; url?: string }) {
+    let updated;
+    try {
+      updated = this.service.update(Number(id), body);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    if (!updated) throw new NotFoundException('TURN server not found');
+    return updated;
   }
 
   @Delete(':id')

@@ -46,6 +46,9 @@ services:
     networks: [open-tilawa]
 
   seeder:
+    # Registry image for a fleet; `build` stays so a checkout can run a node
+    # without publishing first. SEEDER_IMAGE lets a host pin a tag or digest.
+    image: ${SEEDER_IMAGE:-ghcr.io/adelpro/open-tilawa-seeder:latest}
     build:
       context: .
       dockerfile: apps/seeder/Dockerfile
@@ -94,8 +97,24 @@ services:
       PORT: ${ADMIN_API_PORT:-9410}
       DB_PATH: /data/tilawa-admin.sqlite
       CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin-tilawa.quran.us.kg}
+      # Seeder updates run through the host daemon (see the socket mount below).
+      SEEDER_UPDATE: "1"
+      SEEDER_COMPOSE_FILE: /host/docker-compose.yml
+      SEEDER_COMPOSE_PROJECT: open-tilawa
+      SEEDER_SERVICE: seeder
+      # This host builds from the mounted tree; registry-based nodes use `pull`.
+      SEEDER_UPDATE_MODE: build
+    # The socket is owned by root:988; the container's `node` user only needs
+    # to be in that group, not to run as root.
+    group_add: ["${DOCKER_GID:-988}"]
     volumes:
       - admin_data:/data
+      # A socket mount is root-equivalent on the host — that is the cost of
+      # "update the seeder from the dashboard", and it is why the endpoint is
+      # admin-only, CSRF-guarded, audited, and fixed to one compose service.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Read-only source tree: the compose file and the seeder build context.
+      - ./:/host:ro
     ports:
       - "127.0.0.1:${ADMIN_API_PORT:-9410}:${ADMIN_API_PORT:-9410}"
     healthcheck:

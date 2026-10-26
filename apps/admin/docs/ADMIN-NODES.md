@@ -69,6 +69,38 @@ transaction id** — not that a TCP port was open. Plain `turn:` over UDP only; 
 `turns:` (TLS) or IPv6 endpoint will report offline because the probe dials
 `udp4`.
 
+## Updating a seeder node
+
+The seeder reports `version`, `sha` and its free disk in `/health`; the Seeders
+screen stores them on every probe, so the row tells you which release a node
+runs and whether it has room for the next release.
+
+**From the dashboard** — *Seeders → Update software*. The action is intentionally
+narrow and off by default:
+
+- it needs `SEEDER_UPDATE=1`, the host's Docker socket, and the repository
+  mounted read-only at `/host` (all three are in the compose `admin-api` block);
+- it runs exactly one fixed command pair against the `seeder` service, with no
+  user input: `docker compose … pull|build seeder` then `up -d --no-deps
+  --force-recreate seeder`;
+- `SEEDER_UPDATE_MODE=build` compiles from the mounted tree (a checkout);
+  `pull` fetches `SEEDER_IMAGE` (a fleet node);
+- the request is admin-only, CSRF-guarded and written to the audit trail.
+
+A Docker socket is root-equivalent on the host. If that is not acceptable on a
+given installation, leave `SEEDER_UPDATE` unset — the button answers 503 and the
+node is updated by hand.
+
+**From the node itself** (registry image — the fleet path):
+
+```bash
+cd /opt/tilawa-seeder && docker compose pull && docker compose up -d
+```
+
+Tag a release (`v1.21.0`) to publish `ghcr.io/adelpro/open-tilawa-seeder:1.21.0`
+(multi-arch: amd64 + arm64) through the `Publish Seeder Image` workflow; nodes
+pin `SEEDER_IMAGE` to that tag for reproducible rollbacks.
+
 ## Publishing a release
 
 1. Create the `.torrent` and keep the audio where the seeder can read it.

@@ -13,6 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { SeedersService } from './seeders.service';
@@ -92,6 +93,13 @@ export class SeedersController {
   @Post('poll-all')
   pollAll() {
     return this.service.pollAll();
+  }
+
+  /** Update the seeder service (image pull/build + recreate) on this host. */
+  @Post(':id/update')
+  @HttpCode(HttpStatus.ACCEPTED)
+  updateSoftware(@Param('id') id: string, @CurrentUser('id') actorId: string | number) {
+    return this.service.updateSoftware(Number(id), Number(actorId));
   }
 
   // ---------- torrent inventory, proxied to the seeder's Basic-auth admin API ----------

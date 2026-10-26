@@ -22,10 +22,6 @@
           {
             "title": "TURN, always watched",
             "body": "The dashboard probes every TURN server over STUN every five minutes and keeps the latency history, so an outage is a fact, not a surprise."
-          },
-          {
-            "title": "Reciters, in one catalogue",
-            "body": "Every reciter with its riwaya, infohash and magnet, in one catalogue the SPA and the API agree on."
           }
         ],
         "steps": {
@@ -55,10 +51,6 @@
           {
             "title": "TURN تحت المراقبة دائمًا",
             "body": "تفحص اللوحة كل خادم TURN عبر STUN كل خمس دقائق وتحفظ سجلّ التأخير، فتنقطع الخدمة معلومةً لا مفاجأة."
-          },
-          {
-            "title": "القرّاء في فهرس واحد",
-            "body": "كل قارئ وروايته وملفّه التورنت، في فهرس واحد تكتبه الواجهة البرمجية وتقرؤه الواجهة على السواء."
           }
         ],
         "steps": {

@@ -529,6 +529,27 @@
         "tags": ["Seeders"]
       }
     },
+    "/api/seeders/{id}/update": {
+      "post": {
+        "operationId": "SeedersController_updateSoftware",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": ["Seeders"]
+      }
+    },
     "/api/seeders/{id}/torrents": {
       "get": {
         "operationId": "SeedersController_torrents",
@@ -644,6 +665,25 @@
     "/api/turns/{id}": {
       "get": {
         "operationId": "TurnsController_one",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Turns"]
+      },
+      "patch": {
+        "operationId": "TurnsController_update",
         "parameters": [
           {
             "name": "id",

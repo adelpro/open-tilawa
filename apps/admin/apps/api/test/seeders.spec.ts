@@ -24,7 +24,17 @@ function fakeSeeder(
     if (decodeURIComponent(req.url ?? '').startsWith('/health')) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
-        JSON.stringify({ status: 'ok', torrents: 2, peers: 5, uploadSpeed: 10, downloadSpeed: 2 }),
+        JSON.stringify({
+          status: 'ok',
+          service: 'tilawa-seeder',
+          version: '1.2.0',
+          sha: 'abc123',
+          disk: { free: 40 * 1024 ** 3, total: 100 * 1024 ** 3 },
+          torrents: 2,
+          peers: 5,
+          uploadSpeed: 10,
+          downloadSpeed: 2,
+        }),
       );
       return;
     }
@@ -287,5 +297,24 @@ describe('seeder proxy', () => {
     await viewer.get('/api/seeders').expect(403);
     await viewer.get('/api/turns').expect(403);
     await viewer.get('/api/reciters').expect(403);
+  });
+
+  it('keeps the version and disk space the node reports', async () => {
+    await agent.post(`/api/seeders/${seederId}/poll`).set('x-csrf-token', csrf).expect(201);
+    const { body } = await agent.get('/api/seeders').expect(200);
+    const row = body.find((s: { id: number }) => s.id === seederId);
+    expect(row.version).toBe('1.2.0');
+    expect(row.sha).toBe('abc123');
+    expect(row.freeBytes).toBe(40 * 1024 ** 3);
+    expect(row.totalBytes).toBe(100 * 1024 ** 3);
+  });
+
+  it('refuses to update the software unless the deployment enabled it', async () => {
+    const res = await agent
+      .post(`/api/seeders/${seederId}/update`)
+      .set('x-csrf-token', csrf)
+      .expect(503);
+    expect(res.body.message).toContain('SEEDER_UPDATE');
+    await agent.post('/api/seeders/9999/update').set('x-csrf-token', csrf).expect(404);
   });
 });

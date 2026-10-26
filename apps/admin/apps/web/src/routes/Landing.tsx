@@ -34,12 +34,11 @@ export function Landing(): ReactElement {
   const features = [
     { title: t('landing.feature1.title'), body: t('landing.feature1.body') },
     { title: t('landing.feature2.title'), body: t('landing.feature2.body') },
-    { title: t('landing.feature3.title'), body: t('landing.feature3.body') },
   ];
 
   const steps = [t('landing.step1'), t('landing.step2'), t('landing.step3')];
 
-  const featureIconNames: IconName[] = ['user', 'check', 'key'];
+  const featureIconNames: IconName[] = ['user', 'check'];
 
   return (
     <div className="landing">

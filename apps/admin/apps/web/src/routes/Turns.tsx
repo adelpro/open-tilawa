@@ -9,6 +9,8 @@ import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
+import { CopyLine } from '../components/CopyLine';
+import { linkProps } from '../lib/router';
 import type { Turn } from '../lib/types-seeders';
 
 /**
@@ -29,7 +31,15 @@ export function Turns(): ReactElement {
   const [busy, setBusy] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newUrl, setNewUrl] = useState('');
+  const [newHost, setNewHost] = useState('');
+  const [newPort, setNewPort] = useState('3478');
+  const [newTransport, setNewTransport] = useState<'turn' | 'turns'>('turn');
+  const [editing, setEditing] = useState<Turn | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editHost, setEditHost] = useState('');
+  const [editPort, setEditPort] = useState('3478');
+  const [editTransport, setEditTransport] = useState<'turn' | 'turns'>('turn');
+  const url = newHost.trim() ? `${newTransport}:${newHost.trim()}:${newPort.trim() || '3478'}` : '';
 
   const load = useCallback(async () => {
     try {
@@ -45,18 +55,52 @@ export function Turns(): ReactElement {
   }, [load]);
 
   async function add(): Promise<void> {
-    if (!newName.trim() || !newUrl.trim()) return;
+    if (!newName.trim() || !url) return;
     setBusy('add');
     setError(null);
     try {
-      await api('/turns', { method: 'POST', body: { name: newName.trim(), url: newUrl.trim() } });
+      await api('/turns', { method: 'POST', body: { name: newName.trim(), url } });
       setNewName('');
-      setNewUrl('');
+      setNewHost('');
+      setNewPort('3478');
+      setNewTransport('turn');
       setShowAdd(false);
       setMessage(t('turns.added'));
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('turns.addFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function startEdit(turn: Turn): void {
+    const { host, port, transport } = splitTurnUrl(turn.url);
+    setEditing(turn);
+    setEditName(turn.name);
+    setEditHost(host);
+    setEditPort(port);
+    setEditTransport(transport);
+    setError(null);
+  }
+
+  async function saveEdit(): Promise<void> {
+    if (!editing) return;
+    setBusy('edit');
+    setError(null);
+    try {
+      await api(`/turns/${editing.id}`, {
+        method: 'PATCH',
+        body: {
+          name: editName.trim(),
+          url: `${editTransport}:${editHost.trim()}:${editPort.trim() || '3478'}`,
+        },
+      });
+      setEditing(null);
+      setMessage(t('turns.updated'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('turns.updateFailed'));
     } finally {
       setBusy(null);
     }
@@ -136,23 +180,163 @@ export function Turns(): ReactElement {
                 />
               )}
             </Field>
-            <Field label={t('turns.url')} hint={t('turns.urlHint')}>
+            <Field label={t('turns.host')} hint={t('turns.hostHint')}>
               {(id) => (
                 <Input
                   id={id}
-                  value={newUrl}
-                  onChange={(event) => setNewUrl(event.target.value)}
-                  placeholder="turn:example.com:3478"
+                  value={newHost}
+                  onChange={(event) => setNewHost(event.target.value)}
+                  placeholder="turn.example.com"
                 />
               )}
             </Field>
             <div className="cluster">
+              <Field label={t('turns.transport')}>
+                {(id) => (
+                  <select
+                    id={id}
+                    className="field__select"
+                    value={newTransport}
+                    onChange={(event) => setNewTransport(event.target.value as 'turn' | 'turns')}
+                  >
+                    <option value="turn">{t('turns.transportPlain')}</option>
+                    <option value="turns">{t('turns.transportTls')}</option>
+                  </select>
+                )}
+              </Field>
+              <Field label={t('turns.port')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    inputMode="numeric"
+                    value={newPort}
+                    onChange={(event) => setNewPort(event.target.value)}
+                  />
+                )}
+              </Field>
+            </div>
+            <div className="cluster">
+              <Button
+                small
+                variant="tertiary"
+                onClick={() => {
+                  setNewTransport('turn');
+                  setNewPort('3478');
+                }}
+              >
+                {t('turns.presetStandard')}
+              </Button>
+              <Button
+                small
+                variant="tertiary"
+                onClick={() => {
+                  setNewTransport('turns');
+                  setNewPort('5349');
+                }}
+              >
+                {t('turns.presetTls')}
+              </Button>
+            </div>
+            <p className="fine-print">
+              {url ? t('turns.urlPreview', { url }) : t('turns.urlPreviewEmpty')}
+            </p>
+
+            <details>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+                {t('turns.deployTitle')}
+              </summary>
+              <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
+                <p className="body muted">{t('turns.deployHint')}</p>
+                <CopyLine
+                  value={
+                    'curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type turn --turn-pass <password>'
+                  }
+                  label={t('help.copy')}
+                />
+                <CopyLine
+                  value={
+                    'ufw allow 3478/udp && ufw allow 3478/tcp && ufw allow 5349/tcp && ufw allow 49160:49200/udp'
+                  }
+                  label={t('help.copy')}
+                />
+                <p className="fine-print">{t('turns.deployDns')}</p>
+                <a className="fine-print" {...linkProps('/help')}>
+                  {t('turns.deployMore')}
+                </a>
+              </div>
+            </details>
+
+            <div className="cluster">
               <Button
                 onClick={() => void add()}
                 busy={busy === 'add'}
-                disabled={!newName.trim() || !newUrl.trim()}
+                disabled={!newName.trim() || !newHost.trim()}
               >
                 {t('turns.addSubmit')}
+              </Button>
+              <Button variant="tertiary" onClick={() => setShowAdd(false)}>
+                {t('turns.cancel')}
+              </Button>
+            </div>
+          </div>
+        </Panel>
+      ) : null}
+
+      {editing ? (
+        <Panel tone="parchment">
+          <h2 className="group-title">
+            {t('turns.editTitle')} — {editing.name}
+          </h2>
+          <div className="stack">
+            <Field label={t('turns.name')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('turns.host')} hint={t('turns.hostHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editHost}
+                  onChange={(event) => setEditHost(event.target.value)}
+                />
+              )}
+            </Field>
+            <div className="cluster">
+              <Field label={t('turns.transport')}>
+                {(id) => (
+                  <select
+                    id={id}
+                    className="field__select"
+                    value={editTransport}
+                    onChange={(event) => setEditTransport(event.target.value as 'turn' | 'turns')}
+                  >
+                    <option value="turn">{t('turns.transportPlain')}</option>
+                    <option value="turns">{t('turns.transportTls')}</option>
+                  </select>
+                )}
+              </Field>
+              <Field label={t('turns.port')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    inputMode="numeric"
+                    value={editPort}
+                    onChange={(event) => setEditPort(event.target.value)}
+                  />
+                )}
+              </Field>
+            </div>
+            <div className="cluster">
+              <Button onClick={() => void saveEdit()} busy={busy === 'edit'}>
+                {t('common.save')}
+              </Button>
+              <Button variant="tertiary" onClick={() => setEditing(null)}>
+                {t('turns.cancel')}
               </Button>
             </div>
           </div>
@@ -220,6 +404,16 @@ export function Turns(): ReactElement {
                         </Button>
                         <Button
                           small
+                          variant="tertiary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            startEdit(turn);
+                          }}
+                        >
+                          {t('turns.edit')}
+                        </Button>
+                        <Button
+                          small
                           variant="destructive"
                           onClick={(event) => {
                             event.stopPropagation();
@@ -248,6 +442,27 @@ function formatTimestamp(value: string | null): string | null {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+}
+
+/**
+ * `turn:host:port` / `turns:host:port` → the three fields the form edits. The
+ * API re-validates on save, so a hand-edited URL that does not parse is refused
+ * there rather than half-saved here.
+ */
+function splitTurnUrl(url: string): {
+  host: string;
+  port: string;
+  transport: 'turn' | 'turns';
+} {
+  const transport: 'turn' | 'turns' = url.startsWith('turns:') ? 'turns' : 'turn';
+  const rest = url.replace(/^turns?:/, '').split('?')[0];
+  const lastColon = rest.lastIndexOf(':');
+  if (lastColon === -1) return { host: rest, port: '3478', transport };
+  return {
+    host: rest.slice(0, lastColon),
+    port: rest.slice(lastColon + 1) || '3478',
+    transport,
+  };
 }
 
 function statusTone(status: Turn['status']): 'ok' | 'bad' | 'notice' {

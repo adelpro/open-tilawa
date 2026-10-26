@@ -4,6 +4,40 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import crypto from 'crypto';
+import { readFileSync as readFile, statfsSync } from 'fs';
+
+/**
+ * What this artefact is, stamped at build time.
+ *
+ * The dashboard compares it with the tag it expects, so "is this node running
+ * the release I just published?" is answerable without opening a shell on the
+ * node. BUILD_SHA is set by the image workflow; SEEDER_VERSION falls back to the
+ * package version, which the image already carries.
+ */
+const VERSION = (() => {
+  try {
+    const pkg = JSON.parse(readFile(new URL('./package.json', import.meta.url), 'utf8'));
+    return process.env.SEEDER_VERSION || pkg.version || '0.0.0';
+  } catch {
+    return process.env.SEEDER_VERSION || '0.0.0';
+  }
+})();
+const BUILD_SHA = process.env.BUILD_SHA || 'dev';
+
+/**
+ * Free/total bytes on the data volume.
+ *
+ * The dashboard plans assignments against this: a node with 40 GB left should
+ * not be handed a 60 GB reciter. Reported as bytes so the client formats it.
+ */
+function diskUsage() {
+  try {
+    const stats = statfsSync(DOWNLOAD_PATH);
+    return { free: stats.bavail * stats.bsize, total: stats.blocks * stats.bsize };
+  } catch {
+    return null;
+  }
+}
 import WebTorrent from 'webtorrent';
 
 const TORRENT_DIR = process.env.TORRENT_DIR || '/data/torrents';
@@ -48,6 +82,10 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       status: 'ok',
+      service: 'tilawa-seeder',
+      version: VERSION,
+      sha: BUILD_SHA,
+      disk: diskUsage(),
       torrents: client.torrents.length,
       peers: client.torrents.reduce((s, t) => s + t.numPeers, 0),
       uploadSpeed: client.uploadSpeed,

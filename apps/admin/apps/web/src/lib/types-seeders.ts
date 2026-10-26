@@ -10,6 +10,13 @@ export interface Seeder {
   downloadSpeed: number;
   /** True when Basic-auth credentials are stored; the password never leaves the API. */
   hasCredentials: boolean;
+  /** Seeder release reported by its /health. */
+  version: string | null;
+  /** Build SHA stamped into the node's image. */
+  sha: string | null;
+  /** Disk space on the node's data volume. */
+  freeBytes: number | null;
+  totalBytes: number | null;
 }
 
 export interface Turn {

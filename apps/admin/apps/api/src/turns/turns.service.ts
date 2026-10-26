@@ -110,6 +110,34 @@ export class TurnsService implements OnModuleInit {
     return this.get(Number(info.lastInsertRowid))!;
   }
 
+  /**
+   * Edit a server's label or endpoint. The URL is re-validated with the same
+   * parser the probe uses, so an address that cannot be dialled is refused here
+   * rather than becoming a node that is permanently offline.
+   */
+  update(id: number, input: { name?: string; url?: string }): TurnServer | null {
+    const existing = this.get(id);
+    if (!existing) return null;
+    const sets: string[] = [];
+    const values: unknown[] = [];
+    if (input.name !== undefined) {
+      const name = input.name.trim();
+      if (!name) throw new Error('the name cannot be empty');
+      sets.push('name = ?');
+      values.push(name);
+    }
+    if (input.url !== undefined) {
+      const url = input.url.trim();
+      parseTurnEndpoint(url); // throws when the host/port cannot be parsed
+      sets.push('url = ?');
+      values.push(url);
+    }
+    if (sets.length > 0) {
+      this.db.prepare(`UPDATE turn_servers SET ${sets.join(', ')} WHERE id = ?`).run(...values, id);
+    }
+    return this.get(id);
+  }
+
   remove(id: number): void {
     this.db.prepare('DELETE FROM turn_checks WHERE turn_id = ?').run(id);
     this.db.prepare('DELETE FROM turn_servers WHERE id = ?').run(id);

@@ -1,7 +1,15 @@
-import { BadGatewayException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Inject } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SQLITE_DB } from '../store/store.module';
-import type { Db } from '@tilawa-admin/core';
+import { AuditRepository, type Db } from '@tilawa-admin/core';
+import { updateSeederService } from './seeder-update';
 
 /** Seeder admin calls are bounded: a hung seeder must not hang the dashboard. */
 const SEEDER_TIMEOUT_MS = 8000;
@@ -37,6 +45,13 @@ export interface Seeder {
   downloadSpeed: number;
   /** True when Basic-auth credentials are stored; the password never leaves the API. */
   hasCredentials: boolean;
+  /** Seeder release reported by its /health, e.g. "1.2.0". */
+  version: string | null;
+  /** Build SHA the node was stamped with, when it reports one. */
+  sha: string | null;
+  /** Disk space on the node's data volume, from its /health. */
+  freeBytes: number | null;
+  totalBytes: number | null;
 }
 
 /** One torrent as the seeder reports it. */
@@ -68,7 +83,11 @@ export interface SeederInventory {
 export class SeedersService {
   private readonly logger = new Logger(SeedersService.name);
 
-  constructor(@Inject(SQLITE_DB) private readonly db: Db) {
+  constructor(
+    @Inject(SQLITE_DB) private readonly db: Db,
+    private readonly config: ConfigService,
+    private readonly audit: AuditRepository,
+  ) {
     this.ensureSchema();
   }
 
@@ -91,14 +110,23 @@ export class SeedersService {
         upload_speed INTEGER NOT NULL DEFAULT 0,
         download_speed INTEGER NOT NULL DEFAULT 0,
         admin_user TEXT,
-        admin_pass TEXT
+        admin_pass TEXT,
+        version TEXT,
+        sha TEXT,
+        free_bytes INTEGER,
+        total_bytes INTEGER
       )
     `);
     const cols = (this.db.pragma('table_info(seeders)') as { name: string }[]).map((c) => c.name);
-    if (!cols.includes('admin_user'))
-      this.db.exec('ALTER TABLE seeders ADD COLUMN admin_user TEXT');
-    if (!cols.includes('admin_pass'))
-      this.db.exec('ALTER TABLE seeders ADD COLUMN admin_pass TEXT');
+    const add = (column: string, type: string): void => {
+      if (!cols.includes(column)) this.db.exec(`ALTER TABLE seeders ADD COLUMN ${column} ${type}`);
+    };
+    add('admin_user', 'TEXT');
+    add('admin_pass', 'TEXT');
+    add('version', 'TEXT');
+    add('sha', 'TEXT');
+    add('free_bytes', 'INTEGER');
+    add('total_bytes', 'INTEGER');
   }
 
   list(): Seeder[] {
@@ -178,47 +206,109 @@ export class SeedersService {
   async poll(id: number): Promise<Seeder | null> {
     const seeder = this.get(id);
     if (!seeder) return null;
+
+    let data: {
+      version?: string;
+      sha?: string;
+      disk?: { free?: number; total?: number };
+      torrents?: number;
+      peers?: number;
+      uploadSpeed?: number;
+      downloadSpeed?: number;
+      stats?: {
+        totalTorrents?: number;
+        totalPeers?: number;
+        uploadSpeed?: number;
+        downloadSpeed?: number;
+      };
+    };
     try {
       const res = await fetch(`${seeder.url}/health`, {
         signal: AbortSignal.timeout(SEEDER_TIMEOUT_MS),
       });
       if (!res.ok) throw new Error(`health answered ${res.status}`);
-      const data = (await res.json()) as {
-        torrents?: number;
-        peers?: number;
-        uploadSpeed?: number;
-        downloadSpeed?: number;
-        stats?: {
-          totalTorrents?: number;
-          totalPeers?: number;
-          uploadSpeed?: number;
-          downloadSpeed?: number;
-        };
-      };
-      this.db
-        .prepare(
-          `UPDATE seeders SET status = 'online', last_seen = datetime('now'),
-             torrent_count = ?, peer_count = ?, upload_speed = ?, download_speed = ? WHERE id = ?`,
-        )
-        .run(
-          data.torrents ?? data.stats?.totalTorrents ?? 0,
-          data.peers ?? data.stats?.totalPeers ?? 0,
-          data.uploadSpeed ?? data.stats?.uploadSpeed ?? 0,
-          data.downloadSpeed ?? data.stats?.downloadSpeed ?? 0,
-          id,
-        );
+      data = (await res.json()) as typeof data;
     } catch (err) {
+      // Only the reachability half decides the status. A failure in the write
+      // below is our bug and must surface, not paint a healthy node offline —
+      // that masking is what made a missing column look like a dead seeder.
       this.logger.debug(`seeder ${id} offline: ${(err as Error).message}`);
       this.db
         .prepare("UPDATE seeders SET status = 'offline', last_seen = datetime('now') WHERE id = ?")
         .run(id);
+      return this.get(id);
     }
+
+    this.db
+      .prepare(
+        `UPDATE seeders SET status = 'online', last_seen = datetime('now'),
+           torrent_count = ?, peer_count = ?, upload_speed = ?, download_speed = ?,
+           version = ?, sha = ?, free_bytes = ?, total_bytes = ? WHERE id = ?`,
+      )
+      .run(
+        data.torrents ?? data.stats?.totalTorrents ?? 0,
+        data.peers ?? data.stats?.totalPeers ?? 0,
+        data.uploadSpeed ?? data.stats?.uploadSpeed ?? 0,
+        data.downloadSpeed ?? data.stats?.downloadSpeed ?? 0,
+        data.version ?? null,
+        data.sha ?? null,
+        data.disk?.free ?? null,
+        data.disk?.total ?? null,
+        id,
+      );
     return this.get(id);
   }
 
   async pollAll(): Promise<Seeder[]> {
     await Promise.all(this.list().map((s) => this.poll(s.id)));
     return this.list();
+  }
+
+  /**
+   * Updates the seeder service on this host through Docker.
+   *
+   * Deliberately narrow: one service, one compose file, no user input. It is off
+   * unless `SEEDER_UPDATE=1` is set, because it needs the daemon socket and that
+   * is a decision the deployment makes, not a default.
+   */
+  async updateSoftware(
+    id: number,
+    actorId?: number,
+  ): Promise<{ output: string; version: string | null }> {
+    if (!this.get(id)) throw new NotFoundException('seeder not found');
+    if (this.config.get<string>('SEEDER_UPDATE') !== '1') {
+      throw new ServiceUnavailableException(
+        'node updates are not enabled on this deployment (set SEEDER_UPDATE=1 and mount the Docker socket)',
+      );
+    }
+    const mode = this.config.get<string>('SEEDER_UPDATE_MODE') === 'build' ? 'build' : 'pull';
+    const result = await updateSeederService({
+      composeFile: this.config.get<string>('SEEDER_COMPOSE_FILE') ?? '/host/docker-compose.yml',
+      project: this.config.get<string>('SEEDER_COMPOSE_PROJECT') ?? 'open-tilawa',
+      service: this.config.get<string>('SEEDER_SERVICE') ?? 'seeder',
+      mode,
+      timeoutMs: Number(this.config.get<string>('SEEDER_UPDATE_TIMEOUT_MS') ?? 600_000),
+    });
+    // The node comes back on a new image; re-read /health so the row shows the
+    // version it is actually running rather than the one it had before. The
+    // container is only "started" when compose returns, so give the process a
+    // few seconds to bind its port before calling the absence of an answer a
+    // failed update.
+    let updated = await this.poll(id);
+    for (let attempt = 0; attempt < 12 && updated?.status !== 'online'; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      updated = await this.poll(id);
+    }
+    this.audit.record({
+      actorId: actorId ?? null,
+      userId: id,
+      action: 'seeder:update',
+      target: String(id),
+      status: 'ok',
+      after: { mode: result.mode, version: updated?.version ?? null },
+    });
+    this.logger.log(`seeder ${id} updated (${result.mode}) -> ${updated?.version ?? 'unknown'}`);
+    return { output: result.output, version: updated?.version ?? null };
   }
 
   // ---------- proxy: the seeder's own admin API, on the dashboard's behalf ----------
@@ -353,5 +443,9 @@ function mapSeeder(r: Record<string, unknown>): Seeder {
     uploadSpeed: r.upload_speed as number,
     downloadSpeed: r.download_speed as number,
     hasCredentials: Boolean(r.admin_user && r.admin_pass),
+    version: (r.version as string | null) ?? null,
+    sha: (r.sha as string | null) ?? null,
+    freeBytes: (r.free_bytes as number | null) ?? null,
+    totalBytes: (r.total_bytes as number | null) ?? null,
   };
 }

@@ -1,0 +1,15 @@
+# The seeder image build (and the compose build context) is the repository root,
+# so keep the daemon from receiving every node_modules tree and every local
+# artefact. The seeder only needs apps/seeder.
+.git
+**/node_modules
+**/dist
+**/.next
+data
+backup
+coverage
+*.tsbuildinfo
+.env
+.env.*
+apps/admin
+docs

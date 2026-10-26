@@ -4,6 +4,10 @@ LABEL maintainer="Adelpro <adelpro@gmail.com>"
 LABEL name="open-tilawa-seeder"
 LABEL version="1.2"
 
+# Stamped into /health so the dashboard can tell a node's release from its image.
+ARG BUILD_SHA=dev
+ENV BUILD_SHA=${BUILD_SHA}
+
 WORKDIR /app
 
 COPY apps/seeder/package*.json ./

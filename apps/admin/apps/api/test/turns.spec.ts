@@ -111,6 +111,36 @@ describe('turns api', () => {
     await agent.get('/api/turns/99999').expect(404);
   });
 
+  it('edits the name and endpoint, and refuses an unbindable URL', async () => {
+    const { body } = await agent
+      .post('/api/turns')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'Before', url: 'turn:127.0.0.1:3478' })
+      .expect(201);
+
+    const renamed = await agent
+      .patch(`/api/turns/${body.id}`)
+      .set('x-csrf-token', csrf)
+      .send({ name: 'After' })
+      .expect(200);
+    expect(renamed.body.name).toBe('After');
+    expect(renamed.body.url).toBe('turn:127.0.0.1:3478');
+
+    const retargeted = await agent
+      .patch(`/api/turns/${body.id}`)
+      .set('x-csrf-token', csrf)
+      .send({ url: 'turn:turn.example.net:3478' })
+      .expect(200);
+    expect(retargeted.body.url).toBe('turn:turn.example.net:3478');
+
+    await agent
+      .patch(`/api/turns/${body.id}`)
+      .set('x-csrf-token', csrf)
+      .send({ name: '  ' })
+      .expect(400);
+    await agent.patch('/api/turns/9999').set('x-csrf-token', csrf).send({ name: 'x' }).expect(404);
+  });
+
   it('refuses to store a URL no probe could ever dial', async () => {
     await agent
       .post('/api/turns')
