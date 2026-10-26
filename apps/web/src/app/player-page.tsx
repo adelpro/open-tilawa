@@ -43,7 +43,7 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
   const [rate, setRate] = useAtom(rateAtom);
   const [muted, setMuted] = useAtom(mutedAtom);
   const torrent = useAtomValue(torrentAtom);
-  const { surahId, duration, ready, selectSurah, playSurah, seekTo, next, previous } =
+  const { surahId, duration, ready, track, selectSurah, playSurah, seekTo, next, previous } =
     usePlayerNav();
 
   /** Put the listener back where they stopped: their reciter, their surah. */
@@ -91,6 +91,16 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
     });
     return map;
   }, [torrent]);
+
+  /**
+   * The ring is about *this surah*, not the release: the whole reciter is ~700MB
+   * and 0.2% of it would look empty for a while. WebTorrent keeps a per-file
+   * progress on the file object itself, which is exactly the number a listener
+   * wants ("how much of what I am hearing is here").
+   */
+  const currentFile = track?.file as { progress?: number } | undefined;
+  const progress =
+    typeof currentFile?.progress === 'number' ? currentFile.progress : (torrent?.progress ?? 0);
 
   const source: StreamSource =
     reciter && !reciter.magnet ? 'http' : (torrent?.peers ?? 0) > 0 ? 'connected' : 'waiting';

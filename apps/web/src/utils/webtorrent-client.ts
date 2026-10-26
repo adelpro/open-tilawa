@@ -1,6 +1,7 @@
 import type { Instance } from 'webtorrent';
 
 import { rtcConfig } from '@/constants';
+import { whenWorkerReady } from '@/utils/sw-registration';
 
 /**
  * One WebTorrent client per page, created once and reused.
@@ -13,38 +14,9 @@ import { rtcConfig } from '@/constants';
  */
 let clientPromise: Promise<Instance> | undefined;
 
-// In dev, vite-plugin-pwa serves the worker (with HMR) from this URL instead of
-// the built /sw.js. In production /sw.js is the generated worker.
-const SERVICE_WORKER_URL = import.meta.env.DEV ? '/dev-sw.js?dev-sw' : '/sw.js';
-
-async function registerStreamingWorker(): Promise<
-  ServiceWorkerRegistration | undefined
-> {
-  if (!('serviceWorker' in navigator)) return undefined;
-
-  try {
-    // In dev the worker is served as an ES module; the built one is a classic
-    // script.
-    const options: RegistrationOptions = import.meta.env.DEV
-      ? { scope: '/', type: 'module' }
-      : { scope: '/' };
-
-    const registration = await navigator.serviceWorker.register(
-      SERVICE_WORKER_URL,
-      options,
-    );
-    // Cap the wait: a worker stuck in activation must not hang playback.
-    await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise((resolve) => setTimeout(resolve, 5_000)),
-    ]);
-    return registration;
-  } catch (error) {
-    console.error('WebTorrent service worker registration failed:', error);
-    return undefined;
-  }
-}
-
+// One registration for the whole app, installed at startup (see
+// utils/sw-registration). This module only has to wait for it: `createServer()`
+// needs the registration object, and file.streamURL does not exist without it.
 export function getWebTorrentClient(): Promise<Instance> {
   if (!clientPromise) {
     clientPromise = (async () => {
@@ -55,7 +27,7 @@ export function getWebTorrentClient(): Promise<Instance> {
 
       // `file.streamURL` throws until a server exists, so this must happen
       // before any torrent is added.
-      const registration = await registerStreamingWorker();
+      const registration = await whenWorkerReady();
       if (registration?.active) {
         try {
           (client as any).createServer({ controller: registration });

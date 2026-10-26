@@ -17,7 +17,10 @@ export default defineConfig({
       // needs the ServiceWorkerRegistration object, so it cannot be auto-injected.
       injectRegister: null,
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
+        // Shell only. Fonts, images and the WebTorrent bundle are cached on
+        // first use: 21 blocking precache requests turned a slow link into a
+        // worker that never activated, and without a worker there is no stream.
+        globPatterns: ['**/*.{js,css,html,ico,webmanifest}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
       manifest: {
