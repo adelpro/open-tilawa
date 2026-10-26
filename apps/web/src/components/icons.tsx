@@ -3,7 +3,16 @@ import type { ReactElement } from 'react';
 import { cn } from '@/utils/cn';
 
 export type IconName =
-  'chevron-left' | 'chevron-right' | 'playlist' | 'wifi' | 'link' | 'mic' | 'search' | 'close';
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'playlist'
+  | 'wifi'
+  | 'link'
+  | 'mic'
+  | 'search'
+  | 'close'
+  | 'volume'
+  | 'volume-x';
 
 const STROKE = {
   fill: 'none',
@@ -22,6 +31,19 @@ const GLYPHS = {
     </>
   ),
   close: <path {...STROKE} d="M6 6l12 12M18 6L6 18" />,
+  volume: (
+    <>
+      <path {...STROKE} d="M4 9.5h3.5L12 6v12L7.5 14.5H4z" />
+      <path {...STROKE} d="M15.5 9a4 4 0 0 1 0 6" />
+      <path {...STROKE} d="M18 6.5a7.5 7.5 0 0 1 0 11" />
+    </>
+  ),
+  "volume-x": (
+    <>
+      <path {...STROKE} d="M4 9.5h3.5L12 6v12L7.5 14.5H4z" />
+      <path {...STROKE} d="M16 9.5l5 5M21 9.5l-5 5" />
+    </>
+  ),
   mic: (
     <>
       <rect {...STROKE} x="9" y="3" width="6" height="11" rx="3" />

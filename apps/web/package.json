@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --import ./test/alias-register.mjs --test test/clamp.test.ts test/persistence.test.ts test/reciter-merge.test.ts test/format-bytes.test.ts test/route.test.ts test/sleep-timer.test.ts test/stream-ring.test.ts"
+    "test": "node --experimental-strip-types --import ./test/alias-register.mjs --test test/arabic-count.test.ts test/clamp.test.ts test/persistence.test.ts test/reciter-merge.test.ts test/format-bytes.test.ts test/route.test.ts test/sleep-timer.test.ts test/stream-ring.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

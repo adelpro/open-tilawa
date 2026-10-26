@@ -1,11 +1,12 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import PlayerFooter from '@/components/player-footer';
 import Scrubber from '@/components/scrubber';
 import Sheet, { ReciterSheet, SurahSheet } from '@/components/sheet';
 import StreamSheet, { type StreamSource } from '@/components/stream-sheet';
 import Transport from '@/components/transport';
+import Visualiser from '@/components/visualiser';
 import { surahById } from '@/constants/surah';
 import { usePlayerNav } from '@/hooks/use-player-nav';
 import { getPosition, loadState, saveState } from '@/hooks/use-persistence';
@@ -14,19 +15,22 @@ import { useSheet } from '@/hooks/use-sheet';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
   isPlayingAtom,
+  mutedAtom,
   positionAtom,
+  rateAtom,
   retrySignalAtom,
   torrentAtom,
   torrentErrorAtom,
 } from '@/jotai/player';
 import type { Reciter } from '@/types';
 import { seekBy } from '@/utils/clamp';
+import { surahIdOf } from '@/utils/surah-id';
 
 /**
  * The site is this screen. There is no navigation: the two sheets are the only
  * way out of the player, and they close back onto it.
  */
-export default function PlayerPage() {
+export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { reciters } = useReciters();
   const { sheet, openSurahs, openReciters, openStream, close } = useSheet();
 
@@ -36,6 +40,8 @@ export default function PlayerPage() {
   const setRetrySignal = useSetAtom(retrySignalAtom);
 
   const position = useAtomValue(positionAtom);
+  const [rate, setRate] = useAtom(rateAtom);
+  const [muted, setMuted] = useAtom(mutedAtom);
   const torrent = useAtomValue(torrentAtom);
   const { surahId, duration, ready, selectSurah, playSurah, seekTo, next, previous } =
     usePlayerNav();
@@ -57,6 +63,7 @@ export default function PlayerPage() {
     const stored = loadState();
     const saved = reciters.find((candidate) => candidate.id === stored.reciterId) ?? reciters[0];
     setReciter(saved);
+    setRate(stored.rate ?? 1);
     restoreFor(saved);
   }, [reciters, restoreFor, setReciter]);
 
@@ -75,6 +82,16 @@ export default function PlayerPage() {
 
   const surah = surahById(surahId);
 
+  /** Bytes per surah, once the torrent knows its files. */
+  const sizes = useMemo(() => {
+    const map: Record<number, number> = {};
+    torrent?.files.forEach((file, index) => {
+      const bytes = (file.file as { length?: number } | undefined)?.length;
+      if (typeof bytes === 'number' && bytes > 0) map[surahIdOf(file, index)] = bytes;
+    });
+    return map;
+  }, [torrent]);
+
   const source: StreamSource =
     reciter && !reciter.magnet ? 'http' : (torrent?.peers ?? 0) > 0 ? 'connected' : 'waiting';
 
@@ -82,9 +99,12 @@ export default function PlayerPage() {
     <>
       <main className="player-screen">
         <div className="w-full max-w-[520px]">
-          <h1 className="text-center text-[44px] font-semibold leading-[1.2] text-ink">
-            {surah?.name ?? `سورة ${surahId}`}
-          </h1>
+          {/* The name lives in the footer and in the accessible heading; the
+              space above the scrubber belongs to what the speaker is doing. */}
+          <h1 className="sr-only">{surah?.name ?? `سورة ${surahId}`}</h1>
+          <div className="flex justify-center">
+            <Visualiser playing={isPlaying} />
+          </div>
 
           <div className="mt-10">
             <Scrubber
@@ -130,11 +150,21 @@ export default function PlayerPage() {
         onOpenSurahs={openSurahs}
         onOpenReciters={openReciters}
         onOpenStream={openStream}
+        rate={rate}
+        onOpenRate={onOpenMenu}
+        muted={muted}
+        onToggleMute={() => setMuted((value) => !value)}
       />
 
       <StreamSheet open={sheet === 'stream'} onClose={close} source={source} torrent={torrent} />
 
-      <SurahSheet open={sheet === 'surahs'} onClose={close} current={surahId} onPick={pickSurah} />
+      <SurahSheet
+        open={sheet === 'surahs'}
+        onClose={close}
+        current={surahId}
+        sizes={sizes}
+        onPick={pickSurah}
+      />
 
       <ReciterSheet
         open={sheet === 'reciters'}

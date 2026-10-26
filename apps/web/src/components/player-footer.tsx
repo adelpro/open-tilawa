@@ -19,15 +19,24 @@ export default function PlayerFooter({
   reciterName,
   source,
   progress = 0,
+  rate = 1,
   onOpenSurahs,
   onOpenReciters,
   onOpenStream,
+  onOpenRate,
+  muted,
+  onToggleMute,
 }: {
   surahName: string;
   reciterName: string;
   source: StreamSource;
   /** 0–1 of the torrent this session has; drives the ring, never a second badge. */
   progress?: number;
+  /** Shown only when it deviates from 1x, so the default bar stays two labels. */
+  rate?: number;
+  onOpenRate: () => void;
+  muted: boolean;
+  onToggleMute: () => void;
   onOpenSurahs: () => void;
   onOpenReciters: () => void;
   onOpenStream: () => void;
@@ -38,7 +47,7 @@ export default function PlayerFooter({
   const ring = 2 * Math.PI * 20;
   return (
     <footer className="shrink-0 border-t border-line pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto flex h-16 w-full max-w-[520px] items-center gap-1 px-2">
+      <div className="mx-auto flex h-14 w-full max-w-[520px] items-center gap-0.5 px-2">
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Both rows start with an icon: the same shape means the same thing,
               so neither row reads as a caption. */}
@@ -62,6 +71,30 @@ export default function PlayerFooter({
             <span className="min-w-0 flex-1 truncate">{reciterName}</span>
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={onToggleMute}
+          aria-label={muted ? 'إلغاء كتم الصوت' : 'كتم الصوت'}
+          aria-pressed={muted}
+          className={cn(
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
+            muted ? 'text-ink' : 'text-muted',
+          )}
+        >
+          <Icon name={muted ? 'volume-x' : 'volume'} className="h-[18px] w-[18px]" />
+        </button>
+
+        {Math.abs(rate - 1) > 0.001 && (
+          <button
+            type="button"
+            onClick={onOpenRate}
+            aria-label={`السرعة ${Number(rate.toFixed(2))}x، تغيير السرعة`}
+            className="tnum h-8 shrink-0 rounded-full bg-line px-2 text-[12px] font-semibold text-ink transition-colors hover:bg-line/70"
+          >
+            {Number(rate.toFixed(2))}x
+          </button>
+        )}
 
         <button
           type="button"

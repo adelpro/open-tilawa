@@ -67,13 +67,14 @@ export function mergeReciters(
 
     merged.push(
       known
-        ? { ...known, name, magnet: row.magnet }
+        ? { ...known, name, magnet: row.magnet, riwaya: row.riwaya ?? known.riwaya }
         : {
             id: idFromHash(hash),
             name,
             magnet: row.magnet,
             source: MagnetlinkSource.MP3QURAN,
             complet: true,
+            riwaya: row.riwaya,
           },
     );
   }

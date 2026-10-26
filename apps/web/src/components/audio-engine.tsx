@@ -10,11 +10,14 @@ import {
   durationAtom,
   isPlayingAtom,
   positionAtom,
+  mutedAtom,
+  rateAtom,
   torrentAtom,
   torrentErrorAtom,
 } from '@/jotai/player';
 import { surahById } from '@/constants/surah';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
+import { ensureAnalyser } from '@/utils/audio-analyser';
 
 /**
  * The only <audio> element in the app, mounted once next to the page.
@@ -72,6 +75,8 @@ export default function AudioEngine() {
 
   const reciter = useAtomValue(selectedReciterAtom);
   const surahId = useAtomValue(currentSurahIdAtom);
+  const rate = useAtomValue(rateAtom);
+  const muted = useAtomValue(mutedAtom);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
@@ -170,9 +175,25 @@ export default function AudioEngine() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !trackRef.current) return;
-    if (isPlaying) audio.play().catch(() => setIsPlaying(false));
-    else audio.pause();
+    if (isPlaying) {
+      // The graph needs a gesture; this is one. If it fails, audio still plays.
+      ensureAnalyser(audio);
+      audio.play().catch(() => setIsPlaying(false));
+    } else {
+      audio.pause();
+    }
   }, [isPlaying, surahId, fileCount, setIsPlaying]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) audio.muted = muted;
+  }, [muted, surahId]);
+
+  /** Speed survives a surah change; it is the listener's, not the track's. */
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) audio.playbackRate = rate;
+  }, [rate, surahId, fileCount]);
 
   /** Persist the position while playing, when paused, and before the tab dies. */
   const persist = () => {

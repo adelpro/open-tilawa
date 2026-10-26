@@ -17,6 +17,8 @@ export default function NavSheet({
   sleepActive,
   sleepRemaining,
   onSleep,
+  rate,
+  onRate,
   onClose,
   onNavigate,
 }: {
@@ -25,6 +27,8 @@ export default function NavSheet({
   sleepActive: boolean;
   sleepRemaining: number;
   onSleep: (minutes: number) => void;
+  rate: number;
+  onRate: (rate: number) => void;
   onClose: () => void;
   onNavigate: (route: Route) => void;
 }) {
@@ -59,6 +63,30 @@ export default function NavSheet({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      <div className="border-b border-line pb-3">
+        <div className="flex h-9 items-center px-5">
+          <span className="text-[13px] text-muted">السرعة</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5 px-5 pt-0.5">
+          {[0.75, 1, 1.25, 1.5, 2].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onRate(value)}
+              aria-pressed={Math.abs(rate - value) < 0.001}
+              className={cn(
+                'tnum h-8 rounded-full border px-3 text-[13px] transition-colors',
+                Math.abs(rate - value) < 0.001
+                  ? 'border-ink bg-ink font-semibold text-invert'
+                  : 'border-line text-ink hover:border-ink/40',
+              )}
+            >
+              {Number(value.toFixed(2))}x
+            </button>
+          ))}
         </div>
       </div>
 

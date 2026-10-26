@@ -5,6 +5,8 @@ import Icon from '@/components/icons';
 import { SURAHS } from '@/constants/surah';
 import type { Reciter } from '@/types';
 import { cn } from '@/utils/cn';
+import { ayahCountLabel } from '@/utils/arabic-count';
+import { formatBytes } from '@/utils/format-bytes';
 import { filterReciters, filterSurahs } from '@/utils/search';
 
 type SheetProps = {
@@ -146,17 +148,26 @@ function Empty() {
 }
 
 const row =
-  'flex h-14 w-full items-center gap-3 px-5 text-start text-[16px] text-ink transition-colors hover:bg-line active:bg-line';
+  'flex min-h-16 w-full items-center gap-3 px-5 py-2 text-start text-[16px] text-ink transition-colors hover:bg-line active:bg-line';
+
+const meta = 'tnum mt-0.5 block text-[11.5px] text-muted';
+
+const chip = 'h-8 shrink-0 rounded-full border px-3 text-[12.5px] transition-colors';
+const chipOn = 'border-ink bg-ink font-semibold text-invert';
+const chipOff = 'border-line text-ink hover:border-ink/40';
 
 /** The 114 surahs, mushaf order, opened at the one that is playing. */
 export function SurahSheet({
   open,
   current,
+  sizes,
   onPick,
   onClose,
 }: {
   open: boolean;
   current: number;
+  /** Bytes per surah id, once the torrent's metadata has landed. */
+  sizes?: Record<number, number>;
   onPick: (surahId: number) => void;
   onClose: () => void;
 }) {
@@ -204,10 +215,22 @@ export function SurahSheet({
                   onClick={() => onPick(surah.id)}
                   aria-current={isCurrent ? 'true' : undefined}
                   data-current={isCurrent}
-                  className={cn(row, isCurrent && 'font-semibold')}
+                  className={row}
                 >
                   <span className="tnum w-8 shrink-0 text-xs text-muted">{surah.id}</span>
-                  <span>{surah.name}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className={cn('block truncate', isCurrent && 'font-semibold')}>
+                      {surah.name}
+                    </span>
+                    <span className={meta}>
+                      {ayahCountLabel(surah.ayahCount)} · الجزء {surah.juz}
+                    </span>
+                  </span>
+                  {sizes?.[surah.id] ? (
+                    <span className="tnum shrink-0 text-[11px] text-muted">
+                      {formatBytes(sizes[surah.id])}
+                    </span>
+                  ) : null}
                 </button>
               </li>
             );
@@ -233,7 +256,20 @@ export function ReciterSheet({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState('');
-  const rows = useMemo(() => filterReciters(query, reciters), [query, reciters]);
+  const [filter, setFilter] = useState('all');
+
+  const riwayas = useMemo(
+    () => Array.from(new Set(reciters.map((r) => r.riwaya).filter(Boolean))) as string[],
+    [reciters],
+  );
+
+  const rows = useMemo(() => {
+    const searched = filterReciters(query, reciters);
+    if (filter === 'all') return searched;
+    if (filter === 'p2p') return searched.filter((r) => r.magnet);
+    if (filter === 'http') return searched.filter((r) => !r.magnet);
+    return searched.filter((r) => (r.riwaya ?? 'حفص') === filter);
+  }, [query, reciters, filter]);
 
   useEffect(() => {
     if (open) return;
@@ -246,12 +282,32 @@ export function ReciterSheet({
       open={open}
       onClose={onClose}
       toolbar={
-        <SearchField
-          value={query}
-          onChange={setQuery}
-          placeholder="ابحث باسم القارئ"
-          label="بحث في القرّاء"
-        />
+        <>
+          <SearchField
+            value={query}
+            onChange={setQuery}
+            placeholder="ابحث باسم القارئ"
+            label="بحث في القرّاء"
+          />
+          <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5">
+            {[
+              { key: 'all', label: 'الكل' },
+              { key: 'p2p', label: 'P2P' },
+              { key: 'http', label: 'HTTP' },
+              ...riwayas.map((name) => ({ key: name, label: name })),
+            ].map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setFilter(item.key)}
+                aria-pressed={filter === item.key}
+                className={cn(chip, filter === item.key ? chipOn : chipOff)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </>
       }
     >
       {rows.length === 0 ? (
@@ -266,9 +322,19 @@ export function ReciterSheet({
                   type="button"
                   onClick={() => onPick(reciter)}
                   aria-current={isCurrent ? 'true' : undefined}
-                  className={cn(row, isCurrent && 'font-semibold')}
+                  className={row}
                 >
-                  <span>{reciter.name}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className={cn('block truncate', isCurrent && 'font-semibold')}>
+                      {reciter.name}
+                    </span>
+                    <span className="mt-0.5 block text-[11.5px] text-muted">
+                      {reciter.riwaya ?? 'حفص'} · {reciter.complet ? 'كامل' : 'جزئي'}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[10.5px] text-muted">
+                    {reciter.magnet ? 'P2P' : 'HTTP'}
+                  </span>
                 </button>
               </li>
             );

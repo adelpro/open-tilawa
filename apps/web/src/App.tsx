@@ -9,9 +9,11 @@ import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
 import { useHashRoute } from './hooks/use-hash-route';
 import { useSleepTimer } from './hooks/use-sleep-timer';
-import { useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
-import { isPlayingAtom } from './jotai/player';
+import { isPlayingAtom, rateAtom } from './jotai/player';
+import { selectedReciterAtom } from './jotai/atom';
+import { patchState } from './hooks/use-persistence';
 
 /**
  * A top bar, one routed view, and the `<audio>` element that outlives all of
@@ -21,6 +23,13 @@ export default function App() {
   const { route, navigate } = useHashRoute();
   const [menuOpen, setMenuOpen] = useState(false);
   const setIsPlaying = useSetAtom(isPlayingAtom);
+  const [rate, setRate] = useAtom(rateAtom);
+  const reciter = useAtomValue(selectedReciterAtom);
+
+  const chooseRate = (next: number) => {
+    setRate(next);
+    patchState({ rate: next });
+  };
   const sleep = useSleepTimer(() => setIsPlaying(false));
 
   const go = (next: Parameters<typeof navigate>[0]) => {
@@ -38,7 +47,7 @@ export default function App() {
         ) : route === '/privacy' ? (
           <PrivacyPage />
         ) : (
-          <PlayerPage />
+          <PlayerPage onOpenMenu={() => setMenuOpen(true)} />
         )}
 
         <NavSheet
@@ -47,11 +56,17 @@ export default function App() {
           sleepActive={sleep.active}
           sleepRemaining={sleep.remaining}
           onSleep={sleep.start}
+          rate={rate}
+          onRate={chooseRate}
           onClose={() => setMenuOpen(false)}
           onNavigate={go}
         />
       </div>
-      <AudioEngine />
+      {/* A new element per reciter class: once an element is routed through Web
+          Audio it cannot be released, and a cross-origin host would play silent. */}
+      {/* `p2p` while the reciter is still unknown, so boot does not remount the
+          engine and abort the session open. */}
+      <AudioEngine key={reciter && !reciter.magnet ? 'http' : 'p2p'} />
     </ErrorBoundary>
   );
 }
