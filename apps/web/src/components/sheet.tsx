@@ -35,7 +35,8 @@ export default function Sheet({ title, open, onClose, size = 'full', children }:
     <dialog
       ref={dialogRef}
       aria-label={title}
-      onClose={onClose}
+      // No `onClose` handler: closing programmatically (switching from the menu
+      // to the page it links to) must not look like the listener dismissing it.
       onCancel={(event) => {
         event.preventDefault();
         onClose();

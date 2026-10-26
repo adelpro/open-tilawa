@@ -122,8 +122,9 @@ from the menu closes the menu first (sequential, never stacked).
 - **Menu**: appearance row (`فاتح` / `داكن` segmented, immediate), language row
   (`العربية` selected, `English` present but disabled and marked "قريباً"),
   `عن تلاوة`, `الخصوصية`, then a 11px `--muted` version + short sha line.
-- **About**: logo 96px, two sentences on what the app is, source link, licence
-  line (code + fonts OFL), version.
+- **About**: the wordmark set in Amiri (the PNG is a transparent navy raster and
+  would vanish on the dark theme), two sentences on what the app is, source
+  link, mailto, licence line, version.
 - **Privacy**: five short honest lines — no account, no analytics, positions and
   preferences stay in local storage, the only outbound calls are the reciter
   catalogue and the torrent swarm.

@@ -89,7 +89,10 @@ export function AboutSheet({ open, onClose }: { open: boolean; onClose: () => vo
   return (
     <Sheet title="عن تلاوة" open={open} onClose={onClose}>
       <div className="px-5 py-6 text-[14px] leading-relaxed">
-        <img src="/images/logo.png" alt="تلاوة" width={112} height={112} className="mb-5 h-28 w-28" />
+        {/* The PNG is a navy raster with a baked matte; on the dark theme it
+            would be a dark mark on black. The wordmark is type, so it works in
+            both themes and matches the top bar. */}
+        <p className="font-display mb-5 text-[34px] leading-none text-ink">تلاوة</p>
 
         <p className="text-ink">
           تلاوة تطبيق لسماع القرآن الكريم، يبثّ التلاوات عبر الشبكة الندّية بدل خوادم مركزية، ويعمل

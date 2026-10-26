@@ -221,3 +221,18 @@ compose up -d web` restores the chrome-less player.
     390×600.
 - The seven-row P2P variant of the popover needs a real swarm to fill; verified
   on the live host in the ship step.
+
+### Correction after container verification (2026-10-26)
+
+- **Sheet-to-sheet navigation closed both.** `dialog.close()` fires the same
+  `close` event as a dismissal, and the sheet forwarded it to `onClose`, so
+  opening About from the menu closed About immediately. The `close` handler is
+  gone; Escape is handled by `onCancel` (prevented) and the backdrop click.
+- **About shows the wordmark as type, not the PNG.** `logo.png` is a transparent
+  navy raster: fine on white, a dark mark on black. The wordmark in Amiri adapts
+  to both themes and matches the top bar; the PNG stays the favicon/social asset.
+- **The Docker build needed `npm ci --ignore-scripts`.** WebTorrent's browser
+  bundle is vendored in `public/`, so nothing from `node_modules` is shipped, but
+  `node-datachannel` has no musl prebuild and tried to compile in the Alpine
+  build stage. It also had a stale `# syntax=docker/dockerfile:1` that forced a
+  registry round-trip; removed.
