@@ -68,7 +68,7 @@ export default function useTorrent() {
 
       if (!hasStreamingServer(localClient)) {
         setError(
-          "Streaming is unavailable: the service worker could not start (needs HTTPS or localhost). Use the source link instead.",
+          "Streaming is unavailable: the service worker could not start (needs HTTPS or localhost).",
         );
         return;
       }

@@ -93,7 +93,7 @@ export function openTorrentSession(client: Instance, options: OpenOptions): Prom
   return next;
 }
 
-/** Nothing to play (an HTTP-only reciter): let go of the torrent we were seeding. */
+/** Nothing to play: let go of the torrent we were seeding. */
 export function closeTorrentSession(): Promise<void> {
   const next = queue.then(async () => {
     if (!active) return;

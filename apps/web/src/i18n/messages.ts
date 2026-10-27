@@ -39,8 +39,6 @@ const ar = {
     connected: 'متصل عبر الأقران',
     waiting: 'بانتظار الأقران',
     webseed: 'من الخادم',
-    fromPeers: 'من الشبكة الندّية',
-    fromServer: 'من خادم البثّ',
   },
   stream: {
     title: 'تفاصيل البث',
@@ -73,7 +71,6 @@ const ar = {
     juz: (n: number) => `الجزء ${n}`,
     verses: (n: number) =>
       n === 1 ? 'آية واحدة' : n === 2 ? 'آيتان' : n <= 10 ? `${n} آيات` : `${n} آية`,
-    riwaya: { hafs: 'حفص', warsh: 'ورش', qalon: 'قالون' } as Record<string, string>,
   },
   transport: {
     previous: 'السورة السابقة',
@@ -144,8 +141,6 @@ const en: typeof ar = {
     connected: 'Connected to peers',
     waiting: 'Waiting for peers',
     webseed: 'From the server',
-    fromPeers: 'from the peer network',
-    fromServer: 'from the streaming server',
   },
   stream: {
     title: 'Stream details',
@@ -177,7 +172,6 @@ const en: typeof ar = {
     recitersError: 'Could not load the reciters. Check your connection and try again.',
     juz: (n: number) => `Juz ${n}`,
     verses: (n: number) => (n === 1 ? '1 verse' : `${n} verses`),
-    riwaya: { hafs: 'Hafs', warsh: 'Warsh', qalon: 'Qalon' },
   },
   transport: {
     previous: 'Previous surah',
