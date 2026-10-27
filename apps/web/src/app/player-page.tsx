@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import PlayerFooter from '@/components/player-footer';
 import Scrubber from '@/components/scrubber';
@@ -13,6 +13,7 @@ import { usePlayerNav } from '@/hooks/use-player-nav';
 import { getPosition, loadState, saveState, setLastSurah } from '@/hooks/use-persistence';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useReciters } from '@/hooks/use-reciters';
+import { useShortcuts } from '@/hooks/use-shortcuts';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
   isPlayingAtom,
@@ -35,22 +36,30 @@ import { normaliseVisualiser } from '@/utils/visualiser-models';
  */
 export default function PlayerPage({
   sheet,
+  pinned,
+  togglePin,
   openSurahs,
   openReciters,
   openStream,
+  openKeys,
   close,
   onOpenMenu,
 }: {
-  sheet: 'surahs' | 'reciters' | 'stream' | null;
+  sheet: 'surahs' | 'reciters' | 'stream' | 'keys' | null;
+  pinned: boolean;
+  togglePin: () => void;
   openSurahs: () => void;
   openReciters: () => void;
   openStream: () => void;
+  openKeys: () => void;
   close: () => void;
   onOpenMenu: () => void;
 }) {
   const { t } = useLocale();
   const { reciters, error: recitersError, retry: retryReciters } = useReciters();
   const wide = useMediaQuery('(min-width: 1024px)');
+  const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
+  const keyboard = wide && finePointer;
 
   const [reciter, setReciter] = useAtom(selectedReciterAtom);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
@@ -96,15 +105,55 @@ export default function PlayerPage({
     saveState({ ...loadState(), reciterId: picked.id });
     setIsPlaying(false);
     restoreFor(picked);
-    close();
+    if (!pinned) close();
   };
 
   const pickSurah = (picked: number) => {
     playSurah(picked);
-    close();
+    if (!pinned) close();
   };
 
   const surah = surahById(surahId);
+
+  /**
+   * Keyboard is a desktop affordance: wide layout *and* a real pointer. A phone
+   * with a Bluetooth keyboard keeps its media keys and nothing else.
+   */
+  const [hint, setHint] = useState(false);
+  useEffect(() => {
+    if (!keyboard) return;
+    try {
+      if (!window.localStorage.getItem('tilawa.keys.v1')) setHint(true);
+    } catch {
+      // A blocked store means the hint shows again; harmless.
+    }
+  }, [keyboard]);
+
+  const dismissHint = useCallback(() => {
+    setHint(false);
+    try {
+      window.localStorage.setItem('tilawa.keys.v1', '1');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useShortcuts(keyboard, {
+    onPlayPause: () => setIsPlaying((value) => !value),
+    onBack: () => seekTo(seekBy(position, -15, duration)),
+    onForward: () => seekTo(seekBy(position, 15, duration)),
+    onPrevious: previous,
+    onNext: next,
+    onReciters: openReciters,
+    onSurahs: openSurahs,
+    onMute: () => setMuted((value) => !value),
+    onHelp: () => {
+      openKeys();
+      dismissHint();
+    },
+    onClose: close,
+    onAny: dismissHint,
+  });
 
   /** Bytes per surah, once the torrent knows its files. */
   const sizes = useMemo(() => {
@@ -230,6 +279,19 @@ export default function PlayerPage({
               </button>
             </div>
           ) : null}
+
+          {hint && keyboard ? (
+            <p className="mt-6 text-center text-[11.5px] text-muted lg:fixed lg:inset-x-0 lg:bottom-[236px] lg:mt-0">
+              {t.keys.hint}
+              <button
+                type="button"
+                onClick={dismissHint}
+                className="ms-2 underline underline-offset-4 hover:text-ink"
+              >
+                {t.keys.dismiss}
+              </button>
+            </p>
+          ) : null}
         </div>
       </main>
 
@@ -254,6 +316,8 @@ export default function PlayerPage({
         current={surahId}
         sizes={sizes}
         onPick={pickSurah}
+        pinned={pinned}
+        onTogglePin={wide ? togglePin : undefined}
       />
 
       <ReciterSheet
@@ -264,7 +328,31 @@ export default function PlayerPage({
         onPick={pickReciter}
         error={recitersError}
         onRetry={retryReciters}
+        pinned={pinned}
+        onTogglePin={wide ? togglePin : undefined}
       />
+
+      <Sheet title={t.keys.title} open={sheet === 'keys'} onClose={close} size="auto" pinned={pinned} onTogglePin={wide ? togglePin : undefined}>
+        <dl className="space-y-3 px-5 py-4">
+          {[
+            { key: 'Space', value: t.keys.playPause },
+            { key: '← / →', value: t.keys.seek },
+            { key: '↑ / ↓', value: t.keys.surahs },
+            { key: 'R', value: t.keys.reciters },
+            { key: 'S', value: t.keys.surahList },
+            { key: 'M', value: t.keys.mute },
+            { key: '?', value: t.keys.help },
+            { key: 'Esc', value: t.keys.close },
+          ].map((row) => (
+            <div key={row.key} className="flex items-baseline justify-between gap-6">
+              <dt className="text-[13px] text-muted">{row.value}</dt>
+              <dd className="rounded-md border border-line px-2 py-0.5 font-mono text-[11.5px] text-ink">
+                {row.key}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </Sheet>
     </>
   );
 }

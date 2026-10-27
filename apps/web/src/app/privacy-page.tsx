@@ -6,7 +6,7 @@ export default function PrivacyPage() {
 
   return (
     <main className="page-screen">
-      <div className="w-full max-w-[520px]">
+      <div className="w-full max-w-[520px] lg:max-w-[700px]">
         <a
           href="#/"
           className="inline-flex h-11 items-center gap-1 text-[14px] text-muted transition-colors hover:text-ink"
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
           {t.routes.listen}
         </a>
 
-        <h1 className="mt-6 text-[26px] font-semibold leading-tight text-ink">{t.privacy.title}</h1>
+        <h1 className="mt-6 text-[26px] font-semibold leading-tight text-ink lg:text-[32px]">{t.privacy.title}</h1>
 
         <ul className="mt-6 space-y-4 text-[15px] leading-relaxed text-ink">
           <li>لا حساب، ولا تسجيل، ولا بريد إلكتروني.</li>

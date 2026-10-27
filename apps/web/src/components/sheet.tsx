@@ -21,7 +21,25 @@ type SheetProps = {
   /** Pinned under the header, outside the scrolling body (the search field). */
   toolbar?: ReactNode;
   children: ReactNode;
+  /** Desktop only: keep the panel docked while rows are picked. */
+  pinned?: boolean;
+  onTogglePin?: () => void;
 };
+
+function PinGlyph({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M9 3h6l-1 5 4 4H6l4-4-1-5Z"
+        fill={filled ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M12 12v9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function CloseGlyph() {
   return (
@@ -50,6 +68,8 @@ export default function Sheet({
   size = 'full',
   toolbar,
   children,
+  pinned = false,
+  onTogglePin,
 }: SheetProps) {
   const { t } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -83,14 +103,31 @@ export default function Sheet({
       >
         <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-5">
           <h2 className="text-[15px] font-semibold">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t.common.close}
-            className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
-          >
-            <CloseGlyph />
-          </button>
+          <div className="flex items-center gap-1">
+            {onTogglePin ? (
+              <button
+                type="button"
+                onClick={onTogglePin}
+                aria-pressed={pinned}
+                aria-label={pinned ? t.common.unpin : t.common.pin}
+                title={pinned ? t.common.unpin : t.common.pin}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:text-ink',
+                  pinned ? 'text-ink' : 'text-muted',
+                )}
+              >
+                <PinGlyph filled={pinned} />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t.common.close}
+              className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
+            >
+              <CloseGlyph />
+            </button>
+          </div>
         </div>
         {toolbar}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
@@ -125,14 +162,31 @@ export default function Sheet({
       <div className={size === 'full' ? 'flex h-[90dvh] flex-col' : 'flex max-h-[90dvh] flex-col'}>
         <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-5">
           <h2 className="text-[15px] font-semibold">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t.common.close}
-            className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
-          >
-            <CloseGlyph />
-          </button>
+          <div className="flex items-center gap-1">
+            {onTogglePin ? (
+              <button
+                type="button"
+                onClick={onTogglePin}
+                aria-pressed={pinned}
+                aria-label={pinned ? t.common.unpin : t.common.pin}
+                title={pinned ? t.common.unpin : t.common.pin}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:text-ink',
+                  pinned ? 'text-ink' : 'text-muted',
+                )}
+              >
+                <PinGlyph filled={pinned} />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t.common.close}
+              className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
+            >
+              <CloseGlyph />
+            </button>
+          </div>
         </div>
         {toolbar}
 
@@ -225,6 +279,8 @@ export function SurahSheet({
   sizes,
   onPick,
   onClose,
+  pinned,
+  onTogglePin,
 }: {
   open: boolean;
   current: number;
@@ -232,6 +288,8 @@ export function SurahSheet({
   sizes?: Record<number, number>;
   onPick: (surahId: number) => void;
   onClose: () => void;
+  pinned?: boolean;
+  onTogglePin?: () => void;
 }) {
   const { t, locale } = useLocale();
   const listRef = useRef<HTMLUListElement>(null);
@@ -256,6 +314,8 @@ export function SurahSheet({
       title="السور"
       open={open}
       onClose={onClose}
+      pinned={pinned}
+      onTogglePin={onTogglePin}
       toolbar={
         <SearchField
           value={query}
@@ -313,6 +373,8 @@ export function ReciterSheet({
   onClose,
   error = false,
   onRetry,
+  pinned,
+  onTogglePin,
 }: {
   open: boolean;
   reciters: Reciter[];
@@ -321,6 +383,8 @@ export function ReciterSheet({
   onClose: () => void;
   error?: boolean;
   onRetry?: () => void;
+  pinned?: boolean;
+  onTogglePin?: () => void;
 }) {
   const { t } = useLocale();
   const [query, setQuery] = useState('');
@@ -347,6 +411,8 @@ export function ReciterSheet({
       title="القرّاء"
       open={open}
       onClose={onClose}
+      pinned={pinned}
+      onTogglePin={onTogglePin}
       toolbar={
         <>
           <SearchField

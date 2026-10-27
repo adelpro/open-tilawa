@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import AboutPage from './app/about-page';
 import PlayerPage from './app/player-page';
@@ -9,6 +9,7 @@ import ErrorBoundary from './components/error-boundary';
 import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
 import { useHashRoute } from './hooks/use-hash-route';
+import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
 import { useSleepTimer } from './hooks/use-sleep-timer';
 import { useLocale } from './hooks/use-locale';
@@ -27,8 +28,17 @@ import { patchSettings } from './hooks/use-persistence';
 export default function App() {
   const { route, navigate } = useHashRoute();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { sheet, openSurahs, openReciters, openStream, close } = useSheet();
+  const { sheet, pinned, togglePin, openSurahs, openReciters, openStream, openKeys, close } =
+    useSheet();
   const setIsPlaying = useSetAtom(isPlayingAtom);
+  const wide = useMediaQuery('(min-width: 1024px)');
+  const pinnedBooted = useRef(false);
+  useEffect(() => {
+    if (pinnedBooted.current || !wide) return;
+    pinnedBooted.current = true;
+    if (pinned) openReciters();
+  }, [wide, pinned, openReciters]);
+
   const { locale, setLocale } = useLocale();
   const { theme, setTheme } = useTheme();
   const [rate, setRate] = useAtom(rateAtom);
@@ -59,6 +69,7 @@ export default function App() {
           onToggleMenu={() => setMenuOpen((open) => !open)}
           onOpenSurahs={openSurahs}
           onOpenReciters={openReciters}
+          onOpenKeys={openKeys}
         />
 
         {route === '/about' ? (
@@ -82,9 +93,12 @@ export default function App() {
         ) : (
           <PlayerPage
             sheet={sheet}
+            pinned={pinned}
+            togglePin={togglePin}
             openSurahs={openSurahs}
             openReciters={openReciters}
             openStream={openStream}
+            openKeys={openKeys}
             close={close}
             onOpenMenu={() => setMenuOpen(true)}
           />

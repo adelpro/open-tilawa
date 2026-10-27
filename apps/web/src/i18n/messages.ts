@@ -9,7 +9,24 @@ export type Locale = (typeof LOCALES)[number];
 const ar = {
   brand: 'تلاوة',
   menu: { open: 'القائمة', close: 'إغلاق القائمة' },
-  common: { close: 'إغلاق' },
+  common: {
+    close: 'إغلاق',
+    pin: 'تثبيت اللوحة',
+    unpin: 'إلغاء التثبيت',
+  },
+  keys: {
+    title: 'الاختصارات',
+    playPause: 'تشغيل / إيقاف',
+    seek: 'تقديم أو إرجاع ١٥ ثانية',
+    surahs: 'السورة السابقة / التالية',
+    reciters: 'قائمة القرّاء',
+    surahList: 'قائمة السور',
+    mute: 'كتم الصوت',
+    help: 'هذه القائمة',
+    close: 'إغلاق اللوحة',
+    hint: 'Space للتشغيل · ←/→ ١٥ ثانية · ؟ للمزيد',
+    dismiss: 'إخفاء',
+  },
   routes: { listen: 'الاستماع', settings: 'الإعدادات', about: 'عن تلاوة', privacy: 'الخصوصية' },
   settings: {
     language: 'اللغة',
@@ -111,7 +128,24 @@ const ar = {
 const en: typeof ar = {
   brand: 'Tilawa',
   menu: { open: 'Menu', close: 'Close menu' },
-  common: { close: 'Close' },
+  common: {
+    close: 'Close',
+    pin: 'Pin this panel',
+    unpin: 'Unpin this panel',
+  },
+  keys: {
+    title: 'Keyboard',
+    playPause: 'Play / pause',
+    seek: 'Forward or back 15 seconds',
+    surahs: 'Previous / next surah',
+    reciters: 'Reciter list',
+    surahList: 'Surah list',
+    mute: 'Mute',
+    help: 'This list',
+    close: 'Close the panel',
+    hint: 'Space to play · ←/→ 15 seconds · ? for more',
+    dismiss: 'Dismiss',
+  },
   routes: { listen: 'Listen', settings: 'Settings', about: 'About Tilawa', privacy: 'Privacy' },
   settings: {
     language: 'Language',

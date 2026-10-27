@@ -13,11 +13,13 @@ export default function TopBar({
   onToggleMenu,
   onOpenSurahs,
   onOpenReciters,
+  onOpenKeys,
 }: {
   menuOpen: boolean;
   onToggleMenu: () => void;
   onOpenSurahs: () => void;
   onOpenReciters: () => void;
+  onOpenKeys: () => void;
 }) {
   const { t } = useLocale();
 
@@ -43,6 +45,15 @@ export default function TopBar({
         <a href="#/privacy" className="transition-colors hover:text-ink">
           {t.routes.privacy}
         </a>
+        <button
+          type="button"
+          onClick={onOpenKeys}
+          aria-label={t.keys.title}
+          title={t.keys.title}
+          className="flex h-6 w-6 items-center justify-center rounded-full border border-line text-[12px] leading-none text-muted transition-colors hover:text-ink"
+        >
+          ؟
+        </button>
       </nav>
 
       <button

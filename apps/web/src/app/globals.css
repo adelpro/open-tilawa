@@ -110,6 +110,14 @@ input[type='search']::-webkit-search-decoration {
   overflow-y: auto;
 }
 
+/* On a desktop the prose column gets a readable measure and some air above it,
+   instead of hugging the header like a phone. */
+@media (min-width: 1024px) {
+  .page-screen {
+    padding: 48px 40px 72px;
+  }
+}
+
 .page-screen > div {
   margin-inline: auto;
 }

@@ -8,7 +8,7 @@ export default function AboutPage() {
 
   return (
     <main className="page-screen">
-      <div className="w-full max-w-[520px]">
+      <div className="w-full max-w-[520px] lg:max-w-[700px]">
         <a
           href="#/"
           className="inline-flex h-11 items-center gap-1 text-[14px] text-muted transition-colors hover:text-ink"
@@ -18,7 +18,7 @@ export default function AboutPage() {
         </a>
 
         {/* No second logo here: the header already carries the mark. */}
-        <h1 className="mt-6 text-[26px] font-semibold leading-tight text-ink">{t.about.title}</h1>
+        <h1 className="mt-6 text-[26px] font-semibold leading-tight text-ink lg:text-[32px]">{t.about.title}</h1>
 
         <p className="mt-6 text-[15px] leading-relaxed text-ink">{t.about.body1}</p>
         <p className="mt-3 text-[15px] leading-relaxed text-muted">{t.about.body2}</p>
