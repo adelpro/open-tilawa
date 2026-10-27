@@ -2,15 +2,17 @@
  * One AudioContext for the page, created on the first play (a gesture) and never
  * torn down.
  *
- * Two ways to reach the samples, and the difference matters:
+ * One way, and it is same-origin only. Both alternatives were measured:
  *
- * - `captureStream()` taps what the element is already playing. It works for a
- *   cross-origin file (the Itqan-hosted reciters) and does not touch the output,
- *   so nothing can go silent.
- * - `createMediaElementSource()` is the fallback where captureStream is missing
- *   (Safari). It *takes over* the element's output, so it must be connected to
- *   the destination — and it outputs silence for a cross-origin source the
- *   browser will not share, which is why it is only used same-origin.
+ * - `captureStream()` throws `SecurityError: Cannot capture from element with
+ *   cross-origin data` for a host-served file (the Itqan reciters).
+ * - `createMediaElementSource()` accepts it, but then outputs zeroes — the
+ *   browser will not hand out samples it cannot share, and the graph takes the
+ *   element's output, so the reciter would play silent.
+ *
+ * So a spectrum for a cross-origin reciter is only possible if the audio comes
+ * through our own origin (an nginx proxy). Until then those reciters play with a
+ * flat shelf, which is honest: there is no data to draw.
  *
  * Everything is wrapped: a refused or suspended context must leave the player
  * audible and the visualiser flat, not break the stream.
@@ -57,17 +59,9 @@ export function ensureAnalyser(audio: HTMLAudioElement): AnalyserNode | null {
 
     let source: AudioNode | null = null;
 
-    // 1. Tap the element output. Works cross-origin, leaves playback untouched.
-    const capture = (audio as HTMLAudioElement & {
-      captureStream?: () => MediaStream;
-      mozCaptureStream?: () => MediaStream;
-    });
-    const stream = capture.captureStream?.() ?? capture.mozCaptureStream?.();
-    if (stream && stream.getAudioTracks().length > 0) {
-      source = ctx.createMediaStreamSource(stream);
-    } else if (isSameOrigin(audio) && !elementSource) {
-      // 2. Same-origin only: this replaces the element's output, so it must be
-      //    connected to the destination to stay audible.
+    // Same-origin only. This replaces the element's output, so it must stay
+    // connected to the destination to remain audible.
+    if (isSameOrigin(audio) && !elementSource) {
       elementSource = ctx.createMediaElementSource(audio);
       elementSource.connect(ctx.destination);
       source = elementSource;
