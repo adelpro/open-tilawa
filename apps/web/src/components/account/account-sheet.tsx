@@ -9,7 +9,7 @@ import { useLocale } from '@/hooks/use-locale';
 import { userDevicesAtom } from '@/jotai/gun';
 import { cn } from '@/utils/cn';
 
-type Tab = 'devices' | 'link';
+type Tab = 'devices' | 'add';
 
 const chip = 'rounded-full px-3 py-1.5 text-[12.5px] transition-colors';
 const chipOn = 'border-ink bg-ink font-semibold text-invert';
@@ -20,10 +20,17 @@ const chipOff = 'border border-line text-ink hover:bg-line';
  *
  * With `auto` the panel grew and shrank as the tabs changed, so the sheet
  * jumped under the finger on every switch. The height is the tallest common
- * state; anything taller scrolls.
+ * state; anything taller scrolls — except the camera, which fills it.
  */
-const BODY = 'h-[min(72dvh,30rem)] overflow-y-auto overscroll-contain px-5 pb-5';
+const BODY = 'h-[min(72dvh,30rem)] px-5 pb-5 pt-3';
 
+/**
+ * A ring is one account: the keypair, plus every device that holds a copy of it.
+ *
+ * A device in a ring can only add another device to *that* ring, so it is shown
+ * the pairing code and never the scanner. Scanning is for a device with no key
+ * yet, which is joining a ring rather than adding to one.
+ */
 export default function AccountSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useLocale();
   const copy = t.account;
@@ -31,6 +38,7 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
   const devices = useAtomValue(userDevicesAtom) as Record<string, { id?: string }>;
   const [tab, setTab] = useState<Tab>('devices');
   const [confirmText, setConfirmText] = useState('');
+  const [camera, setCamera] = useState(false);
 
   const deviceCount = Object.values(devices || {}).filter((d) => d?.id).length;
   const isLastDevice = deviceCount <= 1;
@@ -38,23 +46,36 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
 
   const close = () => {
     setConfirmText('');
+    setCamera(false);
     onClose();
   };
 
   return (
     <Sheet title={copy.title} open={open} onClose={close} size="auto">
-      <div className={cn(BODY, 'space-y-3 pt-3')}>
+      <div
+        className={cn(
+          BODY,
+          // The camera owns the panel: everything else leaves the flow so the
+          // viewfinder sits in the visible area instead of below a fold.
+          camera ? 'flex flex-col overflow-hidden' : 'space-y-3 overflow-y-auto overscroll-contain',
+        )}
+      >
         {loggedIn ? (
           <>
-            <p className="text-[12.5px] text-muted">
-              {copy.signedInAs} <span className="text-ink">{name || '—'}</span>
-            </p>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="min-w-0 truncate text-[12.5px] text-muted">
+                {copy.ringOf} <span className="text-ink">{name || '—'}</span>
+              </p>
+              <span className="shrink-0 text-[11.5px] text-muted">
+                {copy.deviceCount(deviceCount)}
+              </span>
+            </div>
 
             <div className="flex gap-1.5">
               {(
                 [
                   ['devices', copy.devices],
-                  ['link', copy.link],
+                  ['add', copy.addDevice],
                 ] as [Tab, string][]
               ).map(([key, label]) => (
                 <button
@@ -111,12 +132,16 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
                 </div>
               </>
             ) : (
-              <LinkDevice canShare onLinked={() => setTab('devices')} />
+              <LinkDevice
+                mode="share"
+                onLinked={() => setTab('devices')}
+                onCameraChange={setCamera}
+              />
             )}
           </>
         ) : (
           <>
-            <div className="rounded-xl border border-line p-3">
+            <div className={cn('rounded-xl border border-line p-3', camera && 'hidden')}>
               <p className="text-[13px] font-medium text-ink">{copy.createTitle}</p>
               <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.createNote}</p>
               <button
@@ -130,7 +155,14 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
               {error ? <p className="mt-1.5 text-[12px] text-red-500">{error}</p> : null}
             </div>
 
-            <LinkDevice canShare={false} onLinked={close} />
+            <LinkDevice
+              mode="scan"
+              onCameraChange={setCamera}
+              onLinked={() => {
+                setCamera(false);
+                setTab('devices');
+              }}
+            />
           </>
         )}
       </div>

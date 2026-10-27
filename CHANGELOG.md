@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.5.10 — 2026-10-27
+
+Minor. App versions: **web 1.6.0**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Added
+
+- **The ring.** An account is now named for what it is: one key, and every device
+  that holds a copy of it. The sheet reads «حلقتك» with the device count, and the
+  two halves of the handshake are named for the side you are on.
+
+### Changed
+
+- **A device in the ring is never offered the scanner.** It has a key already, so
+  the only thing it can do is lend it: «إضافة جهاز» shows the pairing code and
+  nothing else. Scanning belongs to a device with no key yet — «الانضمام إلى
+  حلقة» — which is joining a ring rather than adding to one.
+- **The camera takes over the sheet.** The viewfinder now fills the visible area
+  instead of starting below the create card, where the panel clipped it. The
+  other cards leave the flow while the camera is open.
+
+### Fixed
+
+- The scanner was started from the click handler, racing the render; it is
+  started from an effect once the reader element exists.
+
 ## 1.5.9 — 2026-10-27
 
 Patch. App versions: **web 1.5.1**, **admin 1.24.0**, **seeder 1.4.2**.
