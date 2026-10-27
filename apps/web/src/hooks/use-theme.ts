@@ -5,7 +5,9 @@ import { loadState, patchSettings } from '@/hooks/use-persistence';
 
 export type Theme = 'light' | 'dark';
 
-export const themeAtom = atom<Theme>('light');
+// Seeded from storage for the same reason as the locale: main.tsx paints first,
+// and an atom default would undo it on mount.
+export const themeAtom = atom<Theme>(resolveInitialTheme());
 
 export function resolveTheme(stored: Theme | undefined, prefersDark: boolean): Theme {
   if (stored === 'light' || stored === 'dark') return stored;

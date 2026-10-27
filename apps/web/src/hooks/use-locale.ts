@@ -4,7 +4,9 @@ import { useEffect } from 'react';
 import { loadState, patchSettings } from '@/hooks/use-persistence';
 import { DIRECTION, MESSAGES, normaliseLocale, type Locale, type Messages } from '@/i18n/messages';
 
-export const localeAtom = atom<Locale>('ar');
+// Seeded from storage, not a constant: the pre-paint apply in main.tsx and this
+// hook must agree, or the effect below immediately repaints the default.
+export const localeAtom = atom<Locale>(resolveInitialLocale());
 
 export function resolveInitialLocale(): Locale {
   if (typeof window === 'undefined') return 'ar';
