@@ -12,8 +12,13 @@ export type IconName =
   | 'search'
   | 'close'
   | 'volume'
-  | 'volume-x';
-
+  | 'volume-x'
+  | 'users'
+  | 'download'
+  | 'upload'
+  | 'file'
+  | 'activity'
+  | 'server';
 const STROKE = {
   fill: 'none',
   stroke: 'currentColor',
@@ -70,6 +75,45 @@ const GLYPHS = {
       <path {...STROKE} d="M4.5 9.5a11 11 0 0 1 15 0" />
       <path {...STROKE} d="M7.8 13a6.5 6.5 0 0 1 8.4 0" />
       <path {...STROKE} d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0" />
+    </>
+  ),
+  users: (
+    <>
+      <circle {...STROKE} cx="9" cy="8" r="3" />
+      <path {...STROKE} d="M4 18c0-2.8 2.2-5 5-5s5 2.2 5 5" />
+      <circle {...STROKE} cx="16" cy="9" r="2.2" />
+      <path {...STROKE} d="M17 18c0-1.9-1.2-3.5-2.9-4.2" />
+    </>
+  ),
+  download: (
+    <>
+      <path {...STROKE} d="M12 3v10M7 10l5 5 5-5" />
+      <path {...STROKE} d="M5 18h14" />
+    </>
+  ),
+  upload: (
+    <>
+      <path {...STROKE} d="M12 13V3M7 6l5-3 5 3" />
+      <path {...STROKE} d="M5 18h14" />
+    </>
+  ),
+  file: (
+    <>
+      <path {...STROKE} d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" />
+      <path {...STROKE} d="M14 2v5h5" />
+    </>
+  ),
+  activity: (
+    <>
+      <path {...STROKE} d="M3 12h4l3-8 4 16 3-8h4" />
+    </>
+  ),
+  server: (
+    <>
+      <rect {...STROKE} x="4" y="4" width="16" height="6" rx="2" />
+      <rect {...STROKE} x="4" y="14" width="16" height="6" rx="2" />
+      <circle cx="8" cy="7" r="0.8" fill="currentColor" />
+      <circle cx="8" cy="17" r="0.8" fill="currentColor" />
     </>
   ),
 } satisfies Record<IconName, ReactElement>;

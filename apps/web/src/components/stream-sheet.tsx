@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import Icon from '@/components/icons';
 import Sheet from '@/components/sheet';
 import { useLocale } from '@/hooks/use-locale';
 import type { Messages } from '@/i18n/messages';
@@ -10,16 +11,16 @@ import { probeMedia } from '@/utils/webseed';
 /** Where the sound is coming from right now. */
 export type StreamSource = 'connected' | 'waiting' | 'webseed' | 'mixed';
 
-type Row = { label: string; value: string };
+type Row = { label: string; value: string; icon: 'users' | 'download' | 'upload' | 'activity' | 'file' };
 
 function rowsFor(torrent: TorrentInfo | undefined, t: Messages): Row[] {
   return [
-    { label: t.stream.peers, value: `${torrent?.peers ?? 0}` },
-    { label: t.stream.down, value: formatSpeed(torrent?.downloadSpeed) },
-    { label: t.stream.up, value: formatSpeed(torrent?.uploadSpeed) },
-    { label: t.stream.downloaded, value: formatBytes(torrent?.downloaded) },
-    { label: t.stream.progress, value: `${((torrent?.progress ?? 0) * 100).toFixed(1)}%` },
-    { label: t.stream.files, value: `${torrent?.files.length ?? 0}` },
+    { label: t.stream.peers, value: `${torrent?.peers ?? 0}`, icon: 'users' },
+    { label: t.stream.down, value: formatSpeed(torrent?.downloadSpeed), icon: 'download' },
+    { label: t.stream.up, value: formatSpeed(torrent?.uploadSpeed), icon: 'upload' },
+    { label: t.stream.downloaded, value: formatBytes(torrent?.downloaded), icon: 'download' },
+    { label: t.stream.progress, value: `${((torrent?.progress ?? 0) * 100).toFixed(1)}%`, icon: 'activity' },
+    { label: t.stream.files, value: `${torrent?.files.length ?? 0}`, icon: 'file' },
   ];
 }
 
@@ -88,19 +89,28 @@ export default function StreamSheet({
   return (
     <Sheet title={t.stream.title} open={open} onClose={onClose} size="auto">
       <div className="px-5 py-4">
-        <dl className="space-y-2">
-          <div className="flex items-baseline justify-between gap-6">
-            <dt className="text-[13px] text-muted">{t.stream.source}</dt>
-            <dd className="text-[13px] text-ink">{sourceLabel}</dd>
+        <dl className="space-y-2.5">
+          <div className="flex items-center justify-between gap-6">
+            <dt className="flex items-center gap-2 text-[13px] text-muted">
+              <Icon name={source === 'webseed' || source === 'mixed' ? 'server' : 'wifi'} className="h-4 w-4" />
+              {t.stream.source}
+            </dt>
+            <dd className="text-[13px] font-medium text-ink">{sourceLabel}</dd>
           </div>
           {rowsFor(torrent, t).map((row) => (
-            <div key={row.label} className="flex items-baseline justify-between gap-6">
-              <dt className="text-[13px] text-muted">{row.label}</dt>
+            <div key={row.label} className="flex items-center justify-between gap-6">
+              <dt className="flex items-center gap-2 text-[13px] text-muted">
+                <Icon name={row.icon as any} className="h-4 w-4" />
+                {row.label}
+              </dt>
               <dd className="tnum text-[13px] text-ink">{row.value}</dd>
             </div>
           ))}
-          <div className="flex items-baseline justify-between gap-6">
-            <dt className="text-[13px] text-muted">{t.stream.fallback}</dt>
+          <div className="flex items-center justify-between gap-6">
+            <dt className="flex items-center gap-2 text-[13px] text-muted">
+              <Icon name="link" className="h-4 w-4" />
+              {t.stream.fallback}
+            </dt>
             <dd className="text-[13px] text-ink">{FALLBACK_LABEL[fallback](t)}</dd>
           </div>
         </dl>
