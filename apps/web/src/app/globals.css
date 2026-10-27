@@ -182,7 +182,7 @@ input[type='search']::-webkit-search-decoration {
 @media (min-width: 1024px) {
   .theatre {
     justify-content: flex-end;
-    padding-bottom: 300px;
+    padding-bottom: 260px;
   }
 
   .top-bar {
@@ -214,10 +214,24 @@ input[type='search']::-webkit-search-decoration {
 
   .theatre-footer > div {
     max-width: 560px;
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .theatre-names {
     display: none;
+  }
+
+  /* Split view: while a panel is docked, the stage centres in what is left
+     instead of sliding under it. 360px is the panel's width. */
+  .app-shell[data-panel='open'] .theatre {
+    padding-inline-start: 384px;
+  }
+
+  .app-shell[data-panel='open'] .theatre-title,
+  .app-shell[data-panel='open'] .theatre-reciter,
+  .app-shell[data-panel='open'] .theatre-horizon,
+  .app-shell[data-panel='open'] .theatre-floor,
+  .app-shell[data-panel='open'] .theatre-footer {
+    inset-inline-start: 360px;
   }
 }

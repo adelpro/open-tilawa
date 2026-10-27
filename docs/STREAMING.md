@@ -123,13 +123,15 @@ The phone's bottom sheets and sandwich menu are replaced, not enlarged:
 - **No bottom sheet, no hamburger.** The lists open as a 360 px panel docked to
   the reading edge, below the header. It is not modal: no backdrop, no focus
   trap, the player stays visible and keeps playing. `Esc`, the close button or
-  picking a row closes it. Below 1024 px the platform dialog is still used.
+  picking a row closes it. While it is open the stage re-centres in the
+  remaining width (it never slides under the panel). Below 1024 px the platform
+  dialog is still used.
 - **The title and the reciter line are the triggers.** The surah name opens the
   surah list, the reciter name opens the reciter list; a `▾` appears on hover and
   on keyboard focus.
 - **Navigation is four words** in the header (القرّاء · السور · عن تلاوة ·
   الخصوصية) instead of a menu button.
-- **The stage:** surah name at 26 vh, controls in the lower third, a 160 px
+- **The stage:** surah name at 22 vh, controls in the lower third, a 160 px
   spectrum horizon at the bottom at 70 % ink, and a 1 px floor line that stays
   when paused so the page never becomes a blank sheet.
 - The footer keeps only mute, speed and the stream ring, sitting above the

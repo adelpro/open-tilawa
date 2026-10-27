@@ -139,7 +139,7 @@ export default function PlayerPage({
         <div className="w-full max-w-[520px]">
           {/* The name lives in the footer and in the accessible heading; the
               space above the scrubber belongs to what the speaker is doing. */}
-          <h1 className="sr-only lg:not-sr-only lg:fixed lg:inset-x-0 lg:top-[26vh] lg:text-center lg:text-[clamp(32px,4vw,56px)] lg:font-semibold lg:tracking-[-0.02em] lg:text-ink">
+          <h1 className="sr-only lg:not-sr-only lg:fixed lg:inset-x-0 lg:top-[22vh] lg:text-center lg:text-[clamp(32px,4vw,56px)] lg:font-semibold lg:tracking-[-0.02em] lg:text-ink">
             {wide ? (
               <button
                 type="button"
@@ -150,7 +150,7 @@ export default function PlayerPage({
                 {surah?.name ?? `سورة ${surahId}`}
                 <span
                   aria-hidden="true"
-                  className="text-[18px] text-muted opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                  className="text-[18px] text-muted opacity-30 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                 >
                   ▾
                 </span>
@@ -159,7 +159,7 @@ export default function PlayerPage({
               surah?.name ?? `سورة ${surahId}`
             )}
           </h1>
-          <p className="hidden lg:fixed lg:inset-x-0 lg:top-[calc(26vh+84px)] lg:block lg:text-center lg:text-[16px] lg:text-muted">
+          <p className="hidden lg:fixed lg:inset-x-0 lg:top-[calc(22vh+72px)] lg:block lg:text-center lg:text-[16px] lg:text-muted">
             <button
               type="button"
               onClick={openReciters}
@@ -169,20 +169,20 @@ export default function PlayerPage({
               {reciter?.name ?? ''}
               <span
                 aria-hidden="true"
-                className="text-[13px] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                className="text-[13px] opacity-30 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
               >
                 ▾
               </span>
             </button>
           </p>
-          <div className="flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0 lg:opacity-70">
+          <div className="theatre-horizon flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0 lg:opacity-70">
             <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 64} />
           </div>
           {/* The floor: the horizon's edge, kept even when paused so the stage
               never becomes a blank page. */}
           <div
             aria-hidden="true"
-            className="hidden lg:fixed lg:inset-x-0 lg:bottom-[160px] lg:z-0 lg:block lg:h-px lg:bg-line"
+            className="theatre-floor hidden lg:fixed lg:inset-x-0 lg:bottom-[160px] lg:z-0 lg:block lg:h-px lg:bg-line"
           />
 
           <div className="mt-10 lg:mx-auto lg:mt-0 lg:w-[560px]">

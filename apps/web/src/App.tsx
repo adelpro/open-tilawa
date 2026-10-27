@@ -53,7 +53,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="app-shell">
+      <div className="app-shell" data-panel={sheet ? 'open' : 'closed'}>
         <TopBar
           menuOpen={menuOpen}
           onToggleMenu={() => setMenuOpen((open) => !open)}
