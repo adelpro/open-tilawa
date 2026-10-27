@@ -56,7 +56,7 @@ export default function PlayerFooter({
             type="button"
             onClick={onOpenSurahs}
             aria-label={t.footer.list}
-            className="flex h-8 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[15px] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
+            className="flex h-7 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[15px] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
           >
             <Icon name="playlist" className="h-4 w-4 text-muted" />
             <span className="min-w-0 flex-1 truncate">{surahName}</span>
@@ -66,7 +66,7 @@ export default function PlayerFooter({
             type="button"
             onClick={onOpenReciters}
             aria-label={t.footer.reciter}
-            className="flex h-8 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
+            className="flex h-7 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
           >
             <Icon name="mic" className="h-4 w-4" />
             <span className="min-w-0 flex-1 truncate">{reciterName}</span>

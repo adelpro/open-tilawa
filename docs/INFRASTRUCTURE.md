@@ -32,12 +32,17 @@ each piece does, which port it listens on, and how data moves between them.
 
 - **Image:** built from `apps/web` (Vite), served by nginx on port 80; only the
   edge publishes it.
-- **What it does:** lists reciters, plays audio from torrents in the browser
-  (WebTorrent + a service worker), and offers an HTTP fallback.
+- **What it does:** lists the published reciters (read from the admin
+  catalogue), plays audio from torrents in the browser (WebTorrent + a service
+  worker), and serves the payload of the `/media` web seed — the only HTTP
+  fallback. Flow: [STREAMING.md](STREAMING.md).
 - **Speeds:** the player reports peers and ↓/↑ rates through one formatter
   (`formatSpeed`), so 900 B/s, 40 KB/s and 1.2 GB/s all read correctly.
-- **Content source:** today its reciter list is **static** (`src/constants`); it
-  does not read the admin catalogue. That is a known gap, not a design.
+- **Content source:** `GET /api/public/reciters` (published rows only). The
+  bundle carries no reciter list; the last good payload is cached in
+  `localStorage` so a catalogue outage costs freshness, not playback.
+- **Volumes:** `seed_torrents` → `/usr/share/nginx/html/torrents`,
+  `seed_downloads` → `/usr/share/nginx/html/media` (read-only, `limit_rate 1m`).
 
 ## 2. Tracker — `tracker`
 
@@ -192,6 +197,8 @@ Root `.env` (seeder + tracker + turn): `ADMIN_USER`, `ADMIN_PASS`,
 
 - Community-node enrollment (outbound token + heartbeat) is designed but not
   built; a community node today needs its admin port reachable.
-- The public site does not read the catalogue yet (static list).
+- `/media` serves the seeder in the same compose stack (the primary node), not
+  the whole fleet: a published reciter absent from that node has no HTTP
+  fallback. Per-node web seeds or an infohash proxy are the upgrade path.
 - Remote nodes update themselves; the dashboard's update button is local only.
 - Catalogue manifests are not signed yet.

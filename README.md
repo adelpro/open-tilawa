@@ -1,17 +1,20 @@
 # open-tilawa
 
 Self-hostable infrastructure for the **Open Tilawa WebTorrent stack**: a
-peer-to-peer Quran recitation player that streams audio from archive.org web
-seeds and WebTorrent peers, with no central media server.
+peer-to-peer Quran recitation player that streams audio from WebTorrent peers,
+with the operator's own node as the HTTP safety net.
+
+Playback, cold starts and the no-peer path are documented in
+**[docs/STREAMING.md](docs/STREAMING.md)**.
 
 ## High-level architecture
 
 ```
 Browser (React/Vite SPA)
    │  WebTorrent (WebRTC + WebSocket trackers)
-   │  HTTP range requests to web seeds (archive.org)
+   │  HTTP range requests to our own web seed (/media/<folder>/<file>)
    ▼
-Edge (nginx)  ──►  Web (SPA + /torrents/*.torrent)
+Edge (nginx)  ──►  Web (SPA + /torrents/*.torrent + /media/*)
    │
    ├──► Tracker (bittorrent-tracker, WS+HTTP)  ◄── seeders + browsers
    │
@@ -33,21 +36,22 @@ Volumes: `seed_downloads` (seeder data), `seed_torrents` (shared with web for `.
 
 ### Data flow
 
-1. **Seeder** fetches magnet URIs (from `MAGNETS_URL` or fallback `MAGNETLINKS.js`), downloads each torrent, and saves its `.torrent` file to `/data/torrents` (shared volume → web's `/torrents/`).
-2. **Browser** loads the SPA, selects a reciter. `use-torrent.ts`:
-   - Fetches `/torrents/{infohash}.torrent` (HTTP metadata, no peers needed).
+1. **Seeder** loads every `.torrent` in `/data/torrents`, downloads the release into `/data/downloads`, and keeps seeding. The `.torrent` files are shared with the web container (`/torrents/`), the payload is mounted at `/media/`.
+2. **Browser** loads the SPA and asks the admin catalogue for the published reciters (`GET /api/public/reciters`). There is no reciter list in the bundle; the last good payload is cached in `localStorage`.
+3. **Selecting a reciter** starts `use-torrent.ts`:
+   - Fetches `/torrents/{infohash}.torrent` (metadata over HTTP, no peers needed).
    - On 200: `client.add(torrentBlob, { announce: wsTrackers, deselect: true })`.
    - On 404: falls back to `client.add(magnet)` (requires WebRTC peers).
-3. **Metadata** resolves → `showPlaylist()` builds a track list. Web-seed reciters use HTTP URLs (`ws + filename`); P2P-only reciters keep the `TorrentFile` reference.
-4. **Playback**: the app registers one service worker (`/sw.js`, PWA + WebTorrent merged), calls `client.createServer()`, and points `<audio>` at `file.streamURL`. The worker answers range requests from torrent pieces, so playback starts on the first pieces and seeking works. Itqan-sourced reciters keep a plain HTTP `<audio src>`.
-5. **Selection**: only the current surah is selected (`deselect: true` + `file.select()`), so the rest of an 114-file torrent does not compete for bandwidth.
-6. **TURN**: coturn relays WebRTC when direct P2P fails (symmetric NAT). External IP is resolved from the DDNS hostname `turn.quran.us.kg`.
+4. **Playback**: the app registers one service worker (`/sw.js`, PWA + WebTorrent merged), calls `client.createServer()`, and points `<audio>` at `file.streamURL` — a **same-origin** `/webtorrent/<infohash>/<path>` URL. The worker answers range requests from torrent pieces, so playback starts on the first pieces and seeking works. `<audio>` never points at a remote file.
+5. **No peers**: after 8 s with zero peers the client calls `torrent.addWebSeed("<origin>/media/")`. Pieces from that HTTP source are verified, stored, seeded to other peers, and peers are used in parallel if they appear. The audio element's `src` does not change.
+6. **Selection**: only the current surah is selected (`deselect: true` + `file.select()`), so the rest of a 114-file torrent does not compete for bandwidth.
+7. **TURN**: coturn relays WebRTC when direct P2P fails (symmetric NAT). External IP is resolved from the DDNS hostname `turn.quran.us.kg`.
 
 ### Key constraints (browser WebTorrent)
 
 - **WebSocket trackers only** (`wss://`/`ws://`). HTTP/UDP trackers are silently ineffective in a browser.
 - **Metadata without peers**: host `.torrent` files over HTTP (`client.add(url)`) — preferred over magnet fallback.
-- **Web seeds** (`ws=` / `urlList`): plain HTTP origin serving files; enables playback with zero peers (but only after metadata exists).
+- **Web seeds** are `fetch()` calls: the host must allow CORS, and the URL must end in `<torrent folder>/<file>`. Our own `/media/` is same-origin and has that layout, which is why it is the only fallback.
 - **Incremental vs full-file**: stream with `file.streamURL` (service worker, range requests). `file.blob()`/`getBlobURL()` are gone in v3 and would download the whole file first.
 
 ### Service worker (PWA + WebTorrent)
@@ -66,7 +70,8 @@ See [apps/web/README.md](apps/web/README.md) for the merge contract, the nginx
 |---|---|
 | `EDGE_PORT` | Edge nginx port (default 8084) |
 | `TRACKER_PORT` | Tracker port (default 8083) |
-| `MAGNETS_URL` | URL to fetch magnet URIs (falls back to bundled list) |
+| `MAGNETS_URL` | Magnet list for the legacy `seed.mjs` node type (`seed-all.mjs` reads `/data/torrents` instead) |
+| `ITQAN_API_KEY` | Itqan CMS API key for `import-itqan.mjs` (seeder only; never shipped to the web app) |
 | `TURN_REALM` | Coturn realm (turn.quran.us.kg) |
 | `TURN_USERNAME` / `TURN_PASSWORD` | Coturn credentials |
 | `TURN_EXTERNAL_IP` | DDNS hostname (turn.quran.us.kg) — resolved at coturn startup |
@@ -92,16 +97,19 @@ Versioning, tags and the order to deploy in: [docs/RELEASING.md](docs/RELEASING.
 - `adelpro/open-quran` — frontend/app repo (external for now)
 - `adelpro/open-quran-tracker` — original tracker + seeder (kept as-is)
 
-## Scope of recent work (Phases 1–5)
+## Current state (October 2026)
 
-- **Phase 1**: `.torrent` coverage for all 20 reciters (2 missing archive.org ones added).
-- **Phase 2**: 10s metadata timeout, retry button, web-seed fallback link.
-- **Phase 3**: incremental streaming via `file.streamTo()` instead of whole-file `blob()`.
-- **Phase 4**: UX polish — peer/speed status, spinner hints, retryable failures.
-- **Phase 5.1**: auto-discover web-seed mirrors from magnet `ws=` params.
-- **Phase 5.2**: user-triggered offline download button.
-- **Phase 5.3**: TURN external IP fixed (DDNS hostname + conditional restart).
-- **Phase 5.4**: P2P HLS deferred (registered in PLAN.md with trigger conditions).
+- **Reciter roster** comes from the admin catalogue only; publication is a flag
+  on the row, so curation needs no deploy. Ten reciters are published.
+- **Riwaya** is data (`Hafs`, `Warsh`, `Qalon`, `unknown`), never a default.
+- **Fallback** is a BEP19 web seed on our own origin (`/media/`), added after 8 s
+  with zero peers. It seeds back to peers and never replaces the `<audio>` source.
+- **Importing a source** is a one-off seeder job (`import-itqan.mjs`) that
+  downloads, verifies and seeds the release; the browser never talks to the
+  source host.
+- Historical phases 1–5 (2019–2025 experiments with `streamTo()`, offline
+  downloads, `ws=` mirrors) are superseded by the flow in
+  [docs/STREAMING.md](docs/STREAMING.md).
 
 ## Deploying New Nodes
 

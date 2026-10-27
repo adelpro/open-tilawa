@@ -19,8 +19,8 @@ const TRAILS = 3;
  * fading lines, so it reads as a moving trace rather than a jittering edge.
  *
  * Everything is ink on transparent, bottom-anchored, mirrored so band 0 sits at
- * the reading edge (right) in this RTL page. Paused, the last shape stays at a
- * quarter opacity: the block does not jump.
+ * the reading edge (right) in this RTL page. Paused, the block is empty: the
+ * canvas keeps its height so the controls never jump.
  */
 export default function Visualiser({ playing, model }: { playing: boolean; model: Model }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -129,6 +129,8 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
     observer.observe(canvas);
 
     if (!playing) {
+      // Nothing is playing, so nothing is drawn — not even the old shape.
+      ctx.clearRect(0, 0, width, HEIGHT);
       return () => observer.disconnect();
     }
 
@@ -178,7 +180,7 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       ref={canvasRef}
       aria-hidden="true"
       className="block h-16 w-full transition-opacity duration-300"
-      style={{ opacity: playing ? 1 : 0.25 }}
+      style={{ opacity: playing ? 1 : 0 }}
     />
   );
 }

@@ -57,10 +57,10 @@ message protocol has to match what `client.createServer()` expects in the page.
    the 114-surah torrent does not download itself in the background. Only the
    torrent is owned by the hook; it is destroyed on unmount/reciter change, the
    client is not.
-3. `src/components/audio-player.tsx` — `audio.src = file.streamURL` and
-   `file.select()` for the current surah, `deselect()` on the previous one.
-   Itqan-sourced reciters (and anything without a torrent file) keep the plain
-   HTTP `<audio src={track.link}>` fallback.
+3. `src/components/audio-engine.tsx` — `audio.src = file.streamURL` and
+   `file.select()` for the current surah, `deselect()` on the previous one. The
+   element never points at a remote file: the only HTTP source is the `/media`
+   web seed added to the torrent itself.
 
 `file.streamURL` looks like `/webtorrent/<infoHash>/<file path>`. Because the
 worker is the server, the app requires a secure context (HTTPS, or localhost in
@@ -111,8 +111,8 @@ Then rebuild and re-check streaming.
 - The worker's `ReadableStream` is cancelled if the page is backgrounded long
   enough to be frozen; playback restarts from the last buffered position.
 - iOS Safari needs HTTPS and a first-load navigation before the worker controls
-  the page; the very first play on a fresh origin may fall back to the HTTP
-  source link shown in the error state.
+  the page; the very first play on a fresh origin may show the streaming error
+  and its retry button.
 
 ## The player screen
 

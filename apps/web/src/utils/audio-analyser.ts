@@ -5,14 +5,15 @@
  * One way, and it is same-origin only. Both alternatives were measured:
  *
  * - `captureStream()` throws `SecurityError: Cannot capture from element with
- *   cross-origin data` for a host-served file (the Itqan reciters).
+ *   cross-origin data` for a file served from another host without CORS.
  * - `createMediaElementSource()` accepts it, but then outputs zeroes — the
  *   browser will not hand out samples it cannot share, and the graph takes the
  *   element's output, so the reciter would play silent.
  *
- * So a spectrum for a cross-origin reciter is only possible if the audio comes
- * through our own origin (an nginx proxy). Until then those reciters play with a
- * flat shelf, which is honest: there is no data to draw.
+ * So a spectrum is only possible when the audio comes through our own origin —
+ * which it now does: the service-worker stream, and the `/media` web seed that
+ * feeds it. Cross-origin hosts would play with a flat shelf, which is honest:
+ * there is no data to draw.
  *
  * Everything is wrapped: a refused or suspended context must leave the player
  * audible and the visualiser flat, not break the stream.
