@@ -80,9 +80,11 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       ctx.beginPath();
       ctx.moveTo(width, HEIGHT);
       for (let i = 0; i < points; i += 1) {
-        const value = (data[i] - 128) / 128;
+        const value = Math.abs((data[i] - 128) / 128);
         const x = width - i * step;
-        ctx.lineTo(x, HEIGHT - Math.abs(value) * (HEIGHT - 6));
+        // A silent time-domain buffer is flat, which collapses the polygon to
+        // nothing; the floor keeps a hairline the way the bars keep 2px.
+        ctx.lineTo(x, HEIGHT - Math.max(1.5, value * (HEIGHT - 6)));
       }
       ctx.lineTo(0, HEIGHT);
       ctx.closePath();
