@@ -92,15 +92,3 @@ export function openTorrentSession(client: Instance, options: OpenOptions): Prom
   queue = next.catch(() => undefined);
   return next;
 }
-
-/** Nothing to play: let go of the torrent we were seeding. */
-export function closeTorrentSession(): Promise<void> {
-  const next = queue.then(async () => {
-    if (!active) return;
-    const previous = active;
-    active = null;
-    await destroyTorrent(previous.torrent);
-  });
-  queue = next.catch(() => undefined);
-  return next;
-}

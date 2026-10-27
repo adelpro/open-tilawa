@@ -9,7 +9,7 @@ answer "what was in that repo release?" without diffing branches.
 
 | Repo | web | admin | seeder |
 |---|---|---|---|
-| 1.4.0 | 1.3.5 | 1.23.2 | 1.3.3 |
+| 1.5.0 | 1.4.0 | 1.24.0 | 1.4.0 |
 
 Bump the root version when you tag a repo release, and name the three app
 versions in the tag notes.
@@ -20,21 +20,21 @@ Three apps ship independently and carry their own version:
 
 | App | Package | Version also in |
 |---|---|---|
-| `apps/web` | `apps/web/package.json` | `src/constants/version.ts` (`APP_VERSION`), footer and header read it |
+| `apps/web` | `apps/web/package.json` | nothing else: `APP_VERSION` is imported from it at build, and the header and about page read that |
 | `apps/admin` | `apps/admin/package.json` (workspaces: `apps/api`, `apps/web`, `libs/core`) | injected at build by Vite (`__APP_VERSION__`) |
 | `apps/seeder` | `apps/seeder/package.json` | `/health` reports it as `version`; the Dockerfile carries a `LABEL version` |
 
 ## Lock the version
 
-A version is three fields that must agree, or the release lies about itself:
+A version is two fields that must agree, or the release lies about itself:
 
 1. `package.json` → `version`
 2. the lockfile root → `version` and `packages[""].version` (web and seeder use
    npm lockfiles; admin uses yarn 4, which does not record it)
-3. `apps/web/src/constants/version.ts` → `APP_VERSION` (web only)
 
-The app shows the third one in the UI and the node reports the first after a
-build, so a mismatch is visible to users before it is visible to you.
+There is no third copy. `apps/web/src/constants/version.ts` imports the version
+from `package.json`, so the number in the header, the about page and the build is
+the same number — bumping the package is the whole job.
 
 ## Tag
 
@@ -60,7 +60,7 @@ A `v*` tag on `apps/seeder/**` also publishes the multi-arch image through
 ## Order
 
 ```bash
-# 1. version + lockfile + APP_VERSION agree, code committed
+# 1. version + lockfile agree, code committed
 # 2. build it, or the tag points at something that never compiled
 yarn workspace @tilawa-admin/web build
 ( cd apps/web && npm run build )
