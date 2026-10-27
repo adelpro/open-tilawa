@@ -22,7 +22,8 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
   const levels = useRef<number[]>(new Array(BARS).fill(0.08));
   const peaks = useRef<number[]>(new Array(BARS).fill(0.08));
   const history = useRef<number[][]>([]);
-  const wave = useRef<Float32Array>(new Float32Array(BARS * 4));
+  // 128 is silence in the byte time-domain format; zeroes would draw a full block.
+  const wave = useRef<Float32Array>(new Float32Array(BARS * 4).fill(128));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -93,6 +94,11 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
 
     const drawWaterfall = () => {
       const columns = history.current;
+      if (columns.length === 0) {
+        // Nothing has been heard yet: a hairline, not an empty rectangle.
+        ctx.fillRect(0, HEIGHT - 1.5, width, 1.5);
+        return;
+      }
       const step = width / HISTORY;
       columns.forEach((column, age) => {
         const x = width - (age + 1) * step;
