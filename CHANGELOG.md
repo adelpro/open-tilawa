@@ -1,5 +1,55 @@
 # Changelog
 
+## 1.5.8 — 2026-10-27
+
+Minor. App versions: **web 1.5.0**, **admin 1.24.0**, **seeder 1.4.2**.
+
+Favourites and listen counts, and an account that carries them between devices.
+
+### Added
+
+- **A favourite button on every reciter**, with the public totals beside it: how
+  many listeners favourited that reciter and how many times it was played.
+- **Two personal scopes in the reciter sheet** — «مفضّلتي» and «آخر ما استمعت»
+  (the last ten you opened, newest first) — next to the two public sorts.
+- **Accounts over the self-hosted gun relay** (`gundb-relay.quran.us.kg`).
+  Sign up with a username and password, or link a second device.
+- **Device linking by QR.** The code carries a one-time key, not the account key:
+  the real keypair sits on the relay encrypted to a throwaway pair for two
+  minutes and is deleted on first successful scan.
+- **A device list** with rename, a `this device` marker, a `primary` badge, and
+  last-seen times.
+- **A schema stamp** on the account graph (`version: 1`) with forward migrations.
+
+### Changed
+
+- **Signing out refuses to run on the last device** without typing the
+  confirmation, because there is no password reset and the account would be lost.
+- **Favourites work signed out.** They live in this browser first and union into
+  the account on login, so nothing made before signing in is dropped.
+- **The heart and eye glyphs are Phosphor icons** (`Heart`, `Headphones`) rather
+  than text symbols, with tabular counts.
+
+### Fixed
+
+- **Clients were pinned to the build that installed the worker.** Navigations
+  served `index.html` from the precache, so a client whose worker never updated
+  kept an old build's HTML and hashed bundles indefinitely — the files those
+  bundles pointed at were long gone from nginx. Navigations are network-first now
+  (2 s) with the precached shell as the offline fallback. A deploy reaches people
+  on their next load.
+- **Two quick favourites lost one count.** Bumps are serialised per reciter; two
+  toggles in the same millisecond used to tie on Gun's state clock and leave the
+  tab stale until reload.
+- **A fresh account never got a schema stamp.** `.once()` on a path the relay had
+  never seen does not always answer, and the write sat behind it. Reads are
+  bounded now.
+- **The device list said "no devices" after signing in.** The login snapshot
+  replaced the atom after this device had already written its row; it merges.
+- **The account sheet showed an 80-character key as the username.** `recall()`
+  drops the alias, so it is stored in the account profile and read back.
+- The favourite button announced itself in English on an Arabic screen.
+
 ## 1.5.7 — 2026-10-27
 
 Patch. App versions: **web 1.4.7**, **admin 1.24.0**, **seeder 1.4.2**.

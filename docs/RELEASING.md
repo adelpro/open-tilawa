@@ -9,7 +9,7 @@ answer "what was in that repo release?" without diffing branches.
 
 | Repo | web | admin | seeder |
 |---|---|---|---|
-| 1.5.7 | 1.4.7 | 1.24.0 | 1.4.2 |
+| 1.5.8 | 1.5.0 | 1.24.0 | 1.4.2 |
 
 Bump the root version when you tag a repo release, and name the three app
 versions in the tag notes.
@@ -79,6 +79,21 @@ docker compose up -d --build web          # or admin-web, admin-api, seeder
 
 `develop` and `main` are kept identical: `main` is fast-forwarded, never merged
 into by hand, so `git rev-list --count main..develop` is 0 between releases.
+
+## Branches
+
+Three long-lived branches, and nothing else:
+
+| Branch | Holds |
+|---|---|
+| `develop` | where work lands. Every feature branch merges here and is deleted. |
+| `staging` | a promotion of `develop`, for a build to be looked at before it is called a release. Fast-forwarded from `develop`, never committed to. |
+| `main` | what shipped. Fast-forwarded from `staging` when a release is tagged. |
+
+Feature branches are short-lived: merge into `develop`, then delete both the local
+and the remote branch. A branch that is *not* merged but is worth keeping becomes
+an `archive/<name>` tag rather than a branch, so the ref survives without adding
+a fourth head. `git branch -a` should only ever list the three above.
 
 ## Deploying from a working tree
 
