@@ -231,7 +231,7 @@ export default function PlayerPage({
               </span>
             </button>
           </p>
-          <div className="theatre-horizon flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0 lg:opacity-70">
+          <div className="theatre-horizon flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0 lg:opacity-90">
             <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 64} />
           </div>
           {/* The floor: the horizon's edge, kept even when paused so the stage

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.5 — 2026-10-27
+
+Patch. App versions: **web 1.4.5**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Changed
+
+- **The spectrum is legible at ordinary levels.** Bars and peaks lift the analyser
+  value by a gamma (0.65) before it becomes pixels, so a normal voice reads at
+  half height instead of a hairline; the floor bar is 3 px.
+- **Throttled, not twitchy.** Bars rise fast (0.5) and fall slowly (0.14); the
+  ribbon follows a smoothed loudness with the same asymmetry, so quiet passages
+  keep a readable shape without per-frame jitter.
+- The desktop horizon draws at 90 % ink instead of 70 %.
+
 ## 1.5.4 — 2026-10-27
 
 Patch. App versions: **web 1.4.4**, **admin 1.24.0**, **seeder 1.4.2**.

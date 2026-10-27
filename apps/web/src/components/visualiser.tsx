@@ -37,6 +37,8 @@ export default function Visualiser({
   const peaks = useRef<number[]>(new Array(BARS).fill(0.08));
   const smoothed = useRef<Float32Array>(new Float32Array(RIBBON_POINTS).fill(128));
   const trails = useRef<Float32Array[]>([]);
+  /** Smoothed recent peak: fast to rise, slow to fall, so the shape never jitters. */
+  const loudness = useRef(0.12);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -61,9 +63,16 @@ export default function Visualiser({
     /** Index 0 at the right edge, so the voice starts where the eye starts. */
     const xFor = (index: number, step = barWidth + GAP) => width - barWidth - index * step;
 
+    /**
+     * A quiet passage still has to be legible: the level is lifted by a gamma
+     * before it becomes pixels, so an ordinary voice reads at half height instead
+     * of a hairline, while true silence stays at the floor.
+     */
+    const barHeightFor = (level: number) => Math.max(3, Math.pow(level, 0.65) * height);
+
     const drawBars = () => {
       levels.current.forEach((level, index) => {
-        const barHeight = Math.max(2, level * height);
+        const barHeight = barHeightFor(level);
         ctx.fillRect(xFor(index), height - barHeight, barWidth, barHeight);
       });
     };
@@ -71,7 +80,7 @@ export default function Visualiser({
     const drawPeaks = () => {
       drawBars();
       peaks.current.forEach((level, index) => {
-        const y = height - Math.max(3, level * height);
+        const y = height - barHeightFor(level);
         ctx.fillRect(xFor(index), y - 2, barWidth, 1.5);
       });
     };
@@ -88,14 +97,18 @@ export default function Visualiser({
     };
 
     const drawRibbon = () => {
-      const amplitude = height - 8;
+      const amplitude = height - 10;
       // A quiet passage would otherwise be a flat line at the bottom. The gain
-      // follows the recent peak, so the trace keeps a readable shape at any level.
+      // follows the recent peak with a slow release, which is the "throttle": the
+      // trace keeps a readable height at any level without twitching per frame.
       let peak = 0;
       for (let i = 0; i < smoothed.current.length; i += 1) {
         peak = Math.max(peak, Math.abs((smoothed.current[i] - 128) / 128));
       }
-      const gain = Math.min(3.2, 1 / Math.max(0.18, peak));
+      const target = Math.max(0.12, peak);
+      loudness.current +=
+        (target - loudness.current) * (target > loudness.current ? 0.25 : 0.05);
+      const gain = Math.min(5.5, 1.1 / loudness.current);
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
 
@@ -151,7 +164,10 @@ export default function Visualiser({
       if (analyser && !reduced) {
         analyser.getByteFrequencyData(bins);
         downsample(bins, BARS).forEach((target, index) => {
-          levels.current[index] += (Math.max(0.06, target) - levels.current[index]) * 0.35;
+          const level = Math.max(0.06, target);
+          const current = levels.current[index];
+          // Rise quickly, fall slowly: the same shape with less flicker.
+          levels.current[index] += (level - current) * (level > current ? 0.5 : 0.14);
           peaks.current[index] = Math.max(levels.current[index], peaks.current[index] - 0.008);
         });
 
