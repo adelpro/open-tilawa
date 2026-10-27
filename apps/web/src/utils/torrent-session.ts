@@ -1,5 +1,7 @@
 import type { Instance, Torrent } from 'webtorrent';
 
+import { APP_VERSION } from '@/constants/version';
+
 /**
  * The one live torrent, owned by the client rather than by a React component.
  *
@@ -60,7 +62,8 @@ function destroyTorrent(torrent: Torrent): Promise<void> {
 async function addTorrent(client: Instance, options: OpenOptions): Promise<Torrent> {
   const addOptions = { announce: options.announce, deselect: true };
   try {
-    const response = await fetch(`/torrents/${options.infoHash}.torrent`);
+    // Versioned: a corrected .torrent must not be masked by a cached copy.
+    const response = await fetch(`/torrents/${options.infoHash}.torrent?v=${APP_VERSION}`);
     if (response.ok) {
       const blob = await response.blob();
       return client.add(blob as never, addOptions as never) as unknown as Torrent;

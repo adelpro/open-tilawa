@@ -8,7 +8,7 @@ import { formatBytes, formatSpeed } from '@/utils/format-bytes';
 import { probeMedia } from '@/utils/webseed';
 
 /** Where the sound is coming from right now. */
-export type StreamSource = 'connected' | 'waiting' | 'webseed';
+export type StreamSource = 'connected' | 'waiting' | 'webseed' | 'mixed';
 
 type Row = { label: string; value: string };
 
@@ -77,11 +77,13 @@ export default function StreamSheet({
   }, [open, folder, surahId]);
 
   const sourceLabel =
-    source === 'webseed'
-      ? t.source.webseed
-      : source === 'connected'
-        ? t.source.connected
-        : t.source.waiting;
+    source === 'mixed'
+      ? t.source.mixed
+      : source === 'webseed'
+        ? t.source.webseed
+        : source === 'connected'
+          ? t.source.connected
+          : t.source.waiting;
 
   return (
     <Sheet title={t.stream.title} open={open} onClose={onClose} size="auto">

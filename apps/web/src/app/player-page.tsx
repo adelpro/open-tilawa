@@ -175,9 +175,16 @@ export default function PlayerPage({
   const progress =
     typeof currentFile?.progress === 'number' ? currentFile.progress : (torrent?.progress ?? 0);
 
+  /**
+   * What is feeding the stream *now*. The web seed is never removed once added,
+   * so "webseed" alone stopped being the truth the moment a peer connected:
+   * both sources run concurrently, and the label has to say so.
+   */
   const source: StreamSource =
     torrent?.webSeed === 'active'
-      ? 'webseed'
+      ? (torrent?.peers ?? 0) > 0
+        ? 'mixed'
+        : 'webseed'
       : (torrent?.peers ?? 0) > 0
         ? 'connected'
         : 'waiting';

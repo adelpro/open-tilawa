@@ -56,6 +56,7 @@ const ar = {
     connected: 'متصل عبر الأقران',
     waiting: 'بانتظار الأقران',
     webseed: 'من الخادم',
+    mixed: 'الأقران والخادم',
   },
   stream: {
     title: 'تفاصيل البث',
@@ -175,6 +176,7 @@ const en: typeof ar = {
     connected: 'Connected to peers',
     waiting: 'Waiting for peers',
     webseed: 'From the server',
+    mixed: 'Peers and server',
   },
   stream: {
     title: 'Stream details',

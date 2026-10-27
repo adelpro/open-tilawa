@@ -40,6 +40,7 @@ export default function PlayerFooter({
     connected: t.source.connected,
     waiting: t.source.waiting,
     webseed: t.source.webseed,
+    mixed: t.source.mixed,
   };
   const hasProgress = progress > 0.005;
   const percent = Math.round(progress * 100);

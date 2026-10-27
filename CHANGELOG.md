@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.5.3 — 2026-10-27
+
+Patch. App versions: **web 1.4.3**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Fixed
+
+- **The source said "من الخادم" with peers connected.** The web seed is never
+  removed once added, so the label was pinned to it. There is now a fourth state,
+  «الأقران والخادم», for a torrent fed by both — which is the normal case after
+  a slow first peer.
+- **`.torrent` files were cached for a year as immutable.** A corrected announce
+  list was masked by the CDN (`cf-cache-status: HIT`) and clients parsed a broken
+  file. They are now `no-cache`, and the client requests
+  `/torrents/<hash>.torrent?v=<version>` so a fix always busts the cache.
+- Announce lists in the served torrents were rewritten to the seven trackers that
+  answer; the compose-internal `tracker:8083` no longer leaks into a file the
+  browser downloads.
+
 ## 1.5.2 — 2026-10-27
 
 Patch. App versions: **web 1.4.2**, **admin 1.24.0**, **seeder 1.4.1**.
