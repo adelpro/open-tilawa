@@ -80,6 +80,7 @@ export class RecitersController {
       magnet: string;
       fileCount?: number;
       sizeBytes?: number | null;
+      published?: boolean;
     },
   ) {
     try {
@@ -90,6 +91,7 @@ export class RecitersController {
         magnet: this.normalised(body.magnet, body.infohash, body.name),
         fileCount: body.fileCount ?? 0,
         sizeBytes: body.sizeBytes ?? null,
+        published: body.published,
       });
     } catch (err) {
       throw new BadRequestException((err as Error).message);
@@ -108,6 +110,7 @@ export class RecitersController {
       magnet?: string;
       fileCount?: number;
       sizeBytes?: number | null;
+      published?: boolean;
     },
   ) {
     let updated;

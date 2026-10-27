@@ -16,7 +16,8 @@ export class PublicRecitersController {
   @Get('reciters')
   list() {
     return {
-      reciters: this.reciters.list().map((reciter) => ({
+      reciters: this.reciters.listPublished().map((reciter) => ({
+        id: reciter.id,
         name: reciter.name,
         nameAr: reciter.nameAr,
         riwaya: reciter.riwaya,

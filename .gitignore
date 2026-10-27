@@ -27,3 +27,6 @@ logs/
 .vscode/
 .idea/
 dist/
+
+# Local plan-execution scratch (ledgers/briefs)
+.superpowers/

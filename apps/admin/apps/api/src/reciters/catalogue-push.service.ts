@@ -112,7 +112,8 @@ export class CataloguePushService {
       if (!row) {
         this.reciters.add({
           name: torrent.name,
-          riwaya: 'Hafs',
+          // The node knows the folder, not the reading: unknown until a human says.
+          riwaya: 'unknown',
           infohash: torrent.infoHash,
           magnet: magnetForInfo(torrent.infoHash, torrent.name, this.settings.getTrackers()),
           fileCount: torrent.files,
