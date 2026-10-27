@@ -25,6 +25,8 @@ services:
     restart: unless-stopped
     volumes:
       - seed_torrents:/usr/share/nginx/html/torrents:ro
+      # The web seed's payload: the same folders the node seeds, served as-is.
+      - seed_downloads:/usr/share/nginx/html/media:ro
     networks: [open-tilawa]
 
   tracker:
