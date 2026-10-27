@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
-import { getPosition } from '@/hooks/use-persistence';
+import { getPosition, setLastSurah } from '@/hooks/use-persistence';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
   currentSurahIdAtom,
@@ -42,6 +42,7 @@ export function usePlayerNav() {
       const stored = getPosition(forReciterId ?? reciter?.id);
       setPositionAtom(stored && stored.surahId === target ? stored.position : 0);
       setSurahId(target);
+      setLastSurah(target);
       return true;
     },
     [reciter?.id, setPositionAtom, setSurahId],

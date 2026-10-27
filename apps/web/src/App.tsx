@@ -17,7 +17,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
 import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom } from './jotai/atom';
-import { patchState } from './hooks/use-persistence';
+import { patchSettings } from './hooks/use-persistence';
 
 /**
  * A top bar, one routed view, and the `<audio>` element that outlives all of
@@ -34,13 +34,13 @@ export default function App() {
 
   const chooseVisualiser = (next: ReturnType<typeof normaliseVisualiser>) => {
     setVisualiser(next);
-    patchState({ visualiser: next });
+    patchSettings({ visualiser: next });
   };
   const reciter = useAtomValue(selectedReciterAtom);
 
   const chooseRate = (next: number) => {
     setRate(next);
-    patchState({ rate: next });
+    patchSettings({ rate: next });
   };
   const sleep = useSleepTimer(() => setIsPlaying(false));
 

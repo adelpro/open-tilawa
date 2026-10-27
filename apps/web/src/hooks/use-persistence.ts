@@ -1,16 +1,22 @@
 /**
- * Local persistence, v2.
+ * Local persistence, v3.
  *
- * The v1 shape was flat (`{ reciterId, surahIndex, position }`) and every write
- * clobbered the previous reciter's position. v2 keeps a small map instead, so
- * "continue listening" works across reciters, and it migrates the v1 keys
- * rather than orphaning them.
+ * One key, one shape, one write path. The v1 layout (`{ reciterId, surahIndex,
+ * position }`) clobbered the previous reciter's position; v2 kept a per-reciter
+ * map but grew settings fields one by one at the top level. v3 groups them, so
+ * "what the listener chose" and "where they were" are separable and both can be
+ * migrated on their own.
+ *
+ * Nothing here writes on `timeupdate`: position is debounced, and flushed when
+ * playback pauses, when the surah changes and when the page goes away.
  */
 
-export const STORAGE_KEY = 'open-tilawa:v2';
+export const STORAGE_KEY = 'open-tilawa:v3';
+const PREVIOUS_KEY = 'open-tilawa:v2';
 const LEGACY_KEY = 'tilawa:state';
 const LEGACY_PROGRESS_PREFIX = 'tilawa:progress:';
 const MAX_POSITIONS = 10;
+const POSITION_WRITE_DELAY = 2_000;
 
 export type StoredPosition = {
   /** 1–114. Note: v1 stored a 0-based playlist index; the migration shifts it. */
@@ -19,21 +25,27 @@ export type StoredPosition = {
   updatedAt: number;
 };
 
-export type StoredState = {
-  version: 2;
-  reciterId?: number;
-  positions: Record<string, StoredPosition>;
-  /** Optional so a blob written before speed existed stays valid. */
+export type StoredSettings = {
   rate?: number;
   visualiser?: string;
   locale?: string;
   theme?: string;
+};
+
+export type StoredState = {
+  version: 3;
+  reciterId?: number;
+  /** The surah the listener last selected, before any position is written. */
+  lastSurahId?: number;
+  positions: Record<string, StoredPosition>;
+  settings: StoredSettings;
   updatedAt: number;
 };
 
 export const DEFAULT_STATE: StoredState = {
-  version: 2,
+  version: 3,
   positions: {},
+  settings: {},
   updatedAt: 0,
 };
 
@@ -44,82 +56,158 @@ type LegacyState = {
   updatedAt?: number;
 };
 
+type LegacyProgress = { surahIndex?: number; position?: number; updatedAt?: number };
+
+type V2State = {
+  version?: unknown;
+  reciterId?: unknown;
+  positions?: unknown;
+  rate?: unknown;
+  visualiser?: unknown;
+  locale?: unknown;
+  theme?: unknown;
+  updatedAt?: unknown;
+};
+
 function toPosition(surahIndex: number, position: number, updatedAt: number): StoredPosition {
   return { surahId: surahIndex + 1, position: Math.max(0, position || 0), updatedAt };
 }
 
+function stringOrUndefined(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function settingsOf(source: {
+  rate?: unknown;
+  visualiser?: unknown;
+  locale?: unknown;
+  theme?: unknown;
+}): StoredSettings {
+  const settings: StoredSettings = {
+    rate: numberOrUndefined(source.rate),
+    visualiser: stringOrUndefined(source.visualiser),
+    locale: stringOrUndefined(source.locale),
+    theme: stringOrUndefined(source.theme),
+  };
+  // Drop absent keys so the blob stays readable in devtools.
+  (Object.keys(settings) as (keyof StoredSettings)[]).forEach((key) => {
+    if (settings[key] === undefined) delete settings[key];
+  });
+  return settings;
+}
+
+/** v2 → v3: settings move into their own bag, everything else is preserved. */
+export function migrateV2(raw: unknown): StoredState | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const value = raw as V2State;
+  if (value.version !== 2) return null;
+
+  const positions =
+    value.positions && typeof value.positions === 'object'
+      ? (value.positions as Record<string, StoredPosition>)
+      : {};
+
+  const lastReciter = numberOrUndefined(value.reciterId);
+  const saved = lastReciter !== undefined ? positions[String(lastReciter)] : undefined;
+
+  return {
+    version: 3,
+    reciterId: lastReciter,
+    lastSurahId: saved?.surahId,
+    positions,
+    settings: settingsOf(value),
+    updatedAt: numberOrUndefined(value.updatedAt) ?? 0,
+  };
+}
+
 /**
  * Pure migration so it can be tested: given whatever the browser holds, return
- * a valid v2 state. Unknown shapes degrade to defaults — never throw.
+ * a valid state. Unknown shapes degrade to defaults — never throw.
  */
 export function migrateLegacy(
   legacy: LegacyState | null,
-  progress: Record<string, { surahIndex?: number; position?: number; updatedAt?: number }>,
+  progress: Record<string, LegacyProgress>,
 ): StoredState {
   const positions: Record<string, StoredPosition> = {};
 
   for (const [reciterId, entry] of Object.entries(progress)) {
     if (typeof entry?.surahIndex !== 'number') continue;
-    positions[reciterId] = toPosition(
-      entry.surahIndex,
-      entry.position ?? 0,
-      entry.updatedAt ?? 0,
-    );
+    positions[reciterId] = toPosition(entry.surahIndex, entry.position ?? 0, entry.updatedAt ?? 0);
   }
 
-  const reciterId = legacy?.reciterId;
-  if (typeof reciterId === 'number' && typeof legacy?.surahIndex === 'number') {
-    positions[String(reciterId)] = toPosition(
+  if (legacy && typeof legacy.surahIndex === 'number' && legacy.reciterId !== undefined) {
+    positions[String(legacy.reciterId)] = toPosition(
       legacy.surahIndex,
       legacy.position ?? 0,
       legacy.updatedAt ?? 0,
     );
   }
 
+  const reciterId = numberOrUndefined(legacy?.reciterId);
+  const saved = reciterId !== undefined ? positions[String(reciterId)] : undefined;
+
   return {
-    ...DEFAULT_STATE,
-    reciterId: typeof reciterId === 'number' ? reciterId : undefined,
+    version: 3,
+    reciterId,
+    lastSurahId: saved?.surahId,
     positions,
-    updatedAt: Math.max(legacy?.updatedAt ?? 0, 0),
+    settings: {},
+    updatedAt: 0,
   };
 }
 
 export function isStoredState(value: unknown): value is StoredState {
   if (!value || typeof value !== 'object') return false;
-  const candidate = value as Partial<StoredState>;
-  return candidate.version === 2 && typeof candidate.positions === 'object';
+  const candidate = value as StoredState;
+  return candidate.version === 3 && typeof candidate.positions === 'object';
+}
+
+function readRaw(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
 }
 
 export function loadState(): StoredState {
   if (typeof window === 'undefined') return { ...DEFAULT_STATE };
+
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed: unknown = JSON.parse(raw);
+    const current = readRaw(STORAGE_KEY);
+    if (current) {
+      const parsed: unknown = JSON.parse(current);
       if (isStoredState(parsed)) {
-        // Pick the known fields: an older build's `theme`/`repeat`/`rate` keys
-        // must not be carried forward forever.
-        const rate = (parsed as { rate?: unknown }).rate;
-        const visualiser = (parsed as { visualiser?: unknown }).visualiser;
-        const locale = (parsed as { locale?: unknown }).locale;
-        const theme = (parsed as { theme?: unknown }).theme;
         return {
-          version: 2,
-          reciterId: typeof parsed.reciterId === 'number' ? parsed.reciterId : undefined,
+          version: 3,
+          reciterId: numberOrUndefined(parsed.reciterId),
+          lastSurahId: numberOrUndefined(parsed.lastSurahId),
           positions: parsed.positions ?? {},
-          rate: typeof rate === 'number' && Number.isFinite(rate) ? rate : undefined,
-          visualiser: typeof visualiser === 'string' ? visualiser : undefined,
-          locale: typeof locale === 'string' ? locale : undefined,
-          theme: typeof theme === 'string' ? theme : undefined,
-          updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0,
+          settings: settingsOf(parsed.settings ?? {}),
+          updatedAt: numberOrUndefined(parsed.updatedAt) ?? 0,
         };
       }
     }
 
-    const legacyRaw = window.localStorage.getItem(LEGACY_KEY);
+    // v2: same key family, settings at the top level.
+    const previous = readRaw(PREVIOUS_KEY);
+    if (previous) {
+      const migrated = migrateV2(JSON.parse(previous));
+      if (migrated) {
+        saveState(migrated);
+        return migrated;
+      }
+    }
+
+    const legacyRaw = readRaw(LEGACY_KEY);
     const legacy: LegacyState | null = legacyRaw ? JSON.parse(legacyRaw) : null;
 
-    const progress: Record<string, { surahIndex?: number; position?: number; updatedAt?: number }> = {};
+    const progress: Record<string, LegacyProgress> = {};
     for (let i = 0; i < window.localStorage.length; i += 1) {
       const key = window.localStorage.key(i);
       if (!key?.startsWith(LEGACY_PROGRESS_PREFIX)) continue;
@@ -167,7 +255,17 @@ export function trimPositions(state: StoredState): StoredState {
 
 export function patchState(patch: Partial<Omit<StoredState, 'version'>>): StoredState {
   const current = loadState();
-  return saveState({ ...current, ...patch, version: 2, updatedAt: Date.now() });
+  return saveState({ ...current, ...patch, version: 3, updatedAt: Date.now() });
+}
+
+export function patchSettings(patch: StoredSettings): StoredState {
+  const current = loadState();
+  return saveState({
+    ...current,
+    settings: { ...current.settings, ...patch },
+    version: 3,
+    updatedAt: Date.now(),
+  });
 }
 
 export function getPosition(reciterId: number | undefined): StoredPosition | undefined {
@@ -175,24 +273,59 @@ export function getPosition(reciterId: number | undefined): StoredPosition | und
   return loadState().positions[String(reciterId)];
 }
 
-export function setPosition(
-  reciterId: number | undefined,
-  surahId: number,
-  position: number,
-): void {
-  if (!reciterId) return;
+let pendingWrite: { state: StoredState; timer: number } | null = null;
+
+function flushPendingWrite(): void {
+  if (!pendingWrite) return;
+  window.clearTimeout(pendingWrite.timer);
+  saveState(pendingWrite.state);
+  pendingWrite = null;
+}
+
+/**
+ * Coalesces the playhead: a five-second interval plus seeks would otherwise hit
+ * localStorage dozens of times a minute. The latest write always wins, and
+ * `flushPosition` forces it (pause, surah swap, pagehide).
+ */
+export function setPosition(reciterId: number | undefined, surahId: number, position: number): void {
+  if (!reciterId || typeof window === 'undefined') return;
   const current = loadState();
-  const positions = {
-    ...current.positions,
-    [String(reciterId)]: { surahId, position: Math.max(0, position), updatedAt: Date.now() },
+  const next: StoredState = {
+    ...current,
+    reciterId,
+    lastSurahId: surahId,
+    positions: {
+      ...current.positions,
+      [String(reciterId)]: { surahId, position: Math.max(0, position), updatedAt: Date.now() },
+    },
   };
-  saveState({ ...current, positions, reciterId });
+
+  if (pendingWrite) window.clearTimeout(pendingWrite.timer);
+  pendingWrite = {
+    state: next,
+    timer: window.setTimeout(() => {
+      if (pendingWrite) saveState(pendingWrite.state);
+      pendingWrite = null;
+    }, POSITION_WRITE_DELAY),
+  };
+}
+
+/** Write the pending playhead now. Safe to call when nothing is pending. */
+export function flushPosition(): void {
+  flushPendingWrite();
+}
+
+export function setLastSurah(surahId: number): void {
+  const current = loadState();
+  if (current.lastSurahId === surahId) return;
+  saveState({ ...current, lastSurahId: surahId, updatedAt: Date.now() });
 }
 
 export function clearState(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(PREVIOUS_KEY);
   } catch {
     // ignore
   }

@@ -1,7 +1,7 @@
 import { atom, useAtom } from 'jotai';
 import { useEffect } from 'react';
 
-import { loadState, patchState } from '@/hooks/use-persistence';
+import { loadState, patchSettings } from '@/hooks/use-persistence';
 
 export type Theme = 'light' | 'dark';
 
@@ -18,7 +18,7 @@ export function prefersDark(): boolean {
 }
 
 export function resolveInitialTheme(): Theme {
-  const raw = typeof window === 'undefined' ? undefined : loadState().theme;
+  const raw = typeof window === 'undefined' ? undefined : loadState().settings.theme;
   const stored = raw === 'light' || raw === 'dark' ? raw : undefined;
   return resolveTheme(stored, prefersDark());
 }
@@ -39,7 +39,7 @@ export function useTheme(): { theme: Theme; setTheme: (next: Theme) => void } {
   const setTheme = (next: Theme) => {
     setThemeAtom(next);
     applyTheme(next);
-    patchState({ theme: next });
+    patchSettings({ theme: next });
   };
 
   return { theme, setTheme };

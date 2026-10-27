@@ -1,14 +1,14 @@
 import { atom, useAtom } from 'jotai';
 import { useEffect } from 'react';
 
-import { loadState, patchState } from '@/hooks/use-persistence';
+import { loadState, patchSettings } from '@/hooks/use-persistence';
 import { DIRECTION, MESSAGES, normaliseLocale, type Locale, type Messages } from '@/i18n/messages';
 
 export const localeAtom = atom<Locale>('ar');
 
 export function resolveInitialLocale(): Locale {
   if (typeof window === 'undefined') return 'ar';
-  return normaliseLocale(loadState().locale);
+  return normaliseLocale(loadState().settings.locale);
 }
 
 /** `lang` and `dir` on <html>: everything else follows the document direction. */
@@ -33,7 +33,7 @@ export function useLocale(): {
   const setLocale = (next: Locale) => {
     setLocaleAtom(next);
     applyLocale(next);
-    patchState({ locale: next });
+    patchSettings({ locale: next });
   };
 
   return { locale, setLocale, t: MESSAGES[locale], dir: DIRECTION[locale] };

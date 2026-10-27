@@ -10,7 +10,7 @@ import Visualiser from '@/components/visualiser';
 import { surahById } from '@/constants/surah';
 import { useLocale } from '@/hooks/use-locale';
 import { usePlayerNav } from '@/hooks/use-player-nav';
-import { getPosition, loadState, saveState } from '@/hooks/use-persistence';
+import { getPosition, loadState, saveState, setLastSurah } from '@/hooks/use-persistence';
 import { useReciters } from '@/hooks/use-reciters';
 import { useSheet } from '@/hooks/use-sheet';
 import { selectedReciterAtom } from '@/jotai/atom';
@@ -54,8 +54,12 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
   /** Put the listener back where they stopped: their reciter, their surah. */
   const restoreFor = useCallback(
     (target: Reciter) => {
+      const state = loadState();
       const saved = getPosition(target.id);
-      selectSurah(saved?.surahId ?? 1, target.id);
+      // A surah picked but never played still counts as "where they were".
+      const surahId =
+        saved?.surahId ?? (state.reciterId === target.id ? state.lastSurahId : undefined) ?? 1;
+      selectSurah(surahId, target.id);
     },
     [selectSurah],
   );
@@ -68,8 +72,8 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
     const stored = loadState();
     const saved = reciters.find((candidate) => candidate.id === stored.reciterId) ?? reciters[0];
     setReciter(saved);
-    setRate(stored.rate ?? 1);
-    setVisualiser(normaliseVisualiser(stored.visualiser));
+    setRate(stored.settings.rate ?? 1);
+    setVisualiser(normaliseVisualiser(stored.settings.visualiser));
     restoreFor(saved);
   }, [reciters, restoreFor, setReciter]);
 

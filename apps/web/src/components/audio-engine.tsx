@@ -2,7 +2,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useRef } from 'react';
 
 import { usePlayerNav } from '@/hooks/use-player-nav';
-import { getPosition, setPosition } from '@/hooks/use-persistence';
+import { flushPosition, getPosition, setPosition } from '@/hooks/use-persistence';
 import useTorrent from '@/hooks/use-torrent';
 import { selectedReciterAtom, webtorrentReadyAtom } from '@/jotai/atom';
 import {
@@ -134,6 +134,7 @@ export default function AudioEngine() {
     const outgoing = lastSurahRef.current;
     if (reciter && outgoing && outgoing !== surahId && audio.currentTime > 0) {
       setPosition(reciter.id, outgoing, audio.currentTime);
+      flushPosition();
     }
     lastSurahRef.current = surahId;
 
@@ -184,6 +185,8 @@ export default function AudioEngine() {
       audio.play().catch(() => setIsPlaying(false));
     } else {
       audio.pause();
+      persist();
+      flushPosition();
     }
   }, [isPlaying, surahId, fileCount, setIsPlaying]);
 
@@ -198,7 +201,7 @@ export default function AudioEngine() {
     if (audio) audio.playbackRate = rate;
   }, [rate, surahId, fileCount]);
 
-  /** Persist the position while playing, when paused, and before the tab dies. */
+  /** Persist the position; the writer coalesces, so callers stay dumb. */
   const persist = () => {
     const audio = audioRef.current;
     if (!audio || !reciter || !surahId) return;
@@ -211,12 +214,17 @@ export default function AudioEngine() {
       if (!audio || audio.paused) return;
       persist();
     }, 5000);
-    window.addEventListener('beforeunload', persist);
-    window.addEventListener('pagehide', persist);
+    // The tab is going away: the debounced write must land now.
+    const flush = () => {
+      persist();
+      flushPosition();
+    };
+    window.addEventListener('beforeunload', flush);
+    window.addEventListener('pagehide', flush);
     return () => {
       window.clearInterval(id);
-      window.removeEventListener('beforeunload', persist);
-      window.removeEventListener('pagehide', persist);
+      window.removeEventListener('beforeunload', flush);
+      window.removeEventListener('pagehide', flush);
     };
     // `persist` closes over reciter/surahId, which are the deps that matter.
   }, [reciter, surahId]);
@@ -305,7 +313,10 @@ export default function AudioEngine() {
       onTimeUpdate={handleTimeUpdate}
       onDurationChange={handleTimeUpdate}
       onLoadedMetadata={restorePosition}
-      onSeeked={persist}
+      onSeeked={() => {
+        persist();
+        flushPosition();
+      }}
       onEnded={() => next()}
       onError={() => console.error('Audio playback error')}
       className="hidden"
