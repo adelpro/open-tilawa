@@ -1,4 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { Headphones, Heart } from '@phosphor-icons/react';
 
 import type { IconName } from '@/components/icons';
 import Icon from '@/components/icons';
@@ -13,6 +15,13 @@ import { riwayaLabel } from '@/utils/riwaya';
 import { filterReciters, filterSurahs } from '@/utils/search';
 import FavoriteButton from '@/components/favorite-button';
 import { useGlobalCounts } from '@/hooks/use-global-counts';
+import { myFavoritesAtom, myRecentAtom } from '@/jotai/gun';
+
+/**
+ * `mine` and `recent` are the listener's own lists; the other three order the
+ * whole roster by a public number.
+ */
+type ReciterScope = 'default' | 'mine' | 'recent' | 'favorites' | 'views';
 
 type SheetProps = {
   title: string;
@@ -397,9 +406,11 @@ export function ReciterSheet({
   const { t } = useLocale();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
-  const [sort, setSort] = useState<'default' | 'favorites' | 'views'>('default');
+  const [scope, setScope] = useState<ReciterScope>('default');
   const sentinelRef = useRef<HTMLDivElement>(null);
   const { viewCounts, favCounts } = useGlobalCounts();
+  const favorites = useAtomValue(myFavoritesAtom);
+  const recent = useAtomValue(myRecentAtom);
 
   const riwayas = useMemo(
     () => Array.from(new Set(reciters.map((r) => r.riwaya).filter(Boolean))) as string[],
@@ -411,23 +422,42 @@ export function ReciterSheet({
     if (filter !== 'all') {
       searched = searched.filter((r) => (r.riwaya || 'unknown') === filter);
     }
-    if (sort === 'favorites') {
-      return [...searched].sort((a, b) => (Number(favCounts[String(b.id)] || 0) - Number(favCounts[String(a.id)] || 0)));
+
+    // Personal scopes keep the order the listener made, not catalogue order:
+    // favourites stay in the roster's order, history stays newest first.
+    if (scope === 'mine') {
+      return searched.filter((r) => favorites.includes(String(r.id)));
     }
-    if (sort === 'views') {
-      return [...searched].sort((a, b) => (Number(viewCounts[String(b.id)] || 0) - Number(viewCounts[String(a.id)] || 0)));
+    if (scope === 'recent') {
+      const position = new Map(recent.map((entry, index) => [entry.id, index]));
+      return searched
+        .filter((r) => position.has(String(r.id)))
+        .sort((a, b) => (position.get(String(a.id)) ?? 0) - (position.get(String(b.id)) ?? 0));
+    }
+
+    if (scope === 'favorites') {
+      return [...searched].sort(
+        (a, b) => Number(favCounts[String(b.id)] || 0) - Number(favCounts[String(a.id)] || 0),
+      );
+    }
+    if (scope === 'views') {
+      return [...searched].sort(
+        (a, b) => Number(viewCounts[String(b.id)] || 0) - Number(viewCounts[String(a.id)] || 0),
+      );
     }
     return searched;
-  }, [query, reciters, filter, sort, favCounts, viewCounts]);
+  }, [query, reciters, filter, scope, favCounts, viewCounts, favorites, recent]);
 
   useEffect(() => {
     if (open) return;
     setQuery('');
     setFilter('all');
+    setScope('default');
   }, [open]);
 
   useEffect(() => {
     if (!open || !onLoadMore || !hasMore || loading || query || filter !== 'all') return;
+    if (scope !== 'default') return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
@@ -442,7 +472,7 @@ export function ReciterSheet({
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [open, onLoadMore, hasMore, loading, query, filter]);
+  }, [open, onLoadMore, hasMore, loading, query, filter, scope]);
 
   return (
     <Sheet
@@ -476,19 +506,23 @@ export function ReciterSheet({
             ))}
           </div>
           <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2">
-            {[
-              { key: 'default', label: t.sheets.sortDefault },
-              { key: 'favorites', label: t.sheets.sortFavorites },
-              { key: 'views', label: t.sheets.sortViews },
-            ].map((item) => (
+            {(
+              [
+                ['default', t.sheets.sortDefault],
+                ['mine', t.sheets.myFavorites],
+                ['recent', t.sheets.myRecent],
+                ['favorites', t.sheets.sortFavorites],
+                ['views', t.sheets.sortViews],
+              ] as [ReciterScope, string][]
+            ).map(([key, label]) => (
               <button
-                key={item.key}
+                key={key}
                 type="button"
-                onClick={() => setSort(item.key as 'default' | 'favorites' | 'views')}
-                aria-pressed={sort === item.key}
-                className={cn(chip, sort === item.key ? chipOn : chipOff)}
+                onClick={() => setScope(key)}
+                aria-pressed={scope === key}
+                className={cn(chip, scope === key ? chipOn : chipOff)}
               >
-                {item.label}
+                {label}
               </button>
             ))}
           </div>
@@ -518,8 +552,16 @@ export function ReciterSheet({
                       <span className={cn('block truncate', isCurrent && 'font-semibold')}>
                         {reciter.name}
                       </span>
-                      <span className="mt-0.5 block text-[11.5px] text-muted">
-                        {reciter.complet ? 'كامل' : 'جزئي'} · {f} ♥ · {v} 👁
+                      <span className="mt-0.5 flex items-center gap-2 text-[11.5px] text-muted">
+                        <span>{reciter.complet ? t.sheets.complete : t.sheets.partial}</span>
+                        <span className="inline-flex items-center gap-0.5">
+                          <Heart size={11} weight="fill" aria-hidden="true" />
+                          <span className="tnum">{f}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-0.5">
+                          <Headphones size={11} aria-hidden="true" />
+                          <span className="tnum">{v}</span>
+                        </span>
                       </span>
                     </span>
                     <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[10.5px] text-ink">

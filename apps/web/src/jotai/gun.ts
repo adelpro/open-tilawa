@@ -44,3 +44,7 @@ userProgressAtom.debugLabel = 'user-progress';
 
 export const userProfileAtom = atom<{ displayName?: string; avatarUrl?: string } | null>(null);
 userProfileAtom.debugLabel = 'user-profile';
+
+/** Last ten reciters this listener opened, newest first. */
+export const myRecentAtom = atom<{ id: string; at: number }[]>([]);
+myRecentAtom.debugLabel = 'my-recent';
