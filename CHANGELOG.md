@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.5.1 — 2026-10-27
+
+Patch. App versions: **web 1.4.1**, **admin 1.24.0**, **seeder 1.4.1**.
+
+### Fixed
+
+- **The Itqan importer crashed when the seeder was running.** The one-shot client
+  asked for port 6881, which the node already holds; uTP answered
+  `UTP_ECONNRESET` before the `.torrent` was written. It now takes an ephemeral
+  port and leaves DHT, LSD and uTP discovery to the node.
+- **Dead trackers removed.** `wss://tracker.btorrent.xyz` answers connection
+  refused and is gone from the browser list; fourteen long-dead UDP/WS trackers
+  left the node list. The project's own tracker now leads the browser announce
+  list.
+
+### Notes
+
+- Deploy: rebuild `web`; recreate `seeder` on the `seeder-v1.4.1` image.
+
 ## 1.5.0 — 2026-10-27
 
 Repo release. App versions: **web 1.4.0**, **admin 1.24.0**, **seeder 1.4.0**.

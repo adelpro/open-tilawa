@@ -149,7 +149,11 @@ async function download(tracks, folderName) {
 }
 
 async function seed(dir, folderName) {
-  const client = new WebTorrent({ maxConns: 100, dht: true, ut_pex: true });
+  // A separate process from the running seeder: ask for an ephemeral port and
+  // leave DHT/uTP discovery to the node, or the two clients fight over 6881 and
+  // the import crashes before it can write the .torrent.
+  const client = new WebTorrent({ torrentPort: 0, maxConns: 10, dht: false, lsd: false, ut_pex: false });
+  client.on('error', (err) => console.warn(`webtorrent: ${err.message}`));
   const torrent = await new Promise((resolve, reject) => {
     const pending = client.seed(
       dir,

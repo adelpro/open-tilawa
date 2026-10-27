@@ -1,30 +1,18 @@
+/**
+ * Node announce list. `ws://tracker:8083` is the tracker in this compose stack;
+ * the rest are the public WebSocket trackers that still answer, plus three UDP
+ * trackers for TCP peers. The long list of dead UDP trackers (coppersurfer,
+ * mg64, zer0day, empire-js, …) is gone: they only produced timeout noise.
+ */
 const TRACKERS = [
-  "ws://tracker:8083",
+  'ws://tracker:8083',
   'wss://tracker.quran.us.kg',
   'wss://tracker.webtorrent.dev:443/announce',
   'wss://tracker.files.fm:7073/announce',
-  'ws://tracker.files.fm:7072/announce',
   'wss://tracker.openwebtorrent.com:443/announce',
-  'wss://tracker.magnetoo.io:443/announce',
-  'wss://tracker.btorrent.xyz:443/announce',
-  'wss://spacetradersapi-chatbox.herokuapp.com:443/announce',
-  "udp://tracker.coppersurfer.tk:6969",
-  "udp://tracker.leechers-paradise.org:6969",
-  "udp://tracker.opentrackr.org:1337",
-  "udp://tracker.internetwarriors.net:1337",
-  "udp://tracker.openbittorrent.com:80",
-  "udp://tracker.publicbt.com:80",
-  "udp://tracker.mg64.net:2710",
-  "udp://tracker.zer0day.to:1337",
-  "udp://explodie.org:6969",
-  "udp://tracker.empire-js.us:1337",
-  "udp://tracker.uw0.xyz:6969",
-  "udp://tracker.dler.org:6969",
-  "udp://tracker.moeking.me:6969",
-  "udp://tracker.tiny-vps.com:6969",
-  "udp://open.stealth.si:80",
-  "udp://tracker.torrent.eu.org:451",
-  "udp://tracker.cyberia.is:6969",
+  'udp://tracker.opentrackr.org:1337',
+  'udp://tracker.torrent.eu.org:451',
+  'udp://open.stealth.si:80',
 ];
 
 export default TRACKERS;
