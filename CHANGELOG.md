@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.2 — 2026-10-27
+
+Patch. App versions: **web 1.4.2**, **admin 1.24.0**, **seeder 1.4.1**.
+
+### Fixed
+
+- `wss://tracker.fastcast.nz` no longer resolves; it left the browser announce
+  list, which now carries only the project tracker and two public WebSocket
+  trackers that answer.
+
 ## 1.5.1 — 2026-10-27
 
 Patch. App versions: **web 1.4.1**, **admin 1.24.0**, **seeder 1.4.1**.
