@@ -13,11 +13,17 @@ const WAVE_POINTS = 240;
  * into a single line: the quiet ones stay visible, the loud one reaches the top.
  */
 const WAVES = [
-  { gain: 2.6, alpha: 0.95, lineWidth: 1.6, follow: 0.22, shift: 0 },
-  { gain: 2.1, alpha: 0.5, lineWidth: 1.3, follow: 0.14, shift: 37 },
-  { gain: 1.7, alpha: 0.32, lineWidth: 1.1, follow: 0.1, shift: 83 },
-  { gain: 1.35, alpha: 0.2, lineWidth: 1, follow: 0.07, shift: 131 },
+  { gain: 2.6, alpha: 0.95, lineWidth: 1.6, follow: 0.13, shift: 0 },
+  { gain: 2.1, alpha: 0.5, lineWidth: 1.3, follow: 0.09, shift: 37 },
+  { gain: 1.7, alpha: 0.32, lineWidth: 1.1, follow: 0.065, shift: 83 },
+  { gain: 1.35, alpha: 0.2, lineWidth: 1, follow: 0.045, shift: 131 },
 ];
+/**
+ * The analyser is read every other frame, not every frame: at 30 Hz with the
+ * smoothing above the waves breathe instead of twitching, and no one can hear
+ * the difference.
+ */
+const DATA_EVERY = 2;
 
 /**
  * The spectrum, in three shapes: bars, peaks and waves.
@@ -148,7 +154,7 @@ export default function Visualiser({
 
     const tick = () => {
       const analyser = getAnalyser();
-      if (analyser && !reduced) {
+      if (analyser && !reduced && frame % DATA_EVERY === 0) {
         analyser.getByteFrequencyData(bins);
         downsample(bins, BARS).forEach((target, index) => {
           const level = Math.max(0.06, target);

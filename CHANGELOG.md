@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.7 — 2026-10-27
+
+Patch. App versions: **web 1.4.7**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Changed
+
+- **The waves are throttled.** Per-layer smoothing dropped by roughly half
+  (0.22/0.14/0.10/0.07 → 0.13/0.09/0.065/0.045) and the analyser is read every
+  second frame, so the spectrum breathes at ~30 Hz instead of twitching at 60.
+
 ## 1.5.6 — 2026-10-27
 
 Patch. App versions: **web 1.4.6**, **admin 1.24.0**, **seeder 1.4.2**.
