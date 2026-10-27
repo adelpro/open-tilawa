@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAtomValue } from 'jotai';
 
 import Sheet from '@/components/sheet';
-import AuthForm from '@/components/account/auth-form';
 import DeviceList from '@/components/account/device-list';
 import LinkDevice from '@/components/account/link-device';
 import { useGun } from '@/hooks/use-gun';
@@ -10,31 +9,32 @@ import { useLocale } from '@/hooks/use-locale';
 import { userDevicesAtom } from '@/jotai/gun';
 import { cn } from '@/utils/cn';
 
-type Tab = 'signin' | 'create' | 'link' | 'devices';
+type Tab = 'devices' | 'link';
 
 const chip = 'rounded-full px-3 py-1.5 text-[12.5px] transition-colors';
-const chipOn = 'bg-ink text-surface';
+const chipOn = 'border-ink bg-ink font-semibold text-invert';
 const chipOff = 'border border-line text-ink hover:bg-line';
+
+/**
+ * A fixed body height, not `auto`.
+ *
+ * With `auto` the panel grew and shrank as the tabs changed, so the sheet
+ * jumped under the finger on every switch. The height is the tallest common
+ * state; anything taller scrolls.
+ */
+const BODY = 'h-[min(72dvh,30rem)] overflow-y-auto overscroll-contain px-5 pb-5';
 
 export default function AccountSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useLocale();
   const copy = t.account;
-  const { loggedIn, alias, loading, error, createUser, loginUser, logout } = useGun();
+  const { loggedIn, name, loading, error, createAccount, logout } = useGun();
   const devices = useAtomValue(userDevicesAtom) as Record<string, { id?: string }>;
-  const [tab, setTab] = useState<Tab>('signin');
+  const [tab, setTab] = useState<Tab>('devices');
   const [confirmText, setConfirmText] = useState('');
 
   const deviceCount = Object.values(devices || {}).filter((d) => d?.id).length;
   const isLastDevice = deviceCount <= 1;
   const canSignOut = !isLastDevice || confirmText.trim().toLowerCase() === copy.signOutConfirmWord;
-
-  const activeTab: Tab = loggedIn
-    ? tab === 'link' || tab === 'devices'
-      ? tab
-      : 'devices'
-    : tab === 'devices'
-      ? 'signin'
-      : tab;
 
   const close = () => {
     setConfirmText('');
@@ -42,12 +42,12 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
   };
 
   return (
-    <Sheet title={loggedIn ? copy.title : copy.signIn} open={open} onClose={close} size="auto">
-      <div className="space-y-3 px-5 pb-5">
+    <Sheet title={copy.title} open={open} onClose={close} size="auto">
+      <div className={cn(BODY, 'space-y-3 pt-3')}>
         {loggedIn ? (
           <>
             <p className="text-[12.5px] text-muted">
-              {copy.signedInAs} <span className="text-ink">{alias || '—'}</span>
+              {copy.signedInAs} <span className="text-ink">{name || '—'}</span>
             </p>
 
             <div className="flex gap-1.5">
@@ -61,15 +61,15 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
                   key={key}
                   type="button"
                   onClick={() => setTab(key)}
-                  aria-pressed={activeTab === key}
-                  className={cn(chip, activeTab === key ? chipOn : chipOff)}
+                  aria-pressed={tab === key}
+                  className={cn(chip, tab === key ? chipOn : chipOff)}
                 >
                   {label}
                 </button>
               ))}
             </div>
 
-            {activeTab === 'devices' ? (
+            {tab === 'devices' ? (
               <>
                 <DeviceList />
                 <div className="rounded-xl border border-line p-3">
@@ -111,43 +111,26 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
                 </div>
               </>
             ) : (
-              <LinkDevice onLinked={() => setTab('devices')} />
+              <LinkDevice canShare onLinked={() => setTab('devices')} />
             )}
           </>
         ) : (
           <>
-            <div className="flex gap-1.5">
-              {(
-                [
-                  ['signin', copy.signIn],
-                  ['create', copy.create],
-                  ['link', copy.link],
-                ] as [Tab, string][]
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setTab(key)}
-                  aria-pressed={activeTab === key}
-                  className={cn(chip, activeTab === key ? chipOn : chipOff)}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="rounded-xl border border-line p-3">
+              <p className="text-[13px] font-medium text-ink">{copy.createTitle}</p>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.createNote}</p>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => void createAccount()}
+                className="mt-2.5 w-full rounded-xl bg-ink px-3 py-2.5 text-[13.5px] font-medium text-invert disabled:opacity-40"
+              >
+                {loading ? '…' : copy.createAction}
+              </button>
+              {error ? <p className="mt-1.5 text-[12px] text-red-500">{error}</p> : null}
             </div>
 
-            {activeTab === 'link' ? (
-              <LinkDevice onLinked={() => setTab('devices')} />
-            ) : (
-              <AuthForm
-                mode={activeTab === 'create' ? 'create' : 'login'}
-                loading={loading}
-                error={error}
-                onSubmit={(a, p) => {
-                  void (activeTab === 'create' ? createUser(a, p) : loginUser(a, p));
-                }}
-              />
-            )}
+            <LinkDevice canShare={false} onLinked={close} />
           </>
         )}
       </div>

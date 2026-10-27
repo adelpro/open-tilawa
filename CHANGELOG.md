@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.5.9 — 2026-10-27
+
+Patch. App versions: **web 1.5.1**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Changed
+
+- **There is no username and no password.** An account is a key generated in the
+  browser; that key is the identity, and another device gets it by scanning a
+  pairing code. The sign-in form is gone, and so is the copy that implied a
+  password could recover an account.
+
+### Fixed
+
+- **The account died when the browser closed.** Gun's `recall()` only ever
+  writes to sessionStorage, so the keypair was lost with the tab and every
+  restart needed a fresh scan. It is now kept in localStorage, and signing out
+  erases it.
+- **Primary buttons were invisible in the dark theme.** They used `text-surface`,
+  a colour token that does not exist in this palette, so the label inherited the
+  ink colour and sat dark-on-dark (light-on-light in the night theme). They use
+  `text-invert`, the house pairing for `bg-ink`.
+- **The account sheet changed height when switching tabs.** With `size="auto"`
+  the panel grew and shrank under the finger; the body now has a fixed height and
+  scrolls.
+
 ## 1.5.8 — 2026-10-27
 
 Minor. App versions: **web 1.5.0**, **admin 1.24.0**, **seeder 1.4.2**.

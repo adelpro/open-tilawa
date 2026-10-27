@@ -379,6 +379,21 @@ real browser.
 | `components/account/*` | sheet, auth form, link device, device list |
 | `utils/identity.ts`, `utils/favorites-local.ts` | counting identity + local mirror |
 
+### Identity as built
+
+No username, no password. An account is a keypair generated in the browser
+(`SEA.pair()`) and kept in `localStorage` under `open-tilawa:account`; the key is
+the identity and the only thing that opens the account. Gun's `recall()` writes
+to **sessionStorage only**, so without that stored copy the account died with the
+tab and every browser restart needed a fresh pairing scan.
+
+The trade-off is explicit: losing every linked device and the QR means losing the
+account. The sheet says so before the first create, and sign-out refuses to run
+on the last device without a typed confirmation.
+
+The display name is not part of the keypair — SEA stores only the pair — so it
+lives in `profile.name` and every linked device reads it back.
+
 ### Pairing (v2) as built
 
 1. `SEA.pair()` makes a throwaway keypair.
@@ -404,9 +419,10 @@ expired, so a photographed QR dies after two minutes.
 
 ### Traps found in the browser
 
-- **`recall()` drops the alias.** Gun then reports the pub as `user.is.alias`, so
-  the account sheet showed an 80-character key. The alias is now stored in
-  `profile.alias` on create and read back on restore.
+- **`recall()` only persists to sessionStorage**, and it drops the alias, so the
+  sheet showed an 80-character key and the account vanished when the browser
+  closed. The keypair is now stored in localStorage and the name in
+  `profile.name`.
 - **`.once()` on an unseen path may never call back.** The schema write used to
   sit behind that callback, so fresh accounts never got a version stamp. Reads
   are now bounded (1.5 s) and the stamp is written unconditionally.

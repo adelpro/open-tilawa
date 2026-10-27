@@ -30,18 +30,13 @@ const ar = {
   routes: { listen: 'الاستماع', settings: 'الإعدادات', about: 'عن تلاوة', privacy: 'الخصوصية' },
   account: {
     title: 'الحساب',
-    signIn: 'تسجيل الدخول',
-    create: 'حساب جديد',
     link: 'ربط جهاز',
     devices: 'الأجهزة',
-    username: 'اسم المستخدم',
-    password: 'كلمة المرور',
-    passwordHint: '٦ أحرف على الأقل',
-    signInAction: 'دخول',
+    createTitle: 'حساب على هذا الجهاز',
     createAction: 'إنشاء الحساب',
-    signedInAs: 'مسجّل الدخول باسم',
+    signedInAs: 'الحساب',
     createNote:
-      'الحساب محفوظ على هذا الجهاز وحده. لا توجد استعادة لكلمة المرور — اربط جهازاً ثانياً أو احتفظ بنسخة احتياطية إن أردت استعادته.',
+      'الحساب مفتاح يُولَّد هنا ويُحفظ في هذا المتصفح — لا اسم مستخدم ولا كلمة مرور. اربط جهازاً آخر الآن إن أردت أن يبقى الحساب ومفضّلاته بعد فقد هذا الجهاز.',
     devicesNote:
       'كل جهاز في هذه القائمة يحمل مفتاح الحساب نفسه. الإخراج يُسجّل خروج ذلك الجهاز محلياً فقط، ولا يُلغي المفتاح.',
     noDevices: 'لا أجهزة مسجّلة بعد.',
@@ -203,18 +198,13 @@ const en: typeof ar = {
   routes: { listen: 'Listen', settings: 'Settings', about: 'About Tilawa', privacy: 'Privacy' },
   account: {
     title: 'Account',
-    signIn: 'Sign in',
-    create: 'Create',
     link: 'Link',
     devices: 'Devices',
-    username: 'username',
-    password: 'password',
-    passwordHint: 'at least 6 characters',
-    signInAction: 'Sign in',
+    createTitle: 'Account on this device',
     createAction: 'Create account',
-    signedInAs: 'Signed in as',
+    signedInAs: 'Account',
     createNote:
-      'The account lives on this device only. There is no password reset — link a second device or keep a backup if you want to be able to recover it.',
+      'The account is a key generated here and kept in this browser — no username, no password. Link another device now if you want the account and its favourites to outlive this one.',
     devicesNote:
       'Every device listed here holds the same account key. Signing one out only affects that device; it does not revoke the key.',
     noDevices: 'No devices recorded yet.',

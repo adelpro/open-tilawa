@@ -9,8 +9,19 @@ const READER_ID = 'tilawa-qr-reader';
 const card = 'rounded-xl border border-line p-3';
 const action = 'mt-2.5 w-full rounded-xl px-3 py-2 text-[13px] transition-colors';
 
-/** Show a sealed ticket, or scan one. Never renders the account key itself. */
-export default function LinkDevice({ onLinked }: { onLinked: () => void }) {
+/**
+ * Show a sealed ticket, or scan one. Never renders the account key itself.
+ *
+ * `canShare` is false while signed out: there is no keypair to lend, so only
+ * the camera half makes sense.
+ */
+export default function LinkDevice({
+  onLinked,
+  canShare = true,
+}: {
+  onLinked: () => void;
+  canShare?: boolean;
+}) {
   const { t } = useLocale();
   const copy = t.account;
   const { getPair, authWithPair } = useGun();
@@ -55,7 +66,7 @@ export default function LinkDevice({ onLinked }: { onLinked: () => void }) {
     setMessage(null);
     try {
       const pair = getPair();
-      if (!pair) throw new Error(copy.signIn);
+      if (!pair) throw new Error(copy.createAction);
       const ticket = await createPairingTicket(pair);
       // ~50 kB of QR encoder, only for the one screen that draws a code.
       const { default: QRCode } = await import('qrcode');
@@ -105,29 +116,31 @@ export default function LinkDevice({ onLinked }: { onLinked: () => void }) {
 
   return (
     <div className="space-y-2.5">
-      <div className={card}>
-        <p className="text-[13px] font-medium text-ink">{copy.linkTitle}</p>
-        <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.linkNote}</p>
-        <button
-          type="button"
-          onClick={showTicket}
-          className={cn(action, 'border border-line text-ink hover:bg-line')}
-        >
-          {qr ? copy.newCode : copy.showCode}
-        </button>
-        {qr ? (
-          <div className="mt-3 flex flex-col items-center gap-1.5">
-            <img
-              src={qr}
-              alt={copy.linkTitle}
-              className="rounded-lg bg-white p-2"
-              width={260}
-              height={260}
-            />
-            <span className="text-[11.5px] text-muted">{copy.expiresIn(secondsLeft)}</span>
-          </div>
-        ) : null}
-      </div>
+      {canShare ? (
+        <div className={card}>
+          <p className="text-[13px] font-medium text-ink">{copy.linkTitle}</p>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.linkNote}</p>
+          <button
+            type="button"
+            onClick={showTicket}
+            className={cn(action, 'border border-line text-ink hover:bg-line')}
+          >
+            {qr ? copy.newCode : copy.showCode}
+          </button>
+          {qr ? (
+            <div className="mt-3 flex flex-col items-center gap-1.5">
+              <img
+                src={qr}
+                alt={copy.linkTitle}
+                className="rounded-lg bg-white p-2"
+                width={260}
+                height={260}
+              />
+              <span className="text-[11.5px] text-muted">{copy.expiresIn(secondsLeft)}</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={card}>
         <p className="text-[13px] font-medium text-ink">{copy.scanTitle}</p>
@@ -137,7 +150,7 @@ export default function LinkDevice({ onLinked }: { onLinked: () => void }) {
           onClick={() => (scanning ? void stopScanner() : void startScan())}
           className={cn(
             action,
-            scanning ? 'border border-line text-ink hover:bg-line' : 'bg-ink text-surface',
+            scanning ? 'border border-line text-ink hover:bg-line' : 'bg-ink text-invert',
           )}
         >
           {scanning ? copy.scanStop : copy.scanStart}
