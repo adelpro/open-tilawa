@@ -89,6 +89,31 @@ If the file behind `/media` is missing, that request 404s, WebTorrent marks the
 piece missing and retries; the stream sheet reports the surah's fallback as
 unavailable instead of pretending.
 
+### Why the HTTP channel is never closed
+
+The web seed is not a startup crutch that gets discarded once a peer says hello:
+**it stays attached for the life of the torrent**, and that is a deliberate
+choice, not an oversight.
+
+Mobile P2P is bursty. A phone hands over between Wi-Fi and 4G, a NAT binding
+expires, a tab is backgrounded and its WebRTC connection goes quiet, a peer
+closes the lid. If the fallback were detached at the first connected peer, every
+one of those ordinary moments would turn back into a stall — the listener would
+hear the drop at exactly the point the app had just proved it could avoid it.
+
+Keeping it costs nothing while the swarm is healthy:
+
+- WebTorrent asks **both** sources for each block and takes whichever answers
+  first, so a healthy peer simply wins the race; the web seed sits idle.
+- The fallback is rate-limited to 1 MB/s per connection (nginx `limit_rate`), so
+  it can never outrun a working peer or saturate the line.
+- Anything the fallback *does* deliver is verified, stored and **uploaded to other
+  peers**, so a listener on a weak connection becomes a seeder for the next one.
+
+That is why the sheet reports **`P2P + HTTP`** rather than picking a winner: both
+channels are open, and the honest number is the peer count plus the fact that the
+safety net is still there.
+
 ## 5. Why the web seed is our origin
 
 A web seed is a `fetch()` made by JavaScript. That rules out two tempting

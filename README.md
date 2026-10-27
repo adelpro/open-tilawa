@@ -43,7 +43,7 @@ Volumes: `seed_downloads` (seeder data), `seed_torrents` (shared with web for `.
    - On 200: `client.add(torrentBlob, { announce: wsTrackers, deselect: true })`.
    - On 404: falls back to `client.add(magnet)` (requires WebRTC peers).
 4. **Playback**: the app registers one service worker (`/sw.js`, PWA + WebTorrent merged), calls `client.createServer()`, and points `<audio>` at `file.streamURL` — a **same-origin** `/webtorrent/<infohash>/<path>` URL. The worker answers range requests from torrent pieces, so playback starts on the first pieces and seeking works. `<audio>` never points at a remote file.
-5. **No peers**: after 8 s with zero peers the client calls `torrent.addWebSeed("<origin>/media/")`. Pieces from that HTTP source are verified, stored, seeded to other peers, and peers are used in parallel if they appear. The audio element's `src` does not change.
+5. **No peers**: after 8 s with zero peers the client calls `torrent.addWebSeed("<origin>/media/")`. The HTTP channel then stays open for the life of the torrent — mobile P2P drops and recovers constantly, and detaching the fallback at the first peer would turn every handover into a stall. Pieces from it are verified, stored, seeded to other peers, and peers are used in parallel whenever they exist. The audio element's `src` does not change.
 6. **Selection**: only the current surah is selected (`deselect: true` + `file.select()`), so the rest of a 114-file torrent does not compete for bandwidth.
 7. **TURN**: coturn relays WebRTC when direct P2P fails (symmetric NAT). External IP is resolved from the DDNS hostname `turn.quran.us.kg`.
 
