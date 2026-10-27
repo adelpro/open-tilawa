@@ -27,3 +27,15 @@ export function shouldSkip(existingBytes, expectedBytes) {
 export function validFolderName(name) {
   return typeof name === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(name);
 }
+
+/**
+ * What to do with a folder that already exists.
+ *
+ * Overwriting bytes inside a folder a live torrent is seeding makes that node
+ * upload pieces that no longer match its hashes. So a non-empty folder is
+ * refused unless the operator explicitly asks to resume an interrupted import.
+ */
+export function importDecision(entryCount, resume) {
+  if (!Number.isFinite(entryCount) || entryCount <= 0) return 'start';
+  return resume ? 'resume' : 'refuse';
+}

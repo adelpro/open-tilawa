@@ -21,7 +21,7 @@ import WebTorrent from 'webtorrent';
 import Semaphore from './utils/semaphore.js';
 import TRACKERS from './constants/TRACKERS.js';
 import { fits, quotaFromEnv } from './lib/policy.mjs';
-import { shouldSkip, totalBytes, trackFileName, validFolderName } from './lib/itqan.mjs';
+import { importDecision, shouldSkip, totalBytes, trackFileName, validFolderName } from './lib/itqan.mjs';
 
 const API = 'https://api.cms.itqan.dev';
 const DOWNLOAD_PATH = process.env.DOWNLOAD_PATH || '/app/downloads';
@@ -61,6 +61,25 @@ function freeBytes() {
   } catch {
     return undefined;
   }
+}
+
+/** What the node already holds — the number the quota is actually about. */
+function heldBytes(root) {
+  let total = 0;
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile()) total += fs.statSync(full).size;
+    }
+  };
+  try {
+    if (fs.existsSync(root)) walk(root);
+  } catch {
+    // A file vanishing under a running node is not a reason to skip the check
+    // silently; the numbers below still bound the import by quota and free space.
+  }
+  return total;
 }
 
 async function fetchTracks(assetId) {
@@ -151,9 +170,11 @@ async function seed(dir, folderName) {
   await new Promise((resolve) => client.destroy(resolve));
 }
 
-const [assetId, folderName, riwaya] = process.argv.slice(2);
+const argv = process.argv.slice(2).filter((arg) => arg !== '--resume');
+const resume = process.argv.includes('--resume');
+const [assetId, folderName, riwaya] = argv;
 if (!assetId || !folderName || !riwaya) {
-  fail('usage: node import-itqan.mjs <assetId> <folderName> <riwaya>');
+  fail('usage: node import-itqan.mjs <assetId> <folderName> <riwaya> [--resume]');
 }
 if (!validFolderName(folderName)) {
   fail('the folder name may only contain letters, digits, "_" and "-"');
@@ -162,11 +183,28 @@ if (!['Hafs', 'Warsh', 'Qalon', 'unknown'].includes(riwaya)) {
   fail('the riwaya must be Hafs, Warsh, Qalon or unknown');
 }
 
+fs.mkdirSync(DOWNLOAD_PATH, { recursive: true });
+
+const target = path.join(DOWNLOAD_PATH, folderName);
+const existingEntries = (() => {
+  try {
+    return fs.readdirSync(target).length;
+  } catch {
+    return 0;
+  }
+})();
+const decision = importDecision(existingEntries, resume);
+if (decision === 'refuse') {
+  fail(
+    `${target} already has ${existingEntries} entries; remove it, or pass --resume to keep the files that match`,
+  );
+}
+
 const tracks = await fetchTracks(assetId);
 const incoming = totalBytes(tracks.map((track) => ({ size_bytes: track.sizeBytes })));
 const room = fits({
-  quotaBytes: 0,
-  usedBytes: 0,
+  quotaBytes: quotaFromEnv(),
+  usedBytes: heldBytes(DOWNLOAD_PATH),
   incomingBytes: incoming,
   freeBytes: freeBytes(),
   reserveBytes: RESERVE_BYTES,
@@ -176,7 +214,7 @@ if (!room.ok) {
 }
 
 console.log(
-  `itqan asset ${assetId}: ${tracks.length} tracks, ${(incoming / 1024 ** 3).toFixed(2)} GiB → ${folderName} (${riwaya})`,
+  `itqan asset ${assetId}: ${tracks.length} tracks, ${(incoming / 1024 ** 3).toFixed(2)} GiB → ${folderName} (${riwaya}${decision === 'resume' ? ', resuming' : ''})`,
 );
 const dir = await download(tracks, folderName);
 await seed(dir, folderName);

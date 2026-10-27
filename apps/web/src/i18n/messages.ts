@@ -84,7 +84,12 @@ const ar = {
     next: 'السورة التالية',
   },
   scrubber: { label: 'موضع التشغيل', of: 'من' },
-  player: { error: 'تعذّر تشغيل هذا القارئ.', retry: 'إعادة المحاولة', surah: (n: number) => `سورة ${n}` },
+  player: {
+    error: 'تعذّر تشغيل هذا القارئ.',
+    noReciters: 'لا يوجد قرّاء منشورون بعد.',
+    retry: 'إعادة المحاولة',
+    surah: (n: number) => `سورة ${n}`,
+  },
   about: {
     title: 'عن تلاوة',
     body1:
@@ -183,7 +188,12 @@ const en: typeof ar = {
     next: 'Next surah',
   },
   scrubber: { label: 'Playback position', of: 'of' },
-  player: { error: 'This reciter could not start.', retry: 'Try again', surah: (n: number) => `Surah ${n}` },
+  player: {
+    error: 'This reciter could not start.',
+    noReciters: 'No reciter is published yet.',
+    retry: 'Try again',
+    surah: (n: number) => `Surah ${n}`,
+  },
   about: {
     title: 'About Tilawa',
     body1:

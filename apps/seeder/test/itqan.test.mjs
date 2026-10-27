@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { shouldSkip, totalBytes, trackFileName, validFolderName } from '../lib/itqan.mjs';
+import { importDecision, shouldSkip, totalBytes, trackFileName, validFolderName } from '../lib/itqan.mjs';
 
 test('track file names are the three-digit surah', () => {
   assert.equal(trackFileName(1), '001.mp3');
@@ -27,4 +27,11 @@ test('folder names stay filesystem- and URL-safe', () => {
   assert.equal(validFolderName('Atef Muftah'), false);
   assert.equal(validFolderName('../etc'), false);
   assert.equal(validFolderName(''), false);
+});
+
+test('an interrupted import resumes only when asked', () => {
+  assert.equal(importDecision(0, false), 'start');
+  assert.equal(importDecision(0, true), 'start');
+  assert.equal(importDecision(5, false), 'refuse');
+  assert.equal(importDecision(5, true), 'resume');
 });

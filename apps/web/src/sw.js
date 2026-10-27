@@ -36,13 +36,16 @@ cleanupOutdatedCaches();
 registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')));
 
 // Fonts, the logo, the WebTorrent bundle: warm after first use, never a reason
-// to fail an install. Torrent ranges and the torrent files are left alone — the
-// WebTorrent handler above owns those.
+// to fail an install. Torrent ranges, the torrent files and the web-seed payload
+// are left alone: the WebTorrent handler owns the first, and `/media` answers
+// 206s that the Cache API refuses to store (and a cached full file would poison
+// every range request that followed).
 registerRoute(
   ({ url, request }) =>
     url.origin === self.location.origin &&
     request.destination !== 'document' &&
     !url.pathname.startsWith('/webtorrent/') &&
-    !url.pathname.startsWith('/torrents/'),
+    !url.pathname.startsWith('/torrents/') &&
+    !url.pathname.startsWith('/media/'),
   new StaleWhileRevalidate({ cacheName: 'app-runtime' }),
 );

@@ -152,7 +152,18 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
             }}
           />
 
-          {error && (
+          {reciters.length === 0 ? (
+            <div className="mt-6 text-center text-[13px] text-muted">
+              <p>{recitersError ? t.sheets.recitersError : t.player.noReciters}</p>
+              <button
+                type="button"
+                onClick={retryReciters}
+                className="mt-1 h-11 px-3 font-semibold text-ink underline underline-offset-4"
+              >
+                {t.player.retry}
+              </button>
+            </div>
+          ) : error ? (
             <div className="mt-6 text-center text-[13px] text-muted">
               <p title={error}>{t.player.error}</p>
               <button
@@ -163,7 +174,7 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
                 {t.player.retry}
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </main>
 

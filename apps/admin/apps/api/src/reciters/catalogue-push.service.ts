@@ -114,6 +114,8 @@ export class CataloguePushService {
           name: torrent.name,
           // The node knows the folder, not the reading: unknown until a human says.
           riwaya: 'unknown',
+          // Imported ≠ published: curation is a separate, deliberate act.
+          published: false,
           infohash: torrent.infoHash,
           magnet: magnetForInfo(torrent.infoHash, torrent.name, this.settings.getTrackers()),
           fileCount: torrent.files,

@@ -27,6 +27,7 @@ const FALLBACK_LABEL = {
   checking: (t: Messages) => t.stream.fallbackChecking,
   available: (t: Messages) => t.stream.fallbackAvailable,
   missing: (t: Messages) => t.stream.fallbackMissing,
+  unknown: () => '—',
 } as const;
 
 /**
@@ -48,12 +49,20 @@ export default function StreamSheet({
   surahId: number;
 }) {
   const { t } = useLocale();
-  const [fallback, setFallback] = useState<'checking' | 'available' | 'missing'>('checking');
+  const [fallback, setFallback] = useState<'checking' | 'available' | 'missing' | 'unknown'>(
+    'checking',
+  );
 
   const folder = torrent?.name ?? '';
 
   useEffect(() => {
-    if (!open || !folder || !surahId) {
+    // Without metadata there is no folder to ask about: the row says so instead
+    // of sitting on "checking" for a torrent that never arrived.
+    if (!folder) {
+      setFallback('unknown');
+      return;
+    }
+    if (!open || !surahId) {
       setFallback('checking');
       return;
     }
