@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from 'react';
 import { useAtom } from 'jotai';
 
-import { gun, SEA, user, type GunAck } from '@/gun';
-import { clearStoredPair, readStoredPair, storePair } from '@/gun/account-store';
-import { ensureUserSchema } from '@/gun/ensure-user-schema';
+import { gun, SEA, user } from '@/gun';
+import { clearStoredPair, storePair } from '@/gun/account-store';
+import { authPair, publishAuthState, startAuthBridge } from '@/gun/auth';
 import { touchDevice } from '@/hooks/use-user-sync';
 import { getOrCreateDeviceName } from '@/utils/device/device-name';
 import {
@@ -14,93 +14,30 @@ import {
   gunErrorAtom,
 } from '@/jotai/gun';
 
-function authPair(pair: unknown): Promise<GunAck> {
-  return new Promise((resolve) => {
-    try {
-      (gun.user() as any).auth(pair, (ack: GunAck) => resolve(ack || {}));
-    } catch (e) {
-      resolve({ err: e instanceof Error ? e.message : 'auth failed' });
-    }
-  });
-}
-
 /**
- * The name to show for this account. The keypair carries no name — SEA stores
- * only the pair — so it lives in the account profile and every linked device
- * reads it back. Falls back to a short key so the sheet is never blank.
- */
-function resolveName(pub: string | null, setAlias: (v: string | null) => void) {
-  if (!pub) {
-    setAlias(null);
-    return;
-  }
-  setAlias(null);
-  user
-    .get('profile')
-    .get('name')
-    .once((stored: unknown) => {
-      if (typeof stored === 'string' && stored.trim()) {
-        setAlias(stored);
-        return;
-      }
-      setAlias(`${pub.slice(0, 6)}…${pub.slice(-4)}`);
-    });
-}
-
-/**
- * Auth surface. Gun emits `auth` on the root for create/login/leave/recall, so
- * this needs no polling loop.
+ * Auth surface. The subscription that keeps the atoms honest lives in
+ * `gun/auth.ts` — registering one per component meant removing all of them,
+ * including Gun's own, on unmount.
  */
 export function useGun() {
-  const [loggedIn, setLoggedIn] = useAtom(gunLoggedInAtom);
-  const [pub, setPub] = useAtom(gunUserPubAtom);
-  const [name, setName] = useAtom(gunUserAliasAtom);
+  const [loggedIn] = useAtom(gunLoggedInAtom);
+  const [pub] = useAtom(gunUserPubAtom);
+  const [name] = useAtom(gunUserAliasAtom);
   const [loading, setLoading] = useAtom(gunLoadingAtom);
   const [error, setError] = useAtom(gunErrorAtom);
 
   useEffect(() => {
-    const sync = () => {
-      if (!user.is) {
-        setLoggedIn(false);
-        setPub(null);
-        setName(null);
-        return;
-      }
-      setLoggedIn(true);
-      setPub(user.is.pub || null);
-      resolveName(user.is.pub || null, setName);
-      void ensureUserSchema().then(() => touchDevice());
-    };
-    sync(); // recall() may have restored a session before mount
-
-    // Gun's recall() only writes to sessionStorage, so a stored keypair is the
-    // only thing that survives closing the browser.
-    if (!user.is) {
-      const stored = readStoredPair();
-      if (stored) {
-        void authPair(stored).then((ack) => {
-          if (ack.err) clearStoredPair();
-        });
-      }
-    }
-
-    gun.on('auth', sync);
-    return () => {
-      try {
-        (gun as unknown as { off?: () => void }).off?.();
-      } catch {
-        // already detached
-      }
-    };
-  }, [setLoggedIn, setPub, setName]);
+    startAuthBridge();
+  }, []);
 
   const run = useCallback(
-    async (action: () => Promise<GunAck>): Promise<GunAck> => {
+    async (action: () => Promise<{ err?: string }>): Promise<{ err?: string }> => {
       setLoading(true);
       setError(null);
       try {
         const ack = await action();
         if (ack?.err) setError(ack.err);
+        publishAuthState();
         return ack;
       } finally {
         setLoading(false);
@@ -146,8 +83,7 @@ export function useGun() {
     const trimmed = next.trim();
     if (!trimmed) return;
     user.get('profile').put({ name: trimmed, updatedAt: Date.now() });
-    setName(trimmed);
-  }, [setName]);
+  }, []);
 
   const logout = useCallback(() => {
     clearStoredPair();
@@ -156,7 +92,10 @@ export function useGun() {
     } catch {
       // ignore
     }
-  }, []);
+    // leave() clears `user.is` but emits no auth event, so say so explicitly.
+    publishAuthState();
+    setError(null);
+  }, [setError]);
 
   /** The SEA pair, read straight off the live user chain. */
   const getPair = useCallback(() => {

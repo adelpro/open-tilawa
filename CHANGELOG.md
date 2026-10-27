@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.5.11 — 2026-10-27
+
+Patch. App versions: **web 1.6.1**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Changed
+
+- **The pairing code is a popup.** «إظهار رمز الربط» now opens the code centred on
+  screen at 240 px, with «توليد رمز جديد» and a close button, instead of dropping
+  a block into the sheet where the other person had to squint at it.
+
+### Fixed
+
+- **Signing out did nothing.** The key was erased, but the sheet stayed mounted and
+  Gun's `leave()` clears `user.is` without emitting an `auth` event, so nothing
+  re-read the state and the account still looked signed in. The atoms are reset
+  explicitly now.
+- **The auth subscription removed Gun's own listeners.** Each component registered
+  its own `gun.on('auth')` and called `gun.off()` on unmount — and `off()` takes no
+  argument, so it stripped *every* listener on the root, the network's included.
+  There is one subscription for the app now, registered once and never removed.
+
 ## 1.5.10 — 2026-10-27
 
 Minor. App versions: **web 1.6.0**, **admin 1.24.0**, **seeder 1.4.2**.

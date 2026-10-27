@@ -189,23 +189,11 @@ export default function LinkDevice({
           <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.shareNote}</p>
           <button
             type="button"
-            onClick={showTicket}
-            className={cn(action, 'border border-line text-ink hover:bg-line')}
+            onClick={() => void showTicket()}
+            className={cn(action, 'bg-ink text-invert')}
           >
-            {qr ? copy.newCode : copy.showCode}
+            {copy.showCode}
           </button>
-          {qr ? (
-            <div className="mt-3 flex flex-col items-center gap-1.5">
-              <img
-                src={qr}
-                alt={copy.shareTitle}
-                className="rounded-lg bg-white p-2"
-                width={260}
-                height={260}
-              />
-              <span className="text-[11.5px] text-muted">{copy.expiresIn(secondsLeft)}</span>
-            </div>
-          ) : null}
         </div>
       ) : (
         <div className={card}>
@@ -225,6 +213,50 @@ export default function LinkDevice({
       )}
 
       {message ? <p className="text-[12px] text-muted">{message}</p> : null}
+
+      {/*
+        The code is a popup, not a block inside the sheet: it is the one thing
+        the other person has to point a camera at, so it gets the middle of the
+        screen at a size a phone camera can read.
+      */}
+      {qr ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={copy.shareTitle}
+          onClick={() => setQr(null)}
+          className="fixed inset-0 z-[60] grid place-items-center bg-black/60 p-6"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-[300px] rounded-2xl border border-line bg-canvas p-4 text-center"
+          >
+            <p className="text-[13px] font-medium text-ink">{copy.shareTitle}</p>
+            <img
+              src={qr}
+              alt={copy.shareTitle}
+              width={240}
+              height={240}
+              className="mx-auto mt-3 rounded-lg bg-white p-2"
+            />
+            <p className="mt-2 text-[11.5px] text-muted">{copy.expiresIn(secondsLeft)}</p>
+            <button
+              type="button"
+              onClick={() => void showTicket()}
+              className="mt-3 w-full rounded-xl border border-line px-3 py-2 text-[13px] text-ink transition-colors hover:bg-line"
+            >
+              {copy.newCode}
+            </button>
+            <button
+              type="button"
+              onClick={() => setQr(null)}
+              className="mt-1.5 w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink"
+            >
+              {t.common.close}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
