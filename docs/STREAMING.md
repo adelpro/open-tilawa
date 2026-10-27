@@ -116,7 +116,26 @@ primary node), not the whole fleet. A reciter published but absent from that nod
 has no fallback. Routing per node or proxying by infohash is described in the
 2026-10-27 design document.
 
-## 6. What the interface reports
+## 6. Desktop (≥ 1024 px) — the quiet stage
+
+The phone's bottom sheets and sandwich menu are replaced, not enlarged:
+
+- **No bottom sheet, no hamburger.** The lists open as a 360 px panel docked to
+  the reading edge, below the header. It is not modal: no backdrop, no focus
+  trap, the player stays visible and keeps playing. `Esc`, the close button or
+  picking a row closes it. Below 1024 px the platform dialog is still used.
+- **The title and the reciter line are the triggers.** The surah name opens the
+  surah list, the reciter name opens the reciter list; a `▾` appears on hover and
+  on keyboard focus.
+- **Navigation is four words** in the header (القرّاء · السور · عن تلاوة ·
+  الخصوصية) instead of a menu button.
+- **The stage:** surah name at 26 vh, controls in the lower third, a 160 px
+  spectrum horizon at the bottom at 70 % ink, and a 1 px floor line that stays
+  when paused so the page never becomes a blank sheet.
+- The footer keeps only mute, speed and the stream ring, sitting above the
+  horizon; the name rows are hidden because the stage already shows them.
+
+## 7. What the interface reports
 
 | Place | What it shows |
 |---|---|
@@ -129,7 +148,7 @@ has no fallback. Routing per node or proxying by infohash is described in the
 The sheet's «البديل» row is the only extra network call: one `HEAD` per surah the
 listener opens, cached for the session.
 
-## 7. Failure modes
+## 8. Failure modes
 
 | Situation | What happens |
 |---|---|
@@ -141,7 +160,7 @@ listener opens, cached for the session.
 | `/media` file missing | web seed retries; the sheet says the fallback is unavailable |
 | Paused | the spectrum is hidden entirely; the canvas keeps its height so nothing jumps |
 
-## 8. What is deliberately absent
+## 9. What is deliberately absent
 
 - No `MediaSource`/HLS: each surah is one MP3, streamed with ranges.
 - No `<audio src>` pointing at a remote host: that path cannot seed, cannot return

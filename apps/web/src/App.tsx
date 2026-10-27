@@ -9,6 +9,7 @@ import ErrorBoundary from './components/error-boundary';
 import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
 import { useHashRoute } from './hooks/use-hash-route';
+import { useSheet } from './hooks/use-sheet';
 import { useSleepTimer } from './hooks/use-sleep-timer';
 import { useLocale } from './hooks/use-locale';
 import { useTheme } from './hooks/use-theme';
@@ -26,6 +27,7 @@ import { patchSettings } from './hooks/use-persistence';
 export default function App() {
   const { route, navigate } = useHashRoute();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { sheet, openSurahs, openReciters, openStream, close } = useSheet();
   const setIsPlaying = useSetAtom(isPlayingAtom);
   const { locale, setLocale } = useLocale();
   const { theme, setTheme } = useTheme();
@@ -52,7 +54,12 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className="app-shell">
-        <TopBar menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((open) => !open)} />
+        <TopBar
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen((open) => !open)}
+          onOpenSurahs={openSurahs}
+          onOpenReciters={openReciters}
+        />
 
         {route === '/about' ? (
           <AboutPage />
@@ -73,7 +80,14 @@ export default function App() {
             onSleep={sleep.start}
           />
         ) : (
-          <PlayerPage onOpenMenu={() => setMenuOpen(true)} />
+          <PlayerPage
+            sheet={sheet}
+            openSurahs={openSurahs}
+            openReciters={openReciters}
+            openStream={openStream}
+            close={close}
+            onOpenMenu={() => setMenuOpen(true)}
+          />
         )}
 
         <NavSheet

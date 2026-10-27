@@ -11,9 +11,13 @@ import { cn } from '@/utils/cn';
 export default function TopBar({
   menuOpen,
   onToggleMenu,
+  onOpenSurahs,
+  onOpenReciters,
 }: {
   menuOpen: boolean;
   onToggleMenu: () => void;
+  onOpenSurahs: () => void;
+  onOpenReciters: () => void;
 }) {
   const { t } = useLocale();
 
@@ -24,13 +28,30 @@ export default function TopBar({
         <span className="tnum text-[10px] leading-none text-muted">{APP_VERSION}</span>
       </a>
 
+      {/* Desktop navigation: three words, no sandwich. The two lists are the
+          same panels the phone opens, just reachable from here as well. */}
+      <nav className="hidden items-center gap-5 text-[13px] text-muted lg:flex" aria-label={t.brand}>
+        <button type="button" onClick={onOpenReciters} className="transition-colors hover:text-ink">
+          {t.sheets.reciters}
+        </button>
+        <button type="button" onClick={onOpenSurahs} className="transition-colors hover:text-ink">
+          {t.sheets.surahs}
+        </button>
+        <a href="#/about" className="transition-colors hover:text-ink">
+          {t.routes.about}
+        </a>
+        <a href="#/privacy" className="transition-colors hover:text-ink">
+          {t.routes.privacy}
+        </a>
+      </nav>
+
       <button
         type="button"
         onClick={onToggleMenu}
         aria-label={menuOpen ? t.menu.close : t.menu.open}
         aria-expanded={menuOpen}
         aria-haspopup="dialog"
-        className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-line active:bg-line"
+        className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-line active:bg-line lg:hidden"
       >
         <span className="flex w-5 flex-col items-stretch gap-[5px]" aria-hidden="true">
           <span

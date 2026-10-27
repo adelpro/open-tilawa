@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import type { IconName } from '@/components/icons';
 import Icon from '@/components/icons';
 import { SURAHS } from '@/constants/surah';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import type { Reciter } from '@/types';
 import { cn } from '@/utils/cn';
 import { useLocale } from '@/hooks/use-locale';
@@ -37,9 +38,10 @@ function CloseGlyph() {
 }
 
 /**
- * A bottom sheet built on native <dialog>: focus trapping, Escape, the top
- * layer and returning focus to the trigger all come from the platform, so
- * there is no hand-rolled modal state to get wrong.
+ * A bottom sheet built on native <dialog> on a phone, and a docked, non-modal
+ * panel on a desktop. The phone keeps the platform's focus trap and top layer;
+ * the desktop keeps the stage visible, because a sheet on a 1440px screen is a
+ * phone gesture in a room that does not need it.
  */
 export default function Sheet({
   title,
@@ -51,6 +53,7 @@ export default function Sheet({
 }: SheetProps) {
   const { t } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const wide = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -58,6 +61,42 @@ export default function Sheet({
     if (open && !dialog.open) dialog.showModal();
     else if (!open && dialog.open) dialog.close();
   }, [open]);
+
+  /** The panel is not modal, so Escape has to be caught at the window. */
+  useEffect(() => {
+    if (!wide || !open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [wide, open, onClose]);
+
+  if (wide) {
+    return (
+      <aside
+        aria-label={title}
+        className={cn(
+          'fixed inset-y-0 start-0 z-30 mt-14 w-[360px] flex-col border-e border-line bg-canvas text-ink',
+          open ? 'flex' : 'hidden',
+        )}
+      >
+        <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-5">
+          <h2 className="text-[15px] font-semibold">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.common.close}
+            className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
+          >
+            <CloseGlyph />
+          </button>
+        </div>
+        {toolbar}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+      </aside>
+    );
+  }
 
   return (
     <dialog

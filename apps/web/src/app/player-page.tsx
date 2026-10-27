@@ -13,7 +13,6 @@ import { usePlayerNav } from '@/hooks/use-player-nav';
 import { getPosition, loadState, saveState, setLastSurah } from '@/hooks/use-persistence';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useReciters } from '@/hooks/use-reciters';
-import { useSheet } from '@/hooks/use-sheet';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
   isPlayingAtom,
@@ -31,14 +30,27 @@ import { surahIdOf } from '@/utils/surah-id';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
 
 /**
- * The site is this screen. There is no navigation: the two sheets are the only
+ * The site is this screen. There is no navigation: the two lists are the only
  * way out of the player, and they close back onto it.
  */
-export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
+export default function PlayerPage({
+  sheet,
+  openSurahs,
+  openReciters,
+  openStream,
+  close,
+  onOpenMenu,
+}: {
+  sheet: 'surahs' | 'reciters' | 'stream' | null;
+  openSurahs: () => void;
+  openReciters: () => void;
+  openStream: () => void;
+  close: () => void;
+  onOpenMenu: () => void;
+}) {
   const { t } = useLocale();
   const { reciters, error: recitersError, retry: retryReciters } = useReciters();
   const wide = useMediaQuery('(min-width: 1024px)');
-  const { sheet, openSurahs, openReciters, openStream, close } = useSheet();
 
   const [reciter, setReciter] = useAtom(selectedReciterAtom);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
@@ -127,15 +139,51 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
         <div className="w-full max-w-[520px]">
           {/* The name lives in the footer and in the accessible heading; the
               space above the scrubber belongs to what the speaker is doing. */}
-          <h1 className="sr-only lg:not-sr-only lg:fixed lg:inset-x-0 lg:top-[15vh] lg:text-center lg:text-[clamp(32px,4vw,56px)] lg:font-semibold lg:tracking-[-0.02em] lg:text-ink">
-            {surah?.name ?? `سورة ${surahId}`}
+          <h1 className="sr-only lg:not-sr-only lg:fixed lg:inset-x-0 lg:top-[26vh] lg:text-center lg:text-[clamp(32px,4vw,56px)] lg:font-semibold lg:tracking-[-0.02em] lg:text-ink">
+            {wide ? (
+              <button
+                type="button"
+                onClick={openSurahs}
+                aria-haspopup="dialog"
+                className="group inline-flex items-baseline gap-3"
+              >
+                {surah?.name ?? `سورة ${surahId}`}
+                <span
+                  aria-hidden="true"
+                  className="text-[18px] text-muted opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                >
+                  ▾
+                </span>
+              </button>
+            ) : (
+              surah?.name ?? `سورة ${surahId}`
+            )}
           </h1>
-          <p className="hidden lg:fixed lg:inset-x-0 lg:top-[calc(15vh+84px)] lg:block lg:text-center lg:text-[16px] lg:text-muted">
-            {reciter?.name ?? ''}
+          <p className="hidden lg:fixed lg:inset-x-0 lg:top-[calc(26vh+84px)] lg:block lg:text-center lg:text-[16px] lg:text-muted">
+            <button
+              type="button"
+              onClick={openReciters}
+              aria-haspopup="dialog"
+              className="group inline-flex items-center gap-2 hover:text-ink"
+            >
+              {reciter?.name ?? ''}
+              <span
+                aria-hidden="true"
+                className="text-[13px] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+              >
+                ▾
+              </span>
+            </button>
           </p>
-          <div className="flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0">
-            <Visualiser playing={isPlaying} model={visualiser} height={wide ? 200 : 64} />
+          <div className="flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0 lg:opacity-70">
+            <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 64} />
           </div>
+          {/* The floor: the horizon's edge, kept even when paused so the stage
+              never becomes a blank page. */}
+          <div
+            aria-hidden="true"
+            className="hidden lg:fixed lg:inset-x-0 lg:bottom-[160px] lg:z-0 lg:block lg:h-px lg:bg-line"
+          />
 
           <div className="mt-10 lg:mx-auto lg:mt-0 lg:w-[560px]">
             <Scrubber
