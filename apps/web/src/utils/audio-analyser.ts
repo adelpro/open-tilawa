@@ -48,7 +48,7 @@ export function ensureAnalyser(audio: HTMLAudioElement): AnalyserNode | null {
 
     const source = context.createMediaElementSource(audio);
     analyser = context.createAnalyser();
-    analyser.fftSize = 128;
+    analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0.75;
     source.connect(analyser);
     analyser.connect(context.destination);

@@ -3,7 +3,7 @@
  * one colour; only the geometry differs, so switching costs no download and no
  * new dependency.
  */
-export const VISUALISERS = ['bars', 'peaks', 'ribbon', 'dots', 'waterfall'] as const;
+export const VISUALISERS = ['bars', 'peaks', 'ribbon'] as const;
 
 export type Visualiser = (typeof VISUALISERS)[number];
 
@@ -11,11 +11,9 @@ export const VISUALISER_LABELS: Record<Visualiser, string> = {
   bars: 'أعمدة',
   peaks: 'قِمم',
   ribbon: 'شريط',
-  dots: 'نقاط',
-  waterfall: 'شلّال',
 };
 
-/** Unknown values (an older stored choice) fall back rather than blank the block. */
+/** Unknown values — including the retired dots and waterfall — fall back to bars. */
 export function normaliseVisualiser(value: unknown): Visualiser {
   return VISUALISERS.includes(value as Visualiser) ? (value as Visualiser) : 'bars';
 }

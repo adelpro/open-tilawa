@@ -9,10 +9,11 @@ import {
 
 test('an unknown stored model falls back to bars', () => {
   assert.equal(normaliseVisualiser('bars'), 'bars');
-  assert.equal(normaliseVisualiser('waterfall'), 'waterfall');
+  assert.equal(normaliseVisualiser('ribbon'), 'ribbon');
+  assert.equal(normaliseVisualiser('waterfall'), 'bars');
   assert.equal(normaliseVisualiser('nope'), 'bars');
   assert.equal(normaliseVisualiser(undefined), 'bars');
-  assert.equal(VISUALISERS.length, 5);
+  assert.equal(VISUALISERS.length, 3);
 });
 
 test('downsample keeps the peak of each bucket and normalises it', () => {

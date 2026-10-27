@@ -27,13 +27,7 @@ const ar = {
     shapeHint: 'شكل الطيف فوق شريط التقدّم.',
     minutes: (count: number) => `${count} د`,
   },
-  shapes: {
-    bars: 'أعمدة',
-    peaks: 'قِمم',
-    ribbon: 'شريط',
-    dots: 'نقاط',
-    waterfall: 'شلّال',
-  } as Record<string, string>,
+  shapes: { bars: 'أعمدة', peaks: 'قِمم', ribbon: 'شريط' } as Record<string, string>,
   footer: {
     list: 'قائمة السور',
     reciter: 'اختيار القارئ',
@@ -131,7 +125,7 @@ const en: typeof ar = {
     shapeHint: 'The shape of the spectrum above the scrubber.',
     minutes: (count: number) => `${count} min`,
   },
-  shapes: { bars: 'Bars', peaks: 'Peaks', ribbon: 'Ribbon', dots: 'Dots', waterfall: 'Waterfall' },
+  shapes: { bars: 'Bars', peaks: 'Peaks', ribbon: 'Ribbon' },
   footer: {
     list: 'Surah list',
     reciter: 'Choose reciter',

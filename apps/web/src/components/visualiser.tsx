@@ -6,24 +6,29 @@ import { downsample, type Visualiser as Model } from '@/utils/visualiser-models'
 const BARS = 28;
 const HEIGHT = 64;
 const GAP = 3;
-/** Waterfall history: one column per frame bucket, newest at the reading edge. */
-const HISTORY = 56;
+/** Ribbon resolution: points across the width, not raw analyser samples. */
+const RIBBON_POINTS = 220;
+/** How many past frames the ribbon keeps as fading echoes. */
+const TRAILS = 3;
 
 /**
- * The spectrum, in five shapes. Everything is ink on transparent, bottom-anchored,
- * and mirrored so band 0 sits at the reading edge (right) in this RTL page.
+ * The spectrum, in three shapes: bars, peaks and a ribbon.
  *
- * Paused, the last shape stays at a quarter opacity: the block does not jump and
- * "not listening" is legible without a label.
+ * The ribbon is deliberately slow and layered — each frame moves a fraction of
+ * the way to the new waveform, and three older snapshots stay behind it as
+ * fading lines, so it reads as a moving trace rather than a jittering edge.
+ *
+ * Everything is ink on transparent, bottom-anchored, mirrored so band 0 sits at
+ * the reading edge (right) in this RTL page. Paused, the last shape stays at a
+ * quarter opacity: the block does not jump.
  */
 export default function Visualiser({ playing, model }: { playing: boolean; model: Model }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const levels = useRef<number[]>(new Array(BARS).fill(0.08));
   const peaks = useRef<number[]>(new Array(BARS).fill(0.08));
-  const history = useRef<number[][]>([]);
-  // 128 is silence in the byte time-domain format; zeroes would draw a full block.
-  const wave = useRef<Float32Array>(new Float32Array(BARS * 4).fill(128));
+  const smoothed = useRef<Float32Array>(new Float32Array(RIBBON_POINTS).fill(128));
+  const trails = useRef<Float32Array[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,63 +68,48 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       });
     };
 
-    const drawDots = () => {
-      const step = width / BARS;
-      levels.current.forEach((level, index) => {
-        const radius = 1.2 + level * 6;
-        const x = width - step / 2 - index * step;
-        ctx.beginPath();
-        ctx.arc(x, HEIGHT - 8, radius, 0, Math.PI * 2);
-        ctx.fill();
-      });
+    const tracePath = (samples: Float32Array, amplitude: number) => {
+      const step = width / (samples.length - 1);
+      ctx.beginPath();
+      for (let i = 0; i < samples.length; i += 1) {
+        const value = Math.min(1, Math.abs((samples[i] - 128) / 128));
+        const x = width - i * step;
+        ctx.lineTo(x, HEIGHT - Math.max(1.5, value * amplitude));
+      }
+      ctx.lineTo(0, HEIGHT);
     };
 
     const drawRibbon = () => {
-      const data = wave.current;
-      const points = data.length;
-      const step = width / points;
-      ctx.beginPath();
-      ctx.moveTo(width, HEIGHT);
-      for (let i = 0; i < points; i += 1) {
-        const value = Math.abs((data[i] - 128) / 128);
-        const x = width - i * step;
-        // A silent time-domain buffer is flat, which collapses the polygon to
-        // nothing; the floor keeps a hairline the way the bars keep 2px.
-        ctx.lineTo(x, HEIGHT - Math.max(1.5, value * (HEIGHT - 6)));
-      }
-      ctx.lineTo(0, HEIGHT);
-      ctx.closePath();
-      ctx.fill();
-    };
+      const amplitude = HEIGHT - 8;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
 
-    const drawWaterfall = () => {
-      const columns = history.current;
-      if (columns.length === 0) {
-        // Nothing has been heard yet: a hairline, not an empty rectangle.
-        ctx.fillRect(0, HEIGHT - 1.5, width, 1.5);
-        return;
-      }
-      const step = width / HISTORY;
-      columns.forEach((column, age) => {
-        const x = width - (age + 1) * step;
-        if (x < -step) return;
-        column.forEach((level, band) => {
-          const height = Math.max(1, level * HEIGHT);
-          const y = HEIGHT - height;
-          const bandHeight = (HEIGHT / column.length) * 1.1;
-          ctx.fillRect(x, y, step - 1, Math.min(bandHeight, height));
-        });
+      // Oldest first, faintest last: the current line is always the solid one.
+      trails.current.forEach((snapshot, index) => {
+        const age = trails.current.length - index;
+        ctx.globalAlpha = 0.1 + (1 - age / (TRAILS + 1)) * 0.22;
+        ctx.lineWidth = 1;
+        tracePath(snapshot, amplitude * 0.92);
+        ctx.stroke();
       });
+
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 1.4;
+      tracePath(smoothed.current, amplitude);
+      ctx.stroke();
+      // A hairline along the baseline keeps the block from floating.
+      ctx.fillRect(0, HEIGHT - 1, width, 1);
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, width, HEIGHT);
       ctx.fillStyle = inkNow();
+      ctx.strokeStyle = inkNow();
+      ctx.globalAlpha = 1;
       if (model === 'peaks') drawPeaks();
-      else if (model === 'dots') drawDots();
       else if (model === 'ribbon') drawRibbon();
-      else if (model === 'waterfall') drawWaterfall();
       else drawBars();
+      ctx.globalAlpha = 1;
     };
 
     measure();
@@ -135,28 +125,30 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       return () => observer.disconnect();
     }
 
-    const bins = new Uint8Array(128);
-    const time = new Uint8Array(128);
+    const bins = new Uint8Array(512);
+    const time = new Uint8Array(1024);
     let frame = 0;
 
     const tick = () => {
       const analyser = getAnalyser();
       if (analyser && !reduced) {
         analyser.getByteFrequencyData(bins);
-        const bands = downsample(bins, BARS);
-        bands.forEach((target, index) => {
+        downsample(bins, BARS).forEach((target, index) => {
           levels.current[index] += (Math.max(0.06, target) - levels.current[index]) * 0.35;
           peaks.current[index] = Math.max(levels.current[index], peaks.current[index] - 0.008);
         });
 
         if (model === 'ribbon') {
           analyser.getByteTimeDomainData(time);
-          wave.current = new Float32Array(time);
-        }
-
-        if (model === 'waterfall' && frame % 2 === 0) {
-          history.current.unshift(downsample(bins, 10));
-          history.current.length = Math.min(history.current.length, HISTORY);
+          // Slower than the bars on purpose: 0.07 per frame is a trace, not a twitch.
+          for (let i = 0; i < RIBBON_POINTS; i += 1) {
+            const raw = time[Math.floor((i / RIBBON_POINTS) * time.length)];
+            smoothed.current[i] += (raw - smoothed.current[i]) * 0.07;
+          }
+          if (frame % 8 === 0) {
+            trails.current.push(new Float32Array(smoothed.current));
+            trails.current = trails.current.slice(-TRAILS);
+          }
         }
       }
       draw();
