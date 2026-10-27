@@ -18,7 +18,7 @@ export default function TopBar({
   const { t } = useLocale();
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
+    <header className="top-bar flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
       <a href="#/" aria-label={`${t.brand} — ${t.routes.listen}`} className="flex items-center gap-2">
         <img src="/images/icon.png" alt="" className="brand-mark h-6 w-auto" />
         <span className="tnum text-[10px] leading-none text-muted">{APP_VERSION}</span>

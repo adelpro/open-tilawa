@@ -176,3 +176,48 @@ input[type='search']::-webkit-search-decoration {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Desktop theatre (path C, prototype): the spectrum is the floor, the names
+   sit above it, and the bar gets out of the way until you reach for it. */
+@media (min-width: 1024px) {
+  .theatre {
+    justify-content: flex-end;
+    padding-bottom: 268px;
+  }
+
+  .top-bar {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 20;
+    border-bottom-color: transparent;
+    background: transparent;
+    opacity: 0.4;
+    transition: opacity 200ms ease, background-color 200ms ease;
+  }
+
+  .top-bar:hover,
+  .top-bar:focus-within {
+    opacity: 1;
+    background: var(--paper, #ffffff);
+    border-bottom-color: var(--line);
+  }
+
+  .theatre-footer {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 16px;
+    z-index: 10;
+    border-top: 0;
+    background: transparent;
+  }
+
+  .theatre-footer > div {
+    max-width: 560px;
+    justify-content: flex-start;
+  }
+
+  .theatre-names {
+    display: none;
+  }
+}

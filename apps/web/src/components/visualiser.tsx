@@ -4,7 +4,6 @@ import { getAnalyser } from '@/utils/audio-analyser';
 import { downsample, type Visualiser as Model } from '@/utils/visualiser-models';
 
 const BARS = 28;
-const HEIGHT = 64;
 const GAP = 3;
 /** Ribbon resolution: points across the width, not raw analyser samples. */
 const RIBBON_POINTS = 220;
@@ -22,7 +21,16 @@ const TRAILS = 3;
  * the reading edge (right) in this RTL page. Paused, the block is empty: the
  * canvas keeps its height so the controls never jump.
  */
-export default function Visualiser({ playing, model }: { playing: boolean; model: Model }) {
+export default function Visualiser({
+  playing,
+  model,
+  height = 64,
+}: {
+  playing: boolean;
+  model: Model;
+  /** CSS pixels; the theatre layout asks for a taller horizon. */
+  height?: number;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const levels = useRef<number[]>(new Array(BARS).fill(0.08));
@@ -46,7 +54,7 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       width = canvas.clientWidth || 260;
       barWidth = Math.max(2, (width - GAP * (BARS - 1)) / BARS);
       canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(HEIGHT * dpr);
+      canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
@@ -55,15 +63,15 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
 
     const drawBars = () => {
       levels.current.forEach((level, index) => {
-        const height = Math.max(2, level * HEIGHT);
-        ctx.fillRect(xFor(index), HEIGHT - height, barWidth, height);
+        const barHeight = Math.max(2, level * height);
+        ctx.fillRect(xFor(index), height - barHeight, barWidth, barHeight);
       });
     };
 
     const drawPeaks = () => {
       drawBars();
       peaks.current.forEach((level, index) => {
-        const y = HEIGHT - Math.max(3, level * HEIGHT);
+        const y = height - Math.max(3, level * height);
         ctx.fillRect(xFor(index), y - 2, barWidth, 1.5);
       });
     };
@@ -74,13 +82,13 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       for (let i = 0; i < samples.length; i += 1) {
         const value = Math.min(1, Math.abs((samples[i] - 128) / 128) * gain);
         const x = width - i * step;
-        ctx.lineTo(x, HEIGHT - Math.max(1.5, value * amplitude));
+        ctx.lineTo(x, height - Math.max(1.5, value * amplitude));
       }
-      ctx.lineTo(0, HEIGHT);
+      ctx.lineTo(0, height);
     };
 
     const drawRibbon = () => {
-      const amplitude = HEIGHT - 8;
+      const amplitude = height - 8;
       // A quiet passage would otherwise be a flat line at the bottom. The gain
       // follows the recent peak, so the trace keeps a readable shape at any level.
       let peak = 0;
@@ -105,11 +113,11 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       tracePath(smoothed.current, amplitude, gain);
       ctx.stroke();
       // A hairline along the baseline keeps the block from floating.
-      ctx.fillRect(0, HEIGHT - 1, width, 1);
+      ctx.fillRect(0, height - 1, width, 1);
     };
 
     const draw = () => {
-      ctx.clearRect(0, 0, width, HEIGHT);
+      ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = inkNow();
       ctx.strokeStyle = inkNow();
       ctx.globalAlpha = 1;
@@ -130,7 +138,7 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
 
     if (!playing) {
       // Nothing is playing, so nothing is drawn — not even the old shape.
-      ctx.clearRect(0, 0, width, HEIGHT);
+      ctx.clearRect(0, 0, width, height);
       return () => observer.disconnect();
     }
 
@@ -173,14 +181,14 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       cancelAnimationFrame(frameRef.current);
       observer.disconnect();
     };
-  }, [playing, model]);
+  }, [playing, model, height]);
 
   return (
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="block h-16 w-full transition-opacity duration-300"
-      style={{ opacity: playing ? 1 : 0 }}
+      className="block w-full transition-opacity duration-300"
+      style={{ height, opacity: playing ? 1 : 0 }}
     />
   );
 }

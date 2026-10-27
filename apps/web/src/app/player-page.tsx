@@ -11,6 +11,7 @@ import { surahById } from '@/constants/surah';
 import { useLocale } from '@/hooks/use-locale';
 import { usePlayerNav } from '@/hooks/use-player-nav';
 import { getPosition, loadState, saveState, setLastSurah } from '@/hooks/use-persistence';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useReciters } from '@/hooks/use-reciters';
 import { useSheet } from '@/hooks/use-sheet';
 import { selectedReciterAtom } from '@/jotai/atom';
@@ -36,6 +37,7 @@ import { normaliseVisualiser } from '@/utils/visualiser-models';
 export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { t } = useLocale();
   const { reciters, error: recitersError, retry: retryReciters } = useReciters();
+  const wide = useMediaQuery('(min-width: 1024px)');
   const { sheet, openSurahs, openReciters, openStream, close } = useSheet();
 
   const [reciter, setReciter] = useAtom(selectedReciterAtom);
@@ -121,16 +123,21 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   return (
     <>
-      <main className="player-screen">
+      <main className="player-screen theatre">
         <div className="w-full max-w-[520px]">
           {/* The name lives in the footer and in the accessible heading; the
               space above the scrubber belongs to what the speaker is doing. */}
-          <h1 className="sr-only">{surah?.name ?? `سورة ${surahId}`}</h1>
-          <div className="flex justify-center">
-            <Visualiser playing={isPlaying} model={visualiser} />
+          <h1 className="sr-only lg:not-sr-only lg:fixed lg:inset-x-0 lg:top-[15vh] lg:text-center lg:text-[clamp(32px,4vw,56px)] lg:font-semibold lg:tracking-[-0.02em] lg:text-ink">
+            {surah?.name ?? `سورة ${surahId}`}
+          </h1>
+          <p className="hidden lg:fixed lg:inset-x-0 lg:top-[calc(15vh+84px)] lg:block lg:text-center lg:text-[16px] lg:text-muted">
+            {reciter?.name ?? ''}
+          </p>
+          <div className="flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0">
+            <Visualiser playing={isPlaying} model={visualiser} height={wide ? 200 : 64} />
           </div>
 
-          <div className="mt-10">
+          <div className="mt-10 lg:mx-auto lg:mt-0 lg:w-[560px]">
             <Scrubber
               position={position}
               duration={duration}
