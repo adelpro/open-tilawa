@@ -68,11 +68,11 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
       });
     };
 
-    const tracePath = (samples: Float32Array, amplitude: number) => {
+    const tracePath = (samples: Float32Array, amplitude: number, gain: number) => {
       const step = width / (samples.length - 1);
       ctx.beginPath();
       for (let i = 0; i < samples.length; i += 1) {
-        const value = Math.min(1, Math.abs((samples[i] - 128) / 128));
+        const value = Math.min(1, Math.abs((samples[i] - 128) / 128) * gain);
         const x = width - i * step;
         ctx.lineTo(x, HEIGHT - Math.max(1.5, value * amplitude));
       }
@@ -81,6 +81,13 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
 
     const drawRibbon = () => {
       const amplitude = HEIGHT - 8;
+      // A quiet passage would otherwise be a flat line at the bottom. The gain
+      // follows the recent peak, so the trace keeps a readable shape at any level.
+      let peak = 0;
+      for (let i = 0; i < smoothed.current.length; i += 1) {
+        peak = Math.max(peak, Math.abs((smoothed.current[i] - 128) / 128));
+      }
+      const gain = Math.min(3.2, 1 / Math.max(0.18, peak));
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
 
@@ -89,13 +96,13 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
         const age = trails.current.length - index;
         ctx.globalAlpha = 0.1 + (1 - age / (TRAILS + 1)) * 0.22;
         ctx.lineWidth = 1;
-        tracePath(snapshot, amplitude * 0.92);
+        tracePath(snapshot, amplitude * 0.92, gain);
         ctx.stroke();
       });
 
       ctx.globalAlpha = 1;
       ctx.lineWidth = 1.4;
-      tracePath(smoothed.current, amplitude);
+      tracePath(smoothed.current, amplitude, gain);
       ctx.stroke();
       // A hairline along the baseline keeps the block from floating.
       ctx.fillRect(0, HEIGHT - 1, width, 1);
