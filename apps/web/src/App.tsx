@@ -24,6 +24,7 @@ import { patchSettings } from './hooks/use-persistence';
 import { useUserSync } from './hooks/use-user-sync';
 import { useGlobalCounts } from './hooks/use-global-counts';
 import { useTrackView } from './hooks/use-favorites';
+import { useHydrateRecent, useRecentSync, useRecordRecent } from './hooks/use-recent';
 
 /**
  * A top bar, one routed view, and the `<audio>` element that outlives all of
@@ -52,6 +53,9 @@ export default function App() {
   useUserSync();
   useGlobalCounts();
   useTrackView();
+  useHydrateRecent();
+  useRecordRecent();
+  useRecentSync();
 
   const chooseVisualiser = (next: ReturnType<typeof normaliseVisualiser>) => {
     setVisualiser(next);
