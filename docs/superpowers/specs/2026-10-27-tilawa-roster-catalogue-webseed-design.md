@@ -247,7 +247,17 @@ export function shouldAddWebSeed(input: {
 
 `StreamSource` becomes `'connected' | 'waiting' | 'webseed'` (`'http'` is gone).
 Footer icon: `wifi` for connected/waiting, `link` for webseed. The sheet shows the
-live numbers plus one row «المصدر» = «الأقران» / «الخادم» / «بانتظار الأقران».
+live numbers plus two rows:
+
+- «المصدر» = «الأقران» / «الخادم» / «بانتظار الأقران»;
+- «البديل» = «متوفّر» / «غير متوفّر» / «جارٍ الفحص» for **this surah**, from one
+  `HEAD <origin>/media/<torrent.name>/<NNN>.mp3` issued when the sheet opens
+  (same origin, no CORS, no range). The answer is cached per
+  `folder/surah` for the session and reused by the web-seed trigger, so the
+  check never runs twice for the same file.
+
+That last row is the only new probe: it turns "waiting for peers" from a dead end
+into an answer, and it costs one request per surah the listener actually opens.
 
 ## 8. Serving `/media`
 
@@ -351,7 +361,9 @@ Web (`node --experimental-strip-types --test`):
   rows with the same infohash collapse to one (lowest id).
 - `test/webseed.test.ts` — `shouldAddWebSeed`: fires at 8 s with 0 peers and
   incomplete progress; does not fire with a peer; never fires twice; does not
-  fire on a complete torrent.
+  fire on a complete torrent. `mediaUrl` builds
+  `<origin>/media/<folder>/<NNN>.mp3` with the surah zero-padded and the folder
+  encoded.
 - `test/riwaya.test.ts` — `unknown`/empty → «غير محدّد», `Hafs`/`Warsh`/`Qalon`
   unchanged.
 - Remove `test/reciter-merge.test.ts`.
