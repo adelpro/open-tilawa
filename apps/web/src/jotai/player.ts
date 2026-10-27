@@ -21,7 +21,8 @@ export const rateAtom = atom(1);
 /** In-session only: a muted start would look like a broken player tomorrow. */
 export const mutedAtom = atom(false);
 /** Which shape the spectrum takes; a taste, so it is remembered. */
-export const visualiserAtom = atom<Visualiser>('bars');
+/** Waves is the default shape: it reads as audio, not as a level meter. */
+export const visualiserAtom = atom<Visualiser>('ribbon');
 
 export const torrentAtom = atom<TorrentInfo | undefined>(undefined);
 export const torrentErrorAtom = atom<string | undefined>(undefined);

@@ -5,21 +5,27 @@ import { downsample, type Visualiser as Model } from '@/utils/visualiser-models'
 
 const BARS = 28;
 const GAP = 3;
-/** Ribbon resolution: points across the width, not raw analyser samples. */
-const RIBBON_POINTS = 220;
-/** How many past frames the ribbon keeps as fading echoes. */
-const TRAILS = 3;
+/** Points across the width for the wave layers, not raw analyser samples. */
+const WAVE_POINTS = 240;
+/**
+ * Four waves, front to back. Each one reads the same time-domain signal with its
+ * own smoothing and gain, so they breathe at different speeds and never collapse
+ * into a single line: the quiet ones stay visible, the loud one reaches the top.
+ */
+const WAVES = [
+  { gain: 2.6, alpha: 0.95, lineWidth: 1.6, follow: 0.22, shift: 0 },
+  { gain: 2.1, alpha: 0.5, lineWidth: 1.3, follow: 0.14, shift: 37 },
+  { gain: 1.7, alpha: 0.32, lineWidth: 1.1, follow: 0.1, shift: 83 },
+  { gain: 1.35, alpha: 0.2, lineWidth: 1, follow: 0.07, shift: 131 },
+];
 
 /**
- * The spectrum, in three shapes: bars, peaks and a ribbon.
+ * The spectrum, in three shapes: bars, peaks and waves.
  *
- * The ribbon is deliberately slow and layered — each frame moves a fraction of
- * the way to the new waveform, and three older snapshots stay behind it as
- * fading lines, so it reads as a moving trace rather than a jittering edge.
- *
- * Everything is ink on transparent, bottom-anchored, mirrored so band 0 sits at
- * the reading edge (right) in this RTL page. Paused, the block is empty: the
- * canvas keeps its height so the controls never jump.
+ * Waves is the one that reads as a waveform: four layered traces of the same
+ * signal, different smoothing and amplitude, mirrored around the floor and drawn
+ * in ink. Paused, the block is empty: the canvas keeps its height so the
+ * controls never jump.
  */
 export default function Visualiser({
   playing,
@@ -35,10 +41,9 @@ export default function Visualiser({
   const frameRef = useRef(0);
   const levels = useRef<number[]>(new Array(BARS).fill(0.08));
   const peaks = useRef<number[]>(new Array(BARS).fill(0.08));
-  const smoothed = useRef<Float32Array>(new Float32Array(RIBBON_POINTS).fill(128));
-  const trails = useRef<Float32Array[]>([]);
-  /** Smoothed recent peak: fast to rise, slow to fall, so the shape never jitters. */
-  const loudness = useRef(0.12);
+  const waves = useRef<Float32Array[]>(
+    WAVES.map(() => new Float32Array(WAVE_POINTS).fill(128)),
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -85,46 +90,28 @@ export default function Visualiser({
       });
     };
 
-    const tracePath = (samples: Float32Array, amplitude: number, gain: number) => {
-      const step = width / (samples.length - 1);
-      ctx.beginPath();
-      for (let i = 0; i < samples.length; i += 1) {
-        const value = Math.min(1, Math.abs((samples[i] - 128) / 128) * gain);
-        const x = width - i * step;
-        ctx.lineTo(x, height - Math.max(1.5, value * amplitude));
-      }
-      ctx.lineTo(0, height);
-    };
-
-    const drawRibbon = () => {
+    const drawWaves = () => {
       const amplitude = height - 10;
-      // A quiet passage would otherwise be a flat line at the bottom. The gain
-      // follows the recent peak with a slow release, which is the "throttle": the
-      // trace keeps a readable height at any level without twitching per frame.
-      let peak = 0;
-      for (let i = 0; i < smoothed.current.length; i += 1) {
-        peak = Math.max(peak, Math.abs((smoothed.current[i] - 128) / 128));
-      }
-      const target = Math.max(0.12, peak);
-      loudness.current +=
-        (target - loudness.current) * (target > loudness.current ? 0.25 : 0.05);
-      const gain = Math.min(5.5, 1.1 / loudness.current);
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
+      const step = width / (WAVE_POINTS - 1);
 
-      // Oldest first, faintest last: the current line is always the solid one.
-      trails.current.forEach((snapshot, index) => {
-        const age = trails.current.length - index;
-        ctx.globalAlpha = 0.1 + (1 - age / (TRAILS + 1)) * 0.22;
-        ctx.lineWidth = 1;
-        tracePath(snapshot, amplitude * 0.92, gain);
+      // Back to front, so the brightest line is always the nearest one.
+      for (let layer = WAVES.length - 1; layer >= 0; layer -= 1) {
+        const style = WAVES[layer];
+        const samples = waves.current[layer];
+        ctx.globalAlpha = style.alpha;
+        ctx.lineWidth = style.lineWidth;
+        ctx.beginPath();
+        for (let i = 0; i < samples.length; i += 1) {
+          const value = Math.min(1, Math.abs((samples[i] - 128) / 128) * style.gain);
+          const x = width - i * step;
+          const y = height - Math.max(1.5, Math.pow(value, 0.85) * amplitude);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
         ctx.stroke();
-      });
+      }
 
       ctx.globalAlpha = 1;
-      ctx.lineWidth = 1.4;
-      tracePath(smoothed.current, amplitude, gain);
-      ctx.stroke();
       // A hairline along the baseline keeps the block from floating.
       ctx.fillRect(0, height - 1, width, 1);
     };
@@ -135,7 +122,7 @@ export default function Visualiser({
       ctx.strokeStyle = inkNow();
       ctx.globalAlpha = 1;
       if (model === 'peaks') drawPeaks();
-      else if (model === 'ribbon') drawRibbon();
+      else if (model === 'ribbon') drawWaves();
       else drawBars();
       ctx.globalAlpha = 1;
     };
@@ -173,16 +160,13 @@ export default function Visualiser({
 
         if (model === 'ribbon') {
           analyser.getByteTimeDomainData(time);
-          // Slower than the bars on purpose — but the buffer starts at silence,
-          // so the first second catches up quickly before it settles at 0.07.
-          const follow = frame < 45 ? 0.3 : 0.07;
-          for (let i = 0; i < RIBBON_POINTS; i += 1) {
-            const raw = time[Math.floor((i / RIBBON_POINTS) * time.length)];
-            smoothed.current[i] += (raw - smoothed.current[i]) * follow;
-          }
-          if (frame % 8 === 0) {
-            trails.current.push(new Float32Array(smoothed.current));
-            trails.current = trails.current.slice(-TRAILS);
+          for (let layer = 0; layer < WAVES.length; layer += 1) {
+            const style = WAVES[layer];
+            const samples = waves.current[layer];
+            for (let i = 0; i < WAVE_POINTS; i += 1) {
+              const raw = time[(i + style.shift) % time.length];
+              samples[i] += (raw - samples[i]) * style.follow;
+            }
           }
         }
       }

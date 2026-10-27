@@ -7,12 +7,12 @@ import {
   VISUALISERS,
 } from '../src/utils/visualiser-models.ts';
 
-test('an unknown stored model falls back to bars', () => {
+test('an unknown stored model falls back to waves, the default shape', () => {
   assert.equal(normaliseVisualiser('bars'), 'bars');
   assert.equal(normaliseVisualiser('ribbon'), 'ribbon');
-  assert.equal(normaliseVisualiser('waterfall'), 'bars');
-  assert.equal(normaliseVisualiser('nope'), 'bars');
-  assert.equal(normaliseVisualiser(undefined), 'bars');
+  assert.equal(normaliseVisualiser('waterfall'), 'ribbon');
+  assert.equal(normaliseVisualiser('nope'), 'ribbon');
+  assert.equal(normaliseVisualiser(undefined), 'ribbon');
   assert.equal(VISUALISERS.length, 3);
 });
 

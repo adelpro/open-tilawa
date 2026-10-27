@@ -10,15 +10,15 @@ export type Visualiser = (typeof VISUALISERS)[number];
 export const VISUALISER_LABELS: Record<Visualiser, string> = {
   bars: 'أعمدة',
   peaks: 'قِمم',
-  ribbon: 'شريط',
+  ribbon: 'موجات',
 };
 
-/** Unknown values — including the retired dots and waterfall — fall back to bars. */
+/** Unknown values — including the retired dots and waterfall — fall back to waves. */
 export function normaliseVisualiser(value: unknown): Visualiser {
-  return VISUALISERS.includes(value as Visualiser) ? (value as Visualiser) : 'bars';
+  return VISUALISERS.includes(value as Visualiser) ? (value as Visualiser) : 'ribbon';
 }
 
-/** Squash `bins` into `columns` buckets by peak, used by the waterfall. */
+/** Squash `bins` into `columns` buckets by peak, used by the bars. */
 export function downsample(bins: Uint8Array, columns: number): number[] {
   const usable = Math.floor(bins.length * 0.6);
   const out: number[] = [];

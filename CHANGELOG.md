@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.6 — 2026-10-27
+
+Patch. App versions: **web 1.4.6**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Changed
+
+- **The spectrum is waves, not one hairline.** «الطيف» now draws four layered
+  traces of the time-domain signal — different smoothing, gain and phase per
+  layer — so it reads as 3–5 moving waves that grow and shrink instead of a
+  single line pinned to the floor.
+- Waves is the default shape (`ribbon` keeps its stored key; the label is now
+  «موجات»). Bars and peaks keep their gamma lift and throttle from 1.5.5.
+
 ## 1.5.5 — 2026-10-27
 
 Patch. App versions: **web 1.4.5**, **admin 1.24.0**, **seeder 1.4.2**.
