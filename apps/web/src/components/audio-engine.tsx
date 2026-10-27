@@ -313,6 +313,10 @@ export default function AudioEngine() {
       onTimeUpdate={handleTimeUpdate}
       onDurationChange={handleTimeUpdate}
       onLoadedMetadata={restorePosition}
+      // captureStream() has no audio track until the element is actually
+      // rendering, so the analyser is attached once playback starts as well as
+      // before it.
+      onPlaying={(event) => ensureAnalyser(event.currentTarget)}
       onSeeked={() => {
         persist();
         flushPosition();
