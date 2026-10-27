@@ -153,6 +153,23 @@ function Empty() {
   return <p className="px-5 py-10 text-center text-[13px] text-muted">{t.sheets.empty}</p>;
 }
 
+/** The roster is remote now: an outage must say so, not look like an empty list. */
+function RosterError({ onRetry }: { onRetry: () => void }) {
+  const { t } = useLocale();
+  return (
+    <div className="px-5 py-10 text-center">
+      <p className="text-[13px] text-muted">{t.sheets.recitersError}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-2 h-11 px-3 text-[13px] font-semibold text-ink underline underline-offset-4"
+      >
+        {t.player.retry}
+      </button>
+    </div>
+  );
+}
+
 const row =
   'flex min-h-16 w-full items-center gap-3 px-5 py-2 text-start text-[16px] text-ink transition-colors hover:bg-line active:bg-line';
 
@@ -255,12 +272,16 @@ export function ReciterSheet({
   current,
   onPick,
   onClose,
+  error = false,
+  onRetry,
 }: {
   open: boolean;
   reciters: Reciter[];
   current: number | undefined;
   onPick: (reciter: Reciter) => void;
   onClose: () => void;
+  error?: boolean;
+  onRetry?: () => void;
 }) {
   const { t } = useLocale();
   const [query, setQuery] = useState('');
@@ -274,10 +295,7 @@ export function ReciterSheet({
   const rows = useMemo(() => {
     const searched = filterReciters(query, reciters);
     if (filter === 'all') return searched;
-    if (filter === 'http') {
-      return searched.filter((r) => !r.magnet || Boolean(r.itqanPlaylist?.length));
-    }
-    return searched.filter((r) => (r.riwaya ?? 'حفص') === filter);
+    return searched.filter((r) => (r.riwaya || 'unknown') === filter);
   }, [query, reciters, filter]);
 
   useEffect(() => {
@@ -301,7 +319,6 @@ export function ReciterSheet({
           <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5">
             {[
               { key: 'all', label: t.sheets.all },
-              { key: 'http', label: t.sheets.http },
               ...riwayas.map((name) => ({ key: name, label: riwayaLabel(name) })),
             ].map((item) => (
               <button
@@ -318,7 +335,9 @@ export function ReciterSheet({
         </>
       }
     >
-      {rows.length === 0 ? (
+      {error && rows.length === 0 ? (
+        <RosterError onRetry={onRetry ?? (() => undefined)} />
+      ) : rows.length === 0 ? (
         <Empty />
       ) : (
         <ul>
@@ -343,18 +362,6 @@ export function ReciterSheet({
                   <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[10.5px] text-ink">
                     {riwayaLabel(reciter.riwaya)}
                   </span>
-
-                  {/* Every catalogue reciter is seeded over P2P, so a P2P badge
-                      says nothing. The HTTP chip marks the ones that can also
-                      play without peers. */}
-                  {(reciter.itqanPlaylist?.length || !reciter.magnet) && (
-                    <span
-                      title="يتوفّر بديل HTTP"
-                      className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[10.5px] text-muted"
-                    >
-                      HTTP
-                    </span>
-                  )}
                 </button>
               </li>
             );

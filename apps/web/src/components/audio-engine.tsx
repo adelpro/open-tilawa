@@ -93,7 +93,6 @@ export default function AudioEngine() {
   trackRef.current = track;
 
   const fileCount = files.length;
-  const link = track?.link ?? '';
   const magnetURI = torrentInfo?.magnetURI ?? '';
 
   /** Mirror the torrent hook into atoms so the page can read it. */
@@ -167,13 +166,10 @@ export default function AudioEngine() {
       selectedFileRef.current = file;
       audio.src = streamURL;
       audio.load();
-    } else if (current.link) {
-      audio.src = current.link;
-      audio.load();
     }
 
     restoredForRef.current = null;
-  }, [surahId, link, magnetURI, fileCount, reciter]);
+  }, [surahId, magnetURI, fileCount, reciter]);
 
   /** Play / pause. Deliberately does not re-assign src. */
   useEffect(() => {

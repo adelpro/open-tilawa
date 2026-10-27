@@ -1,2 +1,7 @@
-// Bump this on every release so cached PWA versions are identifiable.
-export const APP_VERSION = '1.3.5';
+import pkg from '../../package.json';
+
+/**
+ * The release's version, read from `package.json` — one string to bump, and the
+ * top bar, the about page and any identifying header always agree with it.
+ */
+export const APP_VERSION: string = pkg.version;

@@ -1,58 +1,89 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { RECITERS } from '@/constants';
 import type { Reciter } from '@/types';
-import { mergeReciters, type CatalogueRow } from '@/utils/reciter-merge';
+import { toReciters, type CatalogueRow } from '@/utils/catalogue';
 
 /**
  * The reciter list, served by the admin catalogue.
  *
- * The catalogue is the source of truth for *what exists and where it announces*;
- * the static list remains the source of display metadata (Arabic name, source
- * badge, Itqan fallback playlist), and `constants/reciter-names` supplies the
- * Arabic name, because the catalogue's own name is the torrent's folder name.
- *
- * If the request fails the static list is returned unchanged: a catalogue outage
- * must not turn the player into an empty page.
+ * The catalogue is the only source: what is published there is the roster, in
+ * that order. There is deliberately no built-in list to fall back to — a stale
+ * copy of the roster is how two reciters ended up sharing a name and a stale
+ * hash came back from the dead. The last good payload is cached instead, so an
+ * outage costs freshness, not the player.
  */
 
 const ADMIN_API =
   (import.meta as { env?: Record<string, string> }).env?.VITE_ADMIN_API_URL ||
   'https://admin-tilawa.quran.us.kg';
 
+const CACHE_KEY = 'tilawa.reciters.v1';
+
 let pending: Promise<Reciter[]> | null = null;
 
-async function fetchAndMerge(): Promise<Reciter[]> {
+function readCache(): Reciter[] {
   try {
-    const response = await fetch(`${ADMIN_API}/api/public/reciters`, {
-      headers: { Accept: 'application/json' },
-    });
-    if (!response.ok) return RECITERS;
-    const body = (await response.json()) as { reciters?: CatalogueRow[] };
-    if (!Array.isArray(body.reciters) || body.reciters.length === 0) return RECITERS;
-
-    return mergeReciters(body.reciters as unknown as CatalogueRow[], RECITERS);
+    const raw = window.localStorage.getItem(CACHE_KEY);
+    if (!raw) return [];
+    const rows = JSON.parse(raw) as CatalogueRow[];
+    return Array.isArray(rows) ? toReciters(rows) : [];
   } catch {
-    return RECITERS;
+    return [];
   }
 }
 
-export function useReciters(): { reciters: Reciter[]; fromCatalogue: boolean } {
-  const [reciters, setReciters] = useState<Reciter[]>(RECITERS);
-  const [fromCatalogue, setFromCatalogue] = useState(false);
+function writeCache(rows: CatalogueRow[]): void {
+  try {
+    window.localStorage.setItem(CACHE_KEY, JSON.stringify(rows));
+  } catch {
+    // A full or disabled store costs freshness, never playback.
+  }
+}
+
+async function fetchRoster(): Promise<Reciter[]> {
+  const response = await fetch(`${ADMIN_API}/api/public/reciters`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error(`catalogue answered ${response.status}`);
+
+  const body = (await response.json()) as { reciters?: CatalogueRow[] };
+  if (!Array.isArray(body.reciters)) throw new Error('catalogue payload is not a list');
+
+  writeCache(body.reciters);
+  return toReciters(body.reciters);
+}
+
+export function useReciters(): { reciters: Reciter[]; error: boolean; retry: () => void } {
+  const [reciters, setReciters] = useState<Reciter[]>(readCache);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let live = true;
-    pending ??= fetchAndMerge();
-    void pending.then((list) => {
-      if (!live) return;
-      setReciters(list);
-      setFromCatalogue(list !== RECITERS);
-    });
+    pending ??= fetchRoster();
+    void pending.then(
+      (list) => {
+        if (!live) return;
+        setReciters(list);
+        setError(false);
+      },
+      () => {
+        if (!live) return;
+        setError(true);
+        // A failed fetch must not be memoised, or retry would resolve instantly.
+        pending = null;
+      },
+    );
     return () => {
       live = false;
     };
+  }, [attempt]);
+
+  const retry = useCallback(() => {
+    pending = null;
+    setError(false);
+    setAttempt((value) => value + 1);
   }, []);
 
-  return { reciters, fromCatalogue };
+  return { reciters, error, retry };
 }

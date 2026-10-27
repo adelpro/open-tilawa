@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import { SURAHS } from '../src/constants/surah.ts';
 import { filterReciters, filterSurahs, matchesQuery, normalizeArabic } from '../src/utils/search.ts';
-import { MagnetlinkSource, type Reciter } from '../src/types/index.ts';
+import type { Reciter } from '../src/types/index.ts';
 
 test('normalizeArabic removes what people leave out when typing', () => {
   assert.equal(normalizeArabic('الأنفال'), 'الانفال');
@@ -31,26 +31,14 @@ test('surah search finds by name, without hamza, and by number', () => {
   assert.deepEqual(filterSurahs('لا شيء بهذا الاسم').map((s) => s.id), []);
 });
 
-test('reciter search covers the name and the source host', () => {
+test('reciter search covers the name and the reading', () => {
   const reciters: Reciter[] = [
-    {
-      id: 1,
-      name: 'ماهر المعيقلي',
-      magnet: 'magnet:?xt=urn:btih:aa',
-      source: MagnetlinkSource.MP3QURAN,
-      complet: true,
-    },
-    {
-      id: 2,
-      name: 'بدر التركي',
-      magnet: '',
-      source: MagnetlinkSource.ITQAN,
-      complet: false,
-    },
+    { id: 1, name: 'ماهر المعيقلي', magnet: 'magnet:?xt=urn:btih:aa', riwaya: 'Hafs', complet: true },
+    { id: 2, name: 'ياسين الجزائري', magnet: 'magnet:?xt=urn:btih:bb', riwaya: 'Warsh', complet: true },
   ];
 
   assert.deepEqual(filterReciters('ماهر', reciters).map((r) => r.id), [1]);
-  assert.deepEqual(filterReciters('mp3quran', reciters).map((r) => r.id), [1]);
-  assert.deepEqual(filterReciters('itqan', reciters).map((r) => r.id), [2]);
+  assert.deepEqual(filterReciters('warsh', reciters).map((r) => r.id), [2]);
+  assert.deepEqual(filterReciters('Hafs', reciters).map((r) => r.id), [1]);
   assert.equal(filterReciters('', reciters).length, 2);
 });

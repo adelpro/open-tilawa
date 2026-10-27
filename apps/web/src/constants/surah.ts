@@ -1,4 +1,4 @@
-import { Surah } from '@/types/surah';
+import type { Surah } from '@/types/surah';
 
 /**
  * The 114 surahs in mushaf order.

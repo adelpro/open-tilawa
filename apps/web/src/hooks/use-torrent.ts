@@ -12,7 +12,8 @@ import {
   parseMagnet,
   updateMagnetURI,
 } from "@/utils";
-import { closeTorrentSession, openTorrentSession } from "@/utils/torrent-session";
+import { openTorrentSession } from "@/utils/torrent-session";
+import { mediaBase, shouldAddWebSeed } from "@/utils/webseed";
 
 const TORRENT_READY_TIMEOUT = 10_000;
 
@@ -35,33 +36,8 @@ export default function useTorrent() {
     setError(undefined);
 
     if (!webtorrentReady) return;
-
-    // No torrent yet (e.g. Itqan-sourced reciter): build the playlist directly
-    // from the reciter's Itqan MP3 links so playback works without peers.
     if (!magnetURI) {
-      // An HTTP-only reciter needs no torrent; drop the one still seeding.
-      void closeTorrentSession();
-      const itqanPlaylist = selectedReciterValue?.itqanPlaylist;
-      if (itqanPlaylist && itqanPlaylist.length > 0) {
-        setTorrentInfo({
-          magnetURI: "",
-          downloaded: 0,
-          downloadSpeed: 0,
-          uploadSpeed: 0,
-          progress: 1,
-          peers: 0,
-          files: itqanPlaylist
-            .slice()
-            .sort((a, b) => a.surahId - b.surahId)
-            .map((track) => ({
-              surahId: track.surahId,
-              link: track.link,
-              file: undefined,
-              webSeeds: [],
-            })),
-          ready: true,
-        });
-      }
+      setError('This reciter has no magnet. Publish it from the catalogue.');
       return;
     }
 
@@ -69,6 +45,10 @@ export default function useTorrent() {
     let torrent: any = null;
     let readyTimeout: ReturnType<typeof setTimeout>;
     let detach: (() => void) | undefined;
+    /** Set once the grace period has passed with nobody answering. */
+    let webSeedAdded = false;
+    let readyAt = 0;
+    let webSeedTimer: ReturnType<typeof setInterval> | undefined;
 
     const run = async () => {
       if (cancelled) return;
@@ -119,19 +99,60 @@ export default function useTorrent() {
             //   '001.mp3', 'ar_001_Name.mp3', 'ar_Name_001.mp3'
             const surahMatch = file.name.match(/(\d{1,3})/);
             const surahId = surahMatch ? Number(surahMatch[1]) : 0;
-            return { surahId, link: "", file, webSeeds: [] };
+            return { surahId, file };
           })
           .sort((a: TrackType, b: TrackType) => a.surahId - b.surahId);
         setTorrentInfo({
+          name: torrent.name,
           magnetURI: torrent.magnetURI,
           downloaded: torrent.downloaded,
           downloadSpeed: torrent.downloadSpeed,
           uploadSpeed: torrent.uploadSpeed,
           progress: torrent.progress,
           peers: torrent.numPeers,
+          webSeed: webSeedAdded ? 'active' : 'off',
           files,
           ready: true,
         });
+      };
+
+      /**
+       * Nobody is answering: give the torrent an HTTP source of its own.
+       *
+       * The audio element is never touched — this only adds a peer-like source,
+       * so the pieces it delivers are verified and seeded like any other.
+       */
+      const maybeAddWebSeed = () => {
+        if (cancelled || webSeedAdded || !torrent.ready) return;
+        if (torrent.numPeers > 0) {
+          readyAt = Date.now();
+          return;
+        }
+        if (!readyAt) readyAt = Date.now();
+        const waitedMs = Date.now() - readyAt;
+        if (
+          !shouldAddWebSeed({
+            ready: torrent.ready,
+            peers: torrent.numPeers,
+            progress: torrent.progress,
+            waitedMs,
+            alreadyAdded: webSeedAdded,
+          })
+        )
+          return;
+        try {
+          torrent.addWebSeed(mediaBase(window.location.origin));
+          webSeedAdded = true;
+          setTorrentInfo((prev) => (prev ? { ...prev, webSeed: 'active' } : prev));
+        } catch (err) {
+          console.warn('web seed rejected', err);
+        }
+      };
+
+      const startWebSeedWatch = () => {
+        if (webSeedTimer) return;
+        readyAt = Date.now();
+        webSeedTimer = setInterval(maybeAddWebSeed, 1_000);
       };
 
       readyTimeout = setTimeout(() => {
@@ -145,12 +166,14 @@ export default function useTorrent() {
         clearTimeout(readyTimeout);
         setError(undefined);
         showPlaylist();
+        startWebSeedWatch();
       };
 
       if (torrent.ready) {
         clearTimeout(readyTimeout);
         setError(undefined);
         showPlaylist();
+        startWebSeedWatch();
       } else {
         torrent.on("ready", onReady);
       }
@@ -202,14 +225,10 @@ export default function useTorrent() {
     return () => {
       cancelled = true;
       if (readyTimeout) clearTimeout(readyTimeout);
+      if (webSeedTimer) clearInterval(webSeedTimer);
       detach?.();
     };
-  }, [
-    magnetURI,
-    webtorrentReady,
-    retryCount,
-    selectedReciterValue?.itqanPlaylist,
-  ]);
+  }, [magnetURI, webtorrentReady, retryCount]);
 
   return {
     torrentInfo,

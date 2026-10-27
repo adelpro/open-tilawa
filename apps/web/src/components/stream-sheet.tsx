@@ -1,20 +1,18 @@
+import { useEffect, useState } from 'react';
+
 import Sheet from '@/components/sheet';
 import { useLocale } from '@/hooks/use-locale';
 import type { Messages } from '@/i18n/messages';
 import type { TorrentInfo } from '@/types';
 import { formatBytes, formatSpeed } from '@/utils/format-bytes';
+import { probeMedia } from '@/utils/webseed';
 
-export type StreamSource = 'connected' | 'waiting' | 'http';
+/** Where the sound is coming from right now. */
+export type StreamSource = 'connected' | 'waiting' | 'webseed';
 
 type Row = { label: string; value: string };
 
-function rowsFor(
-  source: StreamSource,
-  torrent: TorrentInfo | undefined,
-  t: Messages,
-): Row[] {
-  if (source === 'http') return [];
-
+function rowsFor(torrent: TorrentInfo | undefined, t: Messages): Row[] {
   return [
     { label: t.stream.peers, value: `${torrent?.peers ?? 0}` },
     { label: t.stream.down, value: formatSpeed(torrent?.downloadSpeed) },
@@ -25,51 +23,76 @@ function rowsFor(
   ];
 }
 
+const FALLBACK_LABEL = {
+  checking: (t: Messages) => t.stream.fallbackChecking,
+  available: (t: Messages) => t.stream.fallbackAvailable,
+  missing: (t: Messages) => t.stream.fallbackMissing,
+} as const;
+
 /**
- * The v1 readout. Every number comes from the running torrent; an HTTP-only
- * reciter says so instead of showing a column of zeroes.
+ * The stream readout. Every number comes from the running torrent; the last row
+ * answers the only question a listener has when nothing plays — is there another
+ * source for this surah? One HEAD against our own origin, cached per file.
  */
 export default function StreamSheet({
   open,
   onClose,
   source,
   torrent,
+  surahId,
 }: {
   open: boolean;
   onClose: () => void;
   source: StreamSource;
   torrent: TorrentInfo | undefined;
+  surahId: number;
 }) {
   const { t } = useLocale();
-  const badge = source === 'http' ? t.source.label : t.source.p2p;
+  const [fallback, setFallback] = useState<'checking' | 'available' | 'missing'>('checking');
+
+  const folder = torrent?.name ?? '';
+
+  useEffect(() => {
+    if (!open || !folder || !surahId) {
+      setFallback('checking');
+      return;
+    }
+    let live = true;
+    setFallback('checking');
+    void probeMedia(window.location.origin, folder, surahId).then((available) => {
+      if (live) setFallback(available ? 'available' : 'missing');
+    });
+    return () => {
+      live = false;
+    };
+  }, [open, folder, surahId]);
+
+  const sourceLabel =
+    source === 'webseed'
+      ? t.source.webseed
+      : source === 'connected'
+        ? t.source.connected
+        : t.source.waiting;
 
   return (
     <Sheet title={t.stream.title} open={open} onClose={onClose} size="auto">
       <div className="px-5 py-4">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="rounded-full border border-line px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink">
-            {badge}
-          </span>
-          <span className="text-[12px] text-muted">
-            {source === 'http' ? t.source.fromHost : t.source.fromPeers}
-          </span>
-        </div>
-
-        {source === 'http' ? (
-          <div className="space-y-1 text-[13px] leading-relaxed text-muted">
-            <p className="text-[15px] font-semibold text-ink">{t.source.label}</p>
-            <p>{t.stream.httpNote}</p>
+        <dl className="space-y-2">
+          <div className="flex items-baseline justify-between gap-6">
+            <dt className="text-[13px] text-muted">{t.stream.source}</dt>
+            <dd className="text-[13px] text-ink">{sourceLabel}</dd>
           </div>
-        ) : (
-          <dl className="space-y-2">
-            {rowsFor(source, torrent, t).map((row) => (
-              <div key={row.label} className="flex items-baseline justify-between gap-6">
-                <dt className="text-[13px] text-muted">{row.label}</dt>
-                <dd className="tnum text-[13px] text-ink">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
+          {rowsFor(torrent, t).map((row) => (
+            <div key={row.label} className="flex items-baseline justify-between gap-6">
+              <dt className="text-[13px] text-muted">{row.label}</dt>
+              <dd className="tnum text-[13px] text-ink">{row.value}</dd>
+            </div>
+          ))}
+          <div className="flex items-baseline justify-between gap-6">
+            <dt className="text-[13px] text-muted">{t.stream.fallback}</dt>
+            <dd className="text-[13px] text-ink">{FALLBACK_LABEL[fallback](t)}</dd>
+          </div>
+        </dl>
 
         {source === 'waiting' && (
           <p className="mt-3 text-[11.5px] leading-relaxed text-muted">{t.stream.waitingNote}</p>

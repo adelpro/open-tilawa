@@ -35,7 +35,7 @@ import { normaliseVisualiser } from '@/utils/visualiser-models';
  */
 export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { t } = useLocale();
-  const { reciters } = useReciters();
+  const { reciters, error: recitersError, retry: retryReciters } = useReciters();
   const { sheet, openSurahs, openReciters, openStream, close } = useSheet();
 
   const [reciter, setReciter] = useAtom(selectedReciterAtom);
@@ -113,7 +113,11 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
     typeof currentFile?.progress === 'number' ? currentFile.progress : (torrent?.progress ?? 0);
 
   const source: StreamSource =
-    reciter && !reciter.magnet ? 'http' : (torrent?.peers ?? 0) > 0 ? 'connected' : 'waiting';
+    torrent?.webSeed === 'active'
+      ? 'webseed'
+      : (torrent?.peers ?? 0) > 0
+        ? 'connected'
+        : 'waiting';
 
   return (
     <>
@@ -176,7 +180,7 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
         onToggleMute={() => setMuted((value) => !value)}
       />
 
-      <StreamSheet open={sheet === 'stream'} onClose={close} source={source} torrent={torrent} />
+      <StreamSheet open={sheet === 'stream'} onClose={close} source={source} torrent={torrent} surahId={surahId} />
 
       <SurahSheet
         open={sheet === 'surahs'}
@@ -192,6 +196,8 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
         reciters={reciters}
         current={reciter?.id}
         onPick={pickReciter}
+        error={recitersError}
+        onRetry={retryReciters}
       />
     </>
   );

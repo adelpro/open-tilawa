@@ -37,5 +37,5 @@ export function filterSurahs(query: string, rows: SurahRow[] = SURAHS): SurahRow
 
 export function filterReciters(query: string, rows: Reciter[]): Reciter[] {
   if (!query.trim()) return rows;
-  return rows.filter((reciter) => matchesQuery([reciter.name, reciter.source], query));
+  return rows.filter((reciter) => matchesQuery([reciter.name, reciter.riwaya], query));
 }

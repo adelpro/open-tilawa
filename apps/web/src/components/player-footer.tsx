@@ -2,7 +2,6 @@ import Icon from '@/components/icons';
 import type { StreamSource } from '@/components/stream-sheet';
 import { useLocale } from '@/hooks/use-locale';
 import { cn } from '@/utils/cn';
-import { shouldShowRing } from '@/utils/stream-ring';
 
 /**
  * The mini-player: the surah is the title (tap for the list), the reciter is the
@@ -40,9 +39,8 @@ export default function PlayerFooter({
   const sourceLabel: Record<StreamSource, string> = {
     connected: t.source.connected,
     waiting: t.source.waiting,
-    http: t.source.http,
+    webseed: t.source.webseed,
   };
-  const showRing = shouldShowRing(source);
   const hasProgress = progress > 0.005;
   const percent = Math.round(progress * 100);
   const ring = 2 * Math.PI * 20;
@@ -111,34 +109,32 @@ export default function PlayerFooter({
             source === 'connected' ? 'text-ink' : 'text-muted',
           )}
         >
-          {showRing && (
-            <svg
-              viewBox="0 0 44 44"
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 h-11 w-11 -rotate-90 text-ink"
-            >
-              <circle
-                cx="22"
-                cy="22"
-                r="20"
-                fill="none"
-                stroke="rgba(17, 17, 17, 0.14)"
-                strokeWidth="2"
-              />
-              <circle
-                cx="22"
-                cy="22"
-                r="20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray={ring}
-                strokeDashoffset={ring * (1 - progress)}
-              />
-            </svg>
-          )}
-          <Icon name={source === 'http' ? 'link' : 'wifi'} />
+          <svg
+            viewBox="0 0 44 44"
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-11 w-11 -rotate-90 text-ink"
+          >
+            <circle
+              cx="22"
+              cy="22"
+              r="20"
+              fill="none"
+              stroke="rgba(17, 17, 17, 0.14)"
+              strokeWidth="2"
+            />
+            <circle
+              cx="22"
+              cy="22"
+              r="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray={ring}
+              strokeDashoffset={ring * (1 - progress)}
+            />
+          </svg>
+          <Icon name={source === 'webseed' ? 'link' : 'wifi'} />
         </button>
       </div>
     </footer>

@@ -1,8 +1,8 @@
+/**
+ * One surah inside a release. There is no `link`: playback is always the
+ * service-worker stream, and the HTTP fallback is a web seed on the torrent.
+ */
 export type TrackType = {
   surahId: number;
-  link: string;
   file?: any;
-  // All web-seed base URLs discovered from the magnet's ws= params (auto-discovered).
-  webSeeds?: string[];
-  error?: string;
 };
