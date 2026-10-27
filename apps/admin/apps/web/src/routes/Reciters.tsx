@@ -37,6 +37,7 @@ interface Reciter {
   magnet: string;
   fileCount: number;
   sizeBytes: number | null;
+  published: boolean;
   createdAt: string;
 }
 
@@ -67,6 +68,7 @@ export function Reciters(): ReactElement {
   const [editInfohash, setEditInfohash] = useState('');
   const [editMagnet, setEditMagnet] = useState('');
   const [editSizeGb, setEditSizeGb] = useState('');
+  const [editPublished, setEditPublished] = useState(true);
   const [deleting, setDeleting] = useState<Reciter | null>(null);
   const [purgeNodes, setPurgeNodes] = useState(false);
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
@@ -151,6 +153,7 @@ export function Reciters(): ReactElement {
     setEditInfohash(reciter.infohash);
     setEditMagnet(reciter.magnet);
     setEditSizeGb(reciter.sizeBytes === null ? '' : (reciter.sizeBytes / 1024 ** 3).toFixed(2));
+    setEditPublished(reciter.published);
     setError(null);
   }
 
@@ -168,6 +171,7 @@ export function Reciters(): ReactElement {
           infohash: editInfohash.trim(),
           magnet: editMagnet.trim(),
           sizeBytes: editSizeGb.trim() ? Math.round(Number(editSizeGb) * 1024 ** 3) : null,
+          published: editPublished,
         },
       });
       setEditing(null);
@@ -423,6 +427,17 @@ export function Reciters(): ReactElement {
                 />
               )}
             </Field>
+            <label className="cluster" style={{ cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={editPublished}
+                onChange={(event) => setEditPublished(event.target.checked)}
+              />
+              <span>
+                {t('reciters.published')}
+                <span className="row__meta"> — {t('reciters.publishedHint')}</span>
+              </span>
+            </label>
             <div className="cluster">
               <Button onClick={() => void saveEdit()} busy={busy === 'edit'}>
                 {t('common.save')}
@@ -687,6 +702,7 @@ export function Reciters(): ReactElement {
                           {reciter.name}
                         </span>
                       ) : null}
+                      {!reciter.published ? <Chip tone="notice">{t('reciters.hidden')}</Chip> : null}
                     </td>
                     <td>
                       <Chip tone="info">{reciter.riwaya}</Chip>

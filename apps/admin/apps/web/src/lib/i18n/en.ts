@@ -316,6 +316,9 @@ export const en = {
 
   'reciters.size': 'Size (GB)',
   'reciters.sizeHint': 'Used to plan disk space before a push; leave empty if unknown.',
+  'reciters.published': 'Published',
+  'reciters.hidden': 'Hidden',
+  'reciters.publishedHint': 'Shown in the player’s reciter list.',
   'reciters.edit': 'Edit',
   'reciters.editTitle': 'Edit reciter',
   'reciters.updated': 'Reciter updated.',

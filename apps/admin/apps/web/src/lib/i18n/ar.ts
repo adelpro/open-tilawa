@@ -318,6 +318,9 @@ export const ar: Catalogue = {
 
   'reciters.size': 'الحجم (GB)',
   'reciters.sizeHint': 'يُستخدم لتخطيط المساحة قبل الإرسال؛ اتركه فارغًا إن كان مجهولًا.',
+  'reciters.published': 'منشور',
+  'reciters.hidden': 'مخفي',
+  'reciters.publishedHint': 'يظهر في قائمة القرّاء على الموقع.',
   'reciters.edit': 'تعديل',
   'reciters.editTitle': 'تعديل القارئ',
   'reciters.updated': 'حُدّث القارئ.',
