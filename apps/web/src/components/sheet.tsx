@@ -11,6 +11,8 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { formatBytes } from '@/utils/format-bytes';
 import { riwayaLabel } from '@/utils/riwaya';
 import { filterReciters, filterSurahs } from '@/utils/search';
+import FavoriteButton from '@/components/favorite-button';
+import { useGlobalCounts } from '@/hooks/use-global-counts';
 
 type SheetProps = {
   title: string;
@@ -395,7 +397,9 @@ export function ReciterSheet({
   const { t } = useLocale();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState<'default' | 'favorites' | 'views'>('default');
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const { viewCounts, favCounts } = useGlobalCounts();
 
   const riwayas = useMemo(
     () => Array.from(new Set(reciters.map((r) => r.riwaya).filter(Boolean))) as string[],
@@ -403,10 +407,18 @@ export function ReciterSheet({
   );
 
   const rows = useMemo(() => {
-    const searched = filterReciters(query, reciters);
-    if (filter === 'all') return searched;
-    return searched.filter((r) => (r.riwaya || 'unknown') === filter);
-  }, [query, reciters, filter]);
+    let searched = filterReciters(query, reciters);
+    if (filter !== 'all') {
+      searched = searched.filter((r) => (r.riwaya || 'unknown') === filter);
+    }
+    if (sort === 'favorites') {
+      return [...searched].sort((a, b) => (Number(favCounts[String(b.id)] || 0) - Number(favCounts[String(a.id)] || 0)));
+    }
+    if (sort === 'views') {
+      return [...searched].sort((a, b) => (Number(viewCounts[String(b.id)] || 0) - Number(viewCounts[String(a.id)] || 0)));
+    }
+    return searched;
+  }, [query, reciters, filter, sort, favCounts, viewCounts]);
 
   useEffect(() => {
     if (open) return;
@@ -463,6 +475,23 @@ export function ReciterSheet({
               </button>
             ))}
           </div>
+          <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2">
+            {[
+              { key: 'default', label: t.sheets.sortDefault },
+              { key: 'favorites', label: t.sheets.sortFavorites },
+              { key: 'views', label: t.sheets.sortViews },
+            ].map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setSort(item.key as 'default' | 'favorites' | 'views')}
+                aria-pressed={sort === item.key}
+                className={cn(chip, sort === item.key ? chipOn : chipOff)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </>
       }
     >
@@ -474,26 +503,31 @@ export function ReciterSheet({
         <ul>
           {rows.map((reciter) => {
             const isCurrent = reciter.id === current;
+            const f = Number(favCounts[String(reciter.id)] || 0);
+            const v = Number(viewCounts[String(reciter.id)] || 0);
             return (
               <li key={reciter.id}>
-                <button
-                  type="button"
-                  onClick={() => onPick(reciter)}
-                  aria-current={isCurrent ? 'true' : undefined}
-                  className={row}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className={cn('block truncate', isCurrent && 'font-semibold')}>
-                      {reciter.name}
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => onPick(reciter)}
+                    aria-current={isCurrent ? 'true' : undefined}
+                    className={cn(row, 'flex-1')}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className={cn('block truncate', isCurrent && 'font-semibold')}>
+                        {reciter.name}
+                      </span>
+                      <span className="mt-0.5 block text-[11.5px] text-muted">
+                        {reciter.complet ? 'كامل' : 'جزئي'} · {f} ♥ · {v} 👁
+                      </span>
                     </span>
-                    <span className="mt-0.5 block text-[11.5px] text-muted">
-                      {reciter.complet ? 'كامل' : 'جزئي'}
+                    <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[10.5px] text-ink">
+                      {riwayaLabel(reciter.riwaya)}
                     </span>
-                  </span>
-                  <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[10.5px] text-ink">
-                    {riwayaLabel(reciter.riwaya)}
-                  </span>
-                </button>
+                  </button>
+                  <FavoriteButton reciterId={reciter.id} className="px-3" />
+                </div>
               </li>
             );
           })}

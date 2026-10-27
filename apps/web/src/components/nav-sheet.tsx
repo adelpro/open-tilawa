@@ -1,4 +1,4 @@
-import { Gear, Headphones, Info, ShieldCheck } from '@phosphor-icons/react';
+import { Gear, Headphones, Info, ShieldCheck, User } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 
 import Icon from '@/components/icons';
@@ -17,17 +17,20 @@ export default function NavSheet({
   route,
   onClose,
   onNavigate,
+  onOpenAccount,
 }: {
   open: boolean;
   route: Route;
   onClose: () => void;
   onNavigate: (route: Route) => void;
+  onOpenAccount?: () => void;
 }) {
   const { t } = useLocale();
 
-  const items: { route: Route; label: string; icon: ReactNode }[] = [
+  const items: { route?: Route; label: string; icon: ReactNode; action?: () => void }[] = [
     { route: '/', label: t.routes.listen, icon: <Headphones size={18} /> },
     { route: '/settings', label: t.routes.settings, icon: <Gear size={18} /> },
+    { label: t.account.title, icon: <User size={18} />, action: onOpenAccount },
     { route: '/about', label: t.routes.about, icon: <Info size={18} /> },
     { route: '/privacy', label: t.routes.privacy, icon: <ShieldCheck size={18} /> },
   ];
@@ -35,13 +38,22 @@ export default function NavSheet({
   return (
     <Sheet title={t.menu.open} open={open} onClose={onClose} size="auto">
       <div className="pb-3">
-        {items.map((item) => {
-          const current = item.route === route;
+        {items.map((item, idx) => {
+          const current = item.route ? item.route === route : false;
           return (
             <button
-              key={item.route}
+              key={item.route || item.label || idx}
               type="button"
-              onClick={() => onNavigate(item.route)}
+              onClick={() => {
+                if (item.action) {
+                  item.action();
+                  onClose();
+                  return;
+                }
+                if (item.route) {
+                  onNavigate(item.route);
+                }
+              }}
               aria-current={current ? 'page' : undefined}
               className={cn(
                 'flex h-12 w-full items-center gap-3 px-4 text-start text-[15px] text-ink transition-colors hover:bg-line active:bg-line',

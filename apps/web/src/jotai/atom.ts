@@ -7,3 +7,6 @@ selectedReciterAtom.debugLabel = 'selected-reciter';
 
 export const webtorrentReadyAtom = atom<boolean>(false);
 webtorrentReadyAtom.debugLabel = 'webtorrent-ready';
+
+export const accountSheetOpenAtom = atom<boolean>(false);
+accountSheetOpenAtom.debugLabel = 'account-sheet-open';

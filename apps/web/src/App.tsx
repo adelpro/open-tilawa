@@ -8,6 +8,7 @@ import AudioEngine from './components/audio-engine';
 import ErrorBoundary from './components/error-boundary';
 import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
+import AccountSheet from './components/account/account-sheet';
 import { useHashRoute } from './hooks/use-hash-route';
 import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
@@ -18,8 +19,11 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
 import { normaliseVisualiser } from './utils/visualiser-models';
-import { selectedReciterAtom } from './jotai/atom';
+import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
 import { patchSettings } from './hooks/use-persistence';
+import { useUserSync } from './hooks/use-user-sync';
+import { useGlobalCounts } from './hooks/use-global-counts';
+import { useTrackView } from './hooks/use-favorites';
 
 /**
  * A top bar, one routed view, and the `<audio>` element that outlives all of
@@ -43,6 +47,11 @@ export default function App() {
   const { theme, setTheme } = useTheme();
   const [rate, setRate] = useAtom(rateAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
+  const [accountOpen, setAccountOpen] = useAtom(accountSheetOpenAtom);
+
+  useUserSync();
+  useGlobalCounts();
+  useTrackView();
 
   const chooseVisualiser = (next: ReturnType<typeof normaliseVisualiser>) => {
     setVisualiser(next);
@@ -109,7 +118,9 @@ export default function App() {
           route={route}
           onClose={() => setMenuOpen(false)}
           onNavigate={go}
+          onOpenAccount={() => setAccountOpen(true)}
         />
+        <AccountSheet open={accountOpen} onClose={() => setAccountOpen(false)} />
       </div>
       {/* A new element per reciter class: once an element is routed through Web
           Audio it cannot be released, and a cross-origin host would play silent. */}
