@@ -69,6 +69,20 @@ export class RecitersService {
       .map((r: any) => this.mapRow(r));
   }
 
+  listPublishedPaginated(
+    offset: number,
+    limit: number,
+  ): { reciters: Reciter[]; total: number } {
+    const totalRow = this.db
+      .prepare('SELECT COUNT(*) as count FROM reciters WHERE published = 1')
+      .get() as { count: number };
+    const reciters = this.db
+      .prepare('SELECT * FROM reciters WHERE published = 1 ORDER BY id LIMIT ? OFFSET ?')
+      .all(limit, offset)
+      .map((r: any) => this.mapRow(r));
+    return { reciters, total: totalRow.count };
+  }
+
   private mapRow(r: any): Reciter {
     return {
       id: r.id,

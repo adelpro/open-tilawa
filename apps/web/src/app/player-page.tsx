@@ -56,7 +56,14 @@ export default function PlayerPage({
   onOpenMenu: () => void;
 }) {
   const { t } = useLocale();
-  const { reciters, error: recitersError, retry: retryReciters } = useReciters();
+  const {
+    reciters,
+    error: recitersError,
+    retry: retryReciters,
+    loadMore: loadMoreReciters,
+    loading: loadingReciters,
+    hasMore: hasMoreReciters,
+  } = useReciters();
   const wide = useMediaQuery('(min-width: 1024px)');
   const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
   const keyboard = wide && finePointer;
@@ -337,6 +344,9 @@ export default function PlayerPage({
         onRetry={retryReciters}
         pinned={pinned}
         onTogglePin={wide ? togglePin : undefined}
+        onLoadMore={loadMoreReciters}
+        loading={loadingReciters}
+        hasMore={hasMoreReciters}
       />
 
       <Sheet title={t.keys.title} open={sheet === 'keys'} onClose={close} size="auto" pinned={pinned} onTogglePin={wide ? togglePin : undefined}>

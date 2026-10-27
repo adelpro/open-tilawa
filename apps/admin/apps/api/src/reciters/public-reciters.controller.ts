@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { RecitersService } from './reciters.service';
 
 /**
@@ -14,9 +14,19 @@ export class PublicRecitersController {
   constructor(private readonly reciters: RecitersService) {}
 
   @Get('reciters')
-  list() {
+  list(
+    @Query('page') page?: string,
+    @Query('range') range?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const limitNum = Math.max(1, parseInt(range ?? limit ?? '10', 10) || 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    const { reciters, total } = this.reciters.listPublishedPaginated(offset, limitNum);
+
     return {
-      reciters: this.reciters.listPublished().map((reciter) => ({
+      reciters: reciters.map((reciter) => ({
         id: reciter.id,
         name: reciter.name,
         nameAr: reciter.nameAr,
@@ -26,6 +36,9 @@ export class PublicRecitersController {
         sizeBytes: reciter.sizeBytes,
         fileCount: reciter.fileCount,
       })),
+      total,
+      page: pageNum,
+      range: limitNum,
     };
   }
 }
