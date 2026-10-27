@@ -26,6 +26,8 @@ export type StoredState = {
   /** Optional so a blob written before speed existed stays valid. */
   rate?: number;
   visualiser?: string;
+  locale?: string;
+  theme?: string;
   updatedAt: number;
 };
 
@@ -99,12 +101,16 @@ export function loadState(): StoredState {
         // must not be carried forward forever.
         const rate = (parsed as { rate?: unknown }).rate;
         const visualiser = (parsed as { visualiser?: unknown }).visualiser;
+        const locale = (parsed as { locale?: unknown }).locale;
+        const theme = (parsed as { theme?: unknown }).theme;
         return {
           version: 2,
           reciterId: typeof parsed.reciterId === 'number' ? parsed.reciterId : undefined,
           positions: parsed.positions ?? {},
           rate: typeof rate === 'number' && Number.isFinite(rate) ? rate : undefined,
           visualiser: typeof visualiser === 'string' ? visualiser : undefined,
+          locale: typeof locale === 'string' ? locale : undefined,
+          theme: typeof theme === 'string' ? theme : undefined,
           updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0,
         };
       }

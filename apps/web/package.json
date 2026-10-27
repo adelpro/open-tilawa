@@ -12,6 +12,8 @@
     "test": "node --experimental-strip-types --import ./test/alias-register.mjs --test test/arabic-count.test.ts test/clamp.test.ts test/persistence.test.ts test/reciter-merge.test.ts test/format-bytes.test.ts test/riwaya.test.ts test/route.test.ts test/visualiser-models.test.ts test/sleep-timer.test.ts test/stream-ring.test.ts"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@tanstack/redact": "^0.2.0",
     "clsx": "^2.1.1",
     "jotai": "^2.11.1",
     "react": "^19.0.0",

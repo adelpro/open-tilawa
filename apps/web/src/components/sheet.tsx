@@ -5,7 +5,8 @@ import Icon from '@/components/icons';
 import { SURAHS } from '@/constants/surah';
 import type { Reciter } from '@/types';
 import { cn } from '@/utils/cn';
-import { ayahCountLabel } from '@/utils/arabic-count';
+import { useLocale } from '@/hooks/use-locale';
+import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { formatBytes } from '@/utils/format-bytes';
 import { riwayaLabel } from '@/utils/riwaya';
 import { filterReciters, filterSurahs } from '@/utils/search';
@@ -48,6 +49,7 @@ export default function Sheet({
   toolbar,
   children,
 }: SheetProps) {
+  const { t } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -87,7 +89,7 @@ export default function Sheet({
           <button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label={t.common.close}
             className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
           >
             <CloseGlyph />
@@ -119,8 +121,10 @@ function SearchField({
   placeholder: string;
   label: string;
 }) {
+  const { t } = useLocale();
+
   return (
-    <div className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-5">
+    <div className="flex h-11 shrink-0 items-center gap-3 border-b border-line px-4">
       <Icon name="search" className="h-4 w-4 text-muted" />
       <input
         type="search"
@@ -134,7 +138,7 @@ function SearchField({
         <button
           type="button"
           onClick={() => onChange('')}
-          aria-label="مسح البحث"
+          aria-label={t.sheets.clear}
           className="-me-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
         >
           <Icon name="close" className="h-4 w-4" />
@@ -145,7 +149,8 @@ function SearchField({
 }
 
 function Empty() {
-  return <p className="px-5 py-10 text-center text-[13px] text-muted">لا نتائج</p>;
+  const { t } = useLocale();
+  return <p className="px-5 py-10 text-center text-[13px] text-muted">{t.sheets.empty}</p>;
 }
 
 const row =
@@ -172,6 +177,7 @@ export function SurahSheet({
   onPick: (surahId: number) => void;
   onClose: () => void;
 }) {
+  const { t, locale } = useLocale();
   const listRef = useRef<HTMLUListElement>(null);
   const [query, setQuery] = useState('');
   const rows = useMemo(() => filterSurahs(query), [query]);
@@ -221,10 +227,10 @@ export function SurahSheet({
                   <span className="tnum w-8 shrink-0 text-xs text-muted">{surah.id}</span>
                   <span className="min-w-0 flex-1">
                     <span className={cn('block truncate', isCurrent && 'font-semibold')}>
-                      {surah.name}
+                      {locale === 'ar' ? surah.name : SURAH_NAMES_EN[surah.id] ?? surah.name}
                     </span>
                     <span className={meta}>
-                      {ayahCountLabel(surah.ayahCount)} · الجزء {surah.juz}
+                      {t.sheets.verses(surah.ayahCount)} · {t.sheets.juz(surah.juz)}
                     </span>
                   </span>
                   {sizes?.[surah.id] ? (
@@ -256,6 +262,7 @@ export function ReciterSheet({
   onPick: (reciter: Reciter) => void;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
 
@@ -293,8 +300,8 @@ export function ReciterSheet({
           />
           <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5">
             {[
-              { key: 'all', label: 'الكل' },
-              { key: 'http', label: 'HTTP' },
+              { key: 'all', label: t.sheets.all },
+              { key: 'http', label: t.sheets.http },
               ...riwayas.map((name) => ({ key: name, label: riwayaLabel(name) })),
             ].map((item) => (
               <button

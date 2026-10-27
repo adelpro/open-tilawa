@@ -1,13 +1,8 @@
 import Icon from '@/components/icons';
 import type { StreamSource } from '@/components/stream-sheet';
+import { useLocale } from '@/hooks/use-locale';
 import { cn } from '@/utils/cn';
 import { shouldShowRing } from '@/utils/stream-ring';
-
-const SOURCE_LABEL: Record<StreamSource, string> = {
-  connected: 'متصل عبر الأقران',
-  waiting: 'بانتظار الأقران',
-  http: 'يعمل من خادم القارئ',
-};
 
 /**
  * The mini-player: the surah is the title (tap for the list), the reciter is the
@@ -41,6 +36,12 @@ export default function PlayerFooter({
   onOpenReciters: () => void;
   onOpenStream: () => void;
 }) {
+  const { t } = useLocale();
+  const sourceLabel: Record<StreamSource, string> = {
+    connected: t.source.connected,
+    waiting: t.source.waiting,
+    http: t.source.http,
+  };
   const showRing = shouldShowRing(source);
   const hasProgress = progress > 0.005;
   const percent = Math.round(progress * 100);
@@ -56,7 +57,7 @@ export default function PlayerFooter({
           <button
             type="button"
             onClick={onOpenSurahs}
-            aria-label="قائمة السور"
+            aria-label={t.footer.list}
             className="flex h-8 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[15px] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
           >
             <Icon name="playlist" className="h-4 w-4 text-muted" />
@@ -66,7 +67,7 @@ export default function PlayerFooter({
           <button
             type="button"
             onClick={onOpenReciters}
-            aria-label="اختيار القارئ"
+            aria-label={t.footer.reciter}
             className="flex h-8 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
           >
             <Icon name="mic" className="h-4 w-4" />
@@ -77,7 +78,7 @@ export default function PlayerFooter({
         <button
           type="button"
           onClick={onToggleMute}
-          aria-label={muted ? 'إلغاء كتم الصوت' : 'كتم الصوت'}
+          aria-label={muted ? t.footer.unmute : t.footer.mute}
           aria-pressed={muted}
           className={cn(
             'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
@@ -91,7 +92,7 @@ export default function PlayerFooter({
           <button
             type="button"
             onClick={onOpenRate}
-            aria-label={`السرعة ${Number(rate.toFixed(2))}x، تغيير السرعة`}
+            aria-label={t.footer.speedChange(`${Number(rate.toFixed(2))}x`)}
             className="tnum h-8 shrink-0 rounded-full bg-line px-2 text-[12px] font-semibold text-ink transition-colors hover:bg-line/70"
           >
             {Number(rate.toFixed(2))}x
@@ -102,7 +103,7 @@ export default function PlayerFooter({
           type="button"
           onClick={onOpenStream}
           aria-label={
-            hasProgress ? `${SOURCE_LABEL[source]}، التنزيل ${percent}%` : SOURCE_LABEL[source]
+            hasProgress ? `${sourceLabel[source]}, ${percent}%` : sourceLabel[source]
           }
           aria-haspopup="dialog"
           className={cn(

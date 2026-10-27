@@ -32,7 +32,7 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const ink = getComputedStyle(document.body).color || '#111111';
+    const inkNow = () => getComputedStyle(document.body).color || '#111111';
 
     let width = 0;
     let barWidth = 2;
@@ -114,7 +114,7 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
 
     const draw = () => {
       ctx.clearRect(0, 0, width, HEIGHT);
-      ctx.fillStyle = ink;
+      ctx.fillStyle = inkNow();
       if (model === 'peaks') drawPeaks();
       else if (model === 'dots') drawDots();
       else if (model === 'ribbon') drawRibbon();

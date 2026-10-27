@@ -1,3 +1,4 @@
+import { useLocale } from '@/hooks/use-locale';
 import { cn } from '@/utils/cn';
 
 type Props = {
@@ -72,9 +73,11 @@ export default function Transport({
   onSeekDelta,
   className,
 }: Props) {
+  const { t } = useLocale();
+
   return (
     <div className={cn('flex items-center justify-center gap-2', className)}>
-      <button type="button" className={ghost} onClick={onPrevious} aria-label="السورة السابقة">
+      <button type="button" className={ghost} onClick={onPrevious} aria-label={t.transport.previous}>
         <ChevronRight />
       </button>
 
@@ -83,7 +86,7 @@ export default function Transport({
         className={ghost}
         onClick={() => onSeekDelta(-15)}
         disabled={!canPlay}
-        aria-label="ارجع 15 ثانية"
+        aria-label={t.transport.back}
       >
         <span dir="ltr" className="tnum text-[13px] font-semibold">
           −15
@@ -97,7 +100,7 @@ export default function Transport({
         type="button"
         onClick={onPlayPause}
         disabled={!canPlay}
-        aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+        aria-label={isPlaying ? t.transport.pause : t.transport.play}
         className="play-button mx-1 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-ink text-invert disabled:opacity-30"
       >
         {isPlaying ? <PauseGlyph /> : <PlayGlyph />}
@@ -108,14 +111,14 @@ export default function Transport({
         className={ghost}
         onClick={() => onSeekDelta(15)}
         disabled={!canPlay}
-        aria-label="تقدم 15 ثانية"
+        aria-label={t.transport.forward}
       >
         <span dir="ltr" className="tnum text-[13px] font-semibold">
           +15
         </span>
       </button>
 
-      <button type="button" className={ghost} onClick={onNext} aria-label="السورة التالية">
+      <button type="button" className={ghost} onClick={onNext} aria-label={t.transport.next}>
         <ChevronLeft />
       </button>
     </div>

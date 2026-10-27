@@ -1,3 +1,4 @@
+import { useLocale } from '@/hooks/use-locale';
 import { cn } from '@/utils/cn';
 import { formatTime } from '@/utils/format-time';
 
@@ -20,9 +21,10 @@ export default function Scrubber({
   position,
   duration,
   onSeek,
-  ariaLabel = 'موضع التشغيل',
+  ariaLabel,
   className,
 }: Props) {
+  const { t } = useLocale();
   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
   const progress = safeDuration > 0 ? Math.min(100, (position / safeDuration) * 100) : 0;
 
@@ -55,8 +57,8 @@ export default function Scrubber({
             if (safeDuration <= 0) return;
             onSeek((Number(event.target.value) / 1000) * safeDuration);
           }}
-          aria-label={ariaLabel}
-          aria-valuetext={`${formatTime(position)} من ${formatTime(safeDuration)}`}
+          aria-label={ariaLabel ?? t.scrubber.label}
+          aria-valuetext={`${formatTime(position)} ${t.scrubber.of} ${formatTime(safeDuration)}`}
           disabled={safeDuration <= 0}
           className="absolute inset-0 h-full w-full cursor-pointer appearance-none bg-transparent opacity-0 disabled:cursor-default"
         />

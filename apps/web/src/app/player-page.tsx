@@ -8,6 +8,7 @@ import StreamSheet, { type StreamSource } from '@/components/stream-sheet';
 import Transport from '@/components/transport';
 import Visualiser from '@/components/visualiser';
 import { surahById } from '@/constants/surah';
+import { useLocale } from '@/hooks/use-locale';
 import { usePlayerNav } from '@/hooks/use-player-nav';
 import { getPosition, loadState, saveState } from '@/hooks/use-persistence';
 import { useReciters } from '@/hooks/use-reciters';
@@ -33,6 +34,7 @@ import { normaliseVisualiser } from '@/utils/visualiser-models';
  * way out of the player, and they close back onto it.
  */
 export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
+  const { t } = useLocale();
   const { reciters } = useReciters();
   const { sheet, openSurahs, openReciters, openStream, close } = useSheet();
 
@@ -144,13 +146,13 @@ export default function PlayerPage({ onOpenMenu }: { onOpenMenu: () => void }) {
 
           {error && (
             <div className="mt-6 text-center text-[13px] text-muted">
-              <p title={error}>تعذّر تشغيل هذا القارئ.</p>
+              <p title={error}>{t.player.error}</p>
               <button
                 type="button"
                 onClick={() => setRetrySignal((count) => count + 1)}
                 className="mt-1 h-11 px-3 font-semibold text-ink underline underline-offset-4"
               >
-                إعادة المحاولة
+                {t.player.retry}
               </button>
             </div>
           )}

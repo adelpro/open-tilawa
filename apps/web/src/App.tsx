@@ -3,12 +3,15 @@ import { useState } from 'react';
 import AboutPage from './app/about-page';
 import PlayerPage from './app/player-page';
 import PrivacyPage from './app/privacy-page';
+import SettingsPage from './app/settings-page';
 import AudioEngine from './components/audio-engine';
 import ErrorBoundary from './components/error-boundary';
 import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
 import { useHashRoute } from './hooks/use-hash-route';
 import { useSleepTimer } from './hooks/use-sleep-timer';
+import { useLocale } from './hooks/use-locale';
+import { useTheme } from './hooks/use-theme';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
@@ -24,6 +27,8 @@ export default function App() {
   const { route, navigate } = useHashRoute();
   const [menuOpen, setMenuOpen] = useState(false);
   const setIsPlaying = useSetAtom(isPlayingAtom);
+  const { locale, setLocale } = useLocale();
+  const { theme, setTheme } = useTheme();
   const [rate, setRate] = useAtom(rateAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
 
@@ -53,6 +58,20 @@ export default function App() {
           <AboutPage />
         ) : route === '/privacy' ? (
           <PrivacyPage />
+        ) : route === '/settings' ? (
+          <SettingsPage
+            theme={theme}
+            onTheme={setTheme}
+            locale={locale}
+            onLocale={setLocale}
+            rate={rate}
+            onRate={chooseRate}
+            visualiser={visualiser}
+            onVisualiser={chooseVisualiser}
+            sleepActive={sleep.active}
+            sleepRemaining={sleep.remaining}
+            onSleep={sleep.start}
+          />
         ) : (
           <PlayerPage onOpenMenu={() => setMenuOpen(true)} />
         )}
@@ -60,13 +79,6 @@ export default function App() {
         <NavSheet
           open={menuOpen}
           route={route}
-          sleepActive={sleep.active}
-          sleepRemaining={sleep.remaining}
-          onSleep={sleep.start}
-          rate={rate}
-          onRate={chooseRate}
-          visualiser={visualiser}
-          onVisualiser={chooseVisualiser}
           onClose={() => setMenuOpen(false)}
           onNavigate={go}
         />

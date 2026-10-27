@@ -1,4 +1,5 @@
 import { APP_VERSION } from '@/constants/version';
+import { useLocale } from '@/hooks/use-locale';
 import { cn } from '@/utils/cn';
 
 /**
@@ -14,9 +15,11 @@ export default function TopBar({
   menuOpen: boolean;
   onToggleMenu: () => void;
 }) {
+  const { t } = useLocale();
+
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
-      <a href="#/" aria-label="تلاوة — الاستماع" className="flex items-center gap-2">
+      <a href="#/" aria-label={`${t.brand} — ${t.routes.listen}`} className="flex items-center gap-2">
         <img src="/images/icon.png" alt="" className="brand-mark h-6 w-auto" />
         <span className="tnum text-[10px] leading-none text-muted">{APP_VERSION}</span>
       </a>
@@ -24,7 +27,7 @@ export default function TopBar({
       <button
         type="button"
         onClick={onToggleMenu}
-        aria-label={menuOpen ? 'إغلاق القائمة' : 'القائمة'}
+        aria-label={menuOpen ? t.menu.close : t.menu.open}
         aria-expanded={menuOpen}
         aria-haspopup="dialog"
         className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-line active:bg-line"

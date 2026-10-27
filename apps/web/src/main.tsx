@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './app/globals.css';
 import { registerAppWorker } from './utils/sw-registration';
+import { applyLocale, resolveInitialLocale } from './hooks/use-locale';
+import { applyTheme, resolveInitialTheme } from './hooks/use-theme';
+
+// Before the first paint, so neither direction nor palette can flash.
+applyLocale(resolveInitialLocale());
+applyTheme(resolveInitialTheme());
 
 // Install the shell (and the streaming origin) immediately, not on first play.
 void registerAppWorker();

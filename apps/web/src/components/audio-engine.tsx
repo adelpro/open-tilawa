@@ -16,6 +16,8 @@ import {
   torrentErrorAtom,
 } from '@/jotai/player';
 import { surahById } from '@/constants/surah';
+import { useLocale } from '@/hooks/use-locale';
+import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
 import { ensureAnalyser } from '@/utils/audio-analyser';
 
@@ -75,6 +77,7 @@ export default function AudioEngine() {
 
   const reciter = useAtomValue(selectedReciterAtom);
   const surahId = useAtomValue(currentSurahIdAtom);
+  const { t, locale } = useLocale();
   const rate = useAtomValue(rateAtom);
   const muted = useAtomValue(mutedAtom);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
@@ -266,7 +269,11 @@ export default function AudioEngine() {
     if (!('mediaSession' in navigator) || !surahId) return;
     const surah = surahById(surahId);
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: surah ? `سورة ${surah.name}` : `سورة ${surahId}`,
+      title: surah
+        ? locale === 'ar'
+          ? `سورة ${surah.name}`
+          : SURAH_NAMES_EN[surah.id] ?? surah.name
+        : t.player.surah(surahId),
       artist: reciter?.name || 'Open Tilawa',
       album: 'Open Tilawa',
       // The lock screen and the media notification use the square mark, not the
@@ -283,13 +290,14 @@ export default function AudioEngine() {
       navigator.mediaSession.setActionHandler('nexttrack', null);
       navigator.mediaSession.setActionHandler('previoustrack', null);
     };
-  }, [surahId, reciter, next, previous, setIsPlaying]);
+  }, [surahId, reciter, next, previous, setIsPlaying, locale, t]);
 
   /** The tab title is the one place a listener sees the surah while elsewhere. */
   useEffect(() => {
     const surah = surahById(surahId);
-    document.title = surah ? `${surah.name} — Open Tilawa` : 'Open Tilawa';
-  }, [surahId]);
+    const name = surah ? (locale === 'ar' ? surah.name : SURAH_NAMES_EN[surah.id] ?? surah.name) : '';
+    document.title = name ? `${name} — Open Tilawa` : 'Open Tilawa';
+  }, [surahId, locale]);
 
   return (
     <audio

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
  * any route keeps working without a rewrite rule — and the `<audio>` element
  * lives outside the routed view, so navigation never stops playback.
  */
-export const ROUTES = ['/', '/about', '/privacy'] as const;
+export const ROUTES = ['/', '/settings', '/about', '/privacy'] as const;
 export type Route = (typeof ROUTES)[number];
 
 export const DEFAULT_ROUTE: Route = '/';

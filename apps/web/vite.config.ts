@@ -1,11 +1,15 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { redact } from '@tanstack/redact/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
     react(),
+    // Redact replaces the React runtime with a smaller, synchronous one; the
+    // app keeps importing react/react-dom as usual.
+    redact(),
     // One service worker for the whole origin: the PWA worker and WebTorrent's
     // streaming worker are merged in src/sw.js (see apps/web/README.md).
     VitePWA({
