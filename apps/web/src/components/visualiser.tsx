@@ -140,10 +140,12 @@ export default function Visualiser({ playing, model }: { playing: boolean; model
 
         if (model === 'ribbon') {
           analyser.getByteTimeDomainData(time);
-          // Slower than the bars on purpose: 0.07 per frame is a trace, not a twitch.
+          // Slower than the bars on purpose — but the buffer starts at silence,
+          // so the first second catches up quickly before it settles at 0.07.
+          const follow = frame < 45 ? 0.3 : 0.07;
           for (let i = 0; i < RIBBON_POINTS; i += 1) {
             const raw = time[Math.floor((i / RIBBON_POINTS) * time.length)];
-            smoothed.current[i] += (raw - smoothed.current[i]) * 0.07;
+            smoothed.current[i] += (raw - smoothed.current[i]) * follow;
           }
           if (frame % 8 === 0) {
             trails.current.push(new Float32Array(smoothed.current));
