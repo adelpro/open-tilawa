@@ -53,10 +53,10 @@ const ar = {
     speedChange: (rate: string) => `السرعة ${rate}، تغيير السرعة`,
   },
   source: {
-    connected: 'متصل عبر الأقران',
+    connected: 'P2P',
     waiting: 'بانتظار الأقران',
-    webseed: 'من الخادم',
-    mixed: 'الأقران والخادم',
+    webseed: 'HTTP',
+    mixed: 'P2P + HTTP',
   },
   stream: {
     title: 'تفاصيل البث',
@@ -173,10 +173,10 @@ const en: typeof ar = {
     speedChange: (rate: string) => `Speed ${rate}, change speed`,
   },
   source: {
-    connected: 'Connected to peers',
+    connected: 'P2P',
     waiting: 'Waiting for peers',
-    webseed: 'From the server',
-    mixed: 'Peers and server',
+    webseed: 'HTTP',
+    mixed: 'P2P + HTTP',
   },
   stream: {
     title: 'Stream details',

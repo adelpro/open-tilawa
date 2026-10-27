@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.4 — 2026-10-27
+
+Patch. App versions: **web 1.4.4**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Changed
+
+- The stream source is named by transport, not by prose: **`P2P`**, **`HTTP`**, and
+  **`P2P + HTTP`** when both are feeding the torrent. `waiting` still reads
+  «بانتظار الأقران» because it is a state, not a source.
+
 ## 1.5.3 — 2026-10-27
 
 Patch. App versions: **web 1.4.3**, **admin 1.24.0**, **seeder 1.4.2**.
