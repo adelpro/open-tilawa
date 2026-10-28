@@ -87,16 +87,16 @@
 ### Task C1: `.row__actions` in the three remaining tables
 
 - **Files:** `Turns.tsx:393`, `AdminConsole.tsx:253`, `Torrents.tsx:494`.
-- [ ] Swap `cluster cluster--end` for `row__actions`; keep `stopPropagation`.
-- [ ] Test: no table route still contains `cluster cluster--end` inside a `<td>`.
-- [ ] Measure: header-content edge minus first-button edge ≤ 0 for each table, and one button row in EN.
+- [x] Swap `cluster cluster--end` for `row__actions`; keep `stopPropagation`.
+- [x] Test: no table route still contains `cluster cluster--end` inside a `<td>`.
+- [x] Measure: header-content edge minus first-button edge ≤ 0 for each table, and one button row in EN.
 
 ### Task C2: `ConfirmModal`, and the three actions that lack one
 
 - **Files:** `src/components/ConfirmModal.tsx` (new), `Turns.tsx`, `Status.tsx`, `Torrents.tsx`, `Reciters.tsx`, `src/lib/i18n/*`.
-- [ ] Extract the five hand-rolled confirms into `ConfirmModal { title, body, confirmLabel, tone, busy, onConfirm, onClose }`.
-- [ ] Add confirms for TURN unlink, service remove, torrent remove.
-- [ ] Reuse `seeders.unlinkHint` phrasing so no confirm button repeats the cancel verb.
+- [x] Extract the five hand-rolled confirms into `ConfirmModal { title, body, confirmLabel, tone, busy, onConfirm, onClose }`.
+- [x] Add confirms for TURN unlink, service remove, torrent remove.
+- [x] Reuse `seeders.unlinkHint` phrasing so no confirm button repeats the cancel verb.
 
 ---
 

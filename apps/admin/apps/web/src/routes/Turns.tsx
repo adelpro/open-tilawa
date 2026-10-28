@@ -10,6 +10,7 @@ import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { CopyLine } from '../components/CopyLine';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { linkProps } from '../lib/router';
 import type { Turn } from '../lib/types-seeders';
 
@@ -35,6 +36,7 @@ export function Turns(): ReactElement {
   const [newPort, setNewPort] = useState('3478');
   const [newTransport, setNewTransport] = useState<'turn' | 'turns'>('turn');
   const [editing, setEditing] = useState<Turn | null>(null);
+  const [removing, setRemoving] = useState<Turn | null>(null);
   const [editName, setEditName] = useState('');
   const [editHost, setEditHost] = useState('');
   const [editPort, setEditPort] = useState('3478');
@@ -390,7 +392,7 @@ export function Turns(): ReactElement {
                     </td>
                     <td>{formatTimestamp(turn.lastSeen)}</td>
                     <td>
-                      <span className="cluster cluster--end">
+                      <span className="row__actions">
                         <Button
                           small
                           variant="secondary"
@@ -417,7 +419,7 @@ export function Turns(): ReactElement {
                           variant="destructive"
                           onClick={(event) => {
                             event.stopPropagation();
-                            void remove(turn.id);
+                            setRemoving(turn);
                           }}
                           busy={busy === `remove-${turn.id}`}
                         >
@@ -432,6 +434,20 @@ export function Turns(): ReactElement {
           </div>
         </Panel>
       )}
+      {removing ? (
+        <ConfirmModal
+          title={t('turns.removeTitle')}
+          body={t('turns.removeBody')}
+          confirmLabel={t('turns.removeConfirm')}
+          destructive
+          busy={busy === `remove-${removing.id}`}
+          onClose={() => setRemoving(null)}
+          onConfirm={() => {
+            void remove(removing.id);
+            setRemoving(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

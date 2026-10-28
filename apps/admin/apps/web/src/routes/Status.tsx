@@ -9,6 +9,7 @@ import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface ServiceOverview {
   id: number;
@@ -68,6 +69,7 @@ export function Status(): ReactElement {
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<ServiceOverview | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -213,11 +215,11 @@ export function Status(): ReactElement {
                     : `${Math.round(service.uptime24h * 100)}%`}
                 </p>
                 <Timeline buckets={service.timeline} />
-                <div className="cluster cluster--end" style={{ marginTop: 'var(--space-2)' }}>
+                <div className="cluster" style={{ marginTop: 'var(--space-2)' }}>
                   <Button
                     small
                     variant="tertiary"
-                    onClick={() => void removeService(service.id)}
+                    onClick={() => setRemoving(service)}
                     busy={busy === `remove-${service.id}`}
                   >
                     {t('status.remove')}
@@ -342,6 +344,20 @@ export function Status(): ReactElement {
           </Panel>
         </>
       )}
+      {removing ? (
+        <ConfirmModal
+          title={t('status.removeTitle')}
+          body={t('status.removeBody')}
+          confirmLabel={t('status.removeConfirm')}
+          destructive
+          busy={busy === `remove-${removing.id}`}
+          onClose={() => setRemoving(null)}
+          onConfirm={() => {
+            void removeService(removing.id);
+            setRemoving(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { Modal } from '../components/Modal';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { bytes } from '../lib/format';
 import { isUnclassified, riwayaLabel, riwayaOptions, riwayaValue } from '../lib/riwaya';
 import type { Seeder } from '../lib/types-seeders';
@@ -733,7 +734,7 @@ export function Reciters(): ReactElement {
                       {reciter.sizeBytes === null ? '—' : bytes(reciter.sizeBytes, locale)}
                     </td>
                     <td>
-                      <span className="cluster cluster--end">
+                      <span className="row__actions">
                         <Button small variant="tertiary" onClick={() => startEdit(reciter)}>
                           {t('reciters.edit')}
                         </Button>
@@ -783,31 +784,24 @@ export function Reciters(): ReactElement {
       ) : null}
 
       {deleting ? (
-        <Modal title={t('reciters.deleteTitle')} onClose={() => setDeleting(null)}>
-          <div className="stack">
-            <p className="body">{t('reciters.deleteBody', { name: deleting.name })}</p>
-            <label className="cluster" style={{ cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={purgeNodes}
-                onChange={(event) => setPurgeNodes(event.target.checked)}
-              />
-              {t('reciters.deletePurge')}
-            </label>
-            <div className="cluster cluster--end">
-              <Button variant="tertiary" onClick={() => setDeleting(null)}>
-                {t('reciters.cancel')}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => void confirmDelete()}
-                busy={busy === 'delete'}
-              >
-                {t('reciters.deleteConfirm')}
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <ConfirmModal
+          title={t('reciters.deleteTitle')}
+          body={t('reciters.deleteBody', { name: deleting.name })}
+          confirmLabel={t('reciters.deleteConfirm')}
+          destructive
+          busy={busy === 'delete'}
+          onClose={() => setDeleting(null)}
+          onConfirm={() => void confirmDelete()}
+        >
+          <label className="cluster" style={{ cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={purgeNodes}
+              onChange={(event) => setPurgeNodes(event.target.checked)}
+            />
+            {t('reciters.deletePurge')}
+          </label>
+        </ConfirmModal>
       ) : null}
     </div>
   );

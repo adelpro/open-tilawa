@@ -80,8 +80,53 @@ describe('console audit — a select is a select', () => {
   });
 });
 
-/* ---------- tokens ---------- */
+/* ---------- batch C: action columns and confirms ---------- */
 
+const turns = read('routes/Turns.tsx');
+const status = read('routes/Status.tsx');
+const torrents = read('routes/Torrents.tsx');
+const reciters = read('routes/Reciters.tsx');
+
+describe('console audit — one action column', () => {
+  it('no row-action cell still uses the wrapping cluster', () => {
+    // `cluster--end` is right for a dialog footer and wrong for a table cell: in RTL
+    // it pins the buttons to the edge opposite the column header.
+    for (const [name, source] of [
+      ['Turns', turns],
+      ['AdminConsole', consoleScreen],
+      ['Torrents', torrents],
+    ]) {
+      assert.equal(
+        source.includes('<span className="cluster cluster--end">'),
+        false,
+        `${name} still wraps its row actions`,
+      );
+      assert.match(source, /row__actions/);
+    }
+  });
+});
+
+describe('console audit — every destructive action asks first', () => {
+  it('routes every confirm through one component', () => {
+    for (const [name, source] of [
+      ['Reciters', reciters],
+      ['Torrents', torrents],
+      ['Turns', turns],
+      ['Status', status],
+    ]) {
+      assert.match(source, /ConfirmModal/, `${name} has no ConfirmModal`);
+    }
+  });
+
+  it('has no hand-rolled destructive dialog left', () => {
+    const handRolled =
+      /<Modal title=\{t\('(reciters\.deleteTitle|torrents\.untrackedTitle|seeders\.updateTitle|seeders\.unlink)'\)/;
+    assert.equal(handRolled.test(reciters), false);
+    assert.equal(handRolled.test(torrents), false);
+  });
+});
+
+/* ---------- tokens ---------- */
 /** Relative luminance of a #rrggbb string, enough to compare two surfaces. */
 function luminance(hex) {
   const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16) / 255);

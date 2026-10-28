@@ -293,8 +293,8 @@ it with evidence rather than taste:
    turns the header's primary button into a Cancel toggle and pushes the list down by the
    form's height; the list is the reason the operator is on the screen.
 3. **The form host is not the whole problem.** P0-3 (native selects), P1-8 (three one-click
-   destructives) and P1-6/7 (row actions) are in the same blast radius, and a redesign that
-   moves forms but leaves them will have unified the packaging and not the product.
+   destructives) and P1-6/7 (row actions) are in the same blast radius — and all three are now
+   closed. A redesign that had moved forms first would have shipped them around the bugs.
 4. **Dark mode needs a fix regardless.** P0-5 inverts the depth cue on every screen; it is
    a token swap, but it belongs in the same pass because it re-shoots every screen.
 
@@ -326,7 +326,10 @@ re-measured on the same fixture:
 | #4 English in the Arabic console | **fixed** | labels, options and every chip through the catalogue; the raw enum is the chip's `title`; measured chips: مشرف أعلى / المالك / نشط / مدير / مستخدم / معطّل |
 | #5 dark elevation | **fixed** | dark `--canvas` `#000000` → `#2c2c2e` in both dark blocks; measured page `rgb(28,28,30)`, card `rgb(44,44,46)` — the card is now the lighter surface |
 | #9 Arabic display type | **fixed** | `2rem/1.55` → `2.125rem/1.3`: AR h1 now 34px/1.30 against EN 34px/1.15 (was 32px/1.55), single-line at 390px with no clipping |
-| #6–#8, #10–#11, #12–#17 | queued | batches C–E of the plan |
+| #6 row actions anchored to the cell edge | **fixed** | `.row__actions` in Turns, Reciters, AdminConsole and the torrents table; header-content edge minus first-button edge **0** on all four (was +10 / +6) |
+| #7 Reciters wraps in English | **fixed** | one button row in EN at 1440, left edge flush with its header (0) |
+| #8 three one-click destructives | **fixed** | `ConfirmModal` replaces the five hand-rolled dialogs and adds the three missing ones; every confirm is a question with `إلغاء` beside a distinct verb (`أزل`, `افصل الخادم`) |
+| #10–#11, #12–#17 | queued | batches D–E of the plan |
 
 ## How to re-verify
 

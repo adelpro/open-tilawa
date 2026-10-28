@@ -11,7 +11,7 @@ import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
-import { Modal } from '../components/Modal';
+import { ConfirmModal } from '../components/ConfirmModal';
 import type { Seeder, SeederInventory } from '../lib/types-seeders';
 
 interface Reciter {
@@ -48,6 +48,7 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
   const [catalogueBusy, setCatalogueBusy] = useState<string | null>(null);
   const [confirmUntracked, setConfirmUntracked] = useState(false);
   const [confirmingUpdate, setConfirmingUpdate] = useState<Seeder | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState<string | null>(null);
   const [confirmingUnlink, setConfirmingUnlink] = useState<Seeder | null>(null);
 
   const loadSeeders = useCallback(async () => {
@@ -491,11 +492,11 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
                         </Chip>
                       </td>
                       <td>
-                        <span className="cluster cluster--end">
+                        <span className="row__actions">
                           <Button
                             small
                             variant="destructive"
-                            onClick={() => void removeTorrent(torrent.infoHash)}
+                            onClick={() => setConfirmingRemove(torrent.infoHash)}
                             busy={busy === `remove-${torrent.infoHash}`}
                           >
                             {t('torrents.remove')}
@@ -616,58 +617,55 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
           )}
         </Panel>
       ) : null}
+      {confirmingRemove ? (
+        <ConfirmModal
+          title={t('torrents.removeTitle')}
+          body={t('torrents.removeBody')}
+          confirmLabel={t('torrents.removeConfirm')}
+          destructive
+          busy={busy === `remove-${confirmingRemove}`}
+          onClose={() => setConfirmingRemove(null)}
+          onConfirm={() => {
+            void removeTorrent(confirmingRemove);
+            setConfirmingRemove(null);
+          }}
+        />
+      ) : null}
       {confirmUntracked ? (
-        <Modal title={t('torrents.untrackedTitle')} onClose={() => setConfirmUntracked(false)}>
-          <div className="stack">
-            <p className="body">
-              {t('torrents.untrackedBody', { count: String(untracked.length) })}
-            </p>
-            <p className="fine-print">{t('torrents.untrackedHint')}</p>
-            <div className="cluster cluster--end">
-              <Button variant="tertiary" onClick={() => setConfirmUntracked(false)}>
-                {t('torrents.cancel')}
-              </Button>
-              <Button variant="destructive" onClick={() => void removeUntracked()}>
-                {t('torrents.untrackedConfirm')}
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <ConfirmModal
+          title={t('torrents.untrackedTitle')}
+          body={t('torrents.untrackedBody', { count: String(untracked.length) })}
+          hint={t('torrents.untrackedHint')}
+          confirmLabel={t('torrents.untrackedConfirm')}
+          destructive
+          busy={catalogueBusy === 'purge'}
+          onClose={() => setConfirmUntracked(false)}
+          onConfirm={() => void removeUntracked()}
+        />
       ) : null}
       {confirmingUpdate ? (
-        <Modal title={t('seeders.updateTitle')} onClose={() => setConfirmingUpdate(null)}>
-          <div className="stack">
-            <p className="body">{t('seeders.updateBody')}</p>
-            <p className="fine-print">
-              {t('seeders.updateCurrent', {
-                version: confirmingUpdate.version ?? t('seeders.versionUnknown'),
-              })}
-            </p>
-            <div className="cluster cluster--end">
-              <Button variant="tertiary" onClick={() => setConfirmingUpdate(null)}>
-                {t('seeders.cancel')}
-              </Button>
-              <Button onClick={() => void updateSoftware(confirmingUpdate)}>
-                {t('seeders.updateConfirm')}
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <ConfirmModal
+          title={t('seeders.updateTitle')}
+          body={t('seeders.updateBody')}
+          hint={t('seeders.updateCurrent', {
+            version: confirmingUpdate.version ?? t('seeders.versionUnknown'),
+          })}
+          confirmLabel={t('seeders.updateConfirm')}
+          busy={busy === `update-${confirmingUpdate.id}`}
+          onClose={() => setConfirmingUpdate(null)}
+          onConfirm={() => void updateSoftware(confirmingUpdate)}
+        />
       ) : null}
       {confirmingUnlink ? (
-        <Modal title={t('seeders.unlink')} onClose={() => setConfirmingUnlink(null)}>
-          <div className="stack">
-            <p className="body">{t('seeders.unlinkHint')}</p>
-            <div className="cluster cluster--end">
-              <Button variant="tertiary" onClick={() => setConfirmingUnlink(null)}>
-                {t('seeders.cancel')}
-              </Button>
-              <Button variant="destructive" onClick={() => void unlinkSeeder(confirmingUnlink)}>
-                {t('seeders.unlink')}
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <ConfirmModal
+          title={t('seeders.unlink')}
+          body={t('seeders.unlinkHint')}
+          confirmLabel={t('seeders.unlinkConfirm')}
+          destructive
+          busy={busy === `unlink-${confirmingUnlink.id}`}
+          onClose={() => setConfirmingUnlink(null)}
+          onConfirm={() => void unlinkSeeder(confirmingUnlink)}
+        />
       ) : null}
     </div>
   );

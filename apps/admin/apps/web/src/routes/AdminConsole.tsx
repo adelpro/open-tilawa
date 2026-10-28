@@ -266,7 +266,7 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
                             </Chip>
                           </td>
                           <td className="num" data-label={t('admin.actions')}>
-                            <span className="cluster cluster--end">
+                            <span className="row__actions">
                               {iAmOwner && !protectedEntry && entry.role !== 'super_admin' ? (
                                 <Button
                                   variant="tertiary"
