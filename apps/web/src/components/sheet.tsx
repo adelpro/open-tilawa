@@ -720,7 +720,7 @@ export function ReciterSheet({
             placeholder="ابحث باسم القارئ"
             label="بحث في القرّاء"
           />
-          <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5">
+          <div className="flex flex-wrap gap-1.5 border-b border-line px-5 py-2.5">
             {[
               { key: 'all', label: t.sheets.all },
               ...riwayas.map((name) => ({ key: name, label: riwayaLabel(name) })),
@@ -736,7 +736,7 @@ export function ReciterSheet({
               </button>
             ))}
           </div>
-          <div className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2">
+          <div className="flex flex-wrap gap-1.5 border-b border-line px-5 py-2">
             {(
               [
                 ['default', t.sheets.sortDefault],
