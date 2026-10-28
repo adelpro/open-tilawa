@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.6.1 — 2026-10-29
+
+Patch. App versions: **web 1.8.0**, **admin 1.25.1**, **seeder 1.4.3**.
+
+Completes the catalogue screen, which shipped in 1.6.0 an hour earlier without
+being able to answer its own questions.
+
+### Added
+
+- **A scope filter on the catalogue.** It listed all 22 rows, so three live
+  reciters read as two dozen releases. Published is the default; the 19 drafts
+  are one click away, and the count is on the button.
+- **Sortable columns** — name, riwaya, size, coverage — with `aria-sort`, because
+  "which reciters are on no node" was answerable only by scanning.
+- **A confirmation before sending the catalogue to the nodes**, carrying the
+  numbers the plan already computed: how many reciters move, and how many the
+  90 % cap leaves behind.
+
+### Changed
+
+- **Table screens use the width.** The eight-column table was crushed into
+  1000 px on a large display; those screens now take up to 1440 px, while prose
+  keeps its measure.
+- **The placement popup says so when there is only one node** to place on.
+
 ## 1.6.0 — 2026-10-29
 
 Minor. App versions: **web 1.8.0**, **admin 1.25.0**, **seeder 1.4.3**.
