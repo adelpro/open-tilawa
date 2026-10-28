@@ -15,7 +15,11 @@ min-port=49160
 max-port=49200
 no-multicast-peers
 no-cli
-verbose
+# Log to stdout so Docker's json-file driver rotates it. Left to its own devices
+# coturn writes /var/tmp/turn_<pid>_<date>.log inside the container: 762 MB in a
+# single day at `verbose`, with nothing to cap or rotate it.
+log-file=stdout
+simple-log
 CONF
 
 echo "Starting coturn for realm ${TURN_REALM:-turn.quran.us.kg}"
