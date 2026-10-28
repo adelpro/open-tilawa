@@ -1,0 +1,48 @@
+# Staging deployment for open-tilawa
+services:
+  edge:
+    image: nginx:alpine
+    container_name: open-tilawa-staging-edge
+    ports:
+      - "127.0.0.1:${EDGE_PORT:-8086}:80"
+    volumes:
+      - ./edge/templates:/etc/nginx/templates:ro
+    environment:
+      TRACKER_PORT: ${TRACKER_PORT:-8087}
+      TRACKER_PATH: ${TRACKER_PATH:-/}
+    depends_on:
+      - tracker
+      - web
+    restart: unless-stopped
+    networks: [open-tilawa-staging]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: open-tilawa-staging-web
+    restart: unless-stopped
+    volumes:
+      - seed_torrents_staging:/usr/share/nginx/html/torrents:ro
+      - seed_downloads_staging:/usr/share/nginx/html/media:ro
+    networks: [open-tilawa-staging]
+
+  tracker:
+    build:
+      context: .
+      dockerfile: apps/tracker/Dockerfile
+    container_name: open-tilawa-staging-tracker
+    environment:
+      PORT: ${TRACKER_PORT:-8087}
+    ports:
+      - "127.0.0.1:${TRACKER_PORT:-8087}:${TRACKER_PORT:-8087}"
+    restart: unless-stopped
+    networks: [open-tilawa-staging]
+
+networks:
+  open-tilawa-staging:
+    driver: bridge
+
+volumes:
+  seed_torrents_staging:
+  seed_downloads_staging:
