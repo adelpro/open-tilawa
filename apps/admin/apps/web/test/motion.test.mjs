@@ -63,7 +63,9 @@ describe('reduced motion', () => {
 
 describe('typography', () => {
   it('gives small text leading rather than setting it solid', () => {
-    const match = strip(css['tokens.css']).match(/--fine-print:\s*400\s+\d+px\/([\d.]+)/);
+    // The size is expressed in rem since the type audit; the assertion is about
+    // the line-height, so both units are accepted rather than pinning one.
+    const match = strip(css['tokens.css']).match(/--fine-print:\s*400\s+[\d.]+(?:px|rem)\/([\d.]+)/);
     assert.ok(match, '--fine-print not found');
     assert.ok(Number(match[1]) >= 1.3, `fine print line-height is ${match[1]}, expected >= 1.3`);
   });
