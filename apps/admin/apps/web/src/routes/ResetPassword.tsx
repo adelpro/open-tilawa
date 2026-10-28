@@ -60,7 +60,7 @@ export function ResetPassword({ token: fromPath }: { token: string | null }): Re
   };
 
   return (
-    <div className="auth">
+    <main className="auth">
       <div className="auth__card stack">
         <h1 className="display-lg">{token ? t('reset.titleSet') : t('reset.titleRequest')}</h1>
 
@@ -113,6 +113,6 @@ export function ResetPassword({ token: fromPath }: { token: string | null }): Re
           </form>
         )}
       </div>
-    </div>
+    </main>
   );
 }

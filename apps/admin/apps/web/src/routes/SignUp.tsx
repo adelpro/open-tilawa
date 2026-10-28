@@ -57,7 +57,7 @@ export function SignUp(): ReactElement {
 
   if (sent) {
     return (
-      <div className="auth">
+      <main className="auth">
         <div className="auth__card stack">
           <h1 className="display-lg">{t('signup.sentTitle')}</h1>
           <Notice>{t('signup.sentBody', { email })}</Notice>
@@ -69,12 +69,12 @@ export function SignUp(): ReactElement {
             </Button>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="auth">
+    <main className="auth">
       <div className="auth__card stack">
         <div>
           <h1 className="display-lg">{t('signup.title')}</h1>
@@ -129,6 +129,6 @@ export function SignUp(): ReactElement {
           .
         </p>
       </div>
-    </div>
+    </main>
   );
 }

@@ -37,7 +37,11 @@ export function LocaleSwitch({ className = '' }: { className?: string }): ReactE
       <button
         type="button"
         className="locale-switch__trigger"
-        aria-label={t('prefs.language')}
+        /* The visible label is the language code, so the accessible name has to
+           contain it — an aria-label that replaces "EN" with "Language" fails
+           WCAG 2.5.3 (label in name). "English (EN)" reads naturally and keeps
+           the code. */
+        aria-label={`${NAME[locale]} (${SHORT[locale]})`}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((o) => !o)}

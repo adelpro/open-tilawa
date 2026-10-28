@@ -164,7 +164,12 @@
 .auth__card {
   width: 100%;
   max-width: 440px;
-  background: var(--canvas);
+  background: var(--card);
+  /* The card was white-on-white in daylight (1.09:1 against the page) and black
+     on near-black at night (1.23:1), with no border and no shadow — an 18px
+     radius was the only thing saying "this is a surface". One hairline gives it
+     an edge in both themes without adding a shadow to a product that has none. */
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-lg);
   padding: var(--space-8);
 }
@@ -644,7 +649,7 @@ button.chip[aria-pressed='true'] {
 .nav__label {
   padding: 0 12px var(--space-2);
   font: var(--caption-strong);
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-secondary);
@@ -835,7 +840,7 @@ button.chip[aria-pressed='true'] {
 .shell__panel .nav__link {
   min-height: 48px;
   font: var(--body-strong);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 .shell__panel .shell__account {
@@ -877,6 +882,28 @@ button.chip[aria-pressed='true'] {
   .locale-switch__option {
     min-height: 44px;
     min-width: 44px;
+  }
+}
+
+/*
+ * The controls that change the whole interface were below the 44px a finger
+ * needs: the language trigger (32), the appearance toggle (36), the password
+ * reveal (34) and the six footer links (35). `.btn` and `.locale-switch__option`
+ * already grew on a coarse pointer — these are the ones that were missed. The
+ * box grows, the drawing does not.
+ */
+@media (pointer: coarse) {
+  .locale-switch__trigger,
+  .theme-toggle__trigger,
+  .field__reveal {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .site-footer__nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 
@@ -940,7 +967,7 @@ button.chip[aria-pressed='true'] {
   justify-content: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--ink);
   letter-spacing: -0.02em;
   text-decoration: none;
@@ -978,7 +1005,7 @@ button.chip[aria-pressed='true'] {
 }
 
 .landing__nav-links a {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--ink-secondary);
   text-decoration: none;
@@ -1005,11 +1032,34 @@ button.chip[aria-pressed='true'] {
   flex-shrink: 0;
 }
 
+/*
+ * Without a row rule this wrapper is a block, so the appearance toggle, the
+ * sign-in link and the CTA stack into three lines — 116px of controls centred
+ * in a 56px bar, hanging out above the header and over the hero. The phone
+ * query below hides it; the desktop needs it laid out.
+ */
+.landing__nav-right-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * `.locale-switch` ships with the account block's margins, and `.landing__lang`
+ * carries `align-self: start`, which is a grid placement — in the flex row it
+ * pins the switch to the top of the line instead of its centre.
+ */
+.landing__lang {
+  align-self: center;
+  margin: 0;
+  padding: 0;
+}
+
 .landing__nav-signin {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--ink-secondary);
   text-decoration: none;
@@ -1150,7 +1200,7 @@ button.chip[aria-pressed='true'] {
     border: none;
     border-radius: 999px;
     background: var(--canvas-parchment);
-    font-size: 16px;
+    font-size: 1rem;
   }
 
   .landing__nav-mobile-extra .landing__nav-signin--mobile svg {
@@ -1193,7 +1243,7 @@ button.chip[aria-pressed='true'] {
 
   .landing__nav .landing__nav-cta--drawer {
     height: 48px;
-    font-size: 16px;
+    font-size: 1rem;
   }
 
   .landing__nav-links {
@@ -1212,7 +1262,7 @@ button.chip[aria-pressed='true'] {
     padding: 0 4px;
     border-radius: 0;
     border-bottom: 1px solid var(--hairline);
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 500;
   }
 
@@ -1258,7 +1308,7 @@ button.chip[aria-pressed='true'] {
   border-radius: 999px;
   padding-inline: 18px;
   min-height: 40px;
-  font-size: 14px;
+  font-size: 0.875rem;
   white-space: nowrap;
 }
 
@@ -1498,7 +1548,7 @@ button.chip[aria-pressed='true'] {
   animation-delay: 90ms;
 }
 .landing__feature .body {
-  font-size: 14px;
+  font-size: 0.875rem;
   animation-delay: 160ms;
 }
 .landing__feature h2 {
@@ -1594,7 +1644,7 @@ button.chip[aria-pressed='true'] {
     box-shadow: 0 16px 32px -20px rgba(0, 0, 0, 0.16);
   }
   .landing__hero .display-xl {
-    font-size: 40px;
+    font-size: 2.5rem;
     letter-spacing: -0.02em;
   }
   .landing__hero {
@@ -2173,7 +2223,7 @@ td.num {
 /* The language switch on the public page: no account block around it to hold it up. */
 .landing__lang {
   justify-self: end;
-  align-self: start;
+  align-self: center;
 }
 
 /* ---------- the bootstrap prompt ---------- */
@@ -2184,7 +2234,7 @@ td.num {
   max-height: 22rem;
   overflow: auto;
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
@@ -2209,7 +2259,7 @@ td.num {
 }
 
 .legal__version {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--ink-secondary);
   margin: 0 0 var(--space-4);
 }
@@ -2247,7 +2297,7 @@ td.num {
   gap: var(--space-2);
 }
 .site-footer__brandblock h3 {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 700;
   margin: 0;
 }
@@ -2275,7 +2325,7 @@ td.num {
 }
 
 .site-footer__col h3 {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2285,7 +2335,7 @@ td.num {
 
 .site-footer__col a {
   display: block;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--ink);
   text-decoration: none;
   margin-bottom: var(--space-1);
@@ -2316,7 +2366,7 @@ td.num {
 }
 
 .site-footer__nav a {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--ink-secondary);
   text-decoration: none;
   padding: 8px 4px;
@@ -2331,7 +2381,7 @@ td.num {
 }
 
 .site-footer__copy {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--ink);
   opacity: 0.78;
   margin: 0;
@@ -2361,7 +2411,7 @@ td.num {
   padding: 6px 8px;
   cursor: pointer;
   color: var(--ink-secondary);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   transition:
@@ -2380,7 +2430,7 @@ td.num {
 }
 
 .locale-switch__current {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -2407,7 +2457,7 @@ td.num {
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--ink);
   transition: background 150ms ease-out;
   box-shadow: none;
@@ -2481,7 +2531,7 @@ td.num {
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--ink);
   transition: background 150ms ease-out;
   box-shadow: none;
@@ -2501,7 +2551,7 @@ td.num {
 
 .theme-toggle__option {
   padding: 4px 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   border: none;
   border-radius: var(--radius-pill);
   background: transparent;
@@ -2528,7 +2578,8 @@ td.num {
    a tertiary control with a drop shadow reads as a card, not a verb. */
 
 button:focus-visible,
-.btn:focus-visible {
+.btn:focus-visible,
+a:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }

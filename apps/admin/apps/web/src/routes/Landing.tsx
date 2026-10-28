@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { navigate } from '../lib/router';
 import { useI18n } from '../lib/i18n';
 import { Icon } from '../components/icons';
@@ -24,6 +24,8 @@ export function Landing({ version }: { version: string | null }): ReactElement {
   const { t } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -31,6 +33,66 @@ export function Landing({ version }: { version: string | null }): ReactElement {
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  /**
+   * The drawer is a full-screen layer, so it has to behave like a dialog or it is
+   * just a page that happens to cover another page: Escape closes it, Tab stays
+   * inside it, and the document behind it does not scroll underneath the finger.
+   */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+
+    const focusable = () =>
+      Array.from(
+        drawer.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMenuOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = focusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (event.shiftKey && (active === first || !drawer.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !drawer.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKeyDown);
+
+    // Rotating a tablet past the breakpoint hides the drawer in CSS; without this
+    // the body would stay locked behind a layer nobody can see.
+    const wide = window.matchMedia('(min-width: 1025px)');
+    const onWide = (event: MediaQueryListEvent) => {
+      if (event.matches) setMenuOpen(false);
+    };
+    wide.addEventListener('change', onWide);
+
+    focusable()[0]?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      wide.removeEventListener('change', onWide);
+      if (drawer.contains(document.activeElement)) toggleRef.current?.focus();
+    };
+  }, [menuOpen]);
 
   const features = [
     { title: t('landing.feature1.title'), body: t('landing.feature1.body') },
@@ -54,15 +116,24 @@ export function Landing({ version }: { version: string | null }): ReactElement {
           <BrandLabel version={version} />
         </span>
         <button
+          ref={toggleRef}
           type="button"
           className="landing__nav-menu"
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
+          aria-controls="landing-menu"
           onClick={() => setMenuOpen((o) => !o)}
         >
           <Icon name={menuOpen ? 'close' : 'menu'} />
         </button>
-        <div className={`landing__nav-center${menuOpen ? ' landing__nav-center--open' : ''}`}>
+        <div
+          id="landing-menu"
+          ref={drawerRef}
+          className={`landing__nav-center${menuOpen ? ' landing__nav-center--open' : ''}`}
+          role={menuOpen ? 'dialog' : undefined}
+          aria-modal={menuOpen ? 'true' : undefined}
+          aria-label={menuOpen ? 'Menu' : undefined}
+        >
           <div className="landing__nav-links">
             <a
               href="/about"

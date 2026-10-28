@@ -62,7 +62,7 @@ export function SignIn(): ReactElement {
   };
 
   return (
-    <div className="auth">
+    <main className="auth">
       <div className="auth__card stack">
         <div>
           <h1 className="display-lg">{t('auth.signIn.title')}</h1>
@@ -113,6 +113,6 @@ export function SignIn(): ReactElement {
           .
         </p>
       </div>
-    </div>
+    </main>
   );
 }

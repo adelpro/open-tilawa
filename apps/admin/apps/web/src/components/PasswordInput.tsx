@@ -17,6 +17,7 @@ import { useI18n } from '../lib/i18n';
  */
 export function PasswordInput({
   id,
+  name = 'password',
   value,
   onChange,
   autoComplete,
@@ -26,6 +27,7 @@ export function PasswordInput({
   minLength,
 }: {
   id: string;
+  name?: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: 'current-password' | 'new-password';
@@ -41,6 +43,7 @@ export function PasswordInput({
     <>
       <input
         id={id}
+        name={name}
         className="field__input field__input--reveal"
         type={shown ? 'text' : 'password'}
         autoComplete={autoComplete}

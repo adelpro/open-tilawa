@@ -58,7 +58,7 @@ export function Setup(): ReactElement {
 
   if (done) {
     return (
-      <div className="auth">
+      <main className="auth">
         <div className="auth__card stack">
           <h1 className="display-lg">{t('setup.doneTitle')}</h1>
           <Notice tone="ok">{t('setup.doneBody')}</Notice>
@@ -66,12 +66,12 @@ export function Setup(): ReactElement {
             {t('auth.signIn.submit')}
           </a>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="auth">
+    <main className="auth">
       <div className="auth__card stack">
         <div>
           <h1 className="display-lg">{t('setup.title')}</h1>
@@ -153,6 +153,6 @@ export function Setup(): ReactElement {
           .
         </p>
       </div>
-    </div>
+    </main>
   );
 }

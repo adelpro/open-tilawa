@@ -17,7 +17,7 @@ export function LegalPage({
 }): ReactElement {
   return (
     <div className="legal">
-      <article className="legal__article">
+      <main className="legal__article">
         <h1 className="display-lg">{title}</h1>
         <p className="legal__version">{version}</p>
         {sections.map((s, i) => (
@@ -26,7 +26,7 @@ export function LegalPage({
             <div className="body">{s.body}</div>
           </section>
         ))}
-      </article>
+      </main>
       <Footer />
     </div>
   );

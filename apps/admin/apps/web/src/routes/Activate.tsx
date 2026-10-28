@@ -41,7 +41,7 @@ export function Activate({ token: fromPath }: { token: string | null }): ReactEl
   }, [refresh, fromPath, t]);
 
   return (
-    <div className="auth">
+    <main className="auth">
       <div className="auth__card stack">
         <h1 className="display-lg">
           {state === 'ok'
@@ -66,6 +66,6 @@ export function Activate({ token: fromPath }: { token: string | null }): ReactEl
           </>
         ) : null}
       </div>
-    </div>
+    </main>
   );
 }

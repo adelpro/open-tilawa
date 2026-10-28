@@ -82,10 +82,13 @@
   --canvas-parchment: #f5f5f7;
   --canvas-cream: #ffefc4;
   --surface-pearl: #fafafc;
+  /* A card is a raised surface. In daylight that is the page paper; in the dark
+     it has to be *lighter* than the page, or the card reads as a hole. */
+  --card: #ffffff;
 
   /* text — measured against white */
   --ink: #1d1d1f; /* 14.7:1 on cream, AAA */
-  --ink-secondary: #6e6e73; /* 5.07:1, AA */
+  --ink-secondary: #6e6e73; /* 5.07:1 on white, 4.66:1 on --canvas-parchment: AA */
   --ink-on-dark: #f5f5f7;
 
   /* the one interactive accent */
@@ -135,20 +138,25 @@
   --font-arabic: 'IBM Plex Arabic', 'Noto Sans Arabic', Tahoma, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --display-lg: 600 34px/1.15 var(--font-sans);
-  --display-xl: 600 64px/1.05 var(--font-sans);
-  --display-md: 600 28px/1.2 var(--font-sans);
-  --display-feature: 600 22px/1.25 var(--font-sans);
-  --display-sm: 600 21px/1.19 var(--font-sans);
-  --display-section: 600 36px/1.15 var(--font-sans);
-  --body: 400 17px/1.47 var(--font-sans);
-  --body-strong: 600 17px/1.24 var(--font-sans);
-  --caption: 400 14px/1.43 var(--font-sans);
-  --caption-strong: 600 14px/1.29 var(--font-sans);
+  /* Sizes are `rem`, not `px`: the browser's own text-size setting scales `rem`
+     and ignores `px`, so a `px` scale silently discards the preference a user
+     set — measured: a 24px root changed nothing on this page. 1rem is still
+     16px, so the design is pixel-identical at default settings. Line heights stay
+     unitless so they follow the size. */
+  --display-lg: 600 2.125rem/1.15 var(--font-sans);
+  --display-xl: 600 4rem/1.05 var(--font-sans);
+  --display-md: 600 1.75rem/1.2 var(--font-sans);
+  --display-feature: 600 1.375rem/1.25 var(--font-sans);
+  --display-sm: 600 1.3125rem/1.19 var(--font-sans);
+  --display-section: 600 2.25rem/1.15 var(--font-sans);
+  --body: 400 1.0625rem/1.47 var(--font-sans);
+  --body-strong: 600 1.0625rem/1.24 var(--font-sans);
+  --caption: 400 0.875rem/1.43 var(--font-sans);
+  --caption-strong: 600 0.875rem/1.29 var(--font-sans);
   /* Small type gets *more* leading, not less: at 12px a line-height of 1 collides
      with the next line. 1.45 matches the Arabic fine print. */
-  --fine-print: 400 13px/1.45 var(--font-sans);
-  --code: 400 13px/1.4 var(--font-mono);
+  --fine-print: 400 0.8125rem/1.45 var(--font-sans);
+  --code: 400 0.8125rem/1.4 var(--font-mono);
 
   /* shape */
   --radius-sm: 8px;
@@ -181,6 +189,7 @@
     --canvas-parchment: #1c1c1e;
     --canvas-cream: #2c2618;
     --surface-pearl: #272729;
+    --card: var(--surface-pearl);
     --ink: var(--ink-on-dark);
     --ink-secondary: #cccccc;
     --primary: var(--primary-on-dark);
@@ -204,6 +213,7 @@
   --canvas-parchment: #1c1c1e;
   --canvas-cream: #2c2618;
   --surface-pearl: #272729;
+  --card: var(--surface-pearl);
   --ink: var(--ink-on-dark);
   --ink-secondary: #cccccc;
   --primary: var(--primary-on-dark);
@@ -219,17 +229,26 @@
 
 [data-theme='light'] {
   /* explicit light override — resets any system dark preference */
+  --card: #ffffff;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* The body font carries `rem`, so it must not be applied to `html`: `rem` on the
+   root resolves against the *initial* 16px, which would make the root 1.0625×16
+   = 17px and then the body 1.0625×17 = 18.06px — the scale compounding once per
+   element that repeats the shorthand. `html` stays at the browser default and
+   every `rem` resolves against it. */
 html,
 body {
   margin: 0;
   background: var(--canvas-parchment);
   color: var(--ink);
+}
+
+body {
   font: var(--body);
   -webkit-font-smoothing: antialiased;
 }
@@ -281,8 +300,10 @@ body {
 }
 .fine-print {
   font: var(--fine-print);
-  color: var(--ink);
-  opacity: 0.78;
+  /* A token colour, not an `opacity`: opacity is inherited by children, and the
+     sign-in line wraps a link — 78% of #1d1d1f painted the link #3e85a2, which
+     measured 4.13:1 on white and failed AA. */
+  color: var(--ink-secondary);
 }
 .code {
   font: var(--code);
@@ -391,17 +412,17 @@ button:active,
  */
 html[lang='ar'] {
   --font-sans: var(--font-arabic);
-  --display-lg: 600 32px/1.55 var(--font-arabic);
-  --display-xl: 600 44px/1.3 -0.01em var(--font-arabic);
-  --display-section: 600 28px/1.35 var(--font-arabic);
-  --display-feature: 600 19px/1.35 var(--font-arabic);
-  --display-md: 600 26px/1.5 var(--font-arabic);
-  --display-sm: 600 20px/1.45 var(--font-arabic);
-  --body: 400 17px/1.75 var(--font-arabic);
-  --body-strong: 600 17px/1.6 var(--font-arabic);
-  --caption: 400 14px/1.65 var(--font-arabic);
-  --caption-strong: 600 14px/1.55 var(--font-arabic);
-  --fine-print: 400 13px/1.6 var(--font-arabic);
+  --display-lg: 600 2rem/1.55 var(--font-arabic);
+  --display-xl: 600 2.75rem/1.3 -0.01em var(--font-arabic);
+  --display-section: 600 1.75rem/1.35 var(--font-arabic);
+  --display-feature: 600 1.1875rem/1.35 var(--font-arabic);
+  --display-md: 600 1.625rem/1.5 var(--font-arabic);
+  --display-sm: 600 1.25rem/1.45 var(--font-arabic);
+  --body: 400 1.0625rem/1.75 var(--font-arabic);
+  --body-strong: 600 1.0625rem/1.6 var(--font-arabic);
+  --caption: 400 0.875rem/1.65 var(--font-arabic);
+  --caption-strong: 600 0.875rem/1.55 var(--font-arabic);
+  --fine-print: 400 0.8125rem/1.6 var(--font-arabic);
 }
 
 html[lang='ar'] .display-lg,

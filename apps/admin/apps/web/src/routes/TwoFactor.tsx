@@ -96,7 +96,7 @@ export function TwoFactor(): ReactElement {
   };
 
   return (
-    <div className="auth">
+    <main className="auth">
       <div className="auth__card stack">
         <div>
           <h1 className="display-lg">{t('twofa.title')}</h1>
@@ -176,6 +176,6 @@ export function TwoFactor(): ReactElement {
           </form>
         )}
       </div>
-    </div>
+    </main>
   );
 }
