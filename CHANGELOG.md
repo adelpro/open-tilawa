@@ -1,5 +1,89 @@
 # Changelog
 
+## 1.6.0 — 2026-10-29
+
+Minor. App versions: **web 1.8.0**, **admin 1.25.0**, **seeder 1.4.3**.
+
+The release where the console stopped describing the system and started
+recording it.
+
+### Added
+
+- **Placement.** The catalogue now records what was asked of each node —
+  `pending`, `placed`, `failed` — instead of leaving the operator to compare two
+  lists by eye. A request becomes `placed` only when the node reports it, and
+  fails after three hours if it never does, or when a node stops reporting a
+  torrent it used to hold.
+- **Coverage on every reciter.** Four states, each with one action: healthy,
+  *not seeded* (published and held by nobody — the one a listener feels),
+  *unpublished* (disk spent on what the site hides), dormant.
+- **Place and unplace from Reciters.** One row per node, sorted by free space,
+  refusing a node that cannot fit the release.
+- **The pinned node.** The seeder this dashboard runs is recognised by its URL
+  host and sits at the top of the fleet with its own row treatment, because if it
+  is down the site is down.
+- **Version drift.** Desired (the checkout, or the image tag) versus running
+  (the node's own `/health`), per node.
+- **"Make nodes complete."** Fills every node from the catalogue and stops at
+  90 % of its quota, then says how many reciters it left out.
+- **A seeder poll every five minutes**, so the fleet's numbers are true without
+  anyone clicking. The dashboard had been showing `22 torrents · 32.7 GB` for a
+  node holding three.
+- **`normalise.mjs`**, a tool that turns a downloaded folder into a library
+  entry: files renamed to `001.mp3`…`NNN.mp3`, everything that is not the mushaf
+  dropped, the release name stripped of source tags, and a fresh torrent with
+  our announce list and a `url-list` web seed.
+- **An eight-step node tutorial** covering disk sizing, `6881/udp`, placement and
+  the 90 % rule — the parts that actually bite someone standing up a node.
+
+### Changed
+
+- **Three surfaces became two nouns.** Reciters is the catalogue and its
+  placement; Nodes is the fleet. `/dashboard/torrents` — a node page with a node
+  chosen silently — is gone, and so is its sidebar entry.
+- **The node screen stops creating.** A torrent enters through the catalogue,
+  which is what decides where it goes; the node keeps only repairs.
+- **Deleting on a node means deleting the data.** The confirm says so, and
+  unplacing is the separate action that stops seeding while keeping the files the
+  HTTP source serves.
+- **The book's torrents were rebuilt.** Every published reciter is 114 files
+  named `001.mp3`…`114.mp3`, one whole mushaf per release, with our tracker
+  first, the public ones beside it, and a `url-list` pointing at `/media/`.
+  `(MP3_Quran)` and `_Update2` are gone from the names — they were the source
+  site's metadata, and they travelled into the torrent name, the magnet and the
+  web-seed path.
+- **Magnets carry `xs`.** Metadata arrives over HTTP even with no swarm peer,
+  which is what makes an HTTP-only reciter playable.
+- **The TURN credential comes from the build.** It used to be a hardcoded
+  fallback, so a working relay password shipped in the bundle four times.
+- **TURN logs to stdout** instead of writing 762 MB a day into its own container.
+
+### Fixed
+
+- **Deleting a torrent killed the seeder.** `client.get()` is async, so the guard
+  never fired and `torrent.destroy` threw on a promise — every delete took the
+  node down mid-request. It also left the payload on disk and the `.torrent` in
+  place, so the next restart re-added the whole release.
+- **A fresh admin database could not be created.** `reciters` existed only
+  because a service created it at request time, so migration 017 failed on any
+  empty database. It is a migration now (`015_reciters.sql`).
+- **Production was offline.** Both compose files declared `edge`, `web` and
+  `tracker` in the same project, so a staging deploy *replaced* the production
+  containers. Staging has its own project in the fix, and for the alpha it is
+  gone entirely: one environment, one file.
+- **A sheet opened over another closed itself.** The history entry belongs to the
+  layer now, not to each sheet.
+- **The camera panel** names why it could not open, and releases the stream when
+  the sheet closes instead of leaving the light on.
+
+### Removed
+
+- **The staging stack**, its volumes, its tunnel hostname and its env file.
+- **`turn-tls.quran.us.kg`** and the TLS listener coturn never opened — no
+  certificate, and a raw TCP tunnel cannot pass through the HTTP proxy anyway.
+- **The Tailscale endpoints** from the ICE config: dead candidates for every real
+  listener, and they published the tailnet's address.
+
 ## 1.5.12 — 2026-10-27
 
 Minor. App versions: **web 1.7.0**, **admin 1.24.0**, **seeder 1.4.2**.
