@@ -6,6 +6,7 @@ import http from 'http';
 import crypto from 'crypto';
 import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
 import TRACKERS from './constants/TRACKERS.js';
+import parseTorrent from 'parse-torrent';
 import { readFileSync as readFile, statfsSync } from 'fs';
 
 /**
@@ -217,11 +218,33 @@ function removeTorrent(hash, res) {
 const torrentFiles = fs.readdirSync(TORRENT_DIR).filter(f => f.endsWith('.torrent'));
 log.info(`Found ${torrentFiles.length} torrent files in ${TORRENT_DIR}`);
 
+/**
+ * Map every file to its own infoHash *before* anything is added.
+ *
+ * The filename cannot be trusted — one file in this deployment is named after a
+ * hash that is not the hash of its content — and the metadata callback is too
+ * late: a delete that arrives while a torrent is still loading finds no file to
+ * unlink, so the .torrent is left behind and the next boot re-adds the whole
+ * release. parse-torrent is async even for a Buffer, hence the await here rather
+ * than inside the loop below.
+ */
+for (const tf of torrentFiles) {
+  const fullPath = path.join(TORRENT_DIR, tf);
+  try {
+    const parsed = await parseTorrent(fs.readFileSync(fullPath));
+    if (parsed?.infoHash) sourceFiles.set(parsed.infoHash, fullPath);
+  } catch (error) {
+    log.warning(`could not read ${tf}: ${error.message}`);
+  }
+}
+
 for (const tf of torrentFiles) {
   const fullPath = path.join(TORRENT_DIR, tf);
   // Announce to our tracker as well as whatever the .torrent already lists:
   // without this the node seeds happily but is invisible on the tracker.
   client.add(fullPath, { path: DOWNLOAD_PATH, announce: ANNOUNCE }, (torrent) => {
+    // Re-set: a file that failed to parse above still gets recorded once its
+    // metadata is read by the client.
     sourceFiles.set(torrent.infoHash, fullPath);
     log.success(`Seeding: ${torrent.name} (${torrent.infoHash}) — ${torrent.files.length} files`);
   });
