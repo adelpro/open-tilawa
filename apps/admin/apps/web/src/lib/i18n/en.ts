@@ -98,7 +98,7 @@ export const en = {
 
   'seeders.title': 'Seeder nodes',
   'seeders.lede':
-    'Nodes that distribute the torrents. The dashboard keeps their status and proxies torrent operations with the credentials stored on each row.',
+    'Seeders distribute the torrents. The dashboard tracks each node’s status and runs torrent operations on it using that node’s stored credentials.',
   'seeders.add': 'Add seeder',
   'seeders.cancel': 'Cancel',
   'seeders.addSubmit': 'Add',
@@ -109,12 +109,12 @@ export const en = {
   'seeders.unlinkHint':
     'Removes the node from this dashboard. The node keeps running and keeps seeding.',
   'seeders.name': 'Name',
+  'seeders.server': 'Server',
   'seeders.url': 'URL',
   'seeders.urlHint': 'Base URL of the seeder, e.g. http://192.168.1.100:8085.',
   'seeders.adminUser': 'Admin user',
   'seeders.adminPass': 'Admin password',
   'seeders.credentialsHint': 'Used server-side for torrent operations. Optional for a public node.',
-  'seeders.credentials': 'Credentials',
   'seeders.credentialsSet': 'Stored',
   'seeders.credentialsMissing': 'None',
   'seeders.statusHeading': 'Status',
@@ -133,7 +133,6 @@ export const en = {
     'Queues every reciter this node is missing, right after it is registered. Nothing is removed and anything over quota is skipped.',
   'seeders.fillQueued': '{count} reciter(s) queued for download.',
   'seeders.fillFailed': 'The catalogue was not pushed: {error}',
-  'seeders.removed': 'Seeder unlinked. The node keeps seeding.',
   'seeders.loadFailed': 'Could not load the seeders.',
   'seeders.addFailed': 'Could not add the seeder.',
   'seeders.removeFailed': 'Could not unlink the seeder.',
@@ -184,7 +183,7 @@ export const en = {
   'reciters.nameAr': 'Arabic name',
   'reciters.nameArHint': 'The name listeners see in the player. Leave empty to fall back to the name table.',
   'reciters.riwaya': 'Riwaya',
-  'reciters.riwayaHint': 'The transmission, e.g. Hafs.',
+  'reciters.riwayaHint': 'The transmission. “Unspecified” beats a guess.',
   'reciters.infohash': 'Infohash',
   'reciters.infohashHint': 'The torrent that carries this release.',
   'reciters.magnet': 'Magnet link (optional)',
@@ -257,7 +256,7 @@ export const en = {
   'turns.detailFailed': 'Could not load this TURN server.',
   'turns.notFound': 'That TURN server no longer exists.',
   'turns.openHint': 'Open the server history',
-  'seeders.manage': 'Manage torrents',
+  'seeders.manage': 'Torrents',
   'torrents.backToSeeders': 'All seeders',
   'torrents.credentialsHint':
     'These are the seeder’s own ADMIN_USER / ADMIN_PASS (root .env), not your dashboard account.',

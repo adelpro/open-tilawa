@@ -10,8 +10,21 @@ import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
-import { Modal } from '../components/Modal';
 import type { Seeder } from '../lib/types-seeders';
+
+function statusTone(status: Seeder['status']): 'ok' | 'bad' | 'notice' {
+  return status === 'online' ? 'ok' : status === 'offline' ? 'bad' : 'notice';
+}
+
+function statusKey(
+  status: Seeder['status'],
+): 'seeders.statusOnline' | 'seeders.statusOffline' | 'seeders.statusUnknown' {
+  return status === 'online'
+    ? 'seeders.statusOnline'
+    : status === 'offline'
+      ? 'seeders.statusOffline'
+      : 'seeders.statusUnknown';
+}
 
 /**
  * Seeder nodes. The URL is public (its `/health` is); the admin credentials are
@@ -38,7 +51,6 @@ export function Seeders(): ReactElement {
   const [editUrl, setEditUrl] = useState('');
   const [editUser, setEditUser] = useState('');
   const [editPass, setEditPass] = useState('');
-  const [confirmingUpdate, setConfirmingUpdate] = useState<Seeder | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -143,40 +155,6 @@ export function Seeders(): ReactElement {
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function updateSoftware(seeder: Seeder): Promise<void> {
-    setConfirmingUpdate(null);
-    setBusy(`update-${seeder.id}`);
-    setError(null);
-    setMessage(null);
-    try {
-      const result = await api<{ output: string; version: string | null }>(
-        `/seeders/${seeder.id}/update`,
-        { method: 'POST' },
-      );
-      setMessage(
-        t('seeders.updatedSoftware', { version: result.version ?? t('seeders.versionUnknown') }),
-      );
-      await load();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function remove(id: number): Promise<void> {
-    setBusy(`remove-${id}`);
-    try {
-      await api(`/seeders/${id}`, { method: 'DELETE' });
-      setMessage(t('seeders.removed'));
-      await load();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('seeders.removeFailed'));
     } finally {
       setBusy(null);
     }
@@ -362,13 +340,11 @@ export function Seeders(): ReactElement {
       ) : (
         <Panel>
           <div className="table-scroll">
-            <table className="table">
+            <table className="table table--seeders">
               <thead>
                 <tr>
-                  <th scope="col">{t('seeders.name')}</th>
-                  <th scope="col">{t('seeders.statusHeading')}</th>
+                  <th scope="col">{t('seeders.server')}</th>
                   <th scope="col">{t('seeders.traffic')}</th>
-                  <th scope="col">{t('seeders.credentials')}</th>
                   <th scope="col">{t('seeders.actions')}</th>
                 </tr>
               </thead>
@@ -388,33 +364,34 @@ export function Seeders(): ReactElement {
                     }}
                   >
                     <td>
-                      <span className="row__label">{seeder.name}</span>{' '}
-                      <Chip tone={seeder.version ? 'ok' : 'notice'}>
-                        {seeder.version
-                          ? `v${seeder.version}`
-                          : t('seeders.versionUnknown')}
-                      </Chip>
-                      <br />
-                      <span className="row__id">{seeder.url}</span>
-                    </td>
-                    <td>
-                      <Chip
-                        tone={
-                          seeder.status === 'online'
-                            ? 'ok'
-                            : seeder.status === 'offline'
-                              ? 'bad'
-                              : 'notice'
-                        }
-                      >
-                        {t(
-                          seeder.status === 'online'
-                            ? 'seeders.statusOnline'
-                            : seeder.status === 'offline'
-                              ? 'seeders.statusOffline'
-                              : 'seeders.statusUnknown',
-                        )}
-                      </Chip>
+                      <span className="row__cell">
+                        <span className="row__line">
+                          <span className="row__label">{seeder.name}</span>
+                          <Chip tone={statusTone(seeder.status)}>
+                            {t(statusKey(seeder.status))}
+                          </Chip>
+                          {/* Credentials never reach this screen — the API does not
+                              return them. The row can only say whether any are set. */}
+                          <span className="row__meta">
+                            ·{' '}
+                            {t(
+                              seeder.hasCredentials
+                                ? 'seeders.credentialsSet'
+                                : 'seeders.credentialsMissing',
+                            )}
+                          </span>
+                        </span>
+                        <span className="row__line">
+                          <Chip tone={seeder.version ? 'ok' : 'notice'}>
+                            {seeder.version
+                              ? `v${seeder.version}`
+                              : t('seeders.versionUnknown')}
+                          </Chip>
+                          <span className="row__id" title={seeder.url}>
+                            {seeder.url}
+                          </span>
+                        </span>
+                      </span>
                     </td>
                     <td>
                       {t('seeders.torrentCount', { count: String(seeder.torrentCount) })} ·{' '}
@@ -426,7 +403,6 @@ export function Seeders(): ReactElement {
                       </span>
                       <br />
                       <span className="row__meta">
-                        {seeder.sha ? `sha ${seeder.sha} · ` : ''}
                         {t('seeders.diskFree', {
                           free: bytes(seeder.freeBytes, locale),
                           total: bytes(seeder.totalBytes, locale),
@@ -447,12 +423,7 @@ export function Seeders(): ReactElement {
                       </span>
                     </td>
                     <td>
-                      {seeder.hasCredentials
-                        ? t('seeders.credentialsSet')
-                        : t('seeders.credentialsMissing')}
-                    </td>
-                    <td>
-                      <span className="cluster cluster--end">
+                      <span className="row__actions">
                         <Button
                           small
                           variant="secondary"
@@ -484,29 +455,6 @@ export function Seeders(): ReactElement {
                         >
                           {t('seeders.edit')}
                         </Button>
-                        <Button
-                          small
-                          variant="secondary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setConfirmingUpdate(seeder);
-                          }}
-                          busy={busy === `update-${seeder.id}`}
-                        >
-                          {t('seeders.updateSoftware')}
-                        </Button>
-                        <Button
-                          small
-                          variant="destructive"
-                          title={t('seeders.unlinkHint')}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void remove(seeder.id);
-                          }}
-                          busy={busy === `remove-${seeder.id}`}
-                        >
-                          {t('seeders.unlink')}
-                        </Button>
                       </span>
                     </td>
                   </tr>
@@ -516,26 +464,6 @@ export function Seeders(): ReactElement {
           </div>
         </Panel>
       )}
-      {confirmingUpdate ? (
-        <Modal title={t('seeders.updateTitle')} onClose={() => setConfirmingUpdate(null)}>
-          <div className="stack">
-            <p className="body">{t('seeders.updateBody')}</p>
-            <p className="fine-print">
-              {t('seeders.updateCurrent', {
-                version: confirmingUpdate.version ?? t('seeders.versionUnknown'),
-              })}
-            </p>
-            <div className="cluster cluster--end">
-              <Button variant="tertiary" onClick={() => setConfirmingUpdate(null)}>
-                {t('seeders.cancel')}
-              </Button>
-              <Button onClick={() => void updateSoftware(confirmingUpdate)}>
-                {t('seeders.updateConfirm')}
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      ) : null}
     </div>
   );
 }

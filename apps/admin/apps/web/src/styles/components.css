@@ -367,6 +367,52 @@
   font: var(--fine-print);
   color: var(--ink-secondary);
 }
+/* The identity stack. The name owns its line, so a version chip can never land in
+   the middle of a wrapped name, and the endpoint keeps its own line. */
+.row__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+/* A name is a label, not a column width: one long token must break rather than
+   push the traffic and action columns into wrapping. */
+.row__cell .row__label {
+  overflow-wrap: anywhere;
+}
+.row__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+.row__line .chip {
+  flex: 0 0 auto;
+}
+/* A URL is one token: it never breaks after "//", and a narrow column truncates
+   it instead of paying for a full-width endpoint with the actions column. */
+.row__line .row__id {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+/* Row actions keep one line and start at the same edge as their column header.
+   A wrapping cluster pushed to flex-end put the header above the last button. */
+.row__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  justify-content: flex-start;
+}
+.row__actions .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 
 /* ---------- tables ---------- */
 
@@ -395,6 +441,11 @@
 }
 .table tr:hover td {
   background: var(--canvas-parchment);
+}
+/* The traffic block is what this table is for, and it is four short lines: it
+   keeps its floor, and the name column yields instead of shredding those lines. */
+.table--seeders td:nth-child(2) {
+  min-width: 240px;
 }
 
 /* A row that opens a screen says so with the pointer and a focus ring. */

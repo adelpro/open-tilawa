@@ -80,8 +80,10 @@ The seeder reports `version`, `sha` and its free disk in `/health`; the Seeders
 screen stores them on every probe, so the row tells you which release a node
 runs and whether it has room for the next release.
 
-**From the dashboard** — *Seeders → Update software*. The action is intentionally
-narrow and off by default:
+**From the dashboard** — open the node's own screen (**Seeders →** click the row)
+and use *Update software*. Lifecycle actions live there, not on the list row: the
+list is for the fleet's state, that screen is for one node. The action is
+intentionally narrow and off by default:
 
 - it needs `SEEDER_UPDATE=1`, the host's Docker socket, and the repository
   mounted read-only at `/host` (all three are in the compose `admin-api` block);

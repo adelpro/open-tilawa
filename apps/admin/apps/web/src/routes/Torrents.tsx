@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
-import { linkProps } from '../lib/router';
+import { linkProps, navigate } from '../lib/router';
 import { bytes } from '../lib/format';
+import { riwayaLabel } from '../lib/riwaya';
 import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
@@ -46,6 +47,8 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
   const [picked, setPicked] = useState<string[]>([]);
   const [catalogueBusy, setCatalogueBusy] = useState<string | null>(null);
   const [confirmUntracked, setConfirmUntracked] = useState(false);
+  const [confirmingUpdate, setConfirmingUpdate] = useState<Seeder | null>(null);
+  const [confirmingUnlink, setConfirmingUnlink] = useState<Seeder | null>(null);
 
   const loadSeeders = useCallback(async () => {
     try {
@@ -204,6 +207,40 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
     );
   }, [catalogue, inventory]);
 
+  async function updateSoftware(seeder: Seeder): Promise<void> {
+    setConfirmingUpdate(null);
+    setBusy(`update-${seeder.id}`);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api<{ output: string; version: string | null }>(
+        `/seeders/${seeder.id}/update`,
+        { method: 'POST' },
+      );
+      setMessage(
+        t('seeders.updatedSoftware', { version: result.version ?? t('seeders.versionUnknown') }),
+      );
+      await loadSeeders();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function unlinkSeeder(seeder: Seeder): Promise<void> {
+    setConfirmingUnlink(null);
+    setBusy(`unlink-${seeder.id}`);
+    setError(null);
+    try {
+      await api(`/seeders/${seeder.id}`, { method: 'DELETE' });
+      // The row is gone, so is this screen's subject: back to the fleet.
+      navigate('/seeders');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.removeFailed'));
+      setBusy(null);
+    }
+  }
   async function removeUntracked(): Promise<void> {
     if (seederId === null) return;
     setConfirmUntracked(false);
@@ -287,12 +324,35 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
             if (!node) return null;
             // The node identifies its own build; nothing here is guessed.
             return (
-              <p className="body muted">
-                <Chip tone={node.version ? 'ok' : 'notice'}>
-                  {node.version ? `v${node.version}` : t('seeders.versionUnknown')}
-                </Chip>
-                {node.sha ? <span className="row__meta"> · sha {node.sha}</span> : null}
-              </p>
+              <div className="spread">
+                <p className="body muted">
+                  <Chip tone={node.version ? 'ok' : 'notice'}>
+                    {node.version ? `v${node.version}` : t('seeders.versionUnknown')}
+                  </Chip>
+                  {node.sha ? <span className="row__meta"> · sha {node.sha}</span> : null}
+                </p>
+                {/* Build and membership belong to this screen, not to the list row:
+                    the row is for the fleet's state, this is the one node's life. */}
+                <div className="cluster">
+                  <Button
+                    small
+                    variant="secondary"
+                    onClick={() => setConfirmingUpdate(node)}
+                    busy={busy === `update-${node.id}`}
+                  >
+                    {t('seeders.updateSoftware')}
+                  </Button>
+                  <Button
+                    small
+                    variant="destructive"
+                    title={t('seeders.unlinkHint')}
+                    onClick={() => setConfirmingUnlink(node)}
+                    busy={busy === `unlink-${node.id}`}
+                  >
+                    {t('seeders.unlink')}
+                  </Button>
+                </div>
+              </div>
             );
           })()}
         </Panel>
@@ -520,7 +580,7 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
                             <br />
                             <span className="row__id">{row.infohash.slice(0, 16)}…</span>
                           </td>
-                          <td>{row.riwaya}</td>
+                          <td>{riwayaLabel(row.riwaya, locale)}</td>
                           <td className="num">{bytes(row.sizeBytes, locale)}</td>
                           <td>
                             <Chip tone={onNode ? 'ok' : 'notice'}>
@@ -569,6 +629,41 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
               </Button>
               <Button variant="destructive" onClick={() => void removeUntracked()}>
                 {t('torrents.untrackedConfirm')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
+      {confirmingUpdate ? (
+        <Modal title={t('seeders.updateTitle')} onClose={() => setConfirmingUpdate(null)}>
+          <div className="stack">
+            <p className="body">{t('seeders.updateBody')}</p>
+            <p className="fine-print">
+              {t('seeders.updateCurrent', {
+                version: confirmingUpdate.version ?? t('seeders.versionUnknown'),
+              })}
+            </p>
+            <div className="cluster cluster--end">
+              <Button variant="tertiary" onClick={() => setConfirmingUpdate(null)}>
+                {t('seeders.cancel')}
+              </Button>
+              <Button onClick={() => void updateSoftware(confirmingUpdate)}>
+                {t('seeders.updateConfirm')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
+      {confirmingUnlink ? (
+        <Modal title={t('seeders.unlink')} onClose={() => setConfirmingUnlink(null)}>
+          <div className="stack">
+            <p className="body">{t('seeders.unlinkHint')}</p>
+            <div className="cluster cluster--end">
+              <Button variant="tertiary" onClick={() => setConfirmingUnlink(null)}>
+                {t('seeders.cancel')}
+              </Button>
+              <Button variant="destructive" onClick={() => void unlinkSeeder(confirmingUnlink)}>
+                {t('seeders.unlink')}
               </Button>
             </div>
           </div>

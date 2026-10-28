@@ -115,7 +115,7 @@ each piece does, which port it listens on, and how data moves between them.
   the reciter catalogue, the tracker list, and a torrent ↔ magnet tool.
 - **Adding a node:** the add form can queue the whole catalogue immediately
   (`POST /reciters/push { nodeIds }`, on by default); the push only ever adds and
-  skips what will not fit. The row then shows the node's reported version and
+  skips what will not fit. The node's own screen shows its reported version and
   build SHA, so "is this the release I published?" needs no shell.
 - **Unlinking:** the Remove action is called **Unlink** because that is all it
   does — `DELETE /api/seeders/:id` drops the dashboard row, and the node keeps
