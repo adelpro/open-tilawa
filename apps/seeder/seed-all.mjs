@@ -108,6 +108,112 @@ const client = new WebTorrent({
 });
 globalThis.wtClient = client;
 
+/**
+ * Who to announce to. `TRACKER_ANNOUNCE` overrides the built-in list — an empty
+ * value means announce nowhere, which is what the HTTP tests want: they are
+ * about the admin contract, not the swarm, and dialling seven public trackers
+ * per add makes them slow and flaky.
+ */
+const ANNOUNCE =
+  process.env.TRACKER_ANNOUNCE === undefined
+    ? TRACKERS
+    : process.env.TRACKER_ANNOUNCE.split(',')
+        .map((url) => url.trim())
+        .filter(Boolean);
+
+/**
+ * infoHash -> the .torrent file that would bring that hash back on next boot.
+ *
+ * The boot scan reads TORRENT_DIR, so a torrent whose file survives a delete is
+ * re-added by the next restart. Curated releases are not named after their hash,
+ * so this is recorded as each torrent is added rather than derived.
+ */
+const sourceFiles = new Map();
+
+/**
+ * Remember where a torrent's `.torrent` lives, writing one when it arrived as a
+ * magnet. Without this a magnet-added torrent is seeded until the container
+ * restarts and then silently disappears — the other half of "the node does not
+ * match the catalogue".
+ */
+function persistSource(torrent, source) {
+  if (typeof source === 'string' && source.endsWith('.torrent')) {
+    sourceFiles.set(torrent.infoHash, source);
+    return source;
+  }
+  const target = path.join(TORRENT_DIR, `${torrent.infoHash}.torrent`);
+  try {
+    fs.writeFileSync(target, torrent.torrentFile);
+    sourceFiles.set(torrent.infoHash, target);
+    return target;
+  } catch (error) {
+    log.warning(`could not persist ${torrent.infoHash} to ${TORRENT_DIR}: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Remove a torrent, its payload, and the file that would bring it back.
+ *
+ * Three separate defects lived here:
+ *  - `client.get()` is async, so the old `const torrent = client.get(hash)` held
+ *    a promise. It is truthy, has no `destroy` method, and every DELETE threw an
+ *    uncaught TypeError that killed the node mid-request. That is why deleting
+ *    from the console never worked.
+ *  - `destroy()` without `destroyStore` left every byte on disk.
+ *  - the `.torrent` stayed in TORRENT_DIR, so the boot scan re-added it.
+ */
+function removeTorrent(hash, res) {
+  const answer = (status, payload) => {
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(payload));
+  };
+
+  client
+    .get(hash)
+    .then((torrent) => {
+      if (!torrent) {
+        answer(404, { error: 'not found' });
+        return;
+      }
+      const infoHash = torrent.infoHash;
+      const finish = (error) => {
+        if (error) {
+          answer(500, { error: error.message });
+          return;
+        }
+        // The store deletes the files listed in the torrent, not the folder that
+        // held them: without this every reciter leaves an empty directory.
+        try {
+          const root = path.resolve(DOWNLOAD_PATH, torrent.name);
+          const base = path.resolve(DOWNLOAD_PATH);
+          if (root.startsWith(base + path.sep) && fs.existsSync(root) && fs.statSync(root).isDirectory()) {
+            fs.rmSync(root, { recursive: true, force: true });
+          }
+        } catch (error) {
+          log.warning(`could not remove ${torrent.name} from ${DOWNLOAD_PATH}: ${error.message}`);
+        }
+        const source = sourceFiles.get(infoHash);
+        if (source) {
+          try {
+            fs.unlinkSync(source);
+          } catch (error) {
+            if (error.code !== 'ENOENT') log.warning(`could not remove ${source}: ${error.message}`);
+          }
+          sourceFiles.delete(infoHash);
+        }
+        log.success(`Removed ${torrent.name} (${infoHash})`);
+        answer(200, { ok: true, infoHash });
+      };
+      if (torrent.destroyed) {
+        finish();
+        return;
+      }
+      torrent.destroy({ destroyStore: true }, finish);
+    })
+    .catch((error) => answer(400, { error: error.message }));
+}
+
 const torrentFiles = fs.readdirSync(TORRENT_DIR).filter(f => f.endsWith('.torrent'));
 log.info(`Found ${torrentFiles.length} torrent files in ${TORRENT_DIR}`);
 
@@ -115,7 +221,8 @@ for (const tf of torrentFiles) {
   const fullPath = path.join(TORRENT_DIR, tf);
   // Announce to our tracker as well as whatever the .torrent already lists:
   // without this the node seeds happily but is invisible on the tracker.
-  client.add(fullPath, { path: DOWNLOAD_PATH, announce: TRACKERS }, (torrent) => {
+  client.add(fullPath, { path: DOWNLOAD_PATH, announce: ANNOUNCE }, (torrent) => {
+    sourceFiles.set(torrent.infoHash, fullPath);
     log.success(`Seeding: ${torrent.name} (${torrent.infoHash}) — ${torrent.files.length} files`);
   });
 }
@@ -280,7 +387,7 @@ const server = http.createServer((req, res) => {
           });
           return;
         }
-        client.add(source, { path: DOWNLOAD_PATH, announce: TRACKERS }, (torrent) => {
+        client.add(source, { path: DOWNLOAD_PATH, announce: ANNOUNCE }, (torrent) => {
           // `xl` is a hint; the metadata length is the fact. Checking here aborts
           // before the payload moves, which is the only place a cap can hold.
           const settled = quotaCheck(torrent.length);
@@ -294,6 +401,7 @@ const server = http.createServer((req, res) => {
             });
             return;
           }
+          persistSource(torrent, source);
           clearTimeout(timer);
           answer(200, { ok: true, name: torrent.name, infoHash: torrent.infoHash });
         });
@@ -381,16 +489,7 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname.startsWith('/api/torrents/') && req.method === 'DELETE') {
     const hash = url.pathname.split('/').pop();
-    const torrent = client.get(hash);
-    if (!torrent) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'not found' }));
-      return;
-    }
-    torrent.destroy(() => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true }));
-    });
+    removeTorrent(hash, res);
     return;
   }
 
