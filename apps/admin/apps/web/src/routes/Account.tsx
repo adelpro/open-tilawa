@@ -244,7 +244,6 @@ export function Account(): ReactElement {
 
       {tab === 'profile' ? (
         <>
-          <h2 className="group-title">{t('account.group.profile')}</h2>
 
           <Panel tone="parchment">
             <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
@@ -589,7 +588,7 @@ export function Account(): ReactElement {
                 <tr>
                   <th>{t('account.devices.device')}</th>
                   <th>{t('account.devices.signedIn')}</th>
-                  <th aria-label={t('account.devices.actions')} />
+                  <th scope="col">{t('account.devices.actions')}</th>
                 </tr>
               </thead>
               <tbody>

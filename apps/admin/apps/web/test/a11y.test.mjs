@@ -120,10 +120,13 @@ describe('typography (A7, A8)', () => {
 });
 
 describe('headings and the account screen (A9, T13.8)', () => {
-  it('gives the account three groups with one heading level each', () => {
-    assert.match(account, /account\.group\.profile/);
+  it('gives the account its groups one heading level each', () => {
+    // Security and danger are groups the tab bar does not name, so they carry a label.
+    // The profile tab names its own region — an eyebrow repeating the tab was removed
+    // in the console audit (P2: "the account screen says profile twice").
     assert.match(account, /account\.group\.security/);
     assert.match(account, /account\.group\.danger/);
+    assert.equal(/account\.group\.profile/.test(account), false, 'the tab-named group grew an eyebrow');
     // Panel titles are h3 under those groups: no skipped level, no second h1.
     assert.equal(/<h2 className="display-sm"/.test(account), false, 'a panel title is still h2');
     assert.match(account, /<h3 className="display-sm"/);

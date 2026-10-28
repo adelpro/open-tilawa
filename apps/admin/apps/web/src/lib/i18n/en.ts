@@ -427,11 +427,12 @@ export const en = {
   'status.state': 'State',
   'status.version': 'Version',
   'status.latency': 'Latency',
-  'status.uptime': 'Uptime',
+  'status.uptime': 'Uptime (24h)',
   'status.headroom': 'Headroom',
   'status.ok': 'Up',
   'status.down': 'Down',
   'status.unknown': 'Unknown',
+  'status.timeline': 'Last 24 hours',
   'status.noChecks': 'no data',
   'status.loading': 'Loading status',
   'status.noNodes': 'No seeders registered.',
@@ -616,11 +617,10 @@ export const en = {
     'Menus, buttons and messages — this console is translated, the data it manages is not.',
   'prefs.saved': 'Saved.',
 
-  'account.group.profile': 'Profile',
   'account.group.security': 'Security',
   'account.group.danger': 'Delete your account',
 
-  'account.title': 'Your account.',
+  'account.title': 'Your account',
   'account.photo.title': 'Photo',
   'account.photo.uploaded': 'uploaded',
   'account.photo.fallback': 'Gravatar or initials',
@@ -693,7 +693,7 @@ export const en = {
 
   'common.save': 'Save',
   'common.cancel': 'Cancel',
-  'admin.title': 'Admin.',
+  'admin.title': 'Admin',
   'admin.owner': 'Owner',
   'admin.lede':
     'Search accounts, disable or enable them, and read gate health and audit. Roles and deletion are super-admin only.',
@@ -724,7 +724,7 @@ export const en = {
   'admin.recent': 'Recent admin and account actions',
   'admin.nothing': 'Nothing recorded yet.',
 
-  'super.title': 'Super admin.',
+  'super.title': 'Super admin',
   'super.lede':
     'Roles, deletion and platform health. The last active super admin cannot be demoted, disabled or deleted.',
   'super.makeAdmin': 'Make admin',

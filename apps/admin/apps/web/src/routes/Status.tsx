@@ -359,8 +359,9 @@ export function Status(): ReactElement {
 
 /** 24 hourly buckets, oldest first; an empty hour is a hairline, not a verdict. */
 function Timeline({ buckets }: { buckets: (number | null)[] }): ReactElement {
+  const { t } = useI18n();
   return (
-    <div className="timeline" role="img" aria-label="24h">
+    <div className="timeline" role="img" aria-label={t('status.timeline')}>
       {buckets.map((ratio, index) => (
         <span
           key={index}

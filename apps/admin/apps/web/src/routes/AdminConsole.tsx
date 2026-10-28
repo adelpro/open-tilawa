@@ -233,7 +233,7 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
                       <th>{t('common.email')}</th>
                       <th>{t('admin.role')}</th>
                       <th>{t('common.status')}</th>
-                      <th aria-label={t('admin.actions')} />
+                      <th scope="col">{t('admin.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -269,7 +269,7 @@ group.
 | #8c locale label | fixed; axe still reports — proven false positive |
 | #10 password `name` | fixed |
 | #11 link focus ring | fixed |
-| #4 px type scale | open |
+| #4 px type scale | fixed — `rem` scale; measured on the console 2026-10-28: a 24px root takes the h1 32 → 48 and body 17 → 25.5 with no overflow |
 | #5 card edge | open |
 | #7 tap targets | open |
 | #9 dead `theme.css` | open |

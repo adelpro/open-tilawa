@@ -428,11 +428,12 @@ export const ar: Catalogue = {
   'status.state': 'الحالة',
   'status.version': 'الإصدار',
   'status.latency': 'التأخير',
-  'status.uptime': 'الجهوزية',
+  'status.uptime': 'الجهوزية (24 ساعة)',
   'status.headroom': 'المتاح',
   'status.ok': 'يعمل',
   'status.down': 'متوقف',
   'status.unknown': 'غير معروف',
+  'status.timeline': 'سجل آخر 24 ساعة',
   'status.noChecks': 'لا بيانات',
   'status.loading': 'جارٍ تحميل الحالة',
   'status.noNodes': 'لا خوادم توزيع مسجّلة.',
@@ -612,11 +613,10 @@ export const ar: Catalogue = {
   'prefs.languageHint': 'القوائم والأزرار والرسائل — تُترجم هذه اللوحة، أما بياناتها فلا.',
   'prefs.saved': 'تم الحفظ.',
 
-  'account.group.profile': 'الملف',
   'account.group.security': 'الأمان',
   'account.group.danger': 'حذف الحساب',
 
-  'account.title': 'حسابك.',
+  'account.title': 'حسابك',
   'account.photo.title': 'الصورة',
   'account.photo.uploaded': 'مرفوعة',
   'account.photo.fallback': 'غرافاتار أو الحروف الأولى',
@@ -687,7 +687,7 @@ export const ar: Catalogue = {
 
   'common.save': 'حفظ',
   'common.cancel': 'إلغاء',
-  'admin.title': 'الإدارة.',
+  'admin.title': 'الإدارة',
   'admin.owner': 'المالك',
   'admin.lede':
     'ابحث عن الحسابات وعطّلها أو أعد تفعيلها، واطّلع على صحة البوابات والسجل. الأدوار والحذف للإدارة العليا فقط.',
@@ -718,7 +718,7 @@ export const ar: Catalogue = {
   'admin.recent': 'أحدث إجراءات الإدارة والحساب',
   'admin.nothing': 'لا شيء مسجّل بعد.',
 
-  'super.title': 'الإدارة العليا.',
+  'super.title': 'الإدارة العليا',
   'super.lede': 'الأدوار والحذف وصحة المنصة. لا يمكن تخفيض آخر مدير أعلى نشط أو تعطيله أو حذفه.',
   'super.makeAdmin': 'اجعله مديرًا',
   'super.makeUser': 'اجعله مستخدمًا',

@@ -140,9 +140,10 @@
 
   /* Sizes are `rem`, not `px`: the browser's own text-size setting scales `rem`
      and ignores `px`, so a `px` scale silently discards the preference a user
-     set — measured: a 24px root changed nothing on this page. 1rem is still
-     16px, so the design is pixel-identical at default settings. Line heights stay
-     unitless so they follow the size. */
+     set. Measured on the console: a 24px root takes the h1 from 32 to 48 and the
+     body from 17 to 25.5 with no overflow. 1rem is still 16px, so the design is
+     pixel-identical at default settings. Line heights stay unitless so they
+     follow the size. */
   --display-lg: 600 2.125rem/1.15 var(--font-sans);
   --display-xl: 600 4rem/1.05 var(--font-sans);
   --display-md: 600 1.75rem/1.2 var(--font-sans);

@@ -2146,6 +2146,14 @@ td.num {
   color: var(--ink-secondary);
 }
 
+/* Arabic has no case, and tracking on a cursive script pulls the joins apart, so the
+   label device there is weight: the same quiet label, without the two things that do
+   not exist in the script. */
+html[lang='ar'] .group-title {
+  letter-spacing: 0;
+  font-weight: 700;
+}
+
 /* ---------- password reveal ---------- */
 
 /*

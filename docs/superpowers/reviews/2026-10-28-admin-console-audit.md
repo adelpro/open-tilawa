@@ -332,7 +332,13 @@ re-measured on the same fixture:
 | #10 a link row containing buttons | **fixed** | `role="link"` and the row's `tabIndex` are gone from Seeders and Turns; the name is a real `<a>` and the row click stays as a mouse shortcut |
 | #11 a dialog that does not place focus | **fixed** | `FormModal` focuses the first field one frame after mount (measured on all five create dialogs); a question still keeps the panel's focus |
 | — | **bonus** | the dialog's focus effect depended on `close`, which is rebuilt on every parent render, so any re-render while a dialog was open pulled focus back to the panel. Split into a mount effect plus a ref-read listener — without it, a form lost focus on the first keystroke |
-| #12–#17 | queued | batch E of the plan |
+| #12 three page titles end with a full stop | **fixed** | `حسابك` / `الإدارة` / `الإدارة العليا` (and the EN twins) — one rule across all nine |
+| #13 the group label needs uppercase | **fixed** | `html[lang='ar'] .group-title` drops the tracking (it pulls Arabic joins apart) and carries the label by weight instead; measured `letter-spacing: normal`, `font-weight: 700` |
+| #14 the account says "profile" twice | **fixed** | the `الملف` eyebrow is gone; the tab names the region, `الأمان` and `حذف الحساب` keep their labels |
+| #15 the 24-hour strip has no reference | **fixed** | the strip's `aria-label` is translated and the number beside it names the window: `الجهوزية (24 ساعة): 99%` |
+| #16 two notes claim the type scale is broken | **fixed** | `tokens.css` and the earlier audit's status row now carry the measurement |
+| #17 the console's actions column has no header | **fixed** | `الإجراءات`; the account's device table got the same treatment |
+| — | done | the audit's plan (`docs/superpowers/plans/2026-10-28-admin-console-audit-fixes.md`) is complete: batches A–E |
 
 ## How to re-verify
 
