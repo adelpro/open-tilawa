@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.6.2 — 2026-10-29
+
+Patch. App versions: **web 1.8.1**, **admin 1.25.2**, **seeder 1.4.3**.
+
+Three readouts that were wrong at the edges: a fractional speed, a quiet
+recitation, and a healthy relay on a high address.
+
+### Fixed
+
+- **A sub-byte transfer reads `0 B/s`.** WebTorrent reports fractional speeds
+  (0.8 B/s); a negative unit exponent indexed off the start of the ladder and
+  the stream sheet printed `819 undefined/s`. The admin seeder readout carried
+  the same formula.
+- **A healthy TURN server on a 154.x address is reported as online.** The IPv4
+  XOR decode used a signed `^`, so any first octet ≥ `0x80` threw and coturn's
+  correct reply was logged as a malformed STUN reply.
+- **The wave holds its height.** Recitation peaks sit at 0.05–0.2 of full scale,
+  so the ribbon drew a ripple on the floor; an automatic gain lifts a quiet
+  recitation toward the block without attenuating a loud one.
+
+### Changed
+
+- **The wave settles instead of flickering.** The gain and the envelope it
+  follows are low-passed and the layers follow more slowly, so the strip
+  breathes with the recitation rather than twitching on every syllable.
+
 ## 1.6.1 — 2026-10-29
 
 Patch. App versions: **web 1.8.0**, **admin 1.25.1**, **seeder 1.4.3**.
