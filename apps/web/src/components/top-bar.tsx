@@ -33,12 +33,18 @@ export default function TopBar({
       {/* Desktop navigation: three words, no sandwich. The two lists are the
           same panels the phone opens, just reachable from here as well. */}
       <nav className="hidden items-center gap-5 text-[13px] text-muted lg:flex" aria-label={t.brand}>
+        <a href="#/" className="transition-colors hover:text-ink">
+          {t.routes.listen}
+        </a>
         <button type="button" onClick={onOpenReciters} className="transition-colors hover:text-ink">
           {t.sheets.reciters}
         </button>
         <button type="button" onClick={onOpenSurahs} className="transition-colors hover:text-ink">
           {t.sheets.surahs}
         </button>
+        <a href="#/settings" className="transition-colors hover:text-ink">
+          {t.routes.settings}
+        </a>
         <a href="#/about" className="transition-colors hover:text-ink">
           {t.routes.about}
         </a>
