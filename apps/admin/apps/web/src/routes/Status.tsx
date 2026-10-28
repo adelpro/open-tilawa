@@ -10,6 +10,7 @@ import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { FormModal } from '../components/FormModal';
 
 interface ServiceOverview {
   id: number;
@@ -145,9 +146,7 @@ export function Status(): ReactElement {
           <Button variant="secondary" onClick={() => void checkNow()} busy={busy === 'check'}>
             {t('status.checkNow')}
           </Button>
-          <Button onClick={() => setShowAdd(!showAdd)}>
-            {showAdd ? t('status.cancel') : t('status.add')}
-          </Button>
+          <Button onClick={() => setShowAdd(true)}>{t('status.add')}</Button>
         </div>
       </header>
 
@@ -155,34 +154,30 @@ export function Status(): ReactElement {
       {message ? <Notice tone="ok">{message}</Notice> : null}
 
       {showAdd ? (
-        <Panel>
-          <div className="stack">
-            <Field label={t('status.name')}>
-              {(id) => (
-                <Input id={id} value={name} onChange={(event) => setName(event.target.value)} />
-              )}
-            </Field>
-            <Field label={t('status.url')} hint={t('status.urlHint')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={url}
-                  onChange={(event) => setUrl(event.target.value)}
-                  placeholder="https://example.com/health"
-                />
-              )}
-            </Field>
-            <div className="cluster">
-              <Button
-                onClick={() => void addService()}
-                busy={busy === 'add'}
-                disabled={!name.trim() || !url.trim()}
-              >
-                {t('status.addSubmit')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        <FormModal
+          title={t('status.add')}
+          submitLabel={t('status.addSubmit')}
+          onSubmit={() => void addService()}
+          onClose={() => setShowAdd(false)}
+          busy={busy === 'add'}
+          disabled={!name.trim() || !url.trim()}
+        >
+          <Field label={t('status.name')}>
+            {(id) => (
+              <Input id={id} value={name} onChange={(event) => setName(event.target.value)} />
+            )}
+          </Field>
+          <Field label={t('status.url')} hint={t('status.urlHint')}>
+            {(id) => (
+              <Input
+                id={id}
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+                placeholder="https://example.com/health"
+              />
+            )}
+          </Field>
+        </FormModal>
       ) : null}
 
       {overview === null ? (

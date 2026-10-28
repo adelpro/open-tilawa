@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
-import { navigate } from '../lib/router';
+import { linkProps, navigate } from '../lib/router';
 import { bytes } from '../lib/format';
 import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
+import { FormModal } from '../components/FormModal';
 import { SkeletonRows } from '../components/Skeleton';
 import type { Seeder } from '../lib/types-seeders';
 
@@ -197,9 +198,7 @@ export function Seeders(): ReactElement {
           <Button variant="secondary" onClick={() => void pollAll()} busy={busy === 'poll-all'}>
             {t('seeders.pollAll')}
           </Button>
-          <Button onClick={() => setShowAdd(!showAdd)}>
-            {showAdd ? t('seeders.cancel') : t('seeders.add')}
-          </Button>
+          <Button onClick={() => setShowAdd(true)}>{t('seeders.add')}</Button>
         </div>
       </header>
 
@@ -207,8 +206,14 @@ export function Seeders(): ReactElement {
       {message ? <Notice tone="ok">{message}</Notice> : null}
 
       {showAdd ? (
-        <Panel>
-          <div className="stack">
+        <FormModal
+          title={t('seeders.add')}
+          submitLabel={t('seeders.addSubmit')}
+          onSubmit={() => void add()}
+          onClose={() => setShowAdd(false)}
+          busy={busy === 'add'}
+          disabled={!newName.trim() || !newUrl.trim()}
+        >
             <Field label={t('seeders.name')}>
               {(id) => (
                 <Input
@@ -258,25 +263,24 @@ export function Seeders(): ReactElement {
               </label>
               <p className="fine-print">{t('seeders.fillOnAddHint')}</p>
             </div>
-            <div className="cluster">
-              <Button
-                onClick={() => void add()}
-                busy={busy === 'add'}
-                disabled={!newName.trim() || !newUrl.trim()}
-              >
-                {t('seeders.addSubmit')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        </FormModal>
       ) : null}
 
       {editing ? (
-        <Panel tone="parchment">
-          <h2 className="group-title">
-            {t('seeders.editTitle')} — {editing.name}
-          </h2>
-          <div className="stack">
+        <FormModal
+          title={`${t('seeders.editTitle')} — ${editing.name}`}
+          submitLabel={t('common.save')}
+          onSubmit={() => void saveEdit()}
+          onClose={() => setEditing(null)}
+          busy={busy === 'edit'}
+          extra={
+            editing.hasCredentials ? (
+              <Button variant="destructive" onClick={() => void clearCredentials(editing.id)}>
+                {t('seeders.clearCredentials')}
+              </Button>
+            ) : null
+          }
+        >
             <Field label={t('seeders.name')}>
               {(id) => (
                 <Input
@@ -314,21 +318,7 @@ export function Seeders(): ReactElement {
                 />
               )}
             </Field>
-            <div className="cluster">
-              <Button onClick={() => void saveEdit()} busy={busy === 'edit'}>
-                {t('common.save')}
-              </Button>
-              <Button variant="tertiary" onClick={() => setEditing(null)}>
-                {t('seeders.cancel')}
-              </Button>
-              {editing.hasCredentials ? (
-                <Button variant="destructive" onClick={() => void clearCredentials(editing.id)}>
-                  {t('seeders.clearCredentials')}
-                </Button>
-              ) : null}
-            </div>
-          </div>
-        </Panel>
+        </FormModal>
       ) : null}
 
       {seeders === null ? (
@@ -353,20 +343,14 @@ export function Seeders(): ReactElement {
                   <tr
                     key={seeder.id}
                     className="table__row--clickable"
-                    tabIndex={0}
-                    role="link"
                     onClick={() => navigate(`/torrents/${seeder.id}`)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        navigate(`/torrents/${seeder.id}`);
-                      }
-                    }}
                   >
                     <td>
                       <span className="row__cell">
                         <span className="row__line">
-                          <span className="row__label">{seeder.name}</span>
+                          <a className="row__label" {...linkProps(`/torrents/${seeder.id}`)}>
+                            {seeder.name}
+                          </a>
                           <Chip tone={statusTone(seeder.status)}>
                             {t(statusKey(seeder.status))}
                           </Chip>

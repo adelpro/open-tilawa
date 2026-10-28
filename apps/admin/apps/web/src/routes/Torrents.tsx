@@ -12,6 +12,7 @@ import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { FormModal } from '../components/FormModal';
 import type { Seeder, SeederInventory } from '../lib/types-seeders';
 
 interface Reciter {
@@ -284,11 +285,11 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
           </Button>
           <Button
             onClick={() => {
-              setShowAdd(!showAdd);
+              setShowAdd(true);
               if (seederId !== null) void loadFiles(seederId);
             }}
           >
-            {showAdd ? t('torrents.cancel') : t('torrents.add')}
+            {t('torrents.add')}
           </Button>
         </div>
       </header>
@@ -360,9 +361,15 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
       ) : null}
 
       {showAdd && seederId !== null ? (
-        <Panel>
-          <div className="stack">
-            <div className="cluster" role="tablist" aria-label={t('torrents.addMode')}>
+        <FormModal
+          title={t('torrents.add')}
+          submitLabel={t('torrents.addSubmit')}
+          onSubmit={() => void addTorrent()}
+          onClose={() => setShowAdd(false)}
+          busy={busy === 'add'}
+          disabled={mode === 'magnet' ? !magnet.trim() : !torrentPath}
+        >
+          <div className="cluster" role="tablist" aria-label={t('torrents.addMode')}>
               <Button
                 small
                 variant={mode === 'magnet' ? 'primary' : 'secondary'}
@@ -408,17 +415,7 @@ export function Torrents({ seederId: routeId }: { seederId?: string }): ReactEle
                 )}
               </Field>
             )}
-            <div className="cluster">
-              <Button
-                onClick={() => void addTorrent()}
-                busy={busy === 'add'}
-                disabled={mode === 'magnet' ? !magnet.trim() : !torrentPath}
-              >
-                {t('torrents.addSubmit')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        </FormModal>
       ) : null}
 
       {inventory === null ? (

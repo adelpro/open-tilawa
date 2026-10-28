@@ -79,11 +79,24 @@ export function Modal({
     };
   }, []);
 
+  // The panel takes focus once, on mount. Kept out of the listener effect below:
+  // `close` is rebuilt whenever the caller re-renders (its `onClose` is usually an
+  // inline arrow), and re-running that effect used to pull focus back to the dialog
+  // on every keystroke — which breaks a form the moment its state lifts.
   useEffect(() => {
     panel.current?.focus();
+  }, []);
+
+  // The listener reads the latest `close` through a ref, so it is attached once.
+  const closeRef = useRef(close);
+  useEffect(() => {
+    closeRef.current = close;
+  });
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (event.key === 'Escape' && dismissible) {
-        close();
+        closeRef.current();
         return;
       }
       if (event.key !== 'Tab') return;
@@ -107,7 +120,7 @@ export function Modal({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dismissible, close]);
+  }, [dismissible]);
 
   return (
     <div

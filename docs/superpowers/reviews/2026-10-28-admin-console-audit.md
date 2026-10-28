@@ -329,7 +329,10 @@ re-measured on the same fixture:
 | #6 row actions anchored to the cell edge | **fixed** | `.row__actions` in Turns, Reciters, AdminConsole and the torrents table; header-content edge minus first-button edge **0** on all four (was +10 / +6) |
 | #7 Reciters wraps in English | **fixed** | one button row in EN at 1440, left edge flush with its header (0) |
 | #8 three one-click destructives | **fixed** | `ConfirmModal` replaces the five hand-rolled dialogs and adds the three missing ones; every confirm is a question with `إلغاء` beside a distinct verb (`أزل`, `افصل الخادم`) |
-| #10–#11, #12–#17 | queued | batches D–E of the plan |
+| #10 a link row containing buttons | **fixed** | `role="link"` and the row's `tabIndex` are gone from Seeders and Turns; the name is a real `<a>` and the row click stays as a mouse shortcut |
+| #11 a dialog that does not place focus | **fixed** | `FormModal` focuses the first field one frame after mount (measured on all five create dialogs); a question still keeps the panel's focus |
+| — | **bonus** | the dialog's focus effect depended on `close`, which is rebuilt on every parent render, so any re-render while a dialog was open pulled focus back to the panel. Split into a mount effect plus a ref-read listener — without it, a form lost focus on the first keystroke |
+| #12–#17 | queued | batch E of the plan |
 
 ## How to re-verify
 

@@ -105,19 +105,19 @@
 ### Task D1: `FormModal`
 
 - **Files:** `src/components/FormModal.tsx` (new), `Modal.tsx` (initial-focus prop).
-- [ ] `Modal` gains `initialFocus?: RefObject<HTMLElement>`; when absent, the panel keeps focus (a question, not a form).
-- [ ] `FormModal` = `Modal` + `<form onSubmit>` + footer (`extra` destructive slot, cancel, submit that names its verb).
-- [ ] Test: `FormModal` renders a `<form>`, submits on Enter, and passes `initialFocus` to its first field.
+- [x] ~~`Modal` gains `initialFocus`~~ — done in `FormModal` instead: the form focuses its own first field one frame after mount, so a question keeps the panel's focus. One less prop, one fewer thing to get wrong at a call site.
+- [x] `FormModal` = `Modal` + `<form onSubmit>` + footer (`extra` destructive slot, cancel, submit that names its verb).
+- [x] Test: `FormModal` renders a `<form>`, submits on Enter, and passes `initialFocus` to its first field.
 
 ### Task D2–D4: migrate the eight forms
 
 - Seeders add/edit, Turns add/edit, Reciters add/edit, Status add, Torrents add.
-- [ ] Each migration deletes its inline `<Panel>` and makes the page-head button an opener, not a toggle.
-- [ ] Measure per screen: the list does not move when the form opens.
+- [x] Each migration deletes its inline `<Panel>` and makes the page-head button an opener, not a toggle.
+- [x] Measure per screen: the list does not move when the form opens.
 
 ### Task D5: the row stops being a link that contains buttons
 
-- [ ] `role="link"` rows in Seeders/Turns move their action buttons out of the link's name, or the row stops being a link and the name becomes the anchor.
+- [x] `role="link"` rows in Seeders/Turns move their action buttons out of the link's name, or the row stops being a link and the name becomes the anchor.
 
 ---
 

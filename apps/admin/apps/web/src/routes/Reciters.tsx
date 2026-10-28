@@ -10,6 +10,7 @@ import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { Modal } from '../components/Modal';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { FormModal } from '../components/FormModal';
 import { bytes } from '../lib/format';
 import { isUnclassified, riwayaLabel, riwayaOptions, riwayaValue } from '../lib/riwaya';
 import type { Seeder } from '../lib/types-seeders';
@@ -333,9 +334,7 @@ export function Reciters(): ReactElement {
           <Button variant="secondary" onClick={() => void openPush()} busy={pushBusy === 'load'}>
             {t('reciters.push')}
           </Button>
-          <Button onClick={() => setShowAdd(!showAdd)}>
-            {showAdd ? t('reciters.cancel') : t('reciters.add')}
-          </Button>
+          <Button onClick={() => setShowAdd(true)}>{t('reciters.add')}</Button>
         </div>
       </header>
 
@@ -343,11 +342,13 @@ export function Reciters(): ReactElement {
       {message ? <Notice tone="ok">{message}</Notice> : null}
 
       {editing ? (
-        <Panel tone="parchment">
-          <h2 className="group-title">
-            {t('reciters.editTitle')} — {editing.name}
-          </h2>
-          <div className="stack">
+        <FormModal
+          title={`${t('reciters.editTitle')} — ${editing.name}`}
+          submitLabel={t('common.save')}
+          onSubmit={() => void saveEdit()}
+          onClose={() => setEditing(null)}
+          busy={busy === 'edit'}
+        >
             <Field label={t('reciters.nameAr')} hint={t('reciters.nameArHint')}>
               {(id) => (
                 <Input
@@ -449,16 +450,7 @@ export function Reciters(): ReactElement {
                 <span className="row__meta"> — {t('reciters.publishedHint')}</span>
               </span>
             </label>
-            <div className="cluster">
-              <Button onClick={() => void saveEdit()} busy={busy === 'edit'}>
-                {t('common.save')}
-              </Button>
-              <Button variant="tertiary" onClick={() => setEditing(null)}>
-                {t('reciters.cancel')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        </FormModal>
       ) : null}
 
       {pushing ? (
@@ -572,8 +564,14 @@ export function Reciters(): ReactElement {
       ) : null}
 
       {showAdd ? (
-        <Panel>
-          <div className="stack">
+        <FormModal
+          title={t('reciters.add')}
+          submitLabel={t('reciters.addSubmit')}
+          onSubmit={() => void add()}
+          onClose={() => setShowAdd(false)}
+          busy={busy === 'add'}
+          disabled={!newName.trim() || !newInfohash.trim()}
+        >
             <Field label={t('reciters.name')} hint={t('reciters.nameHint')}>
               {(id) => (
                 <Input
@@ -676,17 +674,7 @@ export function Reciters(): ReactElement {
                 />
               )}
             </Field>
-            <div className="cluster">
-              <Button
-                onClick={() => void add()}
-                busy={busy === 'add'}
-                disabled={!newName.trim() || !newInfohash.trim()}
-              >
-                {t('reciters.addSubmit')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        </FormModal>
       ) : null}
 
       {reciters === null ? (

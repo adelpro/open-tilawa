@@ -40,6 +40,17 @@ describe('console audit — the dialog owns the viewport', () => {
   });
 });
 
+describe('console audit — the dialog does not steal focus back', () => {
+  it('focuses the panel once, outside the listener effect', () => {
+    assert.match(modal, /panel\.current\?\.focus\(\);\n  \}, \[\]\);/);
+  });
+
+  it('reads the current close handler through a ref', () => {
+    assert.match(modal, /closeRef\.current = close;/);
+    assert.match(modal, /closeRef\.current\(\);/);
+  });
+});
+
 describe('console audit — touch targets', () => {
   it('gives the small row action a 44px floor on a coarse pointer', () => {
     const coarse = styles.match(/@media \(pointer: coarse\) \{[\s\S]*?\n\}/)?.[0] ?? '';
@@ -123,6 +134,61 @@ describe('console audit — every destructive action asks first', () => {
       /<Modal title=\{t\('(reciters\.deleteTitle|torrents\.untrackedTitle|seeders\.updateTitle|seeders\.unlink)'\)/;
     assert.equal(handRolled.test(reciters), false);
     assert.equal(handRolled.test(torrents), false);
+  });
+});
+
+/* ---------- batch D: forms are dialogs ---------- */
+
+const formModal = read('components/FormModal.tsx');
+
+describe('console audit — one form host', () => {
+  it('every create and edit goes through FormModal', () => {
+    for (const [name, source] of [
+      ['Seeders', read('routes/Seeders.tsx')],
+      ['Turns', turns],
+      ['Reciters', reciters],
+      ['Status', status],
+      ['Torrents', torrents],
+    ]) {
+      assert.match(source, /FormModal/, `${name} has no FormModal`);
+      assert.equal(
+        /\{showAdd \? \(\s*<Panel/.test(source),
+        false,
+        `${name} still opens its add form in a panel`,
+      );
+      assert.equal(
+        /\{editing \? \(\s*<Panel/.test(source),
+        false,
+        `${name} still opens its edit form in a panel`,
+      );
+    }
+  });
+
+  it('focuses the first field, not the dialog', () => {
+    assert.match(formModal, /querySelector<HTMLElement>\('input, textarea, select'\)/);
+    assert.match(formModal, /requestAnimationFrame\(\(\) => field\.focus\(\)\)/);
+  });
+
+  it('submits on Enter and never submits a disabled form', () => {
+    assert.match(formModal, /onSubmit=\{\(event\) => \{/);
+    assert.match(formModal, /event\.preventDefault\(\);/);
+    assert.match(formModal, /if \(!busy && !disabled\) onSubmit\(\);/);
+  });
+});
+
+describe('console audit — a row is not a link full of buttons', () => {
+  it('drops role="link" from rows that carry buttons', () => {
+    for (const [name, source] of [
+      ['Seeders', read('routes/Seeders.tsx')],
+      ['Turns', turns],
+    ]) {
+      assert.equal(source.includes('role="link"'), false, `${name} still has a link row`);
+    }
+  });
+
+  it('gives the name a real anchor instead', () => {
+    assert.match(read('routes/Seeders.tsx'), /<a className="row__label" \{\.\.\.linkProps/);
+    assert.match(turns, /<a className="row__label" \{\.\.\.linkProps/);
   });
 });
 

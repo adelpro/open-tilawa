@@ -11,6 +11,7 @@ import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { CopyLine } from '../components/CopyLine';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { FormModal } from '../components/FormModal';
 import { linkProps } from '../lib/router';
 import type { Turn } from '../lib/types-seeders';
 
@@ -161,9 +162,7 @@ export function Turns(): ReactElement {
           <Button variant="secondary" onClick={() => void pollAll()} busy={busy === 'poll-all'}>
             {t('turns.pollAll')}
           </Button>
-          <Button onClick={() => setShowAdd(!showAdd)}>
-            {showAdd ? t('turns.cancel') : t('turns.add')}
-          </Button>
+          <Button onClick={() => setShowAdd(true)}>{t('turns.add')}</Button>
         </div>
       </header>
 
@@ -171,8 +170,14 @@ export function Turns(): ReactElement {
       {message ? <Notice tone="ok">{message}</Notice> : null}
 
       {showAdd ? (
-        <Panel>
-          <div className="stack">
+        <FormModal
+          title={t('turns.add')}
+          submitLabel={t('turns.addSubmit')}
+          onSubmit={() => void add()}
+          onClose={() => setShowAdd(false)}
+          busy={busy === 'add'}
+          disabled={!newName.trim() || !newHost.trim()}
+        >
             <Field label={t('turns.name')}>
               {(id) => (
                 <Input
@@ -268,28 +273,17 @@ export function Turns(): ReactElement {
               </div>
             </details>
 
-            <div className="cluster">
-              <Button
-                onClick={() => void add()}
-                busy={busy === 'add'}
-                disabled={!newName.trim() || !newHost.trim()}
-              >
-                {t('turns.addSubmit')}
-              </Button>
-              <Button variant="tertiary" onClick={() => setShowAdd(false)}>
-                {t('turns.cancel')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        </FormModal>
       ) : null}
 
       {editing ? (
-        <Panel tone="parchment">
-          <h2 className="group-title">
-            {t('turns.editTitle')} — {editing.name}
-          </h2>
-          <div className="stack">
+        <FormModal
+          title={`${t('turns.editTitle')} — ${editing.name}`}
+          submitLabel={t('common.save')}
+          onSubmit={() => void saveEdit()}
+          onClose={() => setEditing(null)}
+          busy={busy === 'edit'}
+        >
             <Field label={t('turns.name')}>
               {(id) => (
                 <Input
@@ -333,16 +327,7 @@ export function Turns(): ReactElement {
                 )}
               </Field>
             </div>
-            <div className="cluster">
-              <Button onClick={() => void saveEdit()} busy={busy === 'edit'}>
-                {t('common.save')}
-              </Button>
-              <Button variant="tertiary" onClick={() => setEditing(null)}>
-                {t('turns.cancel')}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        </FormModal>
       ) : null}
 
       {turns === null ? (
@@ -369,18 +354,12 @@ export function Turns(): ReactElement {
                   <tr
                     key={turn.id}
                     className="table__row--clickable"
-                    tabIndex={0}
-                    role="link"
                     onClick={() => navigate(`/turns/${turn.id}`)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        navigate(`/turns/${turn.id}`);
-                      }
-                    }}
                   >
                     <td>
-                      <span className="row__label">{turn.name}</span>
+                      <a className="row__label" {...linkProps(`/turns/${turn.id}`)}>
+                        {turn.name}
+                      </a>
                       <br />
                       <span className="row__id">{turn.url}</span>
                     </td>
