@@ -32,6 +32,23 @@ export function downsample(bins: Uint8Array, columns: number): number[] {
   return out;
 }
 
+/**
+ * Automatic gain for the wave. A time-domain peak of a voice sits around
+ * 0.05–0.2 of full scale, so a fixed gain either draws a ripple on the floor or
+ * clips the loud reciters. The gain lifts a quiet recording toward the block,
+ * never attenuates a loud one, and stays at 1 for true silence so a pause is not
+ * amplified into noise.
+ */
+const AUTO_TARGET = 0.9;
+const AUTO_FLOOR = 0.08;
+const AUTO_MAX = 3;
+const AUTO_SILENCE = 0.02;
+
+export function autoGain(envelope: number): number {
+  if (!Number.isFinite(envelope) || envelope < AUTO_SILENCE) return 1;
+  return Math.max(1, Math.min(AUTO_MAX, AUTO_TARGET / Math.max(envelope, AUTO_FLOOR)));
+}
+
 /** `#abc` and `#aabbcc` both, because the tokens are hand-edited. */
 function parseHex(value: string): [number, number, number] {
   const raw = value.trim().replace(/^#/, '');

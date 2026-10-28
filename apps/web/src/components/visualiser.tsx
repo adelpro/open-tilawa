@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react';
 
 import { getAnalyser } from '@/utils/audio-analyser';
-import { downsample, waveTints, type Visualiser as Model } from '@/utils/visualiser-models';
+import {
+  autoGain,
+  downsample,
+  waveTints,
+  type Visualiser as Model,
+} from '@/utils/visualiser-models';
 
 const BARS = 28;
 const GAP = 3;
@@ -14,10 +19,10 @@ const WAVE_POINTS = 240;
  * The front layer is drawn last, so it is the one you read first.
  */
 const WAVES = [
-  { gain: 2.6, follow: 0.13, shift: 0 },
-  { gain: 2.1, follow: 0.09, shift: 37 },
-  { gain: 1.7, follow: 0.065, shift: 83 },
-  { gain: 1.35, follow: 0.045, shift: 131 },
+  { gain: 2.6, follow: 0.1, shift: 0 },
+  { gain: 2.1, follow: 0.07, shift: 37 },
+  { gain: 1.7, follow: 0.05, shift: 83 },
+  { gain: 1.35, follow: 0.035, shift: 131 },
 ];
 /**
  * How opaque each filled layer is, front to back. Alpha is not the only depth
@@ -38,6 +43,15 @@ const FILL_GAIN = 0.65;
  * the difference.
  */
 const DATA_EVERY = 2;
+/**
+ * The envelope and the gain it produces are both low-passed. Snapping the gain
+ * to each frame's peak made the whole strip flicker on every transient: the
+ * attack alone is a quarter of the way per read, and the second stage takes
+ * about a third of a second. Long enough to breathe, not to lag the recitation.
+ */
+const ENVELOPE_ATTACK = 0.25;
+const ENVELOPE_RELEASE = 0.06;
+const AUTO_SMOOTH = 0.1;
 
 /**
  * The spectrum, in three shapes: bars, peaks and waves.
@@ -91,6 +105,10 @@ export default function Visualiser({
 
     let width = 0;
     let barWidth = 2;
+    // The wave's automatic gain and the envelope it follows, both updated in
+    // `tick` and read by `drawWaves`.
+    let auto = 1;
+    let envelope = 0;
 
     const measure = () => {
       width = canvas.clientWidth || 260;
@@ -145,9 +163,12 @@ export default function Visualiser({
         ctx.beginPath();
         ctx.moveTo(width, floor);
         for (let i = 0; i < samples.length; i += 1) {
-          const value = Math.min(1, Math.abs((samples[i] - 128) / 128) * style.gain * FILL_GAIN);
+          const value = Math.min(
+            1,
+            Math.abs((samples[i] - 128) / 128) * auto * style.gain * FILL_GAIN,
+          );
           const x = width - i * step;
-          const y = height - Math.max(1.5, Math.pow(value, 0.85) * amplitude);
+          const y = height - Math.max(1.5, Math.pow(value, 0.7) * amplitude);
           ctx.lineTo(x, y);
         }
         ctx.lineTo(0, floor);
@@ -215,6 +236,14 @@ export default function Visualiser({
 
         if (model === 'ribbon') {
           analyser.getByteTimeDomainData(time);
+          // One envelope for the whole strip: the four layers share a signal,
+          // so a per-layer gain would flatten the ladder, not extend it.
+          let peak = 0;
+          for (let i = 0; i < time.length; i += 1) {
+            peak = Math.max(peak, Math.abs(time[i] - 128) / 128);
+          }
+          envelope += (peak - envelope) * (peak > envelope ? ENVELOPE_ATTACK : ENVELOPE_RELEASE);
+          auto += (autoGain(envelope) - auto) * AUTO_SMOOTH;
           for (let layer = 0; layer < WAVES.length; layer += 1) {
             const style = WAVES[layer];
             const samples = waves.current[layer];

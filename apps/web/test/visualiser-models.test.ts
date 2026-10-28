@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
+  autoGain,
   downsample,
   mixHex,
   normaliseVisualiser,
@@ -36,6 +37,26 @@ test('mixHex walks one colour toward another and clamps its position', () => {
   assert.equal(mixHex('#000000', '#ffffff', 4), '#ffffff');
   // Shorthand in, long form out: canvas takes neither, but the ramp does.
   assert.equal(mixHex('#fff', '#000', 0), '#ffffff');
+});
+
+// Recitation time-domain peaks land around 0.05-0.2 of full scale, so the wave
+// drew a ripple on the floor. The gain lifts a quiet recording toward the block
+// height, never attenuates a loud one, and leaves true silence alone.
+test('autoGain lifts a quiet signal, caps the boost, and leaves silence flat', () => {
+  assert.equal(autoGain(0), 1);
+  assert.equal(autoGain(0.01), 1);
+  assert.equal(autoGain(0.05), 3);
+  assert.equal(autoGain(0.1), 3);
+  assert.equal(autoGain(0.3), 3);
+  assert.equal(autoGain(0.45), 2);
+  assert.equal(autoGain(0.9), 1);
+  assert.equal(autoGain(1), 1);
+  assert.equal(autoGain(Number.NaN), 1);
+  // Whatever the input, the gain stays within the block's budget.
+  for (const peak of [0, 0.02, 0.08, 0.2, 0.5, 1, 4]) {
+    const gain = autoGain(peak);
+    assert.ok(gain >= 1 && gain <= 3, `gain ${gain} for peak ${peak}`);
+  }
 });
 
 test('waveTints lays four even steps from the front tint to the back one', () => {
