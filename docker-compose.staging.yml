@@ -1,14 +1,23 @@
 # Staging deployment for open-tilawa
+#
+# These ports are deliberately *not* `EDGE_PORT`/`TRACKER_PORT`: those are the
+# production values in `.env`, and compose reads `.env` for both stacks. Staging
+# was created with `${EDGE_PORT:-8084}` and therefore bound the production edge
+# port — the tunnel sends `tilawa.quran.us.kg` to 8084, so the public production
+# hostname was serving the staging build while `staging-tilawa.quran.us.kg`
+# (tunnel → 8086) answered nothing at all.
 services:
   edge:
     image: nginx:alpine
     container_name: open-tilawa-staging-edge
     ports:
-      - "127.0.0.1:${EDGE_PORT:-8086}:80"
+      - "127.0.0.1:${STAGING_EDGE_PORT:-8086}:80"
     volumes:
       - ./edge/templates:/etc/nginx/templates:ro
     environment:
-      TRACKER_PORT: ${TRACKER_PORT:-8087}
+      # The tracker image's CMD pins `--port 8083`, so this is the port the edge
+      # must dial inside the network — it is not the host port.
+      TRACKER_PORT: 8083
       TRACKER_PATH: ${TRACKER_PATH:-/}
     depends_on:
       - tracker
@@ -33,9 +42,11 @@ services:
       dockerfile: apps/tracker/Dockerfile
     container_name: open-tilawa-staging-tracker
     environment:
-      PORT: ${TRACKER_PORT:-8087}
+      # Pinned by the image's CMD (`--port 8083`); publishing any other container
+      # port would map the host to a closed socket, which is what 8087:8087 did.
+      PORT: 8083
     ports:
-      - "127.0.0.1:${TRACKER_PORT:-8087}:${TRACKER_PORT:-8087}"
+      - "127.0.0.1:${STAGING_TRACKER_PORT:-8087}:8083"
     restart: unless-stopped
     networks: [open-tilawa-staging]
 
