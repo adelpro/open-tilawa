@@ -7,7 +7,9 @@
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const;
 
 function scaled(bytes: number): { value: number; unit: string } {
-  if (!Number.isFinite(bytes) || bytes <= 0) return { value: 0, unit: 'B' };
+  // Below one byte there is no unit: a negative exponent indexes off the start
+  // of UNITS and multiplies the value back up ("0.8" once printed "819 undefined").
+  if (!Number.isFinite(bytes) || bytes < 1) return { value: 0, unit: 'B' };
   const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), UNITS.length - 1);
   return { value: bytes / 1024 ** exponent, unit: UNITS[exponent] };
 }

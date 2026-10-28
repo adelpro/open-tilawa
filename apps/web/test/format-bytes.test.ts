@@ -18,3 +18,10 @@ test('formatSpeed keeps a stalled transfer a real speed', () => {
   assert.equal(formatSpeed(2.5 * 1024 ** 2), '2.5 MB/s');
   assert.equal(formatSpeed(null), '—');
 });
+
+// WebTorrent reports fractional speeds (0.8 B/s). A negative exponent indexed
+// past the start of UNITS and printed "819 undefined/s".
+test('sub-byte sizes and rates stay at zero, never a phantom unit', () => {
+  assert.equal(formatBytes(0.8), '0 B');
+  assert.equal(formatSpeed(0.8), '0 B/s');
+});

@@ -82,7 +82,9 @@ export function bytes(
 ): string {
   const suffix = perSecond ? '/s' : '';
   if (value === null || value === undefined || !Number.isFinite(value)) return `—${suffix}`;
-  if (value <= 0) return `0 B${suffix}`;
+  // A seeder can report a fractional speed (0.8 B/s). Below one byte there is
+  // no unit: a negative exponent indexes off the start of the ladder.
+  if (value < 1) return `0 B${suffix}`;
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   const exponent = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
   const scaled = value / 1024 ** exponent;
