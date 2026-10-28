@@ -5,6 +5,7 @@ import { gun, user, type GunAck } from './index';
 import { ensureUserSchema } from './ensure-user-schema';
 import { touchDevice } from '@/hooks/use-user-sync';
 import { gunLoggedInAtom, gunUserPubAtom, gunUserAliasAtom } from '@/jotai/gun';
+import { getOrCreateDeviceName } from '@/utils/device/device-name';
 
 const store = getDefaultStore();
 
@@ -43,15 +44,14 @@ function publish(): void {
     store.set(gunUserAliasAtom, null);
     return;
   }
-  store.set(gunUserAliasAtom, null);
+  // Never leave the sheet showing an em dash: the device name is a truthful
+  // placeholder until the account's own name arrives from the relay.
+  store.set(gunUserAliasAtom, getOrCreateDeviceName());
   user
     .get('profile')
     .get('name')
     .once((stored: unknown) => {
-      store.set(
-        gunUserAliasAtom,
-        typeof stored === 'string' && stored.trim() ? stored : `${pub.slice(0, 6)}…${pub.slice(-4)}`,
-      );
+      if (typeof stored === 'string' && stored.trim()) store.set(gunUserAliasAtom, stored);
     });
 }
 

@@ -8,6 +8,8 @@ import { cn } from '@/utils/cn';
 const READER_ID = 'tilawa-qr-reader';
 const card = 'rounded-xl border border-line p-3';
 const action = 'mt-2.5 w-full rounded-xl px-3 py-2 text-[13px] transition-colors';
+const field =
+  'w-full rounded-xl border border-line bg-transparent px-3 py-2 text-[13px] text-ink outline-none focus:border-ink';
 
 type Mode = 'share' | 'scan';
 
@@ -18,6 +20,10 @@ type Mode = 'share' | 'scan';
  * `scan` is the other side: a device with no key reads a ticket to join. The two
  * are never offered together, because a device that is already in the ring has
  * nothing to scan — it would only be trying to join a second ring.
+ *
+ * Both halves have a camera-less path. A desktop has no camera to point at a
+ * phone, and a phone may refuse the permission, so the ticket can always be
+ * copied as text and pasted on the other side.
  */
 export default function LinkDevice({
   mode,
@@ -34,13 +40,17 @@ export default function LinkDevice({
   const { getPair, authWithPair } = useGun();
 
   const [qr, setQr] = useState<string | null>(null);
+  const [ticketText, setTicketText] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [wantScan, setWantScan] = useState(false);
+  const [manual, setManual] = useState(false);
+  const [pasted, setPasted] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const scannerRef = useRef<{ stop: () => Promise<void>; clear: () => void } | null>(null);
-  const aliveRef = useRef(true);
 
   const stopScanner = useCallback(async () => {
     const scanner = scannerRef.current;
@@ -65,7 +75,6 @@ export default function LinkDevice({
 
   useEffect(
     () => () => {
-      aliveRef.current = false;
       void stopScanner();
     },
     [stopScanner],
@@ -79,6 +88,7 @@ export default function LinkDevice({
       setSecondsLeft(left);
       if (left === 0) {
         setQr(null);
+        setTicketText(null);
         setExpiresAt(null);
       }
     };
@@ -86,6 +96,29 @@ export default function LinkDevice({
     const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
   }, [expiresAt]);
+
+  const finishJoin = useCallback(
+    async (text: string) => {
+      const ticket = parseTicket(text);
+      if (!ticket) {
+        setMessage(copy.manualInvalid);
+        return;
+      }
+      setBusy(true);
+      try {
+        const pair = await redeemTicket(ticket);
+        const ack = await authWithPair(pair);
+        if (ack.err) throw new Error(ack.err);
+        setMessage(copy.linked);
+        onLinked();
+      } catch (e) {
+        setMessage(e instanceof Error ? e.message : copy.codeFailed);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [authWithPair, copy, onLinked],
+  );
 
   /**
    * The camera is started from an effect, after the reader element is in the
@@ -110,15 +143,7 @@ export default function LinkDevice({
             const ticket = parseTicket(text);
             if (!ticket) return;
             await leaveCamera();
-            try {
-              const pair = await redeemTicket(ticket);
-              const ack = await authWithPair(pair);
-              if (ack.err) throw new Error(ack.err);
-              setMessage(copy.linked);
-              onLinked();
-            } catch (e) {
-              setMessage(e instanceof Error ? e.message : copy.codeFailed);
-            }
+            await finishJoin(text);
           },
           () => {
             // per-frame decode misses are normal, stay quiet
@@ -127,6 +152,8 @@ export default function LinkDevice({
       } catch {
         if (!cancelled) {
           setWantScan(false);
+          // A device without a camera is not an error state: offer the paste.
+          setManual(true);
           setMessage(copy.cameraUnavailable);
         }
       }
@@ -136,20 +163,34 @@ export default function LinkDevice({
       cancelled = true;
       void stopScanner();
     };
-  }, [wantScan, copy, leaveCamera, onLinked, authWithPair, stopScanner]);
+  }, [wantScan, copy, leaveCamera, finishJoin, stopScanner]);
 
   const showTicket = async () => {
     setMessage(null);
+    setCopied(false);
     try {
       const pair = getPair();
       if (!pair) throw new Error(copy.createAction);
       const ticket = await createPairingTicket(pair);
+      const text = encodeTicket(ticket);
       // ~50 kB of QR encoder, only for the one screen that draws a code.
       const { default: QRCode } = await import('qrcode');
-      setQr(await QRCode.toDataURL(encodeTicket(ticket), { margin: 1, width: 260 }));
+      setQr(await QRCode.toDataURL(text, { margin: 1, width: 260 }));
+      setTicketText(text);
       setExpiresAt(ticket.exp);
     } catch {
       setMessage(copy.codeFailed);
+    }
+  };
+
+  const copyTicket = async () => {
+    if (!ticketText) return;
+    try {
+      await navigator.clipboard.writeText(ticketText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setMessage(copy.copyFailed);
     }
   };
 
@@ -176,6 +217,13 @@ export default function LinkDevice({
           )}
         />
         <p className="text-center text-[11.5px] text-muted">{copy.scanHint}</p>
+        <button
+          type="button"
+          onClick={() => void leaveCamera().then(() => setManual(true))}
+          className="text-center text-[11.5px] text-muted underline underline-offset-2"
+        >
+          {copy.manualToggle}
+        </button>
         {message ? <p className="text-center text-[12px] text-muted">{message}</p> : null}
       </div>
     );
@@ -209,6 +257,39 @@ export default function LinkDevice({
           >
             {copy.scanStart}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMessage(null);
+              setManual((v) => !v);
+            }}
+            className="mt-1.5 w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink"
+          >
+            {copy.manualToggle}
+          </button>
+
+          {manual ? (
+            <div className="mt-2 space-y-2 border-t border-line pt-2.5">
+              <p className="text-[11.5px] leading-relaxed text-muted">{copy.manualNote}</p>
+              <textarea
+                value={pasted}
+                onChange={(e) => setPasted(e.target.value)}
+                rows={3}
+                dir="ltr"
+                placeholder={copy.manualPlaceholder}
+                aria-label={copy.manualToggle}
+                className={cn(field, 'resize-none font-mono text-[11px]')}
+              />
+              <button
+                type="button"
+                disabled={busy || !pasted.trim()}
+                onClick={() => void finishJoin(pasted.trim())}
+                className={cn(action, 'bg-ink text-invert', 'disabled:opacity-40')}
+              >
+                {busy ? '…' : copy.manualAction}
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -242,15 +323,22 @@ export default function LinkDevice({
             <p className="mt-2 text-[11.5px] text-muted">{copy.expiresIn(secondsLeft)}</p>
             <button
               type="button"
-              onClick={() => void showTicket()}
+              onClick={() => void copyTicket()}
               className="mt-3 w-full rounded-xl border border-line px-3 py-2 text-[13px] text-ink transition-colors hover:bg-line"
+            >
+              {copied ? copy.copied : copy.copyCode}
+            </button>
+            <button
+              type="button"
+              onClick={() => void showTicket()}
+              className="mt-1.5 w-full rounded-xl px-3 py-2 text-[12.5px] text-ink transition-colors hover:bg-line"
             >
               {copy.newCode}
             </button>
             <button
               type="button"
               onClick={() => setQr(null)}
-              className="mt-1.5 w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink"
+              className="mt-1 w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink"
             >
               {t.common.close}
             </button>

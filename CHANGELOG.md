@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.5.12 — 2026-10-27
+
+Minor. App versions: **web 1.7.0**, **admin 1.24.0**, **seeder 1.4.2**.
+
+### Added
+
+- **A ring has a name.** Creating one asks for it, prefilled with the device
+  name, so «حلقتك» reads «حلقة عادل» instead of a device label or an em dash.
+- **Joining without a camera.** A desktop has no camera to point at a phone, so
+  the pairing code can be copied as text («نسخ الرمز») and pasted on the other
+  device under «إدخال الرمز يدوياً». If the camera fails to open, that field
+  appears by itself instead of leaving the listener stuck on an error.
+
+### Fixed
+
+- **A fresh ring showed «0 أجهزة» and «لا أجهزة مسجّلة بعد».** The device row was
+  only added when the relay echoed it back, so the sheet contradicted itself for
+  the length of a round trip — or forever if the echo never came. The row goes
+  into the list immediately and the echo only confirms it.
+- **The ring name could render as «—».** It now falls back to the device name
+  while the account's own name is still in flight.
+
 ## 1.5.11 — 2026-10-27
 
 Patch. App versions: **web 1.6.1**, **admin 1.24.0**, **seeder 1.4.2**.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { useAtom, useAtomValue } from 'jotai';
+import { getDefaultStore, useAtom, useAtomValue } from 'jotai';
 
 import { user } from '@/gun';
 import {
@@ -42,21 +42,27 @@ function once<T = any>(node: any, timeout = 1500): Promise<T | null> {
   });
 }
 
-/** Writes this device's row so every linked device can see it in the list. */
+/**
+ * Writes this device's row so every linked device can see it in the list.
+ *
+ * The row is also put into the atom straight away: waiting for the relay echo
+ * left a freshly created ring showing «0 أجهزة» and «لا أجهزة مسجّلة بعد» for as
+ * long as the round trip took — or forever, if the echo never came.
+ */
 export function touchDevice(name?: string): void {
   if (!user.is) return;
+  const deviceId = getOrCreateDeviceId();
+  const row = {
+    id: deviceId,
+    name: name || getOrCreateDeviceName(),
+    pub: user.is.pub,
+    lastSeen: Date.now(),
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+  };
+  getDefaultStore().set(userDevicesAtom, (prev) => ({ ...prev, [deviceId]: row }));
+
   try {
-    const deviceId = getOrCreateDeviceId();
-    user
-      .get('devices')
-      .get(deviceId)
-      .put({
-        id: deviceId,
-        name: name || getOrCreateDeviceName(),
-        pub: user.is.pub,
-        lastSeen: Date.now(),
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      });
+    user.get('devices').get(deviceId).put(row);
 
     // The first device to register claims "primary". Never overwritten, so a
     // later device cannot take the badge.

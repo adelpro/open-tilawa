@@ -7,6 +7,7 @@ import LinkDevice from '@/components/account/link-device';
 import { useGun } from '@/hooks/use-gun';
 import { useLocale } from '@/hooks/use-locale';
 import { userDevicesAtom } from '@/jotai/gun';
+import { getOrCreateDeviceName } from '@/utils/device/device-name';
 import { cn } from '@/utils/cn';
 
 type Tab = 'devices' | 'add';
@@ -39,6 +40,7 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
   const [tab, setTab] = useState<Tab>('devices');
   const [confirmText, setConfirmText] = useState('');
   const [camera, setCamera] = useState(false);
+  const [ringName, setRingName] = useState(() => getOrCreateDeviceName());
 
   const deviceCount = Object.values(devices || {}).filter((d) => d?.id).length;
   const isLastDevice = deviceCount <= 1;
@@ -144,11 +146,22 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
             <div className={cn('rounded-xl border border-line p-3', camera && 'hidden')}>
               <p className="text-[13px] font-medium text-ink">{copy.createTitle}</p>
               <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.createNote}</p>
+              <label className="mt-2.5 block">
+                <span className="mb-1 block text-[11.5px] text-muted">{copy.ringName}</span>
+                <input
+                  value={ringName}
+                  onChange={(e) => setRingName(e.target.value)}
+                  placeholder={copy.ringName}
+                  aria-label={copy.ringName}
+                  maxLength={40}
+                  className="w-full rounded-xl border border-line bg-transparent px-3 py-2 text-[13.5px] text-ink outline-none focus:border-ink"
+                />
+              </label>
               <button
                 type="button"
-                disabled={loading}
-                onClick={() => void createAccount()}
-                className="mt-2.5 w-full rounded-xl bg-ink px-3 py-2.5 text-[13.5px] font-medium text-invert disabled:opacity-40"
+                disabled={loading || !ringName.trim()}
+                onClick={() => void createAccount(ringName)}
+                className="mt-2 w-full rounded-xl bg-ink px-3 py-2.5 text-[13.5px] font-medium text-invert disabled:opacity-40"
               >
                 {loading ? '…' : copy.createAction}
               </button>

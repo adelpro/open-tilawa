@@ -52,14 +52,14 @@ export function useGun() {
    * devices get it by scanning a pairing code.
    */
   const createAccount = useCallback(
-    () =>
+    (ringName?: string) =>
       run(async () => {
         const pair = await SEA.pair();
         const ack = await authPair(pair);
         if (!ack.err) {
           storePair(pair);
           user.get('profile').put({
-            name: getOrCreateDeviceName(),
+            name: (ringName || '').trim() || getOrCreateDeviceName(),
             createdAt: Date.now(),
             updatedAt: Date.now(),
           });
