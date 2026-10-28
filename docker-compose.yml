@@ -2,8 +2,7 @@
 # container, network and *volume* names from it: naming this `tilawa` would
 # orphan open-tilawa_seed_downloads (32 GB of audio) and open-tilawa_admin_data
 # (the catalogue), and Compose would quietly create two fresh empty volumes in
-# their place. Staging gets its own project name for the same reason — see
-# docker-compose.staging.yml.
+# their place. During the alpha this is the only environment.
 name: open-tilawa
 
 services:
