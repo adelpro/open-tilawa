@@ -9,6 +9,9 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+# One env file per stack: staging keeps its secrets here, not in .env.
+.env.*
+!.env.example
 
 # Docker/volumes
 *.tar.gz
@@ -30,3 +33,6 @@ dist/
 
 # Local plan-execution scratch (ledgers/briefs)
 .superpowers/
+
+# Screenshots captured while auditing; never part of a change
+.playwright-mcp/
