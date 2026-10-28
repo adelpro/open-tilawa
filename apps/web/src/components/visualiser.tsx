@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { getAnalyser } from '@/utils/audio-analyser';
-import { downsample, type Visualiser as Model } from '@/utils/visualiser-models';
+import { downsample, waveTints, type Visualiser as Model } from '@/utils/visualiser-models';
 
 const BARS = 28;
 const GAP = 3;
@@ -10,14 +10,28 @@ const WAVE_POINTS = 240;
 /**
  * Four waves, front to back. Each one reads the same time-domain signal with its
  * own smoothing and gain, so they breathe at different speeds and never collapse
- * into a single line: the quiet ones stay visible, the loud one reaches the top.
+ * into a single shape: the quiet ones stay visible, the loud one reaches the top.
+ * The front layer is drawn last, so it is the one you read first.
  */
 const WAVES = [
-  { gain: 2.6, alpha: 0.95, lineWidth: 1.6, follow: 0.13, shift: 0 },
-  { gain: 2.1, alpha: 0.5, lineWidth: 1.3, follow: 0.09, shift: 37 },
-  { gain: 1.7, alpha: 0.32, lineWidth: 1.1, follow: 0.065, shift: 83 },
-  { gain: 1.35, alpha: 0.2, lineWidth: 1, follow: 0.045, shift: 131 },
+  { gain: 2.6, follow: 0.13, shift: 0 },
+  { gain: 2.1, follow: 0.09, shift: 37 },
+  { gain: 1.7, follow: 0.065, shift: 83 },
+  { gain: 1.35, follow: 0.045, shift: 131 },
 ];
+/**
+ * How opaque each filled layer is, front to back. Alpha is not the only depth
+ * cue — the tint does that — but four layers at a flat 0.6 turn the ribbon into
+ * one slab, so the ladder stays wide: the front wash is solid enough to read as
+ * the near silhouette, the back one is a haze.
+ */
+const WAVE_ALPHA = [0.72, 0.55, 0.42, 0.3];
+/**
+ * A filled layer that saturates covers the three behind it, so the ribbon reads
+ * its gain down: the front silhouette still reaches most of the way up, and the
+ * stack keeps four edges instead of collapsing into one block on a loud passage.
+ */
+const FILL_GAIN = 0.65;
 /**
  * The analyser is read every other frame, not every frame: at 30 Hz with the
  * smoothing above the waves breathe instead of twitching, and no one can hear
@@ -28,10 +42,9 @@ const DATA_EVERY = 2;
 /**
  * The spectrum, in three shapes: bars, peaks and waves.
  *
- * Waves is the one that reads as a waveform: four layered traces of the same
- * signal, different smoothing and amplitude, mirrored around the floor and drawn
- * in ink. Paused, the block is empty: the canvas keeps its height so the
- * controls never jump.
+ * Waves is the one that reads as a waveform: four filled silhouettes of the same
+ * signal, different smoothing, amplitude and blue, stacked front to back. Paused,
+ * the block is empty: the canvas keeps its height so the controls never jump.
  */
 export default function Visualiser({
   playing,
@@ -58,7 +71,23 @@ export default function Visualiser({
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const inkNow = () => getComputedStyle(document.body).color || '#111111';
+
+    /**
+     * The palette, read once per theme instead of twice per frame: `draw` used to
+     * ask for the body's colour on every tick, which forces layout 60 times a
+     * second for a value that only changes when the theme does.
+     */
+    const readTokens = () => {
+      const styles = getComputedStyle(document.documentElement);
+      const pick = (name: string, fallback: string) =>
+        styles.getPropertyValue(name).trim() || fallback;
+      return {
+        tints: waveTints(pick('--wave-front', '#1c4d78'), pick('--wave-back', '#5d97c9')),
+        line: pick('--line', '#e8e8e8'),
+      };
+    };
+
+    let tokens = readTokens();
 
     let width = 0;
     let barWidth = 2;
@@ -82,6 +111,7 @@ export default function Visualiser({
     const barHeightFor = (level: number) => Math.max(3, Math.pow(level, 0.65) * height);
 
     const drawBars = () => {
+      ctx.fillStyle = tokens.tints[0];
       levels.current.forEach((level, index) => {
         const barHeight = barHeightFor(level);
         ctx.fillRect(xFor(index), height - barHeight, barWidth, barHeight);
@@ -96,36 +126,44 @@ export default function Visualiser({
       });
     };
 
+    /**
+     * Each layer is a closed silhouette: the trace, then the floor, filled in its
+     * own tint. Where four of them overlap the colour deepens, so the stack shows
+     * its depth without any layer having to be drawn as a hairline.
+     */
     const drawWaves = () => {
-      const amplitude = height - 10;
+      const amplitude = height - 12;
       const step = width / (WAVE_POINTS - 1);
+      const floor = height - 1;
 
-      // Back to front, so the brightest line is always the nearest one.
+      // Back to front, so the deepest tint is the nearest silhouette.
       for (let layer = WAVES.length - 1; layer >= 0; layer -= 1) {
         const style = WAVES[layer];
         const samples = waves.current[layer];
-        ctx.globalAlpha = style.alpha;
-        ctx.lineWidth = style.lineWidth;
+        ctx.fillStyle = tokens.tints[layer];
+        ctx.globalAlpha = WAVE_ALPHA[layer];
         ctx.beginPath();
+        ctx.moveTo(width, floor);
         for (let i = 0; i < samples.length; i += 1) {
-          const value = Math.min(1, Math.abs((samples[i] - 128) / 128) * style.gain);
+          const value = Math.min(1, Math.abs((samples[i] - 128) / 128) * style.gain * FILL_GAIN);
           const x = width - i * step;
           const y = height - Math.max(1.5, Math.pow(value, 0.85) * amplitude);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          ctx.lineTo(x, y);
         }
-        ctx.stroke();
+        ctx.lineTo(0, floor);
+        ctx.closePath();
+        ctx.fill();
       }
 
       ctx.globalAlpha = 1;
-      // A hairline along the baseline keeps the block from floating.
+      // The fill sits on the floor, so the floor itself only needs a hairline for
+      // the quiet passages where the silhouettes are a sliver.
+      ctx.fillStyle = tokens.line;
       ctx.fillRect(0, height - 1, width, 1);
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = inkNow();
-      ctx.strokeStyle = inkNow();
       ctx.globalAlpha = 1;
       if (model === 'peaks') drawPeaks();
       else if (model === 'ribbon') drawWaves();
@@ -142,10 +180,21 @@ export default function Visualiser({
     });
     observer.observe(canvas);
 
+    // The theme lives on <html> as `data-theme`, so the tints have to be re-read
+    // when it flips — during a playing track, without remounting the canvas.
+    const theme = new MutationObserver(() => {
+      tokens = readTokens();
+      draw();
+    });
+    theme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
     if (!playing) {
       // Nothing is playing, so nothing is drawn — not even the old shape.
       ctx.clearRect(0, 0, width, height);
-      return () => observer.disconnect();
+      return () => {
+        observer.disconnect();
+        theme.disconnect();
+      };
     }
 
     const bins = new Uint8Array(512);
@@ -186,6 +235,7 @@ export default function Visualiser({
     return () => {
       cancelAnimationFrame(frameRef.current);
       observer.disconnect();
+      theme.disconnect();
     };
   }, [playing, model, height]);
 

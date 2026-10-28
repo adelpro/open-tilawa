@@ -2,14 +2,13 @@ import { useEffect, useState } from 'react';
 
 import Icon from '@/components/icons';
 import Sheet from '@/components/sheet';
+import StreamSourceIcon from '@/components/stream-source-icon';
 import { useLocale } from '@/hooks/use-locale';
 import type { Messages } from '@/i18n/messages';
 import type { TorrentInfo } from '@/types';
 import { formatBytes, formatSpeed } from '@/utils/format-bytes';
+import type { StreamSource } from '@/utils/stream-source';
 import { probeMedia } from '@/utils/webseed';
-
-/** Where the sound is coming from right now. */
-export type StreamSource = 'connected' | 'waiting' | 'webseed' | 'mixed';
 
 type Row = { label: string; value: string; icon: 'users' | 'download' | 'upload' | 'activity' | 'file' };
 
@@ -92,7 +91,7 @@ export default function StreamSheet({
         <dl className="space-y-2.5">
           <div className="flex items-center justify-between gap-6">
             <dt className="flex items-center gap-2 text-[13px] text-muted">
-              <Icon name={source === 'webseed' || source === 'mixed' ? 'server' : 'wifi'} className="h-4 w-4" />
+              <StreamSourceIcon source={source} className="h-4 w-4" />
               {t.stream.source}
             </dt>
             <dd className="text-[13px] font-medium text-ink">{sourceLabel}</dd>

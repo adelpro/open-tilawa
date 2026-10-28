@@ -7,6 +7,7 @@ export type IconName =
   | 'chevron-right'
   | 'playlist'
   | 'wifi'
+  | 'wifi-waiting'
   | 'link'
   | 'mic'
   | 'search'
@@ -75,6 +76,16 @@ const GLYPHS = {
       <path {...STROKE} d="M4.5 9.5a11 11 0 0 1 15 0" />
       <path {...STROKE} d="M7.8 13a6.5 6.5 0 0 1 8.4 0" />
       <path {...STROKE} d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0" />
+    </>
+  ),
+  /* Same geometry, but the arcs answer one after another while nothing is
+     seeding. The animation is CSS (`.wifi-arc`), not SMIL, so the global
+     reduced-motion rule can switch it off. */
+  'wifi-waiting': (
+    <>
+      <path {...STROKE} className="wifi-arc" d="M4.5 9.5a11 11 0 0 1 15 0" />
+      <path {...STROKE} className="wifi-arc wifi-arc-2" d="M7.8 13a6.5 6.5 0 0 1 8.4 0" />
+      <path {...STROKE} className="wifi-dot" d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0" />
     </>
   ),
   users: (

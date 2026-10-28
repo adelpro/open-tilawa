@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PlayerFooter from '@/components/player-footer';
 import Scrubber from '@/components/scrubber';
 import Sheet, { ReciterSheet, SurahSheet } from '@/components/sheet';
-import StreamSheet, { type StreamSource } from '@/components/stream-sheet';
+import StreamSheet from '@/components/stream-sheet';
 import Transport from '@/components/transport';
 import Visualiser from '@/components/visualiser';
 import { surahById } from '@/constants/surah';
@@ -27,6 +27,7 @@ import {
 } from '@/jotai/player';
 import type { Reciter } from '@/types';
 import { seekBy } from '@/utils/clamp';
+import type { StreamSource } from '@/utils/stream-source';
 import { surahIdOf } from '@/utils/surah-id';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
 

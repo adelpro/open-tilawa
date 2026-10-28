@@ -8,8 +8,10 @@
  * Open Tilawa — one white screen.
  * See docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md.
  *
- * Five values. No second surface, no shadow, no accent colour, no theme
- * system: playback state is expressed by weight and the play glyph only.
+ * Seven values. No second surface, no shadow, no theme system: playback state
+ * is expressed by weight and the play glyph only. The spectrum is the one place
+ * colour is allowed, and it is one hue: --wave-front is the nearest layer,
+ * --wave-back the furthest, and the two between them are mixed in code.
  */
 :root {
   --bg: #ffffff;
@@ -21,10 +23,14 @@
      daylight that step is white; in the dark it has to lift, or a sheet and
      the screen behind it are one flat value and the layer disappears. */
   --surface: #ffffff;
+  /* Deep slate, not cyan: cool enough to belong to the neutrals, and 7.7:1 on
+     the page, so the filled waves read as ink that happens to be blue. */
+  --wave-front: #1c4d78;
+  --wave-back: #5d97c9;
   color-scheme: light;
 }
 
-/* The night palette: same five values, inverted. Nothing else changes. */
+/* The night palette: same seven values, inverted. Nothing else changes. */
 [data-theme='dark'] {
   --bg: #0b0b0c;
   --ink: #f2f2f2;
@@ -32,6 +38,8 @@
   --line: #262626;
   --invert: #0b0b0c;
   --surface: #19191a;
+  --wave-front: #a6c9ec;
+  --wave-back: #3d6b96;
   color-scheme: dark;
 }
 
@@ -188,6 +196,51 @@ input[type='search']::-webkit-search-decoration {
   }
   .press:active:not(:disabled) {
     transform: none;
+  }
+}
+
+/* "Looking for a peer": the wifi arcs arrive one after another, the way the
+   old open-quran icon did, but in CSS so the rule below can reach it. Every
+   keyframe ends on the *visible* value on purpose — the global reduced-motion
+   rule freezes each animation at its last frame, and an icon that dims to
+   nothing there would misreport the state. */
+.wifi-arc {
+  animation: wifi-arc 1.5s ease-in-out infinite;
+}
+
+.wifi-arc-2 {
+  animation-delay: 0.5s;
+}
+
+.wifi-dot {
+  animation: wifi-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes wifi-arc {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes wifi-dot {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wifi-arc,
+  .wifi-dot {
+    animation: none;
+    opacity: 1;
   }
 }
 

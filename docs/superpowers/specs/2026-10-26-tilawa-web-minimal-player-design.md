@@ -117,6 +117,23 @@ Five values, no theme system:
 - No shadows, no cards, no gradient, no accent colour. Playback state is
   expressed by weight and the play glyph only.
 
+### 8.1 Amendment — the spectrum is blue (2026-10-28)
+
+The one exception, added after the spectrum was drawn as a single ink line: four
+waves at one colour could only be told apart by opacity, and the two back layers
+(`0.32`, `0.2`) were near-invisible. The waves are now filled silhouettes, each
+in its own tint, and two values joined the palette:
+
+```
+--wave-front: #1c4d78   (deepest; #a6c9ec at night)
+--wave-back:  #5d97c9   (palest;  #3d6b96 at night)
+```
+
+The two tints between them are mixed in code (`waveTints`), so the ramp is four
+steps of one hue and never drifts toward the cyan the v2 shell was retired for.
+Everything else stands: no shadows, no cards, no second surface, no colour
+anywhere in the UI outside the canvas. Bars and peaks use `--wave-front` flat.
+
 ## 9. Files
 
 Survive: `audio-engine.tsx` (minus queue/mini-player coupling), `hooks/use-torrent.ts`,

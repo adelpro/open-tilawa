@@ -1,6 +1,7 @@
 import Icon from '@/components/icons';
-import type { StreamSource } from '@/components/stream-sheet';
+import StreamSourceIcon from '@/components/stream-source-icon';
 import { useLocale } from '@/hooks/use-locale';
+import type { StreamSource } from '@/utils/stream-source';
 import { cn } from '@/utils/cn';
 
 /**
@@ -136,7 +137,7 @@ export default function PlayerFooter({
               strokeDashoffset={ring * (1 - progress)}
             />
           </svg>
-          <Icon name={source === 'webseed' ? 'link' : 'wifi'} />
+          <StreamSourceIcon source={source} />
         </button>
       </div>
     </footer>

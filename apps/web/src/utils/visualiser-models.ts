@@ -1,7 +1,7 @@
 /**
- * The spectrum has five shapes. All of them read the same analyser and draw in
- * one colour; only the geometry differs, so switching costs no download and no
- * new dependency.
+ * The spectrum has three shapes. All of them read the same analyser and draw in
+ * the same blue; only the geometry differs, so switching costs no download and
+ * no new dependency.
  */
 export const VISUALISERS = ['bars', 'peaks', 'ribbon'] as const;
 
@@ -30,4 +30,36 @@ export function downsample(bins: Uint8Array, columns: number): number[] {
     out.push(peak / 255);
   }
   return out;
+}
+
+/** `#abc` and `#aabbcc` both, because the tokens are hand-edited. */
+function parseHex(value: string): [number, number, number] {
+  const raw = value.trim().replace(/^#/, '');
+  const full = raw.length === 3 ? raw.replace(/./g, (c) => c + c) : raw;
+  if (!/^[0-9a-f]{6}$/i.test(full)) return [0, 0, 0];
+  return [
+    Number.parseInt(full.slice(0, 2), 16),
+    Number.parseInt(full.slice(2, 4), 16),
+    Number.parseInt(full.slice(4, 6), 16),
+  ];
+}
+
+/**
+ * One step along the line from `from` to `to`. The spectrum's layers need four
+ * blues that differ in *colour*, not only in alpha: at alpha 0.2 the fourth
+ * trace was a ghost when it was ink, and a ghost tint is no tint at all.
+ */
+export function mixHex(from: string, to: string, t: number): string {
+  const a = parseHex(from);
+  const b = parseHex(to);
+  const clamped = Math.min(1, Math.max(0, t));
+  const channel = (i: number) => Math.round(a[i] + (b[i] - a[i]) * clamped)
+    .toString(16)
+    .padStart(2, '0');
+  return `#${channel(0)}${channel(1)}${channel(2)}`;
+}
+
+/** Front to back: the four tints the ribbon's layers are filled with. */
+export function waveTints(front: string, back: string): string[] {
+  return [0, 1 / 3, 2 / 3, 1].map((t) => mixHex(front, back, t));
 }
