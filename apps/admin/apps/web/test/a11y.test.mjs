@@ -27,7 +27,7 @@ const en = read('lib/i18n/en.ts');
 describe('landmarks and the skip link (A1, A10)', () => {
   it('starts every signed-in screen with a skip link to the main landmark', () => {
     assert.match(app, /className="skip-link" href="#main"/);
-    assert.match(app, /<main id="main"/);
+    assert.match(app, /<main\s+id="main"/);
   });
 
   it('names the navigation landmark', () => {

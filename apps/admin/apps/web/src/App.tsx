@@ -293,7 +293,17 @@ function Screens(): ReactElement {
         </div>
       </div>
 
-      <main id="main" className="shell__main" tabIndex={-1}>
+      <main
+        id="main"
+        className={
+          // A table with eight columns is unreadable at 1000px. Screens whose
+          // job is a table get the width; prose keeps its measure.
+          first === 'reciters' || first === 'seeders' || first === 'torrents'
+            ? 'shell__main shell__main--wide'
+            : 'shell__main'
+        }
+        tabIndex={-1}
+      >
         <Screen first={first} second={second} role={user.role} />
       </main>
     </div>

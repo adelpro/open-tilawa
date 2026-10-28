@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -23,6 +23,9 @@ interface PushNodePlan {
   present: number;
   skipReason: 'offline' | 'no_credentials' | 'low_space' | 'unreachable' | null;
   detail: string | null;
+  /** Reciters the 90 % cap left out of this node. */
+  skipped: number;
+  capBytes: number | null;
 }
 
 interface PushPlan {
@@ -30,6 +33,8 @@ interface PushPlan {
   nodes: PushNodePlan[];
   applied?: { seederId: number; added: number; error: string | null }[];
 }
+
+type SortKey = 'name' | 'riwaya' | 'size' | 'nodes' | 'published';
 
 interface ReciterPlacement {
   seederId: number;
@@ -92,6 +97,18 @@ export function Reciters(): ReactElement {
   /** The reciter whose placement panel is open, by id so a reload refreshes it. */
   const [placingId, setPlacingId] = useState<number | null>(null);
   const [placementBusy, setPlacementBusy] = useState<number | null>(null);
+  /** Column order. Clicking the active column flips it rather than resetting. */
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({
+    key: 'name',
+    dir: 'asc',
+  });
+  const [confirmPush, setConfirmPush] = useState<PushPlan | null>(null);
+  /**
+   * Which half of the catalogue is on screen. Defaults to published: those are
+   * the reciters the site offers, and the nineteen drafts made the table read as
+   * two dozen releases when three are live.
+   */
+  const [scope, setScope] = useState<'published' | 'drafts' | 'all'>('published');
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
   const [fetchNode, setFetchNode] = useState<number | null>(null);
   const [trackersOpen, setTrackersOpen] = useState(false);
@@ -275,7 +292,32 @@ export function Reciters(): ReactElement {
     }
   }
 
+  /**
+   * A push writes to every node at once. It asks first, with the numbers the
+   * plan already computed: how many reciters move, and how many the 90 % cap
+   * will leave behind.
+   */
+  async function requestPush(): Promise<void> {
+    setPushBusy('plan');
+    setError(null);
+    try {
+      const preview =
+        plan ??
+        (await api<PushPlan>('/reciters/push/plan', {
+          method: 'POST',
+          body: { nodeIds: selected },
+        }));
+      setPlan(preview);
+      setConfirmPush(preview);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.pushFailed'));
+    } finally {
+      setPushBusy(null);
+    }
+  }
+
   async function applyPush(): Promise<void> {
+    setConfirmPush(null);
     setPushBusy('apply');
     setError(null);
     try {
@@ -291,6 +333,59 @@ export function Reciters(): ReactElement {
       setPushBusy(null);
     }
   }
+
+  const counts = useMemo(() => {
+    const rows = reciters ?? [];
+    const published = rows.filter((row) => row.published).length;
+    return { published, drafts: rows.length - published, all: rows.length };
+  }, [reciters]);
+
+  const sorted = useMemo(() => {
+    const rows = (reciters ?? []).filter((row) =>
+      scope === 'all' ? true : scope === 'published' ? row.published : !row.published,
+    );
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      switch (sort.key) {
+        case 'riwaya':
+          return a.riwaya.localeCompare(b.riwaya) * dir;
+        case 'size':
+          return ((a.sizeBytes ?? 0) - (b.sizeBytes ?? 0)) * dir;
+        case 'nodes':
+          return (a.heldBy.length - b.heldBy.length) * dir;
+        case 'published':
+          return (Number(a.published) - Number(b.published)) * dir;
+        default:
+          return (a.nameAr ?? a.name).localeCompare(b.nameAr ?? b.name, locale) * dir;
+      }
+    });
+    return rows;
+  }, [reciters, sort, locale, scope]);
+
+  function toggleSort(key: SortKey): void {
+    setSort((current) =>
+      current.key === key ? { key, dir: current.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' },
+    );
+  }
+
+  /**
+   * A sortable column header. `aria-sort` is what tells a screen reader the
+   * table is ordered, so the arrow is decoration and the attribute is the fact.
+   */
+  const sortHeader = (label: string, key: SortKey): ReactElement => {
+    const active = sort.key === key;
+    return (
+      <th
+        scope="col"
+        aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      >
+        <button type="button" className="th-sort" onClick={() => toggleSort(key)}>
+          {label}
+          <span aria-hidden="true">{active ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : ''}</span>
+        </button>
+      </th>
+    );
+  };
 
   const placing = (reciters ?? []).find((row) => row.id === placingId) ?? null;
 
@@ -594,7 +689,7 @@ export function Reciters(): ReactElement {
                   {t('reciters.pushPreview')}
                 </Button>
                 <Button
-                  onClick={() => void applyPush()}
+                  onClick={() => void requestPush()}
                   busy={pushBusy === 'apply'}
                   disabled={!plan || selected.length === 0}
                 >
@@ -731,21 +826,51 @@ export function Reciters(): ReactElement {
         </Panel>
       ) : (
         <Panel>
+          <div className="spread" style={{ marginBottom: 'var(--space-3)' }}>
+            <p className="body muted">
+              {scope === 'published'
+                ? t('reciters.scopePublishedHint', { count: String(counts.drafts) })
+                : t('reciters.scopeDraftsHint')}
+            </p>
+            <div className="cluster" role="group" aria-label={t('reciters.scope')}>
+              <Button
+                small
+                variant={scope === 'published' ? 'primary' : 'tertiary'}
+                onClick={() => setScope('published')}
+              >
+                {t('reciters.scopePublished', { count: String(counts.published) })}
+              </Button>
+              <Button
+                small
+                variant={scope === 'drafts' ? 'primary' : 'tertiary'}
+                onClick={() => setScope('drafts')}
+              >
+                {t('reciters.scopeDrafts', { count: String(counts.drafts) })}
+              </Button>
+              <Button
+                small
+                variant={scope === 'all' ? 'primary' : 'tertiary'}
+                onClick={() => setScope('all')}
+              >
+                {t('reciters.scopeAll', { count: String(counts.all) })}
+              </Button>
+            </div>
+          </div>
           <div className="table-scroll">
             <table className="table">
               <thead>
                 <tr>
-                  <th scope="col">{t('reciters.name')}</th>
-                  <th scope="col">{t('reciters.riwaya')}</th>
+                  {sortHeader(t('reciters.name'), 'name')}
+                  {sortHeader(t('reciters.riwaya'), 'riwaya')}
                   <th scope="col">{t('reciters.infohash')}</th>
                   <th scope="col">{t('reciters.fileCount')}</th>
-                  <th scope="col">{t('reciters.size')}</th>
-                  <th scope="col">{t('reciters.coverage')}</th>
+                  {sortHeader(t('reciters.size'), 'size')}
+                  {sortHeader(t('reciters.coverage'), 'nodes')}
                   <th scope="col">{t('reciters.actions')}</th>
                 </tr>
               </thead>
               <tbody>
-                {reciters.map((reciter) => (
+                {sorted.map((reciter) => (
                   <tr key={reciter.id}>
                     <td>
                       <span className="row__label">{reciter.nameAr ?? reciter.name}</span>
@@ -927,8 +1052,26 @@ export function Reciters(): ReactElement {
                 </table>
               </div>
             )}
+            {nodes?.length === 1 ? (
+              <p className="body muted">{t('reciters.placeOnlyNode')}</p>
+            ) : null}
           </div>
         </Modal>
+      ) : null}
+
+      {confirmPush ? (
+        <ConfirmModal
+          title={t('reciters.pushConfirmTitle')}
+          body={t('reciters.pushConfirmBody', {
+            add: String(confirmPush.nodes.reduce((sum, node) => sum + node.toAdd.length, 0)),
+            nodes: String(confirmPush.nodes.filter((node) => node.toAdd.length > 0).length),
+            skip: String(confirmPush.nodes.reduce((sum, node) => sum + node.skipped, 0)),
+          })}
+          confirmLabel={t('reciters.pushApply')}
+          busy={pushBusy === 'apply'}
+          onClose={() => setConfirmPush(null)}
+          onConfirm={() => void applyPush()}
+        />
       ) : null}
 
       {deleting ? (

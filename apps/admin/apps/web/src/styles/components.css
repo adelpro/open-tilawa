@@ -455,6 +455,21 @@
 }
 /* The traffic block is what this table is for, and it is four short lines: it
    keeps its floor, and the name column yields instead of shredding those lines. */
+/* A sortable column header keeps the table's type; only the arrow moves. */
+.th-sort {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.th-sort:hover,
+.th-sort:focus-visible {
+  color: var(--ink);
+}
 .table--seeders td:nth-child(2) {
   min-width: 240px;
 }
@@ -926,6 +941,12 @@ button.chip[aria-pressed='true'] {
   max-width: 1000px;
   margin-inline: auto;
   padding: var(--space-12) var(--space-12) var(--space-16);
+}
+/* Screens that are a table rather than a page of prose: the eight-column
+   reciter table was being crushed into 1000px on a 2560px display. Capped, so
+   the eye still has one column to return to. */
+.shell__main--wide {
+  max-width: 1440px;
 }
 .shell__head {
   margin-bottom: var(--space-8);

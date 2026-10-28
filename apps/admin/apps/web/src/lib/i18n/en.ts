@@ -230,6 +230,17 @@ export const en = {
   'reciters.removed': 'Reciter removed.',
   'reciters.loadFailed': 'Could not load the reciters.',
   'reciters.addFailed': 'Could not add the reciter.',
+  'reciters.scope': 'Show',
+  'reciters.scopePublished': 'Published ({count})',
+  'reciters.scopeDrafts': 'Drafts ({count})',
+  'reciters.scopeAll': 'All ({count})',
+  'reciters.scopePublishedHint':
+    'What the site serves. {count} unpublished draft(s) are hidden.',
+  'reciters.scopeDraftsHint': 'Reciters the site does not list.',
+  'reciters.pushConfirmTitle': 'Send the catalogue to the nodes?',
+  'reciters.pushConfirmBody':
+    '{add} reciter(s) will be added across {nodes} node(s). {skip} will be left out at the 90% cap.',
+  'reciters.placeOnlyNode': 'This is the only node. Add another on the Nodes screen.',
   'reciters.coverage': 'Nodes',
   'reciters.onNodes': '{count} nodes',
   'reciters.unseeded': 'Not seeded',
