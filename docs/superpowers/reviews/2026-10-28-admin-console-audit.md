@@ -313,6 +313,19 @@ it with evidence rather than taste:
 6. **P2** — title punctuation, the Arabic group-label device, the account eyebrow, the
    timeline scale, the console action header.
 
+## Implementation status — 2026-10-28
+
+Batch A of `docs/superpowers/plans/2026-10-28-admin-console-audit-fixes.md` is applied and
+re-measured on the same fixture:
+
+| item | state | evidence |
+| --- | --- | --- |
+| #1 the page scrolls behind the dialog | **fixed** | 2,145px list, wheel 900px with the dialog open → `scrollY` **0** (was 900); `body` overflow `hidden`, both restored on close |
+| #2 small buttons on touch | **fixed** | `.btn.btn--sm` inside the coarse block (two classes, so source order cannot win); row actions **44px** at 390 touch (was 34) |
+| #3 unstyled selects | **fixed** | `.field__select` on both console filters and the account language control, `.field__select--auto` so a one-choice select does not span the panel; **49px** (was 19) |
+| #4 English in the Arabic console | **fixed** | labels, options and every chip through the catalogue; the raw enum is the chip's `title`; measured chips: مشرف أعلى / المالك / نشط / مدير / مستخدم / معطّل |
+| #5 dark elevation, #6–#11, #12–#17 | queued | batches B–E of the plan |
+
 ## How to re-verify
 
 ```bash
