@@ -10,6 +10,7 @@ import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { Modal } from '../components/Modal';
 import { bytes } from '../lib/format';
+import { isUnclassified, riwayaLabel, riwayaOptions, riwayaValue } from '../lib/riwaya';
 import type { Seeder } from '../lib/types-seeders';
 
 interface PushNodePlan {
@@ -56,7 +57,9 @@ export function Reciters(): ReactElement {
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newNameAr, setNewNameAr] = useState('');
-  const [newRiwaya, setNewRiwaya] = useState('Hafs');
+  // Unclassified is the honest default: a reading is a fact about the recording,
+  // not something to assume (see docs: "Riwaya is data, not a default").
+  const [newRiwaya, setNewRiwaya] = useState('unknown');
   const [newInfohash, setNewInfohash] = useState('');
   const [newMagnet, setNewMagnet] = useState('');
   const [newFileCount, setNewFileCount] = useState('114');
@@ -149,7 +152,7 @@ export function Reciters(): ReactElement {
     setEditing(reciter);
     setEditName(reciter.name);
     setEditNameAr(reciter.nameAr ?? '');
-    setEditRiwaya(reciter.riwaya);
+    setEditRiwaya(riwayaValue(reciter.riwaya));
     setEditInfohash(reciter.infohash);
     setEditMagnet(reciter.magnet);
     setEditSizeGb(reciter.sizeBytes === null ? '' : (reciter.sizeBytes / 1024 ** 3).toFixed(2));
@@ -367,11 +370,18 @@ export function Reciters(): ReactElement {
             </Field>
             <Field label={t('reciters.riwaya')} hint={t('reciters.riwayaHint')}>
               {(id) => (
-                <Input
+                <select
                   id={id}
+                  className="field__select"
                   value={editRiwaya}
                   onChange={(event) => setEditRiwaya(event.target.value)}
-                />
+                >
+                  {riwayaOptions(editRiwaya).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {locale === 'ar' ? option.ar : option.en}
+                    </option>
+                  ))}
+                </select>
               )}
             </Field>
             <Field label={t('reciters.infohash')} hint={t('reciters.infohashHint')}>
@@ -586,12 +596,18 @@ export function Reciters(): ReactElement {
             </Field>
             <Field label={t('reciters.riwaya')} hint={t('reciters.riwayaHint')}>
               {(id) => (
-                <Input
+                <select
                   id={id}
+                  className="field__select"
                   value={newRiwaya}
                   onChange={(event) => setNewRiwaya(event.target.value)}
-                  placeholder="Hafs"
-                />
+                >
+                  {riwayaOptions(newRiwaya).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {locale === 'ar' ? option.ar : option.en}
+                    </option>
+                  ))}
+                </select>
               )}
             </Field>
             <Field label={t('reciters.infohash')} hint={t('reciters.infohashHint')}>
@@ -705,7 +721,9 @@ export function Reciters(): ReactElement {
                       {!reciter.published ? <Chip tone="notice">{t('reciters.hidden')}</Chip> : null}
                     </td>
                     <td>
-                      <Chip tone="info">{reciter.riwaya}</Chip>
+                      <Chip tone={isUnclassified(reciter.riwaya) ? 'notice' : 'info'}>
+                        {riwayaLabel(reciter.riwaya, locale)}
+                      </Chip>
                     </td>
                     <td>
                       <span className="row__id">{reciter.infohash.slice(0, 16)}…</span>
