@@ -261,14 +261,21 @@ export const en = {
     'Bringing a seeder or a TURN server online, and publishing a release once it is.',
   'help.seeder.title': 'Tutorial — a seeder node',
   'help.seeder.step1':
-    'Start from a checkout of this repository on the machine that will hold the audio. The seeder is built locally, not pulled from a registry.',
+    'Start from a checkout of this repository on the machine that will hold the audio. The seeder is built locally, or pulled by tag when the node is not this host.',
   'help.seeder.step2':
-    'Set the admin port and Basic-auth credentials in the root .env. The dashboard uses these for torrent operations; nothing else needs them.',
-  'help.seeder.step3': 'Build and start the seeder container.',
+    'Size the disk first. Every reciter is one torrent covering the whole mushaf — 1.3 to 1.7 GB — and partial hosting is not possible, so a 20 GB node holds roughly twelve. Set DISK_QUOTA_GB below the free space you actually have; a quota larger than the disk is a promise the machine cannot keep.',
+  'help.seeder.step3':
+    'Set the admin credentials, the quota, a reserve, and the bandwidth caps in the root .env. The dashboard uses the credentials for every torrent operation on this node.',
   'help.seeder.step4':
-    'Confirm the node answers its health check — it needs no credentials, so a plain curl is enough.',
+    'Build and start the seeder container. Publish 6881/tcp and 6881/udp — without the UDP mapping the node only ever dials out, so peers that cannot reach it see one fewer seeder.',
   'help.seeder.step5':
-    'Then register it under Seeders with the same URL and credentials. The status chip turns online within a minute, and the Torrents screen can read and change what the node holds.',
+    'Confirm the node answers its health check. It needs no credentials, and it reports version, disk, quota and headroom — the numbers the dashboard plans against.',
+  'help.seeder.step6':
+    'To hand a .torrent over, copy it into the node. A torrent added through the console is stored the same way, so it survives a restart.',
+  'help.seeder.step7':
+    'Register it under Nodes with the same URL and credentials, then go to Reciters and tick the nodes that should carry each reciter. Placement is recorded: pending until the node confirms, failed if it never does, or if the node stops reporting it.',
+  'help.seeder.step8':
+    'The dashboard never fills a node past 90 % of its quota. When a bulk top-up stops short it says how many reciters it left out, so an incomplete node is never silent.',
   'help.turn.title': 'Tutorial — a TURN server',
   'help.turn.step1':
     'Set the realm, credentials and public IP in the root .env. The realm is what the server calls itself; the IP is how peers outside your network reach it.',

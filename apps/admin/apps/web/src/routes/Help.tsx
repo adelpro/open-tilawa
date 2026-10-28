@@ -65,9 +65,20 @@ export function Help(): ReactElement {
             <CopyLine value={'docker compose up -d --build seeder'} label={copy} />
             <ol className="stack" start={4}>
               <li className="body">{t('help.seeder.step4')}</li>
+              <li className="body">{t('help.seeder.step5')}</li>
             </ol>
             <CopyLine value={'curl -s http://<host>:8085/health'} label={copy} />
-            <p className="body muted">{t('help.seeder.step5')}</p>
+            <ol className="stack" start={6}>
+              <li className="body">{t('help.seeder.step6')}</li>
+            </ol>
+            <CopyLine
+              value={'docker cp release.torrent node:/data/torrents/'}
+              label={copy}
+            />
+            <ol className="stack" start={7}>
+              <li className="body">{t('help.seeder.step7')}</li>
+            </ol>
+            <p className="body muted">{t('help.seeder.step8')}</p>
           </div>
         </details>
       </Panel>
