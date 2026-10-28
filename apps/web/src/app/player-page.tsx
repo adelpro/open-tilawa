@@ -31,6 +31,24 @@ import type { StreamSource } from '@/utils/stream-source';
 import { surahIdOf } from '@/utils/surah-id';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
 
+/** Set once the one-time shortcut hint has been dismissed. */
+const KEYS_HINT_KEY = 'tilawa.keys.v1';
+
+/**
+ * Read the hint's state before the first paint. Resolving it in an effect made
+ * the line appear after mount, which is harmless while it is floating but a
+ * jump once it holds a row in the layout.
+ */
+function wantsKeyboardHint(enabled: boolean): boolean {
+  if (!enabled) return false;
+  try {
+    return !window.localStorage.getItem(KEYS_HINT_KEY);
+  } catch {
+    // A store we cannot read is a store we cannot promise to remember.
+    return false;
+  }
+}
+
 /**
  * The site is this screen. There is no navigation: the two lists are the only
  * way out of the player, and they close back onto it.
@@ -127,20 +145,18 @@ export default function PlayerPage({
    * Keyboard is a desktop affordance: wide layout *and* a real pointer. A phone
    * with a Bluetooth keyboard keeps its media keys and nothing else.
    */
-  const [hint, setHint] = useState(false);
+  const [hint, setHint] = useState(() => wantsKeyboardHint(keyboard));
+
+  // The initial read covers the first paint; this covers a resize into or out
+  // of the wide layout. A dismissed hint stays dismissed.
   useEffect(() => {
-    if (!keyboard) return;
-    try {
-      if (!window.localStorage.getItem('tilawa.keys.v1')) setHint(true);
-    } catch {
-      // A blocked store means the hint shows again; harmless.
-    }
+    setHint(wantsKeyboardHint(keyboard));
   }, [keyboard]);
 
   const dismissHint = useCallback(() => {
     setHint(false);
     try {
-      window.localStorage.setItem('tilawa.keys.v1', '1');
+      window.localStorage.setItem(KEYS_HINT_KEY, '1');
     } catch {
       // ignore
     }
@@ -290,7 +306,7 @@ export default function PlayerPage({
           ) : null}
 
           {hint && keyboard ? (
-            <p className="mt-6 text-center text-[11.5px] text-muted lg:fixed lg:inset-x-0 lg:bottom-[236px] lg:mt-0">
+            <p className="mt-6 text-center text-[11.5px] text-muted lg:mt-4">
               {t.keys.hint}
               <button
                 type="button"
