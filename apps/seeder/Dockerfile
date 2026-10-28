@@ -2,7 +2,7 @@ FROM node:22-slim
 
 LABEL maintainer="Adelpro <adelpro@gmail.com>"
 LABEL name="open-tilawa-seeder"
-LABEL version="1.4.2"
+LABEL version="1.4.3"
 
 # Stamped into /health so the dashboard can tell a node's release from its image.
 ARG BUILD_SHA=dev
