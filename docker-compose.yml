@@ -29,6 +29,11 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      # The TURN credential is compiled into the bundle, so it is a build arg,
+      # not an env var. Both values come from the same .env coturn reads.
+      args:
+        VITE_TURN_USERNAME: ${TURN_USERNAME:-}
+        VITE_TURN_PASSWORD: ${TURN_PASSWORD:-}
     container_name: open-tilawa-web
     restart: unless-stopped
     volumes:

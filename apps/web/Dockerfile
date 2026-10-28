@@ -7,6 +7,15 @@ COPY apps/web/package*.json ./
 # here (node-datachannel ships no musl prebuild) for code that never runs.
 RUN npm ci --ignore-scripts
 COPY apps/web/ .
+
+# Vite inlines `import.meta.env` at build time, so the TURN credential has to be
+# present here — setting it at runtime does nothing. Left empty, the app offers
+# no relay at all rather than falling back to a credential in the source.
+ARG VITE_TURN_USERNAME=""
+ARG VITE_TURN_PASSWORD=""
+ENV VITE_TURN_USERNAME=$VITE_TURN_USERNAME
+ENV VITE_TURN_PASSWORD=$VITE_TURN_PASSWORD
+
 RUN npm run build
 
 FROM nginx:alpine AS runner
