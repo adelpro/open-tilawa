@@ -3,7 +3,12 @@ set -e
 
 cat > /tmp/turnserver.conf <<CONF
 listening-port=3478
-tls-listening-port=5349
+# No TURN-over-TLS. tls-listening-port=5349 was configured without cert/pkey, so
+# coturn refused to bind it and printed an ERROR on every boot — while the
+# hostname that pointed at it (turn-tls.quran.us.kg) went through the Cloudflare
+# proxy, which cannot carry a raw TCP tunnel anyway. If TLS is ever wanted: set
+# cert= and pkey=, listen on 443 (not 5349, which firewalls block), and give it a
+# grey-clouded A record — never a proxied one.
 listening-ip=0.0.0.0
 relay-ip=0.0.0.0
 realm=${TURN_REALM:-turn.quran.us.kg}
