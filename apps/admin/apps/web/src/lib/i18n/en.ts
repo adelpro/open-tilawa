@@ -146,9 +146,10 @@ export const en = {
   'torrents.title': 'Torrents',
   'torrents.lede':
     'What the selected node actually holds. Adding and removing talk to the seeder directly, so this view never drifts from the node.',
-  'torrents.removeTitle': 'Remove this file from the node?',
-  'torrents.removeBody': 'Only the node is touched; the catalogue release stays.',
-  'torrents.removeConfirm': 'Remove',
+  'torrents.removeTitle': 'Delete this release from the node?',
+  'torrents.removeBody':
+    "Its audio is deleted from this node's disk and cannot be restored. The catalogue entry stays, so it can be added again.",
+  'torrents.removeConfirm': 'Delete',
   'torrents.add': 'Add torrent',
   'torrents.cancel': 'Cancel',
   'torrents.addSubmit': 'Add to node',

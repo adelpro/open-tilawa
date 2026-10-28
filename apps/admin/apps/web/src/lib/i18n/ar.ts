@@ -150,9 +150,10 @@ export const ar: Catalogue = {
   'torrents.title': 'ملفات التورنت',
   'torrents.lede':
     'ما يحتفظ به الخادم المحدد فعلًا. الإضافة والإزالة تتوجهان إلى خادم التوزيع مباشرة، فلا تنفصل هذه الصفحة عمّا لديه.',
-  'torrents.removeTitle': 'أتزيل هذا الملف من الخادم؟',
-  'torrents.removeBody': 'يُحذف من الخادم وحده؛ إصدار الفهرس يبقى كما هو.',
-  'torrents.removeConfirm': 'أزل',
+  'torrents.removeTitle': 'أتحذف هذه التلاوة من الخادم؟',
+  'torrents.removeBody':
+    'تُحذف ملفاتها الصوتية من قرص هذا الخادم ولا يمكن استرجاعها. يبقى سجلّها في الفهرس، ويمكن إضافتها من جديد.',
+  'torrents.removeConfirm': 'احذف',
   'torrents.add': 'إضافة ملف',
   'torrents.cancel': 'إلغاء',
   'torrents.addSubmit': 'أضف إلى الخادم',
