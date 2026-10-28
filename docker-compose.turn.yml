@@ -1,6 +1,9 @@
 # Coturn TURN server for WebRTC (UDP/TCP).
-# Run separately: docker compose -f docker-compose.turn.yml up -d
+# An overlay of the production project — it must not have a project of its own:
+#   docker compose -f docker-compose.yml -f docker-compose.turn.yml up -d turn
 # Requires TURN_USERNAME, TURN_PASSWORD, TURN_EXTERNAL_IP in .env
+name: open-tilawa
+
 services:
   turn:
     image: coturn/coturn:latest

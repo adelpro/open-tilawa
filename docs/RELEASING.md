@@ -80,6 +80,40 @@ docker compose up -d --build web          # or admin-web, admin-api, seeder
 `develop` and `main` are kept identical: `main` is fast-forwarded, never merged
 into by hand, so `git rev-list --count main..develop` is 0 between releases.
 
+## The two stacks
+
+Production and staging are two Compose projects that share one checkout. Each has
+its own project name, its own env file and its own ports, so deploying one cannot
+touch the other.
+
+```bash
+# production — ports 8084 (edge), 8083 (tracker), 8085 (seeder), 9400/9410 (admin)
+docker compose up -d --build <service>
+
+# staging — ports 8086 (edge), 8087 (tracker)
+docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --build
+```
+
+Three rules, learned the hard way:
+
+1. **A Compose file declares its project `name:`.** Both files declare one
+   because without it Compose falls back to the directory name, both stacks
+   landed in `open-tilawa`, and a staging deploy replaced the production
+   `edge`/`web`/`tracker` containers — `tilawa.quran.us.kg` answered 502 for as
+   long as it took to notice.
+2. **A stack reads its own env file.** Staging is `.env.staging`, with the same
+   variable names and different values. It is not a `STAGING_*` prefix inside
+   `.env`; that pattern put both stacks on one port once already.
+3. **Never rename a project casually.** Compose derives volume names from the
+   project, so renaming `open-tilawa` to anything else creates fresh empty
+   volumes and orphans `open-tilawa_seed_downloads` and `open-tilawa_admin_data`.
+
+TURN is an overlay of the production project, not a stack of its own:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.turn.yml up -d turn
+```
+
 ## Branches
 
 Three long-lived branches, and nothing else:

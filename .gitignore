@@ -11,7 +11,7 @@ yarn-error.log*
 .env.*.local
 # One env file per stack: staging keeps its secrets here, not in .env.
 .env.*
-!.env.example
+!.env*.example
 
 # Docker/volumes
 *.tar.gz
