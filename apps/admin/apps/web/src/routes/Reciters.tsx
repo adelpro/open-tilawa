@@ -109,6 +109,8 @@ export function Reciters(): ReactElement {
    * two dozen releases when three are live.
    */
   const [scope, setScope] = useState<'published' | 'drafts' | 'all'>('published');
+  /** '' means every riwaya; otherwise an exact value as stored in the catalogue. */
+  const [riwayaFilter, setRiwayaFilter] = useState('');
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
   const [fetchNode, setFetchNode] = useState<number | null>(null);
   const [trackersOpen, setTrackersOpen] = useState(false);
@@ -340,10 +342,19 @@ export function Reciters(): ReactElement {
     return { published, drafts: rows.length - published, all: rows.length };
   }, [reciters]);
 
+  /** Every riwaya actually present, so the list never offers an empty filter. */
+  const riwayas = useMemo(
+    () => [...new Set((reciters ?? []).map((row) => row.riwaya))].sort(),
+    [reciters],
+  );
+
   const sorted = useMemo(() => {
-    const rows = (reciters ?? []).filter((row) =>
-      scope === 'all' ? true : scope === 'published' ? row.published : !row.published,
-    );
+    const rows = (reciters ?? []).filter((row) => {
+      const inScope =
+        scope === 'all' ? true : scope === 'published' ? row.published : !row.published;
+      const inRiwaya = riwayaFilter === '' || row.riwaya === riwayaFilter;
+      return inScope && inRiwaya;
+    });
     const dir = sort.dir === 'asc' ? 1 : -1;
     rows.sort((a, b) => {
       switch (sort.key) {
@@ -360,7 +371,7 @@ export function Reciters(): ReactElement {
       }
     });
     return rows;
-  }, [reciters, sort, locale, scope]);
+  }, [reciters, sort, locale, scope, riwayaFilter]);
 
   function toggleSort(key: SortKey): void {
     setSort((current) =>
@@ -832,7 +843,21 @@ export function Reciters(): ReactElement {
                 ? t('reciters.scopePublishedHint', { count: String(counts.drafts) })
                 : t('reciters.scopeDraftsHint')}
             </p>
-            <div className="cluster" role="group" aria-label={t('reciters.scope')}>
+            <div className="cluster">
+              <select
+                className="field__select"
+                aria-label={t('reciters.riwayaFilter')}
+                value={riwayaFilter}
+                onChange={(event) => setRiwayaFilter(event.target.value)}
+              >
+                <option value="">{t('reciters.allRiwayas')}</option>
+                {riwayas.map((row) => (
+                  <option key={row} value={row}>
+                    {riwayaLabel(row, locale)}
+                  </option>
+                ))}
+              </select>
+              <div className="cluster" role="group" aria-label={t('reciters.scope')}>
               <Button
                 small
                 variant={scope === 'published' ? 'primary' : 'tertiary'}
@@ -854,6 +879,7 @@ export function Reciters(): ReactElement {
               >
                 {t('reciters.scopeAll', { count: String(counts.all) })}
               </Button>
+              </div>
             </div>
           </div>
           <div className="table-scroll">

@@ -210,7 +210,7 @@ export const ar: Catalogue = {
 
   'reciters.title': 'القرّاء',
   'reciters.lede':
-    'السجل الذي يربط القارئ وروايتَه بالملف الذي يحمل ذلك الإصدار. وهو الموضع الوحيد الذي يُدوَّن فيه هذا الربط: أضف القارئ هنا عند نشر إصدار ليبقى الخادم والملف والقارئ مترابطين.',
+    'فهرس التلاوات هو السجل الذي يربط القارئ وروايتَه بالملف الذي يحمل إصداره، وهو الموضع الوحيد الذي يُسجَّل فيه هذا الربط. أضف التلاوة هنا أولًا عند نشر إصدار، ثم وزّعها على الخوادم.',
   'reciters.add': 'إضافة قارئ',
   'reciters.cancel': 'إلغاء',
   'reciters.addSubmit': 'إضافة',
@@ -233,6 +233,8 @@ export const ar: Catalogue = {
   'reciters.removed': 'أُزيل القارئ.',
   'reciters.loadFailed': 'تعذّر تحميل القرّاء.',
   'reciters.addFailed': 'تعذّرت إضافة القارئ.',
+  'reciters.riwayaFilter': 'الرواية',
+  'reciters.allRiwayas': 'كل الروايات',
   'reciters.scope': 'اعرض',
   'reciters.scopePublished': 'المنشور ({count})',
   'reciters.scopeDrafts': 'المسودات ({count})',
@@ -369,7 +371,7 @@ export const ar: Catalogue = {
   'reciters.push': 'أرسل إلى الخوادم',
   'reciters.pushTitle': 'أرسل الفهرس',
   'reciters.pushLede':
-    'يضيف كل قارئ يفتقده الخادم. لا يحذف شيئًا — الملفات الإضافية على الخادم تبقى كما هي.',
+    'يوزّع الفهرس المنشور على الخوادم: يأخذ كل خادم ما ينقصه من التلاوات، حتى 90% من حصته. لا يحذف شيئًا، وما يحمله الخادم من ملفات أخرى يبقى كما هو.',
   'reciters.pushNode': 'الخادم',
   'reciters.pushFree': 'المساحة المتاحة',
   'reciters.pushPlan': 'الخطة',

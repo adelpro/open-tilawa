@@ -207,7 +207,7 @@ export const en = {
 
   'reciters.title': 'Reciters',
   'reciters.lede':
-    'The registry that binds a reciter and riwaya to the torrent carrying that release. It is the one place the mapping is written down: add a reciter here when a release goes live so the seeders, the torrent and the person stay linked.',
+    'The catalogue is the record that ties a reciter and a riwaya to the torrent carrying that release, and the only place the link is written down. Add the release here first, then place it on the nodes.',
   'reciters.add': 'Add reciter',
   'reciters.cancel': 'Cancel',
   'reciters.addSubmit': 'Add',
@@ -230,6 +230,8 @@ export const en = {
   'reciters.removed': 'Reciter removed.',
   'reciters.loadFailed': 'Could not load the reciters.',
   'reciters.addFailed': 'Could not add the reciter.',
+  'reciters.riwayaFilter': 'Riwaya',
+  'reciters.allRiwayas': 'All riwayas',
   'reciters.scope': 'Show',
   'reciters.scopePublished': 'Published ({count})',
   'reciters.scopeDrafts': 'Drafts ({count})',
@@ -370,7 +372,7 @@ export const en = {
   'reciters.push': 'Push to nodes',
   'reciters.pushTitle': 'Push the catalogue',
   'reciters.pushLede':
-    'Adds every reciter a node is missing. Nothing is removed — extra torrents on a node stay put.',
+    'Pushes the published catalogue to the nodes: each one takes the reciters it lacks, up to 90 % of its quota. Nothing is deleted — whatever else a node holds stays where it is.',
   'reciters.pushNode': 'Node',
   'reciters.pushFree': 'Free space',
   'reciters.pushPlan': 'Plan',
