@@ -136,6 +136,7 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
             ) : (
               <LinkDevice
                 mode="share"
+                open={open}
                 onLinked={() => setTab('devices')}
                 onCameraChange={setCamera}
               />
@@ -170,6 +171,7 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
 
             <LinkDevice
               mode="scan"
+              open={open}
               onCameraChange={setCamera}
               onLinked={() => {
                 setCamera(false);

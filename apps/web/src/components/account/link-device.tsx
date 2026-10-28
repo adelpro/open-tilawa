@@ -3,15 +3,90 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPairingTicket, encodeTicket, parseTicket, redeemTicket } from '@/gun/pairing';
 import { useGun } from '@/hooks/use-gun';
 import { useLocale } from '@/hooks/use-locale';
+import type { Messages } from '@/i18n/messages';
+import { classifyCameraError, hasCameraApi, type CameraFault } from '@/utils/camera';
 import { cn } from '@/utils/cn';
 
 const READER_ID = 'tilawa-qr-reader';
 const card = 'rounded-xl border border-line p-3';
 const action = 'mt-2.5 w-full rounded-xl px-3 py-2 text-[13px] transition-colors';
+const quiet = 'w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink';
 const field =
   'w-full rounded-xl border border-line bg-transparent px-3 py-2 text-[13px] text-ink outline-none focus:border-ink';
 
 type Mode = 'share' | 'scan';
+
+/**
+ * The camera panel: a live viewfinder, the stated reason it could not open, or
+ * the paste field. All three share one panel, so a failure never drops the
+ * listener back to the card they came from.
+ *
+ * The reader stays mounted and is only hidden, because the decoder holds a live
+ * `<video>` inside it: unmounting the node under a running scanner leaves the
+ * stream on and the camera light lit.
+ */
+type ScanView = 'camera' | 'paste';
+
+function faultCopy(copy: Messages['account'], fault: CameraFault) {
+  switch (fault) {
+    case 'blocked':
+      return { title: copy.cameraBlockedTitle, note: copy.cameraBlockedNote };
+    case 'no-device':
+      return { title: copy.cameraNoDeviceTitle, note: copy.cameraNoDeviceNote };
+    case 'busy':
+      return { title: copy.cameraBusyTitle, note: copy.cameraBusyNote };
+    case 'secure':
+      return { title: copy.cameraSecureTitle, note: copy.cameraSecureNote };
+    default:
+      return { title: copy.cameraUnavailable, note: copy.manualNote };
+  }
+}
+
+/** Only these can end differently on a second try; http and no-camera cannot. */
+function retryable(fault: CameraFault) {
+  return fault === 'blocked' || fault === 'busy' || fault === 'unknown';
+}
+
+/** The paste field, in the card and in the camera panel: same form, two doors. */
+function PasteForm({
+  copy,
+  value,
+  onChange,
+  onJoin,
+  busy,
+  autoFocus = false,
+}: {
+  copy: Messages['account'];
+  value: string;
+  onChange: (value: string) => void;
+  onJoin: () => void;
+  busy: boolean;
+  autoFocus?: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[11.5px] leading-relaxed text-muted">{copy.manualNote}</p>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        dir="ltr"
+        autoFocus={autoFocus}
+        placeholder={copy.manualPlaceholder}
+        aria-label={copy.manualToggle}
+        className={cn(field, 'resize-none font-mono text-[11px]')}
+      />
+      <button
+        type="button"
+        disabled={busy || !value.trim()}
+        onClick={onJoin}
+        className={cn(action, 'bg-ink text-invert', 'disabled:opacity-40')}
+      >
+        {busy ? '…' : copy.manualAction}
+      </button>
+    </div>
+  );
+}
 
 /**
  * One half of the ring handshake.
@@ -27,10 +102,13 @@ type Mode = 'share' | 'scan';
  */
 export default function LinkDevice({
   mode,
+  open,
   onLinked,
   onCameraChange,
 }: {
   mode: Mode;
+  /** Closing the sheet must release the camera, not just hide it. */
+  open: boolean;
   onLinked: () => void;
   /** Lets the sheet give the viewfinder the whole panel. */
   onCameraChange?: (active: boolean) => void;
@@ -43,7 +121,10 @@ export default function LinkDevice({
   const [ticketText, setTicketText] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [wantScan, setWantScan] = useState(false);
+  const [scanView, setScanView] = useState<ScanView | null>(null);
+  const [fault, setFault] = useState<CameraFault | null>(null);
+  const [opening, setOpening] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [manual, setManual] = useState(false);
   const [pasted, setPasted] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -51,27 +132,37 @@ export default function LinkDevice({
   const [busy, setBusy] = useState(false);
 
   const scannerRef = useRef<{ stop: () => Promise<void>; clear: () => void } | null>(null);
+  const messageRef = useRef<HTMLParagraphElement>(null);
 
   const stopScanner = useCallback(async () => {
     const scanner = scannerRef.current;
     scannerRef.current = null;
     if (!scanner) return;
+    // `stop()` rejects when the scanner never started; the element still needs
+    // emptying, or the next start inherits a stale <video>.
     try {
       await scanner.stop();
-      scanner.clear();
     } catch {
       // already stopped
+    }
+    try {
+      scanner.clear();
+    } catch {
+      // the reader is gone
     }
   }, []);
 
   const leaveCamera = useCallback(async () => {
+    // Leave first, stop after: the panel must not wait on the camera hardware.
+    setScanView(null);
+    setFault(null);
+    setOpening(false);
     await stopScanner();
-    setWantScan(false);
   }, [stopScanner]);
 
   useEffect(() => {
-    onCameraChange?.(wantScan);
-  }, [wantScan, onCameraChange]);
+    onCameraChange?.(scanView !== null);
+  }, [scanView, onCameraChange]);
 
   useEffect(
     () => () => {
@@ -79,6 +170,12 @@ export default function LinkDevice({
     },
     [stopScanner],
   );
+
+  // A sheet dismissed mid-scan used to leave the camera streaming behind a
+  // closed dialog.
+  useEffect(() => {
+    if (!open) void leaveCamera();
+  }, [open, leaveCamera]);
 
   // The countdown runs on the ticket's own expiry, not on a timer we own.
   useEffect(() => {
@@ -121,15 +218,35 @@ export default function LinkDevice({
   );
 
   /**
+   * The scanner effect must not depend on `finishJoin`: it is rebuilt whenever
+   * the sheet re-renders, and a changed dep would stop the camera mid-scan.
+   */
+  const finishJoinRef = useRef(finishJoin);
+  useEffect(() => {
+    finishJoinRef.current = finishJoin;
+  }, [finishJoin]);
+
+  // Scrolling, not a toast: the join card sits above the fold, its message does not.
+  useEffect(() => {
+    if (message) messageRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [message]);
+
+  /**
    * The camera is started from an effect, after the reader element is in the
    * document. Starting it from the click handler raced the render and the video
    * attached to a node that was about to be replaced.
    */
   useEffect(() => {
-    if (!wantScan) return;
+    if (scanView !== 'camera' || fault) return;
     let cancelled = false;
 
     void (async () => {
+      // Plain http has no getUserMedia: do not download 120 kB to learn that.
+      if (!hasCameraApi(navigator.mediaDevices)) {
+        setFault('secure');
+        return;
+      }
+      setOpening(true);
       try {
         // The decoder is ~120 kB and only ever runs on this screen.
         const { Html5Qrcode } = await import('html5-qrcode');
@@ -143,19 +260,18 @@ export default function LinkDevice({
             const ticket = parseTicket(text);
             if (!ticket) return;
             await leaveCamera();
-            await finishJoin(text);
+            await finishJoinRef.current(text);
           },
           () => {
             // per-frame decode misses are normal, stay quiet
           },
         );
-      } catch {
-        if (!cancelled) {
-          setWantScan(false);
-          // A device without a camera is not an error state: offer the paste.
-          setManual(true);
-          setMessage(copy.cameraUnavailable);
-        }
+        if (!cancelled) setOpening(false);
+      } catch (e) {
+        if (cancelled) return;
+        setOpening(false);
+        // Keep the panel: a fault is a state of it, not a way out of it.
+        setFault(classifyCameraError(e));
       }
     })();
 
@@ -163,7 +279,7 @@ export default function LinkDevice({
       cancelled = true;
       void stopScanner();
     };
-  }, [wantScan, copy, leaveCamera, finishJoin, stopScanner]);
+  }, [scanView, fault, attempt, leaveCamera, stopScanner]);
 
   const showTicket = async () => {
     setMessage(null);
@@ -194,9 +310,12 @@ export default function LinkDevice({
     }
   };
 
-  // Camera mode owns the panel: the viewfinder sits in the visible area instead
-  // of below a fold the listener has to discover.
-  if (wantScan) {
+  // The camera owns the panel: the viewfinder sits in the visible area instead of
+  // below a fold the listener has to discover. A failure is shown *in* it, so the
+  // layout never jumps out from under the finger.
+  if (scanView) {
+    const shown = fault ? faultCopy(copy, fault) : null;
+
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -206,25 +325,87 @@ export default function LinkDevice({
             onClick={() => void leaveCamera()}
             className="rounded-full border border-line px-3 py-1 text-[12px] text-ink transition-colors hover:bg-line"
           >
-            {copy.scanStop}
+            {scanView === 'camera' && !fault ? copy.scanStop : copy.scanBack}
           </button>
         </div>
+
+        {/*
+          Kept mounted and only hidden: the decoder holds a live <video> here, and
+          removing the node under it leaves the stream running.
+        */}
         <div
           id={READER_ID}
           className={cn(
             'relative min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-black',
             '[&_video]:h-full [&_video]:w-full [&_video]:object-cover',
+            scanView !== 'camera' || fault ? 'hidden' : undefined,
           )}
         />
-        <p className="text-center text-[11.5px] text-muted">{copy.scanHint}</p>
-        <button
-          type="button"
-          onClick={() => void leaveCamera().then(() => setManual(true))}
-          className="text-center text-[11.5px] text-muted underline underline-offset-2"
-        >
-          {copy.manualToggle}
-        </button>
-        {message ? <p className="text-center text-[12px] text-muted">{message}</p> : null}
+
+        {shown ? (
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-line p-4 text-center">
+            <div role="status" className="space-y-2">
+              <p className="text-[13.5px] font-medium text-ink">{shown.title}</p>
+              <p className="max-w-[34ch] text-[12px] leading-relaxed text-muted">{shown.note}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFault(null);
+                setScanView('paste');
+              }}
+              className={cn(action, 'bg-ink text-invert')}
+            >
+              {copy.manualToggle}
+            </button>
+            {fault && retryable(fault) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setFault(null);
+                  setOpening(false);
+                  setAttempt((n) => n + 1);
+                }}
+                className={quiet}
+              >
+                {copy.cameraRetry}
+              </button>
+            ) : null}
+          </div>
+        ) : scanView === 'paste' ? (
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <PasteForm
+              copy={copy}
+              value={pasted}
+              onChange={setPasted}
+              onJoin={() => void finishJoin(pasted.trim())}
+              busy={busy}
+              autoFocus
+            />
+          </div>
+        ) : (
+          <>
+            <p className="text-center text-[11.5px] text-muted">
+              {opening ? copy.scanOpening : copy.scanHint}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setFault(null);
+                setScanView('paste');
+              }}
+              className="text-center text-[11.5px] text-muted underline underline-offset-2"
+            >
+              {copy.manualToggle}
+            </button>
+          </>
+        )}
+
+        {message ? (
+          <p role="status" aria-live="polite" className="text-center text-[12px] text-muted">
+            {message}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -251,7 +432,8 @@ export default function LinkDevice({
             type="button"
             onClick={() => {
               setMessage(null);
-              setWantScan(true);
+              setFault(null);
+              setScanView('camera');
             }}
             className={cn(action, 'bg-ink text-invert')}
           >
@@ -269,31 +451,24 @@ export default function LinkDevice({
           </button>
 
           {manual ? (
-            <div className="mt-2 space-y-2 border-t border-line pt-2.5">
-              <p className="text-[11.5px] leading-relaxed text-muted">{copy.manualNote}</p>
-              <textarea
+            <div className="mt-2 border-t border-line pt-2.5">
+              <PasteForm
+                copy={copy}
                 value={pasted}
-                onChange={(e) => setPasted(e.target.value)}
-                rows={3}
-                dir="ltr"
-                placeholder={copy.manualPlaceholder}
-                aria-label={copy.manualToggle}
-                className={cn(field, 'resize-none font-mono text-[11px]')}
+                onChange={setPasted}
+                onJoin={() => void finishJoin(pasted.trim())}
+                busy={busy}
               />
-              <button
-                type="button"
-                disabled={busy || !pasted.trim()}
-                onClick={() => void finishJoin(pasted.trim())}
-                className={cn(action, 'bg-ink text-invert', 'disabled:opacity-40')}
-              >
-                {busy ? '…' : copy.manualAction}
-              </button>
             </div>
           ) : null}
         </div>
       )}
 
-      {message ? <p className="text-[12px] text-muted">{message}</p> : null}
+      {message ? (
+        <p ref={messageRef} role="status" aria-live="polite" className="text-[12px] text-muted">
+          {message}
+        </p>
+      ) : null}
 
       {/*
         The code is a popup, not a block inside the sheet: it is the one thing
