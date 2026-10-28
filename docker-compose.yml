@@ -111,6 +111,10 @@ services:
       PORT: ${ADMIN_API_PORT:-9410}
       DB_PATH: /data/tilawa-admin.sqlite
       CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin-tilawa.quran.us.kg}
+      # Absolute origin used in activation and reset mail. Overridden here so a
+      # developer's .env (`http://localhost:9400`) cannot leak into emails sent
+      # from production.
+      WEBSITE: ${ADMIN_WEBSITE:-https://admin-tilawa.quran.us.kg}
       # Seeder updates run through the host daemon (see the socket mount below).
       SEEDER_UPDATE: "1"
       SEEDER_COMPOSE_FILE: /host/docker-compose.yml

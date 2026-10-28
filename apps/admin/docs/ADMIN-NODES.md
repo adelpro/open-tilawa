@@ -32,6 +32,11 @@ Mail (`EMAIL`, `EMAIL_APP_SPECIFIC_PASS`) is optional. Without it the API boots,
 and the routes that need mail (activation, password reset, email 2FA) answer
 **503** with the variable names in the body.
 
+- `WEBSITE` — the public origin stamped into activation and reset links. The
+  compose file sets it to `${ADMIN_WEBSITE:-https://admin-tilawa.quran.us.kg}`
+  so a dev `.env` value (`http://localhost:9400`) cannot leak into production
+  mail, and the API refuses to start in production while it points at loopback.
+
 Root `.env` feeds the seeder and TURN containers:
 
 - `ADMIN_USER`, `ADMIN_PASS` — the seeder's Basic-auth credentials. `ADMIN_PASS`

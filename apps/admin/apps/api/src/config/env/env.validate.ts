@@ -26,6 +26,13 @@ const REQUIRED_IN_PRODUCTION = ['COOKIE_JWT_SECRET', 'TEMP_JWT_SECRET', 'TILAWA_
  */
 const MAIL_KEYS = ['EMAIL', 'EMAIL_APP_SPECIFIC_PASS'] as const;
 
+/**
+ * `WEBSITE` is only ever used to build links inside activation and reset mail,
+ * so a loopback value ships a message nobody outside the host can open. Dev
+ * needs it, production cannot be right with it.
+ */
+const LOOPBACK = /^(https?:\/\/)?(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i;
+
 const logger = new Logger('envValidate');
 
 export function envValidate(config: Record<string, unknown>): EnvConfigDTO {
@@ -51,6 +58,13 @@ export function envValidate(config: Record<string, unknown>): EnvConfigDTO {
       throw new Error(
         `Refusing to start in production without: ${missing.join(', ')}. ` +
           'Set them in .env (see .env.example).',
+      );
+    }
+    if (LOOPBACK.test(validatedConfig.WEBSITE)) {
+      throw new Error(
+        `Refusing to start in production with WEBSITE=${validatedConfig.WEBSITE}. ` +
+          'Activation and reset mail link to this value, so it must be the public ' +
+          'origin (for example https://admin-tilawa.quran.us.kg).',
       );
     }
     if (MAIL_KEYS.some((key) => !config[key])) {
