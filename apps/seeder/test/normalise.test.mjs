@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { episodeOf, planRename } from '../lib/normalise.mjs';
+import { cleanName, episodeOf, planRename } from '../lib/normalise.mjs';
 
 test('reads the episode from a leading number or from inside the name', () => {
   assert.equal(episodeOf('001.mp3'), 1);
@@ -52,4 +52,17 @@ test('refuses a folder with no mp3 at all', () => {
   const plan = planRename(['cover.jpg']);
   assert.equal(plan.ok, false);
   assert.match(plan.error, /no mp3/);
+});
+
+test('drops the source site tags from a release name', () => {
+  assert.equal(cleanName('Maher_Al-Muaiqly_(MP3_Quran)'), 'Maher_Al-Muaiqly');
+  assert.equal(
+    cleanName('Abdulbasit_Abdulsamad_Mojawwad_(MP3_Quran)'),
+    'Abdulbasit_Abdulsamad_Mojawwad',
+  );
+  assert.equal(cleanName('Khalid_Aljleel_Update2_(MP3_Quran)'), 'Khalid_Aljleel');
+});
+
+test('leaves a name that carries no source tags alone', () => {
+  assert.equal(cleanName('Yassine_El_Jazairi_Warsh'), 'Yassine_El_Jazairi_Warsh');
 });

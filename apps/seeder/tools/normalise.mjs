@@ -23,7 +23,7 @@ import createTorrent from 'create-torrent';
 import parseTorrent from 'parse-torrent';
 
 import TRACKERS from '../constants/TRACKERS.js';
-import { planRename } from '../lib/normalise.mjs';
+import { cleanName, planRename } from '../lib/normalise.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -46,14 +46,30 @@ if (!fs.existsSync(dir)) {
   process.exit(2);
 }
 
-const name = path.basename(dir);
+const sourceName = path.basename(dir);
+// The folder name is the release name: it becomes the torrent name, the magnet's
+// `dn` and the web-seed path. Source tags like "(MP3_Quran)" belong to whoever
+// produced the download, not to this library.
+const name = value('--name', cleanName(sourceName));
+if (name.includes('/') || name.includes('..')) {
+  console.error(`refusing to use "${name}" as a folder name`);
+  process.exit(2);
+}
+let target = dir;
+if (name !== sourceName) {
+  target = path.join(path.dirname(dir), name);
+  if (fs.existsSync(target)) {
+    console.error(`target folder already exists: ${target}`);
+    process.exit(1);
+  }
+}
 const plan = planRename(fs.readdirSync(dir));
 if (!plan.ok) {
   console.error(`${name}: ${plan.error}`);
   process.exit(1);
 }
 
-console.log(`--- ${name}`);
+console.log(`--- ${name}${name !== sourceName ? ` (was ${sourceName})` : ''}`);
 console.log(`  episodes: ${plan.count}`);
 if (plan.drop.length) console.log(`  drop    : ${plan.drop.join(', ')}`);
 const renames = plan.rename.filter(({ from, to }) => from !== to);
@@ -64,25 +80,31 @@ if (dryRun) {
   process.exit(0);
 }
 
+// The folder first: its name is the release's identity, and the files move with it.
+if (target !== dir) {
+  fs.renameSync(dir, target);
+  console.log(`  folder  : ${sourceName} → ${name}`);
+}
+
 // Two passes: rename to unique temporary names first, so a swap cannot collide
 // on a case-insensitive filesystem or on partially-overlapping names.
 for (const { from, to } of plan.rename) {
-  if (from !== to) fs.renameSync(path.join(dir, from), path.join(dir, `.tmp-${to}`));
+  if (from !== to) fs.renameSync(path.join(target, from), path.join(target, `.tmp-${to}`));
 }
 for (const { to } of plan.rename) {
-  const temp = path.join(dir, `.tmp-${to}`);
-  if (fs.existsSync(temp)) fs.renameSync(temp, path.join(dir, to));
+  const temp = path.join(target, `.tmp-${to}`);
+  if (fs.existsSync(temp)) fs.renameSync(temp, path.join(target, to));
 }
-for (const file of plan.drop) fs.rmSync(path.join(dir, file), { force: true, recursive: true });
+for (const file of plan.drop) fs.rmSync(path.join(target, file), { force: true, recursive: true });
 
 const buffer = await new Promise((resolve, reject) => {
-  createTorrent(dir, { name, announce: TRACKERS, urlList: [webSeed] }, (error, result) =>
+  createTorrent(target, { name, announce: TRACKERS, urlList: [webSeed] }, (error, result) =>
     error ? reject(error) : resolve(result),
   );
 });
 const parsed = await parseTorrent(buffer);
-const target = path.join(torrentDir, `${parsed.infoHash}.torrent`);
-fs.writeFileSync(target, buffer);
+const torrentFile = path.join(torrentDir, `${parsed.infoHash}.torrent`);
+fs.writeFileSync(torrentFile, buffer);
 
 console.log(
   JSON.stringify(
@@ -93,7 +115,7 @@ console.log(
       files: parsed.files.length,
       announce: parsed.announce,
       urlList: parsed.urlList,
-      torrentFile: target,
+      torrentFile,
     },
     null,
     1,

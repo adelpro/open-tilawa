@@ -15,6 +15,23 @@
 const NUMBERED_LEADING = /^(\d{3})\.[^.]+$/;
 const THREE_DIGITS = /\d{3}/g;
 
+/**
+ * The release name without the source's tags.
+ *
+ * `Maher_Al-Muaiqly_(MP3_Quran)` is a folder name from a download site, and the
+ * parenthesised part is that site's metadata — it travels into the torrent name,
+ * the magnet's `dn` and the web-seed URL, so a listener sees it everywhere.
+ * `_Update2` is the same kind of residue: a re-release marker, not a name.
+ */
+export function cleanName(name) {
+  const stripped = name
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/_?Update\d+/gi, '')
+    .replace(/[_\s]{2,}/g, '_')
+    .replace(/^[_\s]+|[_\s]+$/g, '');
+  return stripped || name;
+}
+
 /** `001.mp3` and `ar_001_reciter.mp3` both name episode 1. */
 export function episodeOf(name) {
   const leading = name.match(NUMBERED_LEADING);
