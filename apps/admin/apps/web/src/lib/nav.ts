@@ -23,7 +23,6 @@ export function navItemsFor(role: AppRole | null): NavEntry[] {
   const items: NavEntry[] = [
     { to: '/dashboard/seeders', labelKey: 'nav.seeders', icon: 'monitor', group: 'workspace' },
     { to: '/dashboard/turns', labelKey: 'nav.turns', icon: 'globe', group: 'workspace' },
-    { to: '/dashboard/torrents', labelKey: 'nav.torrents', icon: 'key', group: 'workspace' },
     { to: '/dashboard/reciters', labelKey: 'nav.reciters', icon: 'user', group: 'workspace' },
     { to: '/dashboard/status', labelKey: 'nav.status', icon: 'monitor', group: 'workspace' },
     { to: '/dashboard/tools', labelKey: 'nav.tools', icon: 'key', group: 'workspace' },

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { SQLITE_DB } from '../store/store.module';
-import type { Db } from '@tilawa-admin/core';
+import { deriveReciterState, type Db, type ReciterState } from '@tilawa-admin/core';
 import { RECITER_NAMES_AR } from './reciter-names';
 
 export interface Reciter {
@@ -18,6 +18,21 @@ export interface Reciter {
   /** Whether the public player lists this row. Curation, not deletion. */
   published: boolean;
   createdAt: string;
+}
+
+/** One node's answer about one reciter. */
+export interface ReciterPlacement {
+  seederId: number;
+  seederName: string;
+  state: 'pending' | 'placed' | 'failed';
+  error: string | null;
+}
+
+/** A catalogue row plus where it actually lives — the whole point of the screen. */
+export interface ReciterWithPlacement extends Reciter {
+  heldBy: { seederId: number; name: string }[];
+  placements: ReciterPlacement[];
+  state: ReciterState;
 }
 
 @Injectable()
@@ -59,6 +74,71 @@ export class RecitersService {
       .prepare('SELECT * FROM reciters ORDER BY id')
       .all()
       .map((r: any) => this.mapRow(r));
+  }
+
+  /**
+   * The catalogue with its coverage: which nodes report holding each row, what
+   * was asked of them, and the resulting state.
+   *
+   * Two queries and no fan-out — the node inventory is a cache refreshed by the
+   * poller, so this stays one statement even with a fleet.
+   */
+  listWithPlacement(): ReciterWithPlacement[] {
+    const rows = this.list();
+
+    const held = this.db
+      .prepare(
+        `SELECT lower(nt.infohash) AS hash, s.id AS seeder_id, s.name AS seeder_name
+         FROM node_torrents nt JOIN seeders s ON s.id = nt.seeder_id`,
+      )
+      .all() as { hash: string; seeder_id: number; seeder_name: string }[];
+
+    const placements = this.db
+      .prepare(
+        `SELECT p.reciter_id, p.seeder_id, p.state, p.error, s.name AS seeder_name
+         FROM placements p JOIN seeders s ON s.id = p.seeder_id`,
+      )
+      .all() as {
+      reciter_id: number;
+      seeder_id: number;
+      state: ReciterPlacement['state'];
+      error: string | null;
+      seeder_name: string;
+    }[];
+
+    const heldBy = new Map<string, { seederId: number; name: string }[]>();
+    for (const row of held) {
+      const list = heldBy.get(row.hash) ?? [];
+      list.push({ seederId: row.seeder_id, name: row.seeder_name });
+      heldBy.set(row.hash, list);
+    }
+
+    const byReciter = new Map<number, ReciterPlacement[]>();
+    for (const row of placements) {
+      const list = byReciter.get(row.reciter_id) ?? [];
+      list.push({
+        seederId: row.seeder_id,
+        seederName: row.seeder_name,
+        state: row.state,
+        error: row.error,
+      });
+      byReciter.set(row.reciter_id, list);
+    }
+
+    return rows.map((reciter) => {
+      const heldRows = heldBy.get(reciter.infohash.toLowerCase()) ?? [];
+      const placed = byReciter.get(reciter.id) ?? [];
+      return {
+        ...reciter,
+        heldBy: heldRows,
+        placements: placed,
+        state: deriveReciterState({
+          published: reciter.published,
+          heldByNodes: heldRows.length,
+          placements: placed.map((p) => p.state),
+        }),
+      };
+    });
   }
 
   /** What the public player may show: curated, not merely present. */

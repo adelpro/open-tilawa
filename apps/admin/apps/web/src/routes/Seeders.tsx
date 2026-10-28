@@ -39,6 +39,9 @@ export function Seeders(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
+  /** Shown after a bulk top-up that had to stop at the 90% cap. */
+  const [completeNote, setCompleteNote] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -161,6 +164,37 @@ export function Seeders(): ReactElement {
     }
   }
 
+  /**
+   * Top up every node with the published catalogue, stopping at 90 % of each
+   * node's quota. A node that cannot take everything says so: the notice after
+   * the run names how many releases were left out, so "incomplete" is never
+   * silent.
+   */
+  async function makeComplete(): Promise<void> {
+    setCompleting(true);
+    setError(null);
+    setMessage(null);
+    setCompleteNote(null);
+    try {
+      const plan = await api<{
+        nodes: { skipped: number; toAdd: { infohash: string }[] }[];
+      }>('/reciters/push/plan', { method: 'POST', body: {} });
+      const applied = await api<{ applied?: { added: number }[] }>('/reciters/push', {
+        method: 'POST',
+        body: {},
+      });
+      const added = (applied.applied ?? []).reduce((sum, row) => sum + row.added, 0);
+      const skipped = plan.nodes.reduce((sum, row) => sum + row.skipped, 0);
+      setMessage(t('seeders.completeDone', { added: String(added) }));
+      if (skipped > 0) setCompleteNote(t('seeders.completeSkipped', { count: String(skipped) }));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.completeFailed'));
+    } finally {
+      setCompleting(false);
+    }
+  }
+
   async function poll(id: number): Promise<void> {
     setBusy(`poll-${id}`);
     try {
@@ -198,12 +232,27 @@ export function Seeders(): ReactElement {
           <Button variant="secondary" onClick={() => void pollAll()} busy={busy === 'poll-all'}>
             {t('seeders.pollAll')}
           </Button>
+          <Button
+            variant="secondary"
+            busy={completing}
+            onClick={() => void makeComplete()}
+          >
+            {t('seeders.complete')}
+          </Button>
           <Button onClick={() => setShowAdd(true)}>{t('seeders.add')}</Button>
         </div>
       </header>
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
+      {completeNote ? (
+        <Notice tone="notice">
+          {completeNote}{' '}
+          <Button small variant="tertiary" onClick={() => setCompleteNote(null)}>
+            {t('seeders.dismiss')}
+          </Button>
+        </Notice>
+      ) : null}
 
       {showAdd ? (
         <FormModal
@@ -339,10 +388,14 @@ export function Seeders(): ReactElement {
                 </tr>
               </thead>
               <tbody>
-                {seeders.map((seeder) => (
+                {[...seeders]
+                  .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+                  .map((seeder) => (
                   <tr
                     key={seeder.id}
-                    className="table__row--clickable"
+                    className={
+                      seeder.pinned ? 'table__row--clickable row--pinned' : 'table__row--clickable'
+                    }
                     onClick={() => navigate(`/torrents/${seeder.id}`)}
                   >
                     <td>
@@ -354,6 +407,7 @@ export function Seeders(): ReactElement {
                           <Chip tone={statusTone(seeder.status)}>
                             {t(statusKey(seeder.status))}
                           </Chip>
+                          {seeder.pinned ? <Chip tone="info">{t('seeders.pinned')}</Chip> : null}
                           {/* Credentials never reach this screen — the API does not
                               return them. The row can only say whether any are set. */}
                           <span className="row__meta">
@@ -371,6 +425,17 @@ export function Seeders(): ReactElement {
                               ? `v${seeder.version}`
                               : t('seeders.versionUnknown')}
                           </Chip>
+                          {seeder.desiredVersion ? (
+                            <Chip
+                              tone={
+                                seeder.version === seeder.desiredVersion ? 'ok' : 'notice'
+                              }
+                            >
+                              {seeder.version === seeder.desiredVersion
+                                ? t('seeders.upToDate')
+                                : t('seeders.behind', { version: seeder.desiredVersion })}
+                            </Chip>
+                          ) : null}
                           <span className="row__id" title={seeder.url}>
                             {seeder.url}
                           </span>

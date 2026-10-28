@@ -467,6 +467,18 @@
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
+
+/* The node this dashboard runs. Pinned to the top and marked, because if it is
+   down the site is down — it should not look like one of the volunteers. */
+.row--pinned td {
+  background: var(--canvas-parchment);
+}
+.row--pinned td:first-child {
+  box-shadow: inset 3px 0 0 var(--ink);
+}
+.row--pinned .row__label {
+  font-weight: 700;
+}
 .table .num {
   text-align: end;
   font: var(--code);

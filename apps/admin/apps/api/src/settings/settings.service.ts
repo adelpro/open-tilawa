@@ -13,6 +13,9 @@ import type { Db } from '@tilawa-admin/core';
  */
 export const DEFAULT_TRACKERS = ['wss://tracker.quran.us.kg'] as const;
 
+/** Where `.torrent` files and /media are served; the magnet's `xs` points here. */
+export const DEFAULT_WEB_ORIGIN = 'https://tilawa.quran.us.kg';
+
 @Injectable()
 export class SettingsService {
   constructor(@Inject(SQLITE_DB) private readonly db: Db) {
@@ -61,6 +64,39 @@ export class SettingsService {
   withTrackers(magnet: string): string {
     return mergeTrackers(magnet, this.getTrackers());
   }
+
+  /**
+   * Where the public site publishes `.torrent` files. Not the admin's own
+   * WEBSITE: the player fetches them from the web origin, next to /media.
+   */
+  getWebOrigin(): string {
+    const row = this.db
+      .prepare("SELECT value FROM app_settings WHERE key = 'webOrigin'")
+      .get() as { value: string } | undefined;
+    return (row?.value ?? DEFAULT_WEB_ORIGIN).replace(/\/+$/, '');
+  }
+
+  setWebOrigin(origin: string): string {
+    const clean = origin.trim().replace(/\/+$/, '');
+    if (!/^https?:\/\/.+/i.test(clean)) {
+      throw new BadRequestException(`not an origin: ${origin}`);
+    }
+    this.db
+      .prepare(
+        "INSERT INTO app_settings (key, value) VALUES ('webOrigin', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      )
+      .run(clean);
+    return clean;
+  }
+
+  torrentUrl(infoHash: string): string {
+    return `${this.getWebOrigin()}/torrents/${infoHash}.torrent`;
+  }
+
+  /** The single magnet builder: trackers + the exact-source URL, always. */
+  magnetFor(infoHash: string, name: string): string {
+    return magnetForInfo(infoHash, name, this.getTrackers(), this.torrentUrl(infoHash));
+  }
 }
 
 /** Pure merge, exported for tests: existing `tr=` entries are kept and deduped. */
@@ -83,8 +119,20 @@ export function mergeTrackers(magnet: string, trackers: string[]): string {
 }
 
 /** A fresh magnet for a catalogue row: hash + name + the configured trackers. */
-export function magnetForInfo(infoHash: string, name: string, trackers: string[]): string {
-  return magnetQuery({ xt: `urn:btih:${infoHash}`, dn: name, tr: trackers });
+export function magnetForInfo(
+  infoHash: string,
+  name: string,
+  trackers: string[],
+  xs?: string | null,
+): string {
+  return magnetQuery({
+    xt: `urn:btih:${infoHash}`,
+    dn: name,
+    tr: trackers,
+    // `xs` is the exact-source URL: metadata arrives over HTTP even when no
+    // swarm peer answers, which is what makes an HTTP-only reciter playable.
+    extras: xs ? [['xs', xs]] : [],
+  });
 }
 
 /**

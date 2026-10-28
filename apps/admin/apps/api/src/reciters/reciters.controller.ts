@@ -18,7 +18,7 @@ import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RecitersService } from './reciters.service';
 import { CataloguePushService } from './catalogue-push.service';
-import { magnetForInfo, SettingsService } from '../settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 @UseGuards(JWTAuthGuard, RoleGuard)
@@ -32,20 +32,29 @@ export class RecitersController {
   ) {}
 
   /**
-   * Every stored magnet announces to the configured trackers. A magnet pasted
-   * without them keeps its own and gains ours; one with only a hash gets the
-   * name and the list.
+   * Every stored magnet is rebuilt from the row's own identity: the configured
+   * trackers and the exact-source URL, canonically encoded. Whatever a paste
+   * carried outside the hash is not part of the release.
    */
   private normalised(magnet: string, infohash: string, name: string): string {
-    const base = magnet?.startsWith('magnet:')
-      ? magnet
-      : magnetForInfo(infohash.trim(), name.trim(), this.settings.getTrackers());
-    return this.settings.withTrackers(base);
+    const hash = (infohash ?? '').trim();
+    if (!hash) return magnet;
+    let label = (name ?? '').trim();
+    if (!label && magnet?.startsWith('magnet:')) {
+      try {
+        label = new URL(magnet).searchParams.get('dn') ?? '';
+      } catch {
+        // a malformed magnet is not a reason to lose the row
+      }
+    }
+    return this.settings.magnetFor(hash, label || hash);
   }
 
   @Get()
   list() {
-    return this.service.list();
+    // Coverage, not just the rows: which nodes report each reciter, what was
+    // asked of them, and the state that follows.
+    return this.service.listWithPlacement();
   }
 
   /** Fill the catalogue from a node's own inventory (sizes included). */
@@ -137,13 +146,53 @@ export class RecitersController {
     return updated;
   }
 
+  /** Put this reciter on specific nodes. Writes a pending placement per node. */
+  @Post(':id/place')
+  @HttpCode(HttpStatus.OK)
+  place(
+    @Param('id') id: string,
+    @Body() body: { seederIds: number[] },
+    @CurrentUser('id') actorId: string | number,
+  ) {
+    return this.push.place(
+      Number(id),
+      (body?.seederIds ?? []).map((entry) => Number(entry)),
+      Number(actorId),
+    );
+  }
+
+  /** Stop seeding on one node, keeping the files the HTTP source serves. */
+  @Delete(':id/place/:seederId')
+  @HttpCode(HttpStatus.OK)
+  unplace(
+    @Param('id') id: string,
+    @Param('seederId') seederId: string,
+    @CurrentUser('id') actorId: string | number,
+  ) {
+    return this.push.unplace(Number(id), Number(seederId), Number(actorId));
+  }
+
+  /**
+   * Delete a catalogue row. `purge=all` also removes it from every node;
+   * `purge=1,2` from exactly those. Omitted means the catalogue only, leaving
+   * whatever the nodes hold as orphans — which the UI warns about.
+   */
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   remove(
     @Param('id') id: string,
-    @Query('purgeNodes') purgeNodes: string | undefined,
+    @Query('purge') purge: string | undefined,
     @CurrentUser('id') actorId: string | number,
   ) {
-    return this.push.remove(Number(id), purgeNodes === 'true', Number(actorId));
+    const target =
+      purge === undefined || purge === ''
+        ? null
+        : purge === 'all'
+          ? ('all' as const)
+          : purge
+              .split(',')
+              .map((entry) => Number(entry))
+              .filter((entry) => Number.isFinite(entry));
+    return this.push.remove(Number(id), target, Number(actorId));
   }
 }

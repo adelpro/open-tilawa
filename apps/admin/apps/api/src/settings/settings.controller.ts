@@ -2,7 +2,7 @@ import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { magnetForInfo, SettingsService } from './settings.service';
+import { SettingsService } from './settings.service';
 import { RecitersService } from '../reciters/reciters.service';
 
 /**
@@ -32,7 +32,7 @@ export class SettingsController {
     let rewritten = 0;
     for (const reciter of this.reciters.list()) {
       this.reciters.update(reciter.id, {
-        magnet: magnetForInfo(reciter.infohash, reciter.name, trackers),
+        magnet: this.settings.magnetFor(reciter.infohash, reciter.name),
       });
       rewritten += 1;
     }

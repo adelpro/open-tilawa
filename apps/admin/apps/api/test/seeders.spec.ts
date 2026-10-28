@@ -397,7 +397,7 @@ describe('seeder proxy', () => {
         .send({ nodeIds: [body.id] })
         .expect(200);
       expect(plan.body.nodes[0].skipReason).toBe('low_space');
-      expect(plan.body.nodes[0].detail).toContain('0 GB headroom');
+      expect(plan.body.nodes[0].detail).toContain('no headroom');
     } finally {
       full.server.close();
     }
@@ -473,7 +473,7 @@ describe('seeder proxy', () => {
       .expect(201);
 
     const purged = await agent
-      .delete(`/api/reciters/${body.id}?purgeNodes=true`)
+      .delete(`/api/reciters/${body.id}?purge=all`)
       .set('x-csrf-token', csrf)
       .expect(200);
     expect(purged.body.removed).toBe(true);

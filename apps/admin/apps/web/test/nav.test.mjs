@@ -11,10 +11,12 @@ describe('navigation by role', () => {
     const items = navItemsFor('user');
     assert.deepEqual(
       items.map((item) => item.labelKey),
+      // Torrents is not a destination: a node is reached through the fleet, and
+      // the catalogue through Reciters. Three surfaces for two nouns is what made
+      // the console feel like it had two lists of the same thing.
       [
         'nav.seeders',
         'nav.turns',
-        'nav.torrents',
         'nav.reciters',
         'nav.status',
         'nav.tools',

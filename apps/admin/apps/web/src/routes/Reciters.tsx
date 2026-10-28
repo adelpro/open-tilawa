@@ -31,6 +31,13 @@ interface PushPlan {
   applied?: { seederId: number; added: number; error: string | null }[];
 }
 
+interface ReciterPlacement {
+  seederId: number;
+  seederName: string;
+  state: 'pending' | 'placed' | 'failed';
+  error: string | null;
+}
+
 interface Reciter {
   id: number;
   name: string;
@@ -42,6 +49,11 @@ interface Reciter {
   sizeBytes: number | null;
   published: boolean;
   createdAt: string;
+  /** Nodes whose last report says they hold this — observation, not intent. */
+  heldBy: { seederId: number; name: string }[];
+  /** What we asked of each node, and what came of it. */
+  placements: ReciterPlacement[];
+  state: 'healthy' | 'unseeded' | 'stale' | 'dormant';
 }
 
 /**
@@ -75,7 +87,11 @@ export function Reciters(): ReactElement {
   const [editSizeGb, setEditSizeGb] = useState('');
   const [editPublished, setEditPublished] = useState(true);
   const [deleting, setDeleting] = useState<Reciter | null>(null);
-  const [purgeNodes, setPurgeNodes] = useState(false);
+  /** Nodes to purge when deleting: unticked unless the operator asks. */
+  const [purgeIds, setPurgeIds] = useState<number[]>([]);
+  /** The reciter whose placement panel is open, by id so a reload refreshes it. */
+  const [placingId, setPlacingId] = useState<number | null>(null);
+  const [placementBusy, setPlacementBusy] = useState<number | null>(null);
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
   const [fetchNode, setFetchNode] = useState<number | null>(null);
   const [trackersOpen, setTrackersOpen] = useState(false);
@@ -276,15 +292,45 @@ export function Reciters(): ReactElement {
     }
   }
 
+  const placing = (reciters ?? []).find((row) => row.id === placingId) ?? null;
+
+  /**
+   * Place or unplace one reciter on one node.
+   *
+   * Unplacing stops seeding and keeps the files: the volume is also the HTTP
+   * source, so removing a torrent here must not delete what /media serves.
+   */
+  async function togglePlacement(seederId: number, active: boolean): Promise<void> {
+    if (!placing) return;
+    setPlacementBusy(seederId);
+    setError(null);
+    try {
+      if (active) {
+        await api(`/reciters/${placing.id}/place`, {
+          method: 'POST',
+          body: { seederIds: [seederId] },
+        });
+      } else {
+        await api(`/reciters/${placing.id}/place/${seederId}`, { method: 'DELETE' });
+      }
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.placeFailed'));
+    } finally {
+      setPlacementBusy(null);
+    }
+  }
+
   async function confirmDelete(): Promise<void> {
     if (!deleting) return;
     setBusy('delete');
     setError(null);
     try {
-      await api(`/reciters/${deleting.id}?purgeNodes=${purgeNodes}`, { method: 'DELETE' });
-      setMessage(purgeNodes ? t('reciters.removedEverywhere') : t('reciters.removed'));
+      const purge = purgeIds.length > 0 ? `?purge=${purgeIds.join(',')}` : '';
+      await api(`/reciters/${deleting.id}${purge}`, { method: 'DELETE' });
+      setMessage(purgeIds.length > 0 ? t('reciters.removedEverywhere') : t('reciters.removed'));
       setDeleting(null);
-      setPurgeNodes(false);
+      setPurgeIds([]);
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('reciters.removeFailed'));
@@ -694,6 +740,7 @@ export function Reciters(): ReactElement {
                   <th scope="col">{t('reciters.infohash')}</th>
                   <th scope="col">{t('reciters.fileCount')}</th>
                   <th scope="col">{t('reciters.size')}</th>
+                  <th scope="col">{t('reciters.coverage')}</th>
                   <th scope="col">{t('reciters.actions')}</th>
                 </tr>
               </thead>
@@ -722,14 +769,40 @@ export function Reciters(): ReactElement {
                       {reciter.sizeBytes === null ? '—' : bytes(reciter.sizeBytes, locale)}
                     </td>
                     <td>
+                      <Chip
+                        tone={
+                          reciter.state === 'healthy'
+                            ? 'ok'
+                            : reciter.state === 'unseeded'
+                              ? 'notice'
+                              : 'info'
+                        }
+                      >
+                        {reciter.state === 'unseeded'
+                          ? t('reciters.unseeded')
+                          : reciter.state === 'stale'
+                            ? t('reciters.stale')
+                            : t('reciters.onNodes', { count: String(reciter.heldBy.length) })}
+                      </Chip>
+                      {reciter.placements.some((p) => p.state === 'pending') ? (
+                        <Chip tone="notice">{t('reciters.pending')}</Chip>
+                      ) : null}
+                    </td>
+                    <td>
                       <span className="row__actions">
+                        <Button small variant="tertiary" onClick={() => setPlacingId(reciter.id)}>
+                          {t('reciters.place')}
+                        </Button>
                         <Button small variant="tertiary" onClick={() => startEdit(reciter)}>
                           {t('reciters.edit')}
                         </Button>
                         <Button
                           small
                           variant="destructive"
-                          onClick={() => setDeleting(reciter)}
+                          onClick={() => {
+                            setPurgeIds([]);
+                            setDeleting(reciter);
+                          }}
                           busy={busy === `remove-${reciter.id}`}
                         >
                           {t('reciters.remove')}
@@ -771,6 +844,93 @@ export function Reciters(): ReactElement {
         </Modal>
       ) : null}
 
+
+      {placing ? (
+        <Modal
+          title={t('reciters.placeTitle', { name: placing.nameAr ?? placing.name })}
+          onClose={() => setPlacingId(null)}
+        >
+          <div className="stack">
+            <p className="body muted">{t('reciters.placeBody')}</p>
+            {nodes === null ? (
+              <SkeletonRows rows={2} label={t('reciters.loading')} />
+            ) : nodes.length === 0 ? (
+              <p className="body muted">{t('torrents.noSeeders')}</p>
+            ) : (
+              <div className="table-scroll">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{t('reciters.placeNode')}</th>
+                      <th scope="col">{t('reciters.placeFree')}</th>
+                      <th scope="col">{t('reciters.placeState')}</th>
+                      <th scope="col">{t('reciters.actions')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...nodes]
+                      .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+                      .map((node) => {
+                        const held = placing.heldBy.some((row) => row.seederId === node.id);
+                        const placement = placing.placements.find((row) => row.seederId === node.id);
+                        // Unknown size is not a reason to refuse; the node enforces the cap itself.
+                        const fits =
+                          placing.sizeBytes === null ||
+                          (node.headroomBytes ?? node.freeBytes ?? 0) >= placing.sizeBytes;
+                        return (
+                          <tr key={node.id}>
+                            <td>
+                              <span className="row__label">{node.name}</span>
+                              {node.pinned ? <Chip tone="info">{t('seeders.pinned')}</Chip> : null}
+                            </td>
+                            <td className="num">
+                              {node.freeBytes === null ? '—' : bytes(node.freeBytes, locale)}
+                            </td>
+                            <td>
+                              {held ? (
+                                <Chip tone="ok">{t('reciters.placePlaced')}</Chip>
+                              ) : placement ? (
+                                <Chip tone={placement.state === 'failed' ? 'notice' : 'info'}>
+                                  {placement.state === 'pending'
+                                    ? t('reciters.pending')
+                                    : t('reciters.failed')}
+                                </Chip>
+                              ) : (
+                                <Chip tone="info">{t('reciters.placeAbsent')}</Chip>
+                              )}
+                            </td>
+                            <td>
+                              <Button
+                                small
+                                variant={held ? 'destructive' : 'secondary'}
+                                busy={placementBusy === node.id}
+                                disabled={!held && !fits}
+                                title={
+                                  fits
+                                    ? undefined
+                                    : t('reciters.noRoom', {
+                                        size:
+                                          placing.sizeBytes === null
+                                            ? '—'
+                                            : bytes(placing.sizeBytes, locale),
+                                      })
+                                }
+                                onClick={() => void togglePlacement(node.id, !held)}
+                              >
+                                {held ? t('reciters.unplace') : t('reciters.placeAction')}
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Modal>
+      ) : null}
+
       {deleting ? (
         <ConfirmModal
           title={t('reciters.deleteTitle')}
@@ -781,14 +941,39 @@ export function Reciters(): ReactElement {
           onClose={() => setDeleting(null)}
           onConfirm={() => void confirmDelete()}
         >
-          <label className="cluster" style={{ cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={purgeNodes}
-              onChange={(event) => setPurgeNodes(event.target.checked)}
-            />
-            {t('reciters.deletePurge')}
-          </label>
+          <div className="stack stack--tight">
+            <p className="body muted">{t('reciters.deleteNodesHint')}</p>
+            {nodes && nodes.length > 0 ? (
+              <>
+                <label className="cluster" style={{ cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={purgeIds.length === nodes.length}
+                    onChange={(event) =>
+                      setPurgeIds(event.target.checked ? nodes.map((node) => node.id) : [])
+                    }
+                  />
+                  {t('reciters.deleteSelectAll')}
+                </label>
+                {nodes.map((node) => (
+                  <label key={node.id} className="cluster" style={{ cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={purgeIds.includes(node.id)}
+                      onChange={(event) =>
+                        setPurgeIds((current) =>
+                          event.target.checked
+                            ? [...current, node.id]
+                            : current.filter((id) => id !== node.id),
+                        )
+                      }
+                    />
+                    {node.name}
+                  </label>
+                ))}
+              </>
+            ) : null}
+          </div>
         </ConfirmModal>
       ) : null}
     </div>

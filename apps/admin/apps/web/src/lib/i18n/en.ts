@@ -122,6 +122,15 @@ export const en = {
   'seeders.credentialsSet': 'Stored',
   'seeders.credentialsMissing': 'None',
   'seeders.statusHeading': 'Status',
+  'seeders.complete': 'Make nodes complete',
+  'seeders.completeDone': 'Added {added} reciter(s).',
+  'seeders.completeSkipped':
+    '{count} reciter(s) left out: the node would pass 90% of its quota.',
+  'seeders.completeFailed': 'Could not top up the nodes.',
+  'seeders.dismiss': 'Dismiss',
+  'seeders.upToDate': 'Current',
+  'seeders.behind': 'Behind {version}',
+  'seeders.pinned': 'This server',
   'seeders.statusOnline': 'Online',
   'seeders.statusOffline': 'Offline',
   'seeders.statusUnknown': 'Not probed yet',
@@ -150,6 +159,22 @@ export const en = {
   'torrents.removeBody':
     "Its audio is deleted from this node's disk and cannot be restored. The catalogue entry stays, so it can be added again.",
   'torrents.removeConfirm': 'Delete',
+  'torrents.noNode': 'Pick a node from the fleet.',
+  'torrents.nodeTitle': 'Node',
+  'torrents.asOf': 'snapshot of {time}',
+  'torrents.stateHealthy': 'In catalogue',
+  'torrents.stateStale': 'Not published',
+  'torrents.stateOrphan': 'Not in catalogue',
+  'torrents.onNodeTitle': 'On this node',
+  'torrents.addFromCatalogue': 'Add from catalogue',
+  'torrents.close': 'Close',
+  'torrents.cataloguePublishedHint':
+    'Published reciters only — the node should carry exactly what the site serves.',
+  'torrents.catalogueNoPublished':
+    'No reciter is published yet. Publish one on the Reciters screen.',
+  'torrents.missingPublished':
+    'The catalogue advertises {count} releases that this node does not hold.',
+  'torrents.review': 'Review',
   'torrents.add': 'Add torrent',
   'torrents.cancel': 'Cancel',
   'torrents.addSubmit': 'Add to node',
@@ -205,6 +230,28 @@ export const en = {
   'reciters.removed': 'Reciter removed.',
   'reciters.loadFailed': 'Could not load the reciters.',
   'reciters.addFailed': 'Could not add the reciter.',
+  'reciters.coverage': 'Nodes',
+  'reciters.onNodes': '{count} nodes',
+  'reciters.unseeded': 'Not seeded',
+  'reciters.stale': 'Unpublished',
+  'reciters.pending': 'Pending',
+  'reciters.failed': 'Failed',
+  'reciters.place': 'Nodes',
+  'reciters.placeTitle': 'Node placement — {name}',
+  'reciters.placeBody':
+    'Tick a node to seed this reciter there. Unplacing stops seeding and keeps the files, so the HTTP source keeps working.',
+  'reciters.placeNode': 'Node',
+  'reciters.placeFree': 'Free space',
+  'reciters.placeState': 'State',
+  'reciters.placePlaced': 'Seeding',
+  'reciters.placeAbsent': 'Not there',
+  'reciters.placeAction': 'Place',
+  'reciters.unplace': 'Unplace',
+  'reciters.noRoom': 'Not enough room for {size}',
+  'reciters.placeFailed': 'Could not change that placement.',
+  'reciters.deleteNodesHint':
+    'Also delete the files from these nodes. Unticked leaves them behind as orphans.',
+  'reciters.deleteSelectAll': 'Select all nodes',
   'reciters.removeFailed': 'Could not remove the reciter.',
   'reciters.signInRequired': 'Sign in required.',
 
@@ -332,10 +379,6 @@ export const en = {
   'reciters.updateFailed': 'Could not update the reciter.',
 
   'torrents.catalogue': 'Catalogue',
-  'torrents.catalogueHint':
-    'The reciter catalogue is the source of truth. Tick what this node should carry; it is added from its catalogue magnet.',
-  'torrents.catalogueEmpty':
-    'The catalogue is empty — import this node or add reciters on the Reciters screen.',
   'torrents.catalogueComplete': 'This node already carries every catalogue release.',
   'torrents.importCatalogue': 'Import this node into the catalogue',
   'torrents.importDone': 'Catalogue filled from the node — {added} added.',
@@ -376,7 +419,6 @@ export const en = {
   'reciters.fetchFailed': 'Could not resolve that magnet.',
   'reciters.deleteTitle': 'Delete this reciter?',
   'reciters.deleteBody': 'Removes “{name}” from the catalogue.',
-  'reciters.deletePurge': 'Also remove its torrent from every connected seeder node',
   'reciters.deleteConfirm': 'Delete',
   'reciters.removedEverywhere': 'Reciter deleted and purged from the nodes.',
 

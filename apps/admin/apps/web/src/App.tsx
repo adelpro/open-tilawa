@@ -313,7 +313,11 @@ function Screen({
   if (first === 'turns') {
     return second ? <TurnDetail id={Number(second)} /> : <Turns />;
   }
-  if (first === 'torrents') return <Torrents seederId={second} />;
+  if (first === 'torrents') {
+    // A node is reached through the fleet. `/torrents` with no id used to pick
+    // one silently, which is what made the two screens feel like duplicates.
+    return second ? <Torrents seederId={second} /> : <Seeders />;
+  }
   if (first === 'reciters') return <Reciters />;
   if (first === 'account') return <Account />;
   if (first === 'tools') return <Tools />;
@@ -424,7 +428,6 @@ function ShellSkeleton({ version }: { version: string | null }): ReactElement {
               <span className="nav__label">{t('nav.workspace')}</span>
               <span className="nav__link">{t('nav.seeders')}</span>
               <span className="nav__link">{t('nav.turns')}</span>
-              <span className="nav__link">{t('nav.torrents')}</span>
               <span className="nav__link">{t('nav.account')}</span>
             </div>
           </nav>

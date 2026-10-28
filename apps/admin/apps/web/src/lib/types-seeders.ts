@@ -23,6 +23,14 @@ export interface Seeder {
   usedBytes: number | null;
   /** How much more it will accept right now (quota and disk combined). */
   headroomBytes: number | null;
+  /**
+   * The node this dashboard runs, recognised by its URL host matching
+   * SEEDER_SERVICE. Pinned to the top: if it is down the site is down.
+   */
+  pinned: boolean;
+  updateMode: 'build' | 'pull';
+  /** The version the deployment says this node should run. */
+  desiredVersion: string | null;
 }
 
 export interface Turn {

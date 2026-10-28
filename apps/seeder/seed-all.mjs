@@ -164,7 +164,7 @@ function persistSource(torrent, source) {
  *  - `destroy()` without `destroyStore` left every byte on disk.
  *  - the `.torrent` stayed in TORRENT_DIR, so the boot scan re-added it.
  */
-function removeTorrent(hash, res) {
+function removeTorrent(hash, res, { keepData = false } = {}) {
   const answer = (status, payload) => {
     res.writeHead(status, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(payload));
@@ -184,12 +184,15 @@ function removeTorrent(hash, res) {
           return;
         }
         // The store deletes the files listed in the torrent, not the folder that
-        // held them: without this every reciter leaves an empty directory.
+        // held them: without this every reciter leaves an empty directory. When
+        // the caller asked to keep the data (unplace), the folder is the point.
         try {
-          const root = path.resolve(DOWNLOAD_PATH, torrent.name);
-          const base = path.resolve(DOWNLOAD_PATH);
-          if (root.startsWith(base + path.sep) && fs.existsSync(root) && fs.statSync(root).isDirectory()) {
-            fs.rmSync(root, { recursive: true, force: true });
+          if (!keepData) {
+            const root = path.resolve(DOWNLOAD_PATH, torrent.name);
+            const base = path.resolve(DOWNLOAD_PATH);
+            if (root.startsWith(base + path.sep) && fs.existsSync(root) && fs.statSync(root).isDirectory()) {
+              fs.rmSync(root, { recursive: true, force: true });
+            }
           }
         } catch (error) {
           log.warning(`could not remove ${torrent.name} from ${DOWNLOAD_PATH}: ${error.message}`);
@@ -210,7 +213,7 @@ function removeTorrent(hash, res) {
         finish();
         return;
       }
-      torrent.destroy({ destroyStore: true }, finish);
+      torrent.destroy({ destroyStore: !keepData }, finish);
     })
     .catch((error) => answer(400, { error: error.message }));
 }
@@ -512,7 +515,10 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname.startsWith('/api/torrents/') && req.method === 'DELETE') {
     const hash = url.pathname.split('/').pop();
-    removeTorrent(hash, res);
+    // `keepData=1` stops seeding but leaves the payload: the library is also the
+    // HTTP source, so removing a torrent from a node must not delete the files
+    // the web seed serves. The console's "unplace" uses this; "purge" does not.
+    removeTorrent(hash, res, { keepData: url.searchParams.get('keepData') === '1' });
     return;
   }
 

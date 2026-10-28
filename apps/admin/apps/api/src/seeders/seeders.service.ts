@@ -7,8 +7,9 @@ import {
 } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { readFileSync } from 'node:fs';
 import { SQLITE_DB } from '../store/store.module';
-import { AuditRepository, type Db } from '@tilawa-admin/core';
+import { AuditRepository, isExpired, nextPlacementState, type Db } from '@tilawa-admin/core';
 import { updateSeederService } from './seeder-update';
 
 /** Seeder admin calls are bounded: a hung seeder must not hang the dashboard. */
@@ -32,6 +33,8 @@ export function assertSeederUrl(raw: string): string {
   }
   return raw.replace(/\/$/, '');
 }
+
+type BaseSeeder = Omit<Seeder, 'pinned' | 'updateMode' | 'desiredVersion'>;
 
 export interface Seeder {
   id: number;
@@ -58,6 +61,16 @@ export interface Seeder {
   usedBytes: number | null;
   /** How much more the node will accept right now (quota and disk combined). */
   headroomBytes: number | null;
+  /**
+   * The node the dashboard itself runs. Pinned to the top of the fleet because
+   * if it is down the site is dead, and recognised by its URL host matching
+   * SEEDER_SERVICE rather than by a flag someone has to remember to set.
+   */
+  pinned: boolean;
+  /** How this node is updated: compiled from the checkout, or pulled by tag. */
+  updateMode: 'build' | 'pull';
+  /** The version the operator's source of truth says it should run. */
+  desiredVersion: string | null;
 }
 
 /** One torrent as the seeder reports it. */
@@ -144,13 +157,29 @@ export class SeedersService {
   list(): Seeder[] {
     return (
       this.db.prepare('SELECT * FROM seeders ORDER BY id').all() as Record<string, unknown>[]
-    ).map(mapSeeder);
+    ).map((row) => this.decorate(mapSeeder(row)));
   }
 
   get(id: number): Seeder | null {
     const r = this.db.prepare('SELECT * FROM seeders WHERE id = ?').get(id) as
       Record<string, unknown> | undefined;
-    return r ? mapSeeder(r) : null;
+    return r ? this.decorate(mapSeeder(r)) : null;
+  }
+
+  /**
+   * Adds the two facts that are not in the row: whether this is the dashboard's
+   * own node, and which version the deployment says it should be running.
+   */
+  private decorate(seeder: BaseSeeder): Seeder {
+    const service = this.config.get<string>('SEEDER_SERVICE') ?? 'seeder';
+    const mode: 'build' | 'pull' =
+      this.config.get<string>('SEEDER_UPDATE_MODE') === 'build' ? 'build' : 'pull';
+    return {
+      ...seeder,
+      pinned: isServiceHost(seeder.url, service),
+      updateMode: mode,
+      desiredVersion: mode === 'build' ? treeVersion() : tagVersion(imageTag()),
+    };
   }
 
   add(input: {
@@ -275,12 +304,124 @@ export class SeedersService {
         data.headroomBytes ?? null,
         id,
       );
+
+    // A healthy node is also the only moment we can learn what it holds. A
+    // failure here is ours, not the node's, so it must not mark it offline.
+    await this.reconcileInventory(id).catch((error) =>
+      this.logger.warn(`reconcile of node ${id} failed: ${(error as Error).message}`),
+    );
     return this.get(id);
   }
 
   async pollAll(): Promise<Seeder[]> {
     await Promise.all(this.list().map((s) => this.poll(s.id)));
     return this.list();
+  }
+
+  /**
+   * Fold one node's inventory into `node_torrents` and settle its placements.
+   *
+   * This is what turns "which node holds this reciter" from a fan-out into a
+   * join, and what makes a placement observable: a request stays pending until
+   * the node's own report confirms it. A node that cannot be read keeps its last
+   * known answer — silence is not evidence of an empty node.
+   */
+  private async reconcileInventory(id: number): Promise<void> {
+    const row = this.db
+      .prepare('SELECT admin_user, admin_pass FROM seeders WHERE id = ?')
+      .get(id) as { admin_user?: string | null; admin_pass?: string | null } | undefined;
+    if (!row?.admin_user || !row?.admin_pass) return;
+
+    let torrents: SeederTorrent[];
+    try {
+      torrents = (await this.inventory(id)).torrents;
+    } catch (error) {
+      this.logger.debug(`node ${id} inventory unavailable: ${(error as Error).message}`);
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const upsert = this.db.prepare(
+      `INSERT INTO node_torrents (seeder_id, infohash, name, size, done, first_seen, last_seen)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(seeder_id, infohash) DO UPDATE SET
+         name = excluded.name, size = excluded.size, done = excluded.done,
+         last_seen = excluded.last_seen`,
+    );
+    const remove = this.db.prepare(
+      'DELETE FROM node_torrents WHERE seeder_id = ? AND infohash = ?',
+    );
+    const markPlaced = this.db.prepare(
+      `UPDATE placements SET state = 'placed', verified_at = ?, error = NULL
+       WHERE seeder_id = ? AND reciter_id = ?`,
+    );
+    const markFailed = this.db.prepare(
+      `UPDATE placements SET state = 'failed', error = ? WHERE seeder_id = ? AND reciter_id = ?`,
+    );
+
+    this.db.transaction(() => {
+      const seen = new Set<string>();
+      // Only a finished torrent is "placed": a download in progress is present
+      // in the inventory but cannot be played yet.
+      const complete = new Set<string>();
+      for (const torrent of torrents) {
+        const hash = torrent.infoHash.toLowerCase();
+        seen.add(hash);
+        if (torrent.done) complete.add(hash);
+        upsert.run(id, hash, torrent.name, torrent.size, torrent.done ? 1 : 0, now, now);
+      }
+
+      const known = this.db
+        .prepare('SELECT infohash FROM node_torrents WHERE seeder_id = ?')
+        .all(id) as { infohash: string }[];
+      for (const { infohash } of known) {
+        if (!seen.has(infohash)) remove.run(id, infohash);
+      }
+
+      const placements = this.db
+        .prepare(
+          `SELECT p.reciter_id, p.state, p.requested_at, lower(r.infohash) AS hash
+           FROM placements p JOIN reciters r ON r.id = p.reciter_id
+           WHERE p.seeder_id = ?`,
+        )
+        .all(id) as { reciter_id: number; state: string; requested_at: string; hash: string }[];
+
+      for (const placement of placements) {
+        const next = nextPlacementState({
+          current: placement.state as 'pending' | 'placed' | 'failed',
+          observed: complete.has(placement.hash),
+          expired: isExpired(placement.requested_at),
+        });
+        if (next.state === 'placed' && placement.state !== 'placed') {
+          markPlaced.run(now, id, placement.reciter_id);
+        } else if (next.state === 'failed' && placement.state !== 'failed') {
+          markFailed.run(next.error, id, placement.reciter_id);
+        }
+      }
+    })();
+  }
+
+  /**
+   * Fail placements that have waited longer than the TTL. Runs on its own beat,
+   * because a node that never answers must not leave a request pending forever:
+   * "we asked and nothing happened" is a failure the operator has to see.
+   */
+  expirePlacements(): number {
+    const rows = this.db
+      .prepare("SELECT reciter_id, seeder_id, requested_at FROM placements WHERE state = 'pending'")
+      .all() as { reciter_id: number; seeder_id: number; requested_at: string }[];
+    const fail = this.db.prepare(
+      "UPDATE placements SET state = 'failed', error = 'not confirmed within 3 hours' WHERE reciter_id = ? AND seeder_id = ?",
+    );
+    let expired = 0;
+    this.db.transaction(() => {
+      for (const row of rows) {
+        if (!isExpired(row.requested_at)) continue;
+        fail.run(row.reciter_id, row.seeder_id);
+        expired += 1;
+      }
+    })();
+    return expired;
   }
 
   /**
@@ -389,11 +530,14 @@ export class SeedersService {
     return this.json<{ ok: boolean; name?: string; infoHash?: string }>(res);
   }
 
-  async removeTorrent(id: number, infoHash: string): Promise<void> {
+  async removeTorrent(id: number, infoHash: string, keepData = false): Promise<void> {
     const seeder = await this.requireSeeder(id);
-    const res = await this.call(seeder, `/api/torrents/${encodeURIComponent(infoHash)}`, {
-      method: 'DELETE',
-    });
+    const suffix = keepData ? '?keepData=1' : '';
+    const res = await this.call(
+      seeder,
+      `/api/torrents/${encodeURIComponent(infoHash)}${suffix}`,
+      { method: 'DELETE' },
+    );
     if (res.status === 404) throw new NotFoundException('the seeder does not hold that torrent');
   }
 
@@ -408,7 +552,7 @@ export class SeedersService {
 
   private async requireSeeder(
     id: number,
-  ): Promise<Seeder & { adminUser: string | null; adminPass: string | null }> {
+  ): Promise<BaseSeeder & { adminUser: string | null; adminPass: string | null }> {
     const row = this.db.prepare('SELECT * FROM seeders WHERE id = ?').get(id) as
       Record<string, unknown> | undefined;
     if (!row) throw new NotFoundException('seeder not found');
@@ -425,7 +569,7 @@ export class SeedersService {
    * tell "the node is unreachable" from "the node refused the credentials".
    */
   private async call(
-    seeder: Seeder & { adminUser: string | null; adminPass: string | null },
+    seeder: BaseSeeder & { adminUser: string | null; adminPass: string | null },
     pathname: string,
     init: RequestInit,
     timeoutMs = SEEDER_TIMEOUT_MS,
@@ -476,7 +620,49 @@ function emptyToNull(value: string | null): string | null {
   return value.trim() === '' ? null : value;
 }
 
-function mapSeeder(r: Record<string, unknown>): Seeder {
+/** `http://seeder:8085` is the node this dashboard manages, in its own project. */
+function isServiceHost(url: string, service: string): boolean {
+  try {
+    return new URL(url).hostname.toLowerCase() === service.toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+/** The version in the checkout the host builds from. */
+function treeVersion(): string | null {
+  try {
+    const pkg = JSON.parse(readFileSync('/host/apps/seeder/package.json', 'utf8')) as {
+      version?: string;
+    };
+    return pkg.version ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** The image tag this host deploys, when it pulls rather than builds. */
+function imageTag(): string | null {
+  try {
+    const env = readFileSync('/host/.env', 'utf8');
+    const match = env.match(/^SEEDER_IMAGE=(.*)$/m);
+    return match ? match[1].trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A registry tag is only a version when it carries one. `:latest` and `:local`
+ * say nothing, and pretending they do would make every node look up to date.
+ */
+function tagVersion(tag: string | null): string | null {
+  if (!tag) return null;
+  const match = tag.match(/(\d+\.\d+\.\d+)/);
+  return match ? match[1] : null;
+}
+
+function mapSeeder(r: Record<string, unknown>): BaseSeeder {
   return {
     id: r.id as number,
     name: r.name as string,

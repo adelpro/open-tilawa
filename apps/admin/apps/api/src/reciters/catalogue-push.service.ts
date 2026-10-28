@@ -1,7 +1,8 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { AuditRepository } from '@tilawa-admin/core';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { AuditRepository, type Db } from '@tilawa-admin/core';
+import { SQLITE_DB } from '../store/store.module';
 import { RecitersService } from '../reciters/reciters.service';
-import { magnetForInfo, SettingsService } from '../settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 import { SeedersService } from '../seeders/seeders.service';
 
 export interface PushNodePlan {
@@ -14,6 +15,13 @@ export interface PushNodePlan {
   present: number;
   /** Why this node will be left alone, when it will be. */
   skipReason: 'offline' | 'no_credentials' | 'low_space' | 'unreachable' | null;
+  /**
+   * Reciters deliberately left out because they would push the node past 90 %
+   * of its quota. Never silent: the fleet shows the count and the reason.
+   */
+  skipped: number;
+  /** Bytes this node may fill before that cap, when it reports a quota. */
+  capBytes: number | null;
   detail: string | null;
 }
 
@@ -42,6 +50,7 @@ export class CataloguePushService {
     private readonly seeders: SeedersService,
     private readonly audit: AuditRepository,
     private readonly settings: SettingsService,
+    @Inject(SQLITE_DB) private readonly db: Db,
   ) {}
 
   plan(nodeIds?: number[]): Promise<PushPlan> {
@@ -117,7 +126,7 @@ export class CataloguePushService {
           // Imported ≠ published: curation is a separate, deliberate act.
           published: false,
           infohash: torrent.infoHash,
-          magnet: magnetForInfo(torrent.infoHash, torrent.name, this.settings.getTrackers()),
+          magnet: this.settings.magnetFor(torrent.infoHash, torrent.name),
           fileCount: torrent.files,
           sizeBytes: torrent.size || null,
         });
@@ -150,7 +159,7 @@ export class CataloguePushService {
    */
   async remove(
     id: number,
-    purgeNodes: boolean,
+    purge: number[] | 'all' | null,
     actorId?: number,
   ): Promise<{
     removed: boolean;
@@ -160,8 +169,12 @@ export class CataloguePushService {
     if (!reciter) throw new NotFoundException('reciter not found');
 
     const nodes: { seederId: number; name: string; removed: boolean; error: string | null }[] = [];
-    if (purgeNodes) {
-      for (const seeder of this.seeders.list()) {
+    if (purge !== null) {
+      const targets =
+        purge === 'all'
+          ? this.seeders.list()
+          : this.seeders.list().filter((seeder) => purge.includes(seeder.id));
+      for (const seeder of targets) {
         if (!seeder.hasCredentials) {
           nodes.push({
             seederId: seeder.id,
@@ -187,15 +200,116 @@ export class CataloguePushService {
     }
 
     this.reciters.remove(id);
+    // Placements cascade with the row, but the cache of what nodes hold does not:
+    // drop the deleted hash so coverage stops counting a row that no longer exists.
+    this.db
+      .prepare('DELETE FROM node_torrents WHERE lower(infohash) = ?')
+      .run(reciter.infohash.toLowerCase());
     this.audit.record({
       actorId: actorId ?? null,
       userId: null,
       action: 'reciter:delete',
       target: String(id),
       status: 'ok',
-      after: { infohash: reciter.infohash, purgeNodes, nodes },
+      after: { infohash: reciter.infohash, purge, nodes },
     });
     return { removed: true, nodes };
+  }
+
+  /**
+   * Put one reciter on specific nodes.
+   *
+   * The placement row is written first, in `pending`: a 1.5 GB download takes
+   * minutes, and the operator has to be able to see "asked, not arrived yet"
+   * rather than a button that looks like it failed.
+   */
+  async place(
+    reciterId: number,
+    seederIds: number[],
+    actorId?: number,
+  ): Promise<{ reciterId: number; results: { seederId: number; ok: boolean; error: string | null }[] }> {
+    const reciter = this.reciters.get(reciterId);
+    if (!reciter) throw new NotFoundException('reciter not found');
+
+    const requestedAt = new Date().toISOString();
+    const upsert = this.db.prepare(
+      `INSERT INTO placements (reciter_id, seeder_id, state, requested_at)
+       VALUES (?, ?, 'pending', ?)
+       ON CONFLICT(reciter_id, seeder_id) DO UPDATE SET
+         state = 'pending', requested_at = excluded.requested_at,
+         verified_at = NULL, error = NULL`,
+    );
+    const fail = this.db.prepare(
+      "UPDATE placements SET state = 'failed', error = ? WHERE reciter_id = ? AND seeder_id = ?",
+    );
+
+    const results: { seederId: number; ok: boolean; error: string | null }[] = [];
+    for (const seederId of [...new Set(seederIds)]) {
+      const seeder = this.seeders.get(seederId);
+      if (!seeder) {
+        results.push({ seederId, ok: false, error: 'seeder not found' });
+        continue;
+      }
+      upsert.run(reciterId, seederId, requestedAt);
+      try {
+        await this.seeders.addTorrent(seederId, { magnet: reciter.magnet });
+        results.push({ seederId, ok: true, error: null });
+      } catch (error) {
+        const message = (error as Error).message;
+        fail.run(message, reciterId, seederId);
+        results.push({ seederId, ok: false, error: message });
+      }
+    }
+
+    // Only the node's own report turns pending into placed.
+    await Promise.all([...new Set(seederIds)].map((id) => this.seeders.poll(id)));
+
+    this.audit.record({
+      actorId: actorId ?? null,
+      userId: null,
+      action: 'reciter:place',
+      target: String(reciterId),
+      status: results.every((r) => r.ok) ? 'ok' : 'error',
+      after: { seederIds, results },
+    });
+    return { reciterId, results };
+  }
+
+  /**
+   * Stop seeding a reciter on one node, keeping its files.
+   *
+   * The volume is also the HTTP source, so removing a torrent from a node must
+   * not delete it. Purging data is the separate, deliberate action.
+   */
+  async unplace(
+    reciterId: number,
+    seederId: number,
+    actorId?: number,
+  ): Promise<{ reciterId: number; seederId: number; ok: boolean; error: string | null }> {
+    const reciter = this.reciters.get(reciterId);
+    if (!reciter) throw new NotFoundException('reciter not found');
+    try {
+      await this.seeders.removeTorrent(seederId, reciter.infohash, true);
+    } catch (error) {
+      const message = (error as Error).message;
+      // 404: the node never held it, which is the state we wanted anyway.
+      if (!/does not hold/.test(message)) {
+        return { reciterId, seederId, ok: false, error: message };
+      }
+    }
+    this.db
+      .prepare('DELETE FROM placements WHERE reciter_id = ? AND seeder_id = ?')
+      .run(reciterId, seederId);
+    await this.seeders.poll(seederId);
+    this.audit.record({
+      actorId: actorId ?? null,
+      userId: null,
+      action: 'reciter:unplace',
+      target: String(reciterId),
+      status: 'ok',
+      after: { seederId },
+    });
+    return { reciterId, seederId, ok: true, error: null };
   }
 
   private async compute(nodeIds?: number[]): Promise<PushPlan> {
@@ -212,6 +326,10 @@ export class CataloguePushService {
           url: seeder.url,
           toAdd: [] as { infohash: string; name: string }[],
           present: 0,
+          skipped: 0,
+          capBytes: seeder.quotaBytes && seeder.quotaBytes > 0
+            ? Math.floor(seeder.quotaBytes * 0.9)
+            : null,
         };
         if (seeder.status === 'offline') {
           return { ...base, skipReason: 'offline', detail: null };
@@ -226,29 +344,48 @@ export class CataloguePushService {
           return { ...base, skipReason: 'unreachable', detail: (err as Error).message };
         }
         const held = new Set(inventory.torrents.map((t) => t.infoHash.toLowerCase()));
-        const missingRows = catalogue.filter((r) => !held.has(r.infohash.toLowerCase()));
-        const toAdd = missingRows.map((r) => ({ infohash: r.infohash, name: r.name }));
+        const missingRows = catalogue.filter(
+          (r) => r.published && !held.has(r.infohash.toLowerCase()),
+        );
 
-        // Capacity comes from the node's own /health: its quota and disk,
-        // combined. Catalogue sizes make the decision possible before any byte
-        // moves; unknown sizes count as 0 and are left to the node, which
-        // applies the same rule after reading the metadata.
-        const needed = missingRows.reduce((sum, row) => sum + (row.sizeBytes ?? 0), 0);
+        // Two bounds, and the tighter one wins: what the node says it can still
+        // take, and 90 % of its quota. The margin exists so a node is never
+        // filled to the point where it cannot even fetch a new reciter.
         const headroom = seeder.headroomBytes;
-        if (headroom !== null && (headroom <= 0 || needed > headroom)) {
+        if (headroom !== null && headroom <= 0) {
           return {
             ...base,
             present: inventory.torrents.length,
             skipReason: 'low_space',
-            detail: `${Math.round(headroom / 1024 ** 3)} GB headroom, ${Math.round(needed / 1024 ** 3)} GB needed`,
+            detail: 'the node reports no headroom',
           };
         }
+        const used = seeder.usedBytes ?? 0;
+        const byQuota = base.capBytes !== null ? Math.max(0, base.capBytes - used) : Infinity;
+        let remaining = Math.min(headroom ?? Infinity, byQuota);
+
+        const toAdd: { infohash: string; name: string }[] = [];
+        let skipped = 0;
+        for (const row of missingRows) {
+          const size = row.sizeBytes ?? 0;
+          if (size <= remaining) {
+            toAdd.push({ infohash: row.infohash, name: row.name });
+            remaining -= size;
+          } else {
+            skipped += 1;
+          }
+        }
+
         return {
           ...base,
           present: inventory.torrents.length,
           toAdd,
-          skipReason: null,
-          detail: null,
+          skipped,
+          skipReason: toAdd.length === 0 && skipped > 0 ? 'low_space' : null,
+          detail:
+            skipped > 0
+              ? `${skipped} left out at the 90% cap`
+              : null,
         };
       }),
     );

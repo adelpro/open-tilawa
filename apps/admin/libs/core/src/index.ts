@@ -37,3 +37,12 @@ export {
 } from './store/audit.repo';
 
 export const CORE_VERSION = '0.4.0';
+
+export {
+  deriveReciterState,
+  isExpired,
+  nextPlacementState,
+  PENDING_TTL_HOURS,
+  type PlacementState,
+  type ReciterState,
+} from './store/placement-state';

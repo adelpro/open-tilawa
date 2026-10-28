@@ -148,7 +148,8 @@ describe('console audit — one form host', () => {
       ['Turns', turns],
       ['Reciters', reciters],
       ['Status', status],
-      ['Torrents', torrents],
+      // Torrents is deliberately absent: the node screen creates nothing. A
+      // torrent enters through the catalogue, which decides where it goes.
     ]) {
       assert.match(source, /FormModal/, `${name} has no FormModal`);
       assert.equal(
