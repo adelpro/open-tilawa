@@ -55,6 +55,21 @@ export function Modal({
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
+  // A dialog owns the viewport while it is open: the page behind it must not move, and the
+  // scrollbar it removes must not shift the layout sideways. Both are put back on unmount.
+  useEffect(() => {
+    const { body, documentElement } = document;
+    const scrollbar = window.innerWidth - documentElement.clientWidth;
+    const previousOverflow = body.style.overflow;
+    const previousPaddingInlineEnd = body.style.paddingInlineEnd;
+    body.style.overflow = 'hidden';
+    if (scrollbar > 0) body.style.paddingInlineEnd = `${scrollbar}px`;
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.paddingInlineEnd = previousPaddingInlineEnd;
+    };
+  }, []);
+
   // Focus leaves with the dialog: returning it to the trigger is what makes the next Tab
   // land where the person was, rather than at the top of the page.
   useEffect(() => {

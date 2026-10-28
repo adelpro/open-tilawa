@@ -16,6 +16,18 @@ import { Tabs } from '../components/Tabs';
 
 type Tab = 'users' | 'audit';
 
+/** The reader's word for each role and status; the raw value stays the chip's title. */
+const ROLE_KEY = {
+  user: 'admin.roleUser',
+  admin: 'admin.roleAdmin',
+  super_admin: 'admin.roleSuper',
+} as const;
+
+const STATUS_KEY = {
+  active: 'admin.statusActive',
+  disabled: 'admin.statusDisabled',
+} as const;
+
 /**
  * The admin console, in two sizes.
  *
@@ -24,9 +36,9 @@ type Tab = 'users' | 'audit';
  * role changes and deletion — on the same rows. One component keeps the two consoles
  * from becoming two systems; `isSuper` decides which controls exist, never the API.
  *
- * The role and status values are shown as the API names them: an operator types them
- * into a CLI, and translating `super_admin` would make the screen disagree with the
- * command it tells you to run.
+ * Role and status render as words in the reader's language, because this is a screen
+ * an operator looks at, not a CLI. The API name is not lost: it is the chip's title,
+ * it is what the role-change dialog quotes back, and it is what the filter sends.
  */
 export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
   const { t, locale } = useI18n();
@@ -147,7 +159,11 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
         <div>
           <div className="cluster">
             <h1 className="display-lg">{isSuper ? t('super.title') : t('admin.title')}</h1>
-            <Chip tone={isSuper ? 'notice' : 'info'}>{isSuper ? 'super_admin' : 'admin'}</Chip>
+            <Chip tone={isSuper ? 'notice' : 'info'}>
+              <span title={isSuper ? 'super_admin' : 'admin'}>
+                {t(isSuper ? 'admin.roleSuper' : 'admin.roleAdmin')}
+              </span>
+            </Chip>
             {currentUser?.isOwner ? <Chip tone="ok">{t('admin.owner')}</Chip> : null}
           </div>
           <p className="body muted">{isSuper ? t('super.lede') : t('admin.lede')}</p>
@@ -170,28 +186,28 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
                 placeholder={t('admin.searchPlaceholder')}
               />
               <label className="field" style={{ minWidth: '8rem' }}>
-                <span className="label">Role</span>
+                <span className="label">{t('admin.role')}</span>
                 <select
-                  className="input"
+                  className="field__select"
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
                 >
-                  <option value="all">All</option>
-                  <option value="user">user</option>
-                  <option value="admin">admin</option>
-                  <option value="super_admin">super_admin</option>
+                  <option value="all">{t('admin.all')}</option>
+                  <option value="user">{t('admin.roleUser')}</option>
+                  <option value="admin">{t('admin.roleAdmin')}</option>
+                  <option value="super_admin">{t('admin.roleSuper')}</option>
                 </select>
               </label>
               <label className="field" style={{ minWidth: '8rem' }}>
-                <span className="label">Status</span>
+                <span className="label">{t('common.status')}</span>
                 <select
-                  className="input"
+                  className="field__select"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
                 >
-                  <option value="all">All</option>
-                  <option value="active">active</option>
-                  <option value="disabled">disabled</option>
+                  <option value="all">{t('admin.all')}</option>
+                  <option value="active">{t('admin.statusActive')}</option>
+                  <option value="disabled">{t('admin.statusDisabled')}</option>
                 </select>
               </label>
               <Button variant="secondary" onClick={() => void load()}>
@@ -240,13 +256,13 @@ export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
                           </td>
                           <td data-label={t('admin.role')}>
                             <Chip tone={entry.role === 'user' ? 'info' : 'notice'}>
-                              {entry.role}
+                              <span title={entry.role}>{t(ROLE_KEY[entry.role])}</span>
                             </Chip>
                             {entry.isOwner ? <Chip tone="ok">{t('admin.owner')}</Chip> : null}
                           </td>
                           <td data-label={t('common.status')}>
                             <Chip tone={entry.status === 'active' ? 'ok' : 'bad'}>
-                              {entry.status}
+                              <span title={entry.status}>{t(STATUS_KEY[entry.status])}</span>
                             </Chip>
                           </td>
                           <td className="num" data-label={t('admin.actions')}>

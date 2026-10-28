@@ -255,7 +255,7 @@ export function Account(): ReactElement {
                 {(id) => (
                   <select
                     id={id}
-                    className="input"
+                    className="field__select field__select--auto"
                     value={locale}
                     disabled={saving}
                     onChange={(event) => void setLocale(event.target.value as Locale)}
