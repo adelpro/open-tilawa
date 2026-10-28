@@ -1,49 +1,15 @@
 import { user } from './index';
 import { CURRENT_USER_SCHEMA_VERSION } from './user-schema';
 import { migrateUserGraph, type UserGraphSnapshot } from './user-migrations';
+import { once } from './once';
 
 /**
- * `.once()` on a path the relay has never seen does not always answer, and the
- * schema write used to sit behind that callback — so a fresh account never got
- * a version stamp. A bounded read keeps the migration path, without letting an
- * empty node block the write.
+ * The paths a future migration is allowed to touch.
+ *
+ * Session state (`reciter`, `surah`, `progress`) is deliberately absent: the
+ * playhead never leaves the device, so there is nothing here to migrate.
  */
-const READ_TIMEOUT_MS = 1500;
-
-function once<T = unknown>(node: any, timeout = READ_TIMEOUT_MS): Promise<T | null> {
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = (value: T | null) => {
-      if (settled) return;
-      settled = true;
-      resolve(value);
-    };
-    const timer = setTimeout(() => finish(null), timeout);
-    try {
-      node.once((data: T) => {
-        clearTimeout(timer);
-        finish(data ?? null);
-      });
-    } catch {
-      clearTimeout(timer);
-      finish(null);
-    }
-  });
-}
-
-const MIGRATED_PATHS = [
-  'profile',
-  'settings',
-  'favorites',
-  'favMeta',
-  'reciter',
-  'surah',
-  'progress',
-  'recentlyViewed',
-  'mostViewed',
-  'devices',
-  'viewedMeta',
-];
+const MIGRATED_PATHS = ['profile', 'settings', 'favorites', 'recentlyViewed', 'devices'];
 
 async function snapshotUserGraph(): Promise<UserGraphSnapshot> {
   if (!user.is) return {};
@@ -62,7 +28,8 @@ async function snapshotUserGraph(): Promise<UserGraphSnapshot> {
 
 /**
  * Runs once per login. Additive schema changes need no migration, so this is a
- * no-op on the common path: one read, then nothing.
+ * no-op on the common path: one read, then nothing. The snapshot only runs when
+ * a real migration exists for a version this account is still on.
  */
 export async function ensureUserSchema(): Promise<void> {
   if (!user.is) return;

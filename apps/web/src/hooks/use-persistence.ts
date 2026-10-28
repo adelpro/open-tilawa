@@ -11,6 +11,9 @@
  * playback pauses, when the surah changes and when the page goes away.
  */
 
+import { LOCALES, type Locale } from '@/i18n/messages';
+import { VISUALISERS, type Visualiser } from '@/utils/visualiser-models';
+
 export const STORAGE_KEY = 'open-tilawa:v3';
 const PREVIOUS_KEY = 'open-tilawa:v2';
 const LEGACY_KEY = 'tilawa:state';
@@ -30,6 +33,32 @@ export type StoredSettings = {
   visualiser?: string;
   locale?: string;
   theme?: string;
+  /**
+   * When this device last changed a setting, in ms. Cross-device sync compares
+   * it so a late relay echo cannot undo a newer local choice. Absent in states
+   * written before settings synced, which read as "oldest".
+   */
+  updatedAt?: number;
+};
+
+/**
+ * The speeds the settings screen offers. A remote value outside this list is a
+ * bad write, not a speed the player supports.
+ */
+export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2] as const;
+
+const THEMES = ['light', 'dark'] as const;
+
+/** A wrong clock must not win forever: stamps this far ahead are ignored. */
+const MAX_CLOCK_SKEW = 60_000;
+
+/** The strict shape a remote payload has to earn before it reaches the atoms. */
+export type ResolvedSettings = {
+  rate?: number;
+  visualiser?: Visualiser;
+  locale?: Locale;
+  theme?: (typeof THEMES)[number];
+  updatedAt: number;
 };
 
 export type StoredState = {
@@ -79,6 +108,19 @@ function stringOrUndefined(value: unknown): string | undefined {
 
 function numberOrUndefined(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+/**
+ * v3 settings keep their own stamp; v2's `updatedAt` was the whole state's
+ * (bumped by position writes), so it must not be mistaken for a settings stamp
+ * and outrank the account's.
+ */
+function storedSettings(source: unknown): StoredSettings {
+  const raw = (source && typeof source === 'object' ? source : {}) as Record<string, unknown>;
+  const settings = settingsOf(raw);
+  const stamp = numberOrUndefined(raw.updatedAt);
+  if (stamp !== undefined) settings.updatedAt = stamp;
+  return settings;
 }
 
 function settingsOf(source: {
@@ -188,7 +230,7 @@ export function loadState(): StoredState {
           reciterId: numberOrUndefined(parsed.reciterId),
           lastSurahId: numberOrUndefined(parsed.lastSurahId),
           positions: parsed.positions ?? {},
-          settings: settingsOf(parsed.settings ?? {}),
+          settings: storedSettings(parsed.settings),
           updatedAt: numberOrUndefined(parsed.updatedAt) ?? 0,
         };
       }
@@ -258,14 +300,107 @@ export function patchState(patch: Partial<Omit<StoredState, 'version'>>): Stored
   return saveState({ ...current, ...patch, version: 3, updatedAt: Date.now() });
 }
 
-export function patchSettings(patch: StoredSettings): StoredState {
+/**
+ * Decide whether the account's settings should replace this device's.
+ *
+ * Pure and total: a malformed relay payload degrades to "nothing to apply".
+ * `now` is a parameter so the clock-skew rule is testable without faking time.
+ */
+export function resolveRemoteSettings(
+  local: StoredSettings,
+  remote: unknown,
+  now: number = Date.now(),
+): ResolvedSettings | null {
+  if (!remote || typeof remote !== 'object') return null;
+
+  const source = remote as Record<string, unknown>;
+  const stamp = numberOrUndefined(source.updatedAt) ?? 0;
+  const localStamp = numberOrUndefined(local.updatedAt) ?? 0;
+
+  // Not strictly newer: the stamp this device just wrote is about to echo back.
+  if (stamp <= localStamp) return null;
+  if (stamp > now + MAX_CLOCK_SKEW) return null;
+
+  const resolved: ResolvedSettings = { updatedAt: stamp };
+
+  const rate = numberOrUndefined(source.rate);
+  if (rate !== undefined && (PLAYBACK_RATES as readonly number[]).includes(rate)) {
+    resolved.rate = rate;
+  }
+  if (typeof source.visualiser === 'string' && (VISUALISERS as readonly string[]).includes(source.visualiser)) {
+    resolved.visualiser = source.visualiser as Visualiser;
+  }
+  if (typeof source.locale === 'string' && (LOCALES as readonly string[]).includes(source.locale)) {
+    resolved.locale = source.locale as Locale;
+  }
+  if (typeof source.theme === 'string' && (THEMES as readonly string[]).includes(source.theme)) {
+    resolved.theme = source.theme as (typeof THEMES)[number];
+  }
+
+  // A stamp with no usable field is not worth a re-render.
+  return Object.keys(resolved).length > 1 ? resolved : null;
+}
+
+/**
+ * The other half of last-write-wins: a device that changed a setting offline
+ * holds the newest value, so login has to push it instead of quietly dropping
+ * it. A missing local stamp means "this device never chose anything" — its
+ * defaults must not overwrite the account.
+ */
+export function shouldPushLocalSettings(
+  local: StoredSettings,
+  remote: unknown,
+  now: number = Date.now(),
+): boolean {
+  const localStamp = numberOrUndefined(local.updatedAt) ?? 0;
+  if (localStamp === 0) return false;
+  if (localStamp > now + MAX_CLOCK_SKEW) return false;
+
+  const remoteStamp =
+    remote && typeof remote === 'object'
+      ? numberOrUndefined((remote as Record<string, unknown>).updatedAt) ?? 0
+      : 0;
+
+  return localStamp > remoteStamp;
+}
+
+/**
+ * Adopt settings that came from the account.
+ *
+ * Deliberately does **not** dispatch `open-tilawa:settings`: that event is the
+ * write-back path to the relay, and an inbound value must never bounce out
+ * again. Without the guard, two devices echo the same object at each other.
+ */
+export function hydrateSettings(settings: StoredSettings): StoredState {
   const current = loadState();
   return saveState({
     ...current,
-    settings: { ...current.settings, ...patch },
+    settings: { ...current.settings, ...settings },
     version: 3,
     updatedAt: Date.now(),
   });
+}
+
+export function patchSettings(patch: StoredSettings): StoredState {
+  const current = loadState();
+  const settings: StoredSettings = { ...current.settings, ...patch, updatedAt: Date.now() };
+  const next = saveState({
+    ...current,
+    settings,
+    version: 3,
+    updatedAt: Date.now(),
+  });
+  try {
+    if (typeof window !== 'undefined') {
+      // The whole merged object, stamped: the ring writer needs neither a read
+      // nor its own clock, so two fields changed at once cannot clobber.
+      const event = new CustomEvent('open-tilawa:settings', { detail: settings });
+      window.dispatchEvent(event);
+    }
+  } catch {
+    // ignore
+  }
+  return next;
 }
 
 export function getPosition(reciterId: number | undefined): StoredPosition | undefined {
@@ -319,14 +454,4 @@ export function setLastSurah(surahId: number): void {
   const current = loadState();
   if (current.lastSurahId === surahId) return;
   saveState({ ...current, lastSurahId: surahId, updatedAt: Date.now() });
-}
-
-export function clearState(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(PREVIOUS_KEY);
-  } catch {
-    // ignore
-  }
 }

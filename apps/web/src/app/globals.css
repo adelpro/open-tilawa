@@ -17,6 +17,10 @@
   --muted: #6b6b6b;
   --line: #e8e8e8;
   --invert: #ffffff;
+  /* Derived, not a sixth colour: the same paper a step off the page. In
+     daylight that step is white; in the dark it has to lift, or a sheet and
+     the screen behind it are one flat value and the layer disappears. */
+  --surface: #ffffff;
   color-scheme: light;
 }
 
@@ -27,6 +31,7 @@
   --muted: #9a9a9a;
   --line: #262626;
   --invert: #0b0b0c;
+  --surface: #19191a;
   color-scheme: dark;
 }
 
@@ -104,6 +109,14 @@ input[type='search']::-webkit-search-decoration {
 }
 
 /* Text pages share the player's measure, start at the top, and scroll. */
+/* The notch: on a phone the bar is the first thing under the status area, so it
+   grows by the inset instead of painting the page underneath it. The inset is
+   0 on a desktop, which is why one rule covers both. */
+.top-bar {
+  padding-top: env(safe-area-inset-top);
+  height: calc(3.5rem + env(safe-area-inset-top));
+}
+
 .page-screen {
   flex: 1;
   padding: 8px 24px calc(48px + env(safe-area-inset-bottom));
@@ -152,27 +165,77 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-/* Bottom sheet, on a native <dialog>: the platform supplies the backdrop, the
-   top layer and the focus trap; this places it and slides it in. */
+/* Shared press feedback for tappable elements. The scale is the feedback; the
+   tint stays opt-in via `active:bg-line`, because a rule that paints every
+   pressed element would flash the selected chip (ink background, invert text)
+   to a light line colour. */
+.press {
+  transition:
+    transform 100ms ease-out,
+    background-color 120ms ease-out,
+    color 120ms ease-out;
+}
+
+.press:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .press {
+    transition:
+      background-color 120ms ease-out,
+      color 120ms ease-out;
+  }
+  .press:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Bottom sheet, on a native <dialog>: the platform supplies the top layer, the
+   backdrop and the focus trap. The panel is moved by a spring in sheet.tsx —
+   there is deliberately no keyframes rule here, because an animation the finger
+   cannot grab is the thing being replaced. */
 .sheet {
   border: 0;
 }
 
-.sheet[open] {
-  animation: sheet-in 180ms cubic-bezier(0.2, 0, 0.2, 1);
-}
-
+/* The page recedes instead of vanishing. Blur is what says "a layer above the
+   screen you were on" without a drop shadow, which the brief rules out. */
 .sheet::backdrop {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(4px) saturate(1.05);
+  -webkit-backdrop-filter: blur(4px) saturate(1.05);
+  opacity: var(--sheet-backdrop, 1);
+  transition: opacity 160ms ease;
 }
 
-@keyframes sheet-in {
-  from {
-    transform: translateY(12px);
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .sheet::backdrop {
+    background: rgba(0, 0, 0, 0.45);
   }
-  to {
-    transform: translateY(0);
+}
+
+[data-theme='dark'] .sheet::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Where transparency is unwelcome, hold the same hierarchy with ink instead. */
+@media (prefers-reduced-transparency: reduce) {
+  .sheet::backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(0, 0, 0, 0.6);
   }
+}
+
+/* The header is the grab area, so the browser must not scroll it first. */
+.sheet-handle {
+  touch-action: none;
+  cursor: grab;
+}
+
+.sheet-handle:active {
+  cursor: grabbing;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -190,7 +253,14 @@ input[type='search']::-webkit-search-decoration {
 @media (min-width: 1024px) {
   .theatre {
     justify-content: flex-end;
-    padding-bottom: 260px;
+    padding-bottom: 32px;
+  }
+
+  /* The spectrum sits above the transport, the way it does on a phone,
+     instead of lying on the floor of the screen behind it. */
+  .theatre-horizon {
+    position: static;
+    opacity: 1;
   }
 
   .top-bar {
@@ -215,13 +285,12 @@ input[type='search']::-webkit-search-decoration {
     background: var(--bg);
   }
 
+  /* The footer is part of the stack now, not a bar floating over the stage. */
   .theatre-footer {
-    position: fixed;
-    inset-inline: 0;
-    bottom: 176px;
-    z-index: 10;
-    border-top: 0;
-    background: transparent;
+    position: static;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    z-index: auto;
   }
 
   .theatre-footer > div {
@@ -239,11 +308,12 @@ input[type='search']::-webkit-search-decoration {
     padding-inline-start: 384px;
   }
 
-  .app-shell[data-panel='open'] .theatre-title,
-  .app-shell[data-panel='open'] .theatre-reciter,
-  .app-shell[data-panel='open'] .theatre-horizon,
-  .app-shell[data-panel='open'] .theatre-floor,
   .app-shell[data-panel='open'] .theatre-footer {
+    padding-inline-start: 384px;
+  }
+
+  .app-shell[data-panel='open'] .theatre-title,
+  .app-shell[data-panel='open'] .theatre-reciter {
     inset-inline-start: 360px;
   }
 }

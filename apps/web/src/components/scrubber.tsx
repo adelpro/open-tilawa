@@ -43,7 +43,7 @@ export default function Scrubber({
             style={{ width: `${progress}%` }}
           />
           <div
-            className="absolute top-1/2 h-2.5 w-2.5 rounded-full bg-ink opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+            className="absolute top-1/2 h-2.5 w-2.5 rounded-full bg-ink opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 group-active:opacity-100"
             style={{ right: `${progress}%`, transform: 'translate(50%, -50%)' }}
           />
         </div>

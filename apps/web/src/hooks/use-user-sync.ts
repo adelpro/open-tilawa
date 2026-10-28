@@ -2,45 +2,18 @@ import { useCallback, useEffect } from 'react';
 import { getDefaultStore, useAtom, useAtomValue } from 'jotai';
 
 import { user } from '@/gun';
+import { once } from '@/gun/once';
 import {
   gunUserPubAtom,
   myFavoritesAtom,
-  myFavMetaAtom,
   userDevicesAtom,
   userDevicesMetaAtom,
-  userCurrentReciterAtom,
-  userCurrentSurahAtom,
-  userProgressAtom,
-  userProfileAtom,
+  userSettingsAtom,
 } from '@/jotai/gun';
 import { getOrCreateDeviceId } from '@/utils/device/device-id';
 import { getOrCreateDeviceName } from '@/utils/device/device-name';
 import { readLocalFavorites, writeLocalFavorites } from '@/utils/favorites-local';
-
-/**
- * Bounded read: an empty node may never answer `.once()`, and the login
- * snapshot must not wait on it forever.
- */
-function once<T = any>(node: any, timeout = 1500): Promise<T | null> {
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = (value: T | null) => {
-      if (settled) return;
-      settled = true;
-      resolve(value);
-    };
-    const timer = setTimeout(() => finish(null), timeout);
-    try {
-      node.once((data: T) => {
-        clearTimeout(timer);
-        finish(data ?? null);
-      });
-    } catch {
-      clearTimeout(timer);
-      finish(null);
-    }
-  });
-}
+import type { StoredSettings } from '@/hooks/use-persistence';
 
 /**
  * Writes this device's row so every linked device can see it in the list.
@@ -69,12 +42,41 @@ export function touchDevice(name?: string): void {
     user
       .get('devices')
       .get('meta')
-      .once((meta: { primaryPub?: string } | undefined) => {
-        if (meta?.primaryPub) return;
+      .once((meta: { primaryPub?: string; primaryDeviceId?: string; createdAt?: number } | undefined) => {
+        if (meta?.primaryDeviceId) return;
+        if (meta?.primaryPub && !meta?.primaryDeviceId) {
+          // Try to find which device has this pub
+          user
+            .get('devices')
+            .once((all: Record<string, any>) => {
+              if (!all) return;
+              let foundId: string | null = null;
+              Object.entries(all).forEach(([id, row]: [string, any]) => {
+                if (id === '_' || id === 'meta') return;
+                if (row?.pub === meta.primaryPub) {
+                  if (!foundId || (row?.lastSeen || 0) > (all[foundId]?.lastSeen || 0)) {
+                    foundId = id;
+                  }
+                }
+              });
+              if (foundId) {
+                user
+                  .get('devices')
+                  .get('meta')
+                  .put({ ...(meta || {}), primaryDeviceId: foundId });
+              } else {
+                user
+                  .get('devices')
+                  .get('meta')
+                  .put({ ...(meta || {}), primaryDeviceId: deviceId });
+              }
+            });
+          return;
+        }
         user
           .get('devices')
           .get('meta')
-          .put({ primaryPub: user.is?.pub, createdAt: Date.now() });
+          .put({ primaryDeviceId: deviceId, primaryPub: user.is?.pub, createdAt: Date.now() });
       });
   } catch {
     // offline or relay down: the next touch retries
@@ -87,14 +89,10 @@ export function touchDevice(name?: string): void {
  */
 export function useUserSync() {
   const pub = useAtomValue(gunUserPubAtom);
-  const [favorites, setFavorites] = useAtom(myFavoritesAtom);
-  const [, setFavMeta] = useAtom(myFavMetaAtom);
+  const [, setFavorites] = useAtom(myFavoritesAtom);
   const [, setDevices] = useAtom(userDevicesAtom);
   const [, setDevicesMeta] = useAtom(userDevicesMetaAtom);
-  const [, setCurrentReciter] = useAtom(userCurrentReciterAtom);
-  const [, setCurrentSurah] = useAtom(userCurrentSurahAtom);
-  const [, setProgress] = useAtom(userProgressAtom);
-  const [, setProfile] = useAtom(userProfileAtom);
+  const [, setSettings] = useAtom(userSettingsAtom);
 
   useEffect(() => {
     if (!pub || !user.is) return;
@@ -126,32 +124,28 @@ export function useUserSync() {
         if (!remoteIds.includes(id)) user.get('favorites').get(id).put(true);
       });
 
-      const [meta, devs, dmeta, cr, cs, pr, prof] = await Promise.all([
-        once(user.get('favMeta')),
+      const [devs, dmeta, remoteSettings] = await Promise.all([
         once(user.get('devices')),
         once(user.get('devices').get('meta')),
-        once(user.get('reciter')),
-        once(user.get('surah')),
-        once(user.get('progress')),
-        once(user.get('profile')),
+        once(user.get('settings')),
       ]);
       if (cancelled) return;
 
-      if (meta && typeof meta === 'object') setFavMeta((prev) => ({ ...meta, ...prev }));
       // Merge, never replace: the snapshot can resolve after this device has
       // already written its own row, and a replace would erase it.
       if (devs && typeof devs === 'object') setDevices((prev) => ({ ...devs, ...prev }));
       if (dmeta && typeof dmeta === 'object') setDevicesMeta((prev) => ({ ...dmeta, ...prev }));
-      if (typeof cr === 'number') setCurrentReciter(cr);
-      if (typeof cs === 'number') setCurrentSurah(cs);
-      // Position is last-write-wins, so the newer stamp wins whichever side it
-      // came from.
-      if (pr && typeof pr === 'object') {
-        setProgress((prev) =>
-          prev && (prev.updatedAt ?? 0) > (pr.updatedAt ?? 0) ? prev : pr,
-        );
+      // Settings are last-write-wins on a stamp, not a blind merge: the relay
+      // replays whatever it holds, and an older value must not undo a choice
+      // this device made while the snapshot was in flight.
+      if (remoteSettings && typeof remoteSettings === 'object') {
+        const { _, ...incoming } = remoteSettings as Record<string, any>;
+        setSettings((prev) => {
+          const next = typeof incoming.updatedAt === 'number' ? incoming.updatedAt : 0;
+          const current = typeof prev.updatedAt === 'number' ? prev.updatedAt : 0;
+          return next >= current ? { ...prev, ...incoming } : prev;
+        });
       }
-      if (prof && typeof prof === 'object') setProfile((prev) => ({ ...prof, ...prev }));
     })();
 
     watch(user.get('favorites').map(), (val: any, key: string) => {
@@ -164,11 +158,6 @@ export function useUserSync() {
       });
     });
 
-    watch(user.get('favMeta').map(), (val: any, key: string) => {
-      if (key === '_' || !val || typeof val !== 'object') return;
-      setFavMeta((prev) => ({ ...prev, [key]: val }));
-    });
-
     watch(user.get('devices').map(), (val: any, key: string) => {
       if (key === '_' || key === 'meta' || !val || typeof val !== 'object') return;
       setDevices((prev) => ({ ...prev, [key]: val }));
@@ -178,20 +167,16 @@ export function useUserSync() {
       if (val && typeof val === 'object') setDevicesMeta(val);
     });
 
-    watch(user.get('reciter'), (val: any) => {
-      if (typeof val === 'number') setCurrentReciter(val);
-    });
-
-    watch(user.get('surah'), (val: any) => {
-      if (typeof val === 'number') setCurrentSurah(val);
-    });
-
-    watch(user.get('progress'), (val: any) => {
-      if (val && typeof val === 'object') setProgress(val);
-    });
-
-    watch(user.get('profile'), (val: any) => {
-      if (val && typeof val === 'object') setProfile(val);
+    // A setting changed on another device lands without a reload. `_` is Gun's
+    // metadata on the node, not a setting.
+    watch(user.get('settings'), (val: any) => {
+      if (!val || typeof val !== 'object') return;
+      const { _, ...incoming } = val;
+      setSettings((prev) => {
+        const next = typeof incoming.updatedAt === 'number' ? incoming.updatedAt : 0;
+        const current = typeof prev.updatedAt === 'number' ? prev.updatedAt : 0;
+        return next >= current ? { ...prev, ...incoming } : prev;
+      });
     });
 
     touchDevice();
@@ -208,29 +193,27 @@ export function useUserSync() {
         }
       });
     };
-  }, [pub, setFavorites, setFavMeta, setDevices, setDevicesMeta, setCurrentReciter, setCurrentSurah, setProgress, setProfile]);
+  }, [pub, setFavorites, setDevices, setDevicesMeta, setSettings]);
 
-  const setCurrentReciterId = useCallback((reciterId: number) => {
+  /**
+   * One write, no read-modify-write.
+   *
+   * The caller hands over the merged, stamped object (`patchSettings` builds
+   * it), so two devices changing different fields in the same second each send
+   * a complete picture. It also removes the old `.once()` gate: on a node the
+   * relay has never seen, that callback could simply never fire, which is how
+   * the first settings write of a fresh account went missing.
+   */
+  const updateSettings = useCallback((p: StoredSettings) => {
     if (!user.is) return;
-    user.get('reciter').put(reciterId);
-    touchDevice();
-  }, []);
-
-  const setCurrentSurahId = useCallback((surahId: number) => {
-    if (!user.is) return;
-    user.get('surah').put(surahId);
-  }, []);
-
-  const setProgressState = useCallback((p: { surahId?: number; position?: number }) => {
-    if (!user.is) return;
-    user.get('progress').put({ ...p, updatedAt: Date.now() });
-  }, []);
-
-  const updateProfile = useCallback((p: { displayName?: string; avatarUrl?: string }) => {
-    if (!user.is) return;
-    user.get('profile').once((current: any) => {
-      user.get('profile').put({ ...(current || {}), ...p, updatedAt: Date.now() });
-    });
+    try {
+      user.get('settings').put({
+        ...p,
+        updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : Date.now(),
+      });
+    } catch {
+      // offline: the local state already holds it
+    }
   }, []);
 
   const updateDeviceName = useCallback((deviceId: string, name: string) => {
@@ -239,11 +222,7 @@ export function useUserSync() {
   }, []);
 
   return {
-    favorites,
-    setCurrentReciterId,
-    setCurrentSurahId,
-    setProgressState,
-    updateProfile,
     updateDeviceName,
+    updateSettings,
   };
 }

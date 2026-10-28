@@ -8,7 +8,7 @@ export type Locale = (typeof LOCALES)[number];
 
 const ar = {
   brand: 'تلاوة',
-  menu: { open: 'القائمة', close: 'إغلاق القائمة' },
+  menu: { open: 'القائمة', close: 'إغلاق القائمة', more: 'المزيد' },
   common: {
     close: 'إغلاق',
     pin: 'تثبيت اللوحة',
@@ -189,7 +189,7 @@ const ar = {
 
 const en: typeof ar = {
   brand: 'Tilawa',
-  menu: { open: 'Menu', close: 'Close menu' },
+  menu: { open: 'Menu', close: 'Close menu', more: 'More' },
   common: {
     close: 'Close',
     pin: 'Pin this panel',

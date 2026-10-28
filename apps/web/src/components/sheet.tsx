@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type PointerEvent as ReactPointerEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { Headphones, Heart } from '@phosphor-icons/react';
 
@@ -13,6 +13,7 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { formatBytes } from '@/utils/format-bytes';
 import { riwayaLabel } from '@/utils/riwaya';
 import { filterReciters, filterSurahs } from '@/utils/search';
+import { DRAG_THRESHOLD, dragOffset, shouldDismiss, springStep } from '@/utils/sheet-drag';
 import FavoriteButton from '@/components/favorite-button';
 import { useGlobalCounts } from '@/hooks/use-global-counts';
 import { myFavoritesAtom, myRecentAtom } from '@/jotai/gun';
@@ -84,14 +85,227 @@ export default function Sheet({
 }: SheetProps) {
   const { t } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const wide = useMediaQuery('(min-width: 1024px)');
+
+  /**
+   * The live offset lives in a ref, not state: a drag has to update the panel
+   * every frame, and re-rendering the whole list 60 times a second would cost
+   * more than the motion it buys.
+   */
+  const offset = useRef(0);
+  const releaseVelocity = useRef(0);
+  const frame = useRef(0);
+  const generation = useRef(0);
+  const dragState = useRef<{
+    id: number;
+    startY: number;
+    moved: boolean;
+    samples: { y: number; t: number }[];
+  } | null>(null);
+
+  /** Height is measured on open and at the start of a drag, never per frame. */
+  const panelHeight = useRef(0);
+  const measure = () => {
+    panelHeight.current =
+      panelRef.current?.getBoundingClientRect().height || window.innerHeight * 0.9;
+    return panelHeight.current;
+  };
+  const height = () => panelHeight.current || measure();
+
+  const reduceMotion = () =>
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+  /** Paint one frame of the panel and keep the scrim in step with it. */
+  const apply = (value: number) => {
+    const panel = panelRef.current;
+    if (panel) panel.style.transform = value === 0 ? '' : `translate3d(0, ${value}px, 0)`;
+    dialogRef.current?.style.setProperty(
+      '--sheet-backdrop',
+      String(Math.max(0, Math.min(1, 1 - value / height()))),
+    );
+  };
+
+  const stop = () => {
+    if (frame.current) cancelAnimationFrame(frame.current);
+    frame.current = 0;
+    generation.current += 1;
+    if (panelRef.current) panelRef.current.style.willChange = '';
+  };
+
+  /**
+   * Spring from the presentation value, carrying the finger's velocity. This is
+   * the only way the panel moves: a CSS transition cannot be grabbed halfway.
+   */
+  const animate = (target: number, velocity: number, done?: () => void) => {
+    stop();
+    if (!panelRef.current || reduceMotion()) {
+      offset.current = target;
+      apply(target);
+      done?.();
+      return;
+    }
+
+    panelRef.current.style.willChange = 'transform';
+    const token = generation.current;
+    let state = { value: offset.current, velocity };
+    let previous = performance.now();
+
+    const step = (now: number) => {
+      if (token !== generation.current) return;
+      state = springStep(state, { target, dt: (now - previous) / 1000 });
+      previous = now;
+      offset.current = state.value;
+      apply(state.value);
+      if (Math.abs(state.value - target) > 0.5 || Math.abs(state.velocity) > 12) {
+        frame.current = requestAnimationFrame(step);
+        return;
+      }
+      frame.current = 0;
+      offset.current = target;
+      apply(target);
+      if (panelRef.current) panelRef.current.style.willChange = '';
+      done?.();
+    };
+
+    frame.current = requestAnimationFrame(step);
+  };
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    else if (!open && dialog.open) dialog.close();
+
+    if (open) {
+      if (!dialog.open) {
+        stop();
+        dialog.showModal();
+        measure();
+        // A rise, not a pop: enough travel to read as arriving, short enough to
+        // stay out of the way. Measured after showModal — a closed dialog is 0px.
+        offset.current = reduceMotion() ? 0 : Math.min(72, height() * 0.15);
+      } else {
+        // Re-opened while the exit was running: keep the panel where it is and
+        // bring it back, instead of letting the pending close finish.
+        stop();
+      }
+      apply(offset.current);
+      animate(0, 0);
+      return;
+    }
+
+    if (!dialog.open) return;
+
+    const velocity = releaseVelocity.current;
+    releaseVelocity.current = 0;
+    // Out along the same path it came in, then out of the top layer.
+    animate(height(), velocity, () => {
+      dialog.close();
+      offset.current = 0;
+      panelHeight.current = 0;
+      apply(0);
+    });
   }, [open]);
+
+  /**
+   * Back closes the sheet instead of leaving the site. The pushed entry is only
+   * unwound when it is still the current one: picking a route from the menu
+   * pushes a new entry first, and going back there would undo the navigation.
+   */
+  useEffect(() => {
+    if (!open || wide) return;
+    const here = window.location.href;
+    window.history.pushState({ tilawaSheet: true }, '');
+    const onPop = () => {
+      if (dialogRef.current?.open) onClose();
+    };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      if (window.history.state?.tilawaSheet && window.location.href === here) {
+        window.history.back();
+      }
+    };
+  }, [open, wide, onClose]);
+
+  /** Grab the header: 1:1 while the finger is down, damped past the top. */
+  const onDragStart = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    // A press that begins on a control is that control's business. Capturing
+    // the pointer here would retarget the click to the header and swallow it.
+    if ((event.target as HTMLElement).closest('button, a, input, [role="button"]')) return;
+    stop();
+    measure();
+    // Capture now, not on the first move: the header is 52px tall, so a flick
+    // leaves it on the very first frame and the rest of the gesture would be
+    // delivered to the list underneath.
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // A captured pointer that already lifted is not a reason to stop.
+    }
+    dragState.current = {
+      id: event.pointerId,
+      startY: event.clientY,
+      moved: false,
+      samples: [{ y: event.clientY, t: performance.now() }],
+    };
+  };
+
+  const onDragMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = dragState.current;
+    if (!state || state.id !== event.pointerId) return;
+
+    const delta = event.clientY - state.startY;
+    if (!state.moved) {
+      // A tap that wobbled is a tap: no direction is chosen until it clears.
+      if (Math.abs(delta) < DRAG_THRESHOLD) return;
+      state.moved = true;
+      if (panelRef.current) panelRef.current.style.willChange = 'transform';
+    }
+
+    const size = height();
+    offset.current = dragOffset(delta, size);
+    apply(offset.current);
+
+    state.samples.push({ y: event.clientY, t: performance.now() });
+    if (state.samples.length > 6) state.samples.shift();
+  };
+
+  const finishDrag = (event: ReactPointerEvent<HTMLDivElement>, cancelled: boolean) => {
+    const state = dragState.current;
+    if (!state || state.id !== event.pointerId) return;
+    dragState.current = null;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // The pointer is already gone; capture is not required for anything else.
+    }
+    if (!state.moved) {
+      if (panelRef.current) panelRef.current.style.willChange = '';
+      return;
+    }
+
+    const size = height();
+    const now = performance.now();
+    const recent = state.samples.filter((sample) => now - sample.t < 120);
+    let velocity = 0;
+    if (!cancelled && recent.length > 1) {
+      const first = recent[0];
+      const last = recent[recent.length - 1];
+      const seconds = Math.max((last.t - first.t) / 1000, 0.016);
+      velocity = Math.max(-4000, Math.min(4000, (last.y - first.y) / seconds));
+    }
+
+    if (!cancelled && shouldDismiss({ offset: offset.current, velocity, height: size })) {
+      // Let the close effect run: it is the one owner of the exit, and it needs
+      // this velocity to hand off at the release point.
+      releaseVelocity.current = velocity;
+      onClose();
+      return;
+    }
+
+    animate(0, velocity);
+  };
 
   /** The panel is not modal, so Escape has to be caught at the window. */
   useEffect(() => {
@@ -108,7 +322,7 @@ export default function Sheet({
       <aside
         aria-label={title}
         className={cn(
-          'fixed inset-y-0 start-0 z-30 mt-14 w-[360px] flex-col border-e border-line bg-canvas text-ink',
+          'fixed inset-y-0 start-0 z-30 top-14 bottom-0 w-[360px] flex-col border-e border-line bg-surface text-ink',
           open ? 'flex' : 'hidden',
         )}
       >
@@ -134,7 +348,7 @@ export default function Sheet({
               type="button"
               onClick={onClose}
               aria-label={t.common.close}
-              className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
+              className="press -me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink active:bg-line"
             >
               <CloseGlyph />
             </button>
@@ -150,7 +364,6 @@ export default function Sheet({
     <dialog
       ref={dialogRef}
       aria-label={title}
-      onClose={onClose}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -168,10 +381,28 @@ export default function Sheet({
         // everything inside sits in the panel below.
         if (event.target === dialogRef.current) onClose();
       }}
-      className="sheet fixed inset-x-0 bottom-0 top-auto m-0 mx-auto w-full max-w-[520px] rounded-t-2xl border-t border-line bg-canvas p-0 text-ink backdrop:bg-black/30"
+      className="sheet fixed inset-x-0 bottom-0 top-auto m-0 mx-auto w-full max-w-[520px] rounded-t-2xl border-t border-line bg-surface p-0 text-ink"
     >
-      <div className={size === 'full' ? 'flex h-[90dvh] flex-col' : 'flex max-h-[90dvh] flex-col'}>
-        <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-5">
+      {/* The handle is the affordance: a sheet you can see you can grab. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-[6px] flex justify-center"
+      >
+        <span className="h-1 w-9 rounded-full bg-ink/20" />
+      </span>
+      <div
+        ref={panelRef}
+        className={
+          size === 'full' ? 'flex h-[90dvh] flex-col' : 'flex max-h-[90dvh] flex-col'
+        }
+      >
+        <div
+          className="sheet-handle flex h-[52px] shrink-0 select-none items-center justify-between border-b border-line px-5"
+          onPointerDown={onDragStart}
+          onPointerMove={onDragMove}
+          onPointerUp={(event) => finishDrag(event, false)}
+          onPointerCancel={(event) => finishDrag(event, true)}
+        >
           <h2 className="text-[15px] font-semibold">{title}</h2>
           <div className="flex items-center gap-1">
             {onTogglePin ? (
@@ -193,7 +424,7 @@ export default function Sheet({
               type="button"
               onClick={onClose}
               aria-label={t.common.close}
-              className="-me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
+              className="press -me-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink active:bg-line"
             >
               <CloseGlyph />
             </button>
@@ -275,11 +506,11 @@ function RosterError({ onRetry }: { onRetry: () => void }) {
 }
 
 const row =
-  'flex min-h-16 w-full items-center gap-3 px-5 py-2 text-start text-[16px] text-ink transition-colors hover:bg-line active:bg-line';
+  'press flex min-h-16 w-full items-center gap-3 px-5 py-2 text-start text-[16px] text-ink transition-colors hover:bg-line';
 
 const meta = 'tnum mt-0.5 block text-[11.5px] text-muted';
 
-const chip = 'h-8 shrink-0 rounded-full border px-3 text-[12.5px] transition-colors';
+const chip = 'press h-11 shrink-0 rounded-full border px-4 text-[12.5px] transition-colors';
 const chipOn = 'border-ink bg-ink font-semibold text-invert';
 const chipOff = 'border-line text-ink hover:border-ink/40';
 

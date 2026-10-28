@@ -6,6 +6,7 @@ const config: Config = {
     extend: {
       colors: {
         canvas: 'var(--bg)',
+        surface: 'var(--surface)',
         ink: 'var(--ink)',
         muted: 'var(--muted)',
         line: 'var(--line)',

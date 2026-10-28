@@ -49,7 +49,7 @@ export default function PlayerFooter({
     <footer className="theatre-footer shrink-0 border-t border-line pb-[env(safe-area-inset-bottom)]">
       {/* Same 16px gutter as the top bar: the ring should sit as far from the
           edge as the mark does, or it reads as pushed to the corner. */}
-      <div className="mx-auto flex h-14 w-full max-w-[520px] items-center gap-0.5 px-4">
+      <div className="mx-auto flex min-h-14 w-full max-w-[520px] items-center gap-0.5 px-4">
         <div className="theatre-names flex min-w-0 flex-1 flex-col">
           {/* Both rows start with an icon: the same shape means the same thing,
               so neither row reads as a caption. */}
@@ -57,7 +57,7 @@ export default function PlayerFooter({
             type="button"
             onClick={onOpenSurahs}
             aria-label={t.footer.list}
-            className="flex h-7 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[15px] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
+            className="press flex h-9 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[15px] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
           >
             <Icon name="playlist" className="h-4 w-4 text-muted" />
             <span className="min-w-0 flex-1 truncate">{surahName}</span>
@@ -67,7 +67,7 @@ export default function PlayerFooter({
             type="button"
             onClick={onOpenReciters}
             aria-label={t.footer.reciter}
-            className="flex h-7 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
+            className="press flex h-9 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
           >
             <Icon name="mic" className="h-4 w-4" />
             <span className="min-w-0 flex-1 truncate">{reciterName}</span>
@@ -80,7 +80,7 @@ export default function PlayerFooter({
           aria-label={muted ? t.footer.unmute : t.footer.mute}
           aria-pressed={muted}
           className={cn(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
+            'press flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
             muted ? 'text-ink' : 'text-muted',
           )}
         >
@@ -92,7 +92,7 @@ export default function PlayerFooter({
             type="button"
             onClick={onOpenRate}
             aria-label={t.footer.speedChange(`${Number(rate.toFixed(2))}x`)}
-            className="tnum h-8 shrink-0 rounded-full bg-line px-2 text-[12px] font-semibold text-ink transition-colors hover:bg-line/70"
+            className="press tnum h-11 shrink-0 rounded-full bg-line px-3 text-[12px] font-semibold text-ink transition-colors hover:bg-line/70"
           >
             {Number(rate.toFixed(2))}x
           </button>
@@ -106,7 +106,7 @@ export default function PlayerFooter({
           }
           aria-haspopup="dialog"
           className={cn(
-            'relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
+            'press relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
             source === 'connected' ? 'text-ink' : 'text-muted',
           )}
         >
@@ -120,7 +120,8 @@ export default function PlayerFooter({
               cy="22"
               r="20"
               fill="none"
-              stroke="rgba(17, 17, 17, 0.14)"
+              stroke="currentColor"
+              strokeOpacity="0.22"
               strokeWidth="2"
             />
             <circle

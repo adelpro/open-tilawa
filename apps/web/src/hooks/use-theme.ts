@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { loadState, patchSettings } from '@/hooks/use-persistence';
 
@@ -28,10 +28,21 @@ export function resolveInitialTheme(): Theme {
 export function applyTheme(theme: Theme): void {
   if (typeof document === 'undefined') return;
   document.documentElement.dataset.theme = theme;
+
+  // The status bar belongs to the screen, not to the browser: a white strip
+  // over a black page reads as a rendering bug. Read the token back after the
+  // palette is applied so the two can never drift apart.
+  const background = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta && background) meta.setAttribute('content', background);
 }
 
 /** One attribute on <html>; the palette does the rest. */
-export function useTheme(): { theme: Theme; setTheme: (next: Theme) => void } {
+export function useTheme(): {
+  theme: Theme;
+  setTheme: (next: Theme) => void;
+  adoptTheme: (next: Theme) => void;
+} {
   const [theme, setThemeAtom] = useAtom(themeAtom);
 
   useEffect(() => {
@@ -44,5 +55,14 @@ export function useTheme(): { theme: Theme; setTheme: (next: Theme) => void } {
     patchSettings({ theme: next });
   };
 
-  return { theme, setTheme };
+  /** Same contract as `adoptLocale`: apply without writing back to the ring. */
+  const adoptTheme = useCallback(
+    (next: Theme) => {
+      setThemeAtom(next);
+      applyTheme(next);
+    },
+    [setThemeAtom],
+  );
+
+  return { theme, setTheme, adoptTheme };
 }

@@ -25,7 +25,7 @@ export default function FavoriteButton({
       aria-pressed={active}
       aria-label={active ? t.sheets.removeFavorite : t.sheets.addFavorite}
       title={active ? t.sheets.removeFavorite : t.sheets.addFavorite}
-      className={cn('inline-flex items-center justify-center', className)}
+      className={cn('press inline-flex h-11 w-11 items-center justify-center rounded-full active:bg-line', className)}
     >
       <Heart
         size={17}

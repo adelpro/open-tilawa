@@ -58,7 +58,7 @@ function PauseGlyph() {
 }
 
 const ghost =
-  'flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-ink focus-visible:text-ink disabled:opacity-40 disabled:hover:text-muted';
+  'press flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink active:bg-line focus-visible:text-ink disabled:opacity-40 disabled:hover:text-muted disabled:hover:bg-transparent';
 
 /**
  * Five controls, one row. In an RTL interface the row starts on the right, so

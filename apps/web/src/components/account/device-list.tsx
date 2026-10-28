@@ -20,7 +20,7 @@ export default function DeviceList() {
   const { t } = useLocale();
   const copy = t.account;
   const devices = useAtomValue(userDevicesAtom) as Record<string, Device>;
-  const meta = useAtomValue(userDevicesMetaAtom) as { primaryPub?: string };
+  const meta = useAtomValue(userDevicesMetaAtom) as { primaryPub?: string; primaryDeviceId?: string; createdAt?: number };
   const { updateDeviceName } = useUserSync();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -62,7 +62,7 @@ export default function DeviceList() {
         ) : (
           rows.map((device) => {
             const isThis = device.id === currentId;
-            const isPrimary = Boolean(meta?.primaryPub && device.pub === meta.primaryPub);
+            const isPrimary = Boolean(meta?.primaryDeviceId && device.id === meta.primaryDeviceId);
             return (
               <li key={device.id} className="px-3 py-3">
                 {editing === device.id ? (

@@ -42,6 +42,9 @@ export default defineConfig({
         // wordmark raster, which launchers cropped into a smudge and which
         // carried the navy brand colour into an app that is otherwise greys.
         icons: [
+          // Scalable first: it is the only one that can follow the tab strip
+          // into dark mode, and the only one that stays crisp on a 3x phone.
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           {

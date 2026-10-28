@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { loadState, patchSettings } from '@/hooks/use-persistence';
 import { DIRECTION, MESSAGES, normaliseLocale, type Locale, type Messages } from '@/i18n/messages';
@@ -23,6 +23,7 @@ export function applyLocale(locale: Locale): void {
 export function useLocale(): {
   locale: Locale;
   setLocale: (next: Locale) => void;
+  adoptLocale: (next: Locale) => void;
   t: Messages;
   dir: 'rtl' | 'ltr';
 } {
@@ -38,5 +39,17 @@ export function useLocale(): {
     patchSettings({ locale: next });
   };
 
-  return { locale, setLocale, t: MESSAGES[locale], dir: DIRECTION[locale] };
+  /**
+   * Apply a locale that came from the account. No `patchSettings`: that writes
+   * back to the relay, and the value just arrived from there.
+   */
+  const adoptLocale = useCallback(
+    (next: Locale) => {
+      setLocaleAtom(next);
+      applyLocale(next);
+    },
+    [setLocaleAtom],
+  );
+
+  return { locale, setLocale, adoptLocale, t: MESSAGES[locale], dir: DIRECTION[locale] };
 }

@@ -238,15 +238,9 @@ export default function PlayerPage({
               </span>
             </button>
           </p>
-          <div className="theatre-horizon flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:z-0 lg:opacity-90">
+          <div className="theatre-horizon mb-4 flex justify-center">
             <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 64} />
           </div>
-          {/* The floor: the horizon's edge, kept even when paused so the stage
-              never becomes a blank page. */}
-          <div
-            aria-hidden="true"
-            className="theatre-floor hidden lg:fixed lg:inset-x-0 lg:bottom-[160px] lg:z-0 lg:block lg:h-px lg:bg-line"
-          />
 
           <div className="mt-10 lg:mx-auto lg:mt-0 lg:w-[560px]">
             <Scrubber
@@ -313,6 +307,7 @@ export default function PlayerPage({
         surahName={surah?.name ?? `سورة ${surahId}`}
         reciterName={reciter?.name ?? 'اختر قارئاً'}
         source={source}
+        progress={progress}
         onOpenSurahs={openSurahs}
         onOpenReciters={openReciters}
         onOpenStream={openStream}

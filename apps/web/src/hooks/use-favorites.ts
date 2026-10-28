@@ -3,7 +3,7 @@ import { useAtom, useAtomValue } from 'jotai';
 
 import { user } from '@/gun';
 import { syncFavorite, syncView } from '@/gun/counts';
-import { myFavoritesAtom, myFavMetaAtom, gunUserPubAtom } from '@/jotai/gun';
+import { myFavoritesAtom, gunUserPubAtom } from '@/jotai/gun';
 import { selectedReciterAtom } from '@/jotai/atom';
 import { getCountingIdentity } from '@/utils/identity';
 import {
@@ -20,11 +20,12 @@ const VIEWED_PREFIX = 'open-tilawa:viewed:';
  *
  * The local list is the source of truth for the UI; `gun.user().favorites` is a
  * sync layer on top of it. A favourite therefore works while logged out, and
- * logging in later merges instead of replacing.
+ * logging in later merges instead of replacing. The login merge itself lives in
+ * `useUserSync` — one owner for the account graph, so two effects cannot race
+ * to rewrite the same list.
  */
 export function useFavorites() {
   const [favorites, setFavorites] = useAtom(myFavoritesAtom);
-  const [favMeta, setFavMeta] = useAtom(myFavMetaAtom);
   const pub = useAtomValue(gunUserPubAtom);
 
   // Seed from localStorage once, so anonymous favourites survive a reload.
@@ -35,20 +36,6 @@ export function useFavorites() {
     }
     // Intentionally runs once; later updates come from toggles and Gun.
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Logged in: merge local into the account, then adopt whatever the account has.
-  useEffect(() => {
-    if (!pub || !user.is) return;
-    const local = readLocalFavorites();
-    const remote = favorites;
-    const merged = Array.from(new Set([...local, ...remote]));
-    merged.forEach((id) => {
-      if (!remote.includes(id)) user.get('favorites').get(id).put(true);
-    });
-    writeLocalFavorites(merged);
-    setFavorites(merged);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pub]);
 
   const isFavorite = useCallback(
     (reciterId: string | number) => favorites.includes(String(reciterId)),
@@ -66,7 +53,6 @@ export function useFavorites() {
 
       if (user.is) {
         user.get('favorites').get(id).put(wasFavorite ? null : true);
-        user.get('favMeta').get(id).put({ favorited: !wasFavorite, updatedAt: Date.now() });
       }
 
       // Only a real transition moves the public counter.
@@ -85,7 +71,7 @@ export function useFavorites() {
     [favorites, pub, setFavorites],
   );
 
-  return { favorites, favMeta, isFavorite, toggle };
+  return { favorites, isFavorite, toggle };
 }
 
 /**

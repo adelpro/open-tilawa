@@ -56,7 +56,7 @@ export default function NavSheet({
               }}
               aria-current={current ? 'page' : undefined}
               className={cn(
-                'flex h-12 w-full items-center gap-3 px-4 text-start text-[15px] text-ink transition-colors hover:bg-line active:bg-line',
+                'press flex h-12 w-full items-center gap-3 px-4 text-start text-[15px] text-ink transition-colors hover:bg-line',
                 current && 'font-semibold',
               )}
             >

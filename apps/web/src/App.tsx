@@ -20,7 +20,8 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
 import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
-import { patchSettings } from './hooks/use-persistence';
+import { userSettingsAtom } from './jotai/gun';
+import { patchSettings, hydrateSettings, loadState, resolveRemoteSettings, shouldPushLocalSettings } from './hooks/use-persistence';
 import { useUserSync } from './hooks/use-user-sync';
 import { useGlobalCounts } from './hooks/use-global-counts';
 import { useTrackView } from './hooks/use-favorites';
@@ -44,13 +45,17 @@ export default function App() {
     if (pinned) openReciters();
   }, [wide, pinned, openReciters]);
 
-  const { locale, setLocale } = useLocale();
-  const { theme, setTheme } = useTheme();
+  const { locale, setLocale, adoptLocale } = useLocale();
+  const { theme, setTheme, adoptTheme } = useTheme();
   const [rate, setRate] = useAtom(rateAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const [accountOpen, setAccountOpen] = useAtom(accountSheetOpenAtom);
+  const remoteSettings = useAtomValue(userSettingsAtom);
 
-  useUserSync();
+  // One mount, one set of relay subscriptions and one device heartbeat. This
+  // hook is not idempotent per caller: each call registers its own `.on()`
+  // listeners, so a second call to read `updateSettings` doubled everything.
+  const { updateSettings } = useUserSync();
   useGlobalCounts();
   useTrackView();
   useHydrateRecent();
@@ -69,6 +74,41 @@ export default function App() {
   };
   const sleep = useSleepTimer(() => setIsPlaying(false));
 
+  /**
+   * Account settings land here, once per newer stamp. `hydrateSettings` writes
+   * them to localStorage without dispatching the write-back event, and the
+   * `adopt*` setters update the atoms without re-stamping — so receiving a
+   * value can never bounce it back to the relay.
+   */
+  useEffect(() => {
+    const local = loadState().settings;
+    const applied = resolveRemoteSettings(local, remoteSettings);
+
+    if (applied) {
+      hydrateSettings(applied);
+      if (applied.rate !== undefined) setRate(applied.rate);
+      if (applied.visualiser) setVisualiser(applied.visualiser);
+      if (applied.locale) adoptLocale(applied.locale);
+      if (applied.theme) adoptTheme(applied.theme);
+      return;
+    }
+
+    // The account is older (or silent) and this device has a newer choice —
+    // send it up once, so a second device can adopt it.
+    if (shouldPushLocalSettings(local, remoteSettings)) updateSettings(local);
+  }, [remoteSettings, setRate, setVisualiser, adoptLocale, adoptTheme, updateSettings]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as Record<string, unknown>;
+      if (detail && typeof detail === 'object') {
+        updateSettings(detail as any);
+      }
+    };
+    window.addEventListener('open-tilawa:settings', handler);
+    return () => window.removeEventListener('open-tilawa:settings', handler);
+  }, [updateSettings]);
+
   const go = (next: Parameters<typeof navigate>[0]) => {
     navigate(next);
     setMenuOpen(false);
@@ -83,6 +123,7 @@ export default function App() {
           onOpenSurahs={openSurahs}
           onOpenReciters={openReciters}
           onOpenKeys={openKeys}
+          onOpenAccount={() => setAccountOpen(true)}
         />
 
         {route === '/about' ? (

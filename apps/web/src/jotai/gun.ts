@@ -1,5 +1,7 @@
 import { atom } from 'jotai';
 
+import type { StoredSettings } from '@/hooks/use-persistence';
+
 export const gunLoggedInAtom = atom<boolean>(false);
 gunLoggedInAtom.debugLabel = 'gun-logged-in';
 
@@ -18,9 +20,6 @@ gunErrorAtom.debugLabel = 'gun-error';
 export const myFavoritesAtom = atom<string[]>([]);
 myFavoritesAtom.debugLabel = 'my-favorites';
 
-export const myFavMetaAtom = atom<Record<string, { favorited: boolean; updatedAt: number }>>({});
-myFavMetaAtom.debugLabel = 'my-fav-meta';
-
 export const globalViewCountsAtom = atom<Record<string, number>>({});
 globalViewCountsAtom.debugLabel = 'global-view-counts';
 
@@ -33,17 +32,8 @@ userDevicesAtom.debugLabel = 'user-devices';
 export const userDevicesMetaAtom = atom<Record<string, any>>({});
 userDevicesMetaAtom.debugLabel = 'user-devices-meta';
 
-export const userCurrentReciterAtom = atom<number | null>(null);
-userCurrentReciterAtom.debugLabel = 'user-current-reciter';
-
-export const userCurrentSurahAtom = atom<number | null>(null);
-userCurrentSurahAtom.debugLabel = 'user-current-surah';
-
-export const userProgressAtom = atom<{ surahId?: number; position?: number; updatedAt?: number } | null>(null);
-userProgressAtom.debugLabel = 'user-progress';
-
-export const userProfileAtom = atom<{ displayName?: string; avatarUrl?: string } | null>(null);
-userProfileAtom.debugLabel = 'user-profile';
+export const userSettingsAtom = atom<StoredSettings>({});
+userSettingsAtom.debugLabel = 'user-settings';
 
 /** Last ten reciters this listener opened, newest first. */
 export const myRecentAtom = atom<{ id: string; at: number }[]>([]);

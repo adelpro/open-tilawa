@@ -2,6 +2,7 @@ import { Gauge, GlobeHemisphereWest, Moon, MoonStars, Sun, Waveform } from '@pho
 import type { ReactNode } from 'react';
 
 import Icon from '@/components/icons';
+import { PLAYBACK_RATES } from '@/hooks/use-persistence';
 import { useLocale } from '@/hooks/use-locale';
 import type { Theme } from '@/hooks/use-theme';
 import { LOCALES, type Locale } from '@/i18n/messages';
@@ -133,7 +134,7 @@ export default function SettingsPage({
             title={t.settings.speed}
             hint={t.settings.playbackHint}
           >
-            {[0.75, 1, 1.25, 1.5, 2].map((value) => (
+            {PLAYBACK_RATES.map((value) => (
               <button
                 key={value}
                 type="button"
