@@ -79,3 +79,43 @@ describe('console audit — a select is a select', () => {
     assert.match(account, /className="field__select/);
   });
 });
+
+/* ---------- tokens ---------- */
+
+/** Relative luminance of a #rrggbb string, enough to compare two surfaces. */
+function luminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16) / 255);
+  const lin = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+const tokens = strip(read('styles/tokens.css'));
+
+describe('console audit — elevation and type, in tokens', () => {
+  it('never paints a card darker than the page under it', () => {
+    // The darkest page surface in either theme; a card may be lighter, never darker.
+    const page = '#1c1c1e';
+    const canvases = [...tokens.matchAll(/--canvas:\s*(#[0-9a-f]{6})/gi)].map((m) => m[1]);
+    assert.ok(canvases.length >= 2, 'expected a light and a dark --canvas');
+    for (const value of canvases) {
+      assert.ok(
+        luminance(value) > luminance(page),
+        `--canvas ${value} is not lighter than the page ${page}`,
+      );
+    }
+  });
+
+  it('sets Arabic display type at least as large as Latin, with heading leading', () => {
+    const latin = tokens.match(/--display-lg:\s*\d+\s+([\d.]+)rem\/([\d.]+)/);
+    const arabic = tokens.match(/--display-lg:\s*\d+\s+([\d.]+)rem\/([\d.]+)\s+var\(--font-arabic\)/);
+    assert.ok(latin && arabic, 'both display-lg tiers must exist');
+    assert.ok(
+      Number(arabic[1]) >= Number(latin[1]),
+      `Arabic display ${arabic[1]}rem is smaller than Latin ${latin[1]}rem`,
+    );
+    assert.ok(
+      Number(arabic[2]) < 1.45,
+      `Arabic display leading ${arabic[2]} is paragraph leading, not heading leading`,
+    );
+  });
+});

@@ -324,7 +324,9 @@ re-measured on the same fixture:
 | #2 small buttons on touch | **fixed** | `.btn.btn--sm` inside the coarse block (two classes, so source order cannot win); row actions **44px** at 390 touch (was 34) |
 | #3 unstyled selects | **fixed** | `.field__select` on both console filters and the account language control, `.field__select--auto` so a one-choice select does not span the panel; **49px** (was 19) |
 | #4 English in the Arabic console | **fixed** | labels, options and every chip through the catalogue; the raw enum is the chip's `title`; measured chips: مشرف أعلى / المالك / نشط / مدير / مستخدم / معطّل |
-| #5 dark elevation, #6–#11, #12–#17 | queued | batches B–E of the plan |
+| #5 dark elevation | **fixed** | dark `--canvas` `#000000` → `#2c2c2e` in both dark blocks; measured page `rgb(28,28,30)`, card `rgb(44,44,46)` — the card is now the lighter surface |
+| #9 Arabic display type | **fixed** | `2rem/1.55` → `2.125rem/1.3`: AR h1 now 34px/1.30 against EN 34px/1.15 (was 32px/1.55), single-line at 390px with no clipping |
+| #6–#8, #10–#11, #12–#17 | queued | batches C–E of the plan |
 
 ## How to re-verify
 

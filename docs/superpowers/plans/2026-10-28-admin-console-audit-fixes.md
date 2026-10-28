@@ -70,15 +70,15 @@
 ### Task B1: dark elevation rises
 
 - **Files:** `src/styles/tokens.css`.
-- [ ] Give dark `--canvas` a lighter value than `--canvas-parchment` (the page); keep light mode untouched.
-- [ ] Test: parse both theme blocks; in each, the card token must be lighter than the page token.
-- [ ] Re-shoot seeders/account in dark; card must read as raised.
+- [x] Give dark `--canvas` a lighter value than `--canvas-parchment` (the page); keep light mode untouched.
+- [x] Test: parse both theme blocks; in each, the card token must be lighter than the page token.
+- [x] Re-shoot seeders/account in dark; card must read as raised.
 
 ### Task B2: the Arabic display tier
 
 - **Files:** `src/styles/tokens.css`.
-- [ ] Arabic `--display-lg` at least the Latin size, leading ≈ 1.25 (Latin 1.15, Arabic body stays 1.6).
-- [ ] Test: the AR display size ≥ EN display size, and its leading < the AR body leading.
+- [x] Arabic `--display-lg` at least the Latin size, leading ≈ 1.25 (Latin 1.15, Arabic body stays 1.6).
+- [x] Test: the AR display size ≥ EN display size, and its leading < the AR body leading.
 
 ---
 
