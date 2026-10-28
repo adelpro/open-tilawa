@@ -1,4 +1,4 @@
-import { type PointerEvent as ReactPointerEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type PointerEvent as ReactPointerEvent, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { Headphones, Heart } from '@phosphor-icons/react';
 
@@ -14,6 +14,7 @@ import { formatBytes } from '@/utils/format-bytes';
 import { riwayaLabel } from '@/utils/riwaya';
 import { filterReciters, filterSurahs } from '@/utils/search';
 import { DRAG_THRESHOLD, dragOffset, shouldDismiss, springStep } from '@/utils/sheet-drag';
+import { createSheetLayer } from '@/utils/sheet-layer';
 import FavoriteButton from '@/components/favorite-button';
 import { useGlobalCounts } from '@/hooks/use-global-counts';
 import { myFavoritesAtom, myRecentAtom } from '@/jotai/gun';
@@ -37,6 +38,22 @@ type SheetProps = {
   pinned?: boolean;
   onTogglePin?: () => void;
 };
+
+/**
+ * One history entry for the whole sheet layer, shared by every sheet: see
+ * utils/sheet-layer.ts for why a per-sheet entry closes the sheet that just
+ * opened.
+ */
+const sheetLayer = createSheetLayer({
+  push: (state) => window.history.pushState(state, ''),
+  back: () => window.history.back(),
+  state: () => window.history.state,
+  href: () => window.location.href,
+  // After the commit, not after the current task: React flushes the arriving
+  // sheet's effect before the next frame, and that is what tells us this was a
+  // handover rather than a plain close.
+  schedule: (run) => requestAnimationFrame(() => run()),
+});
 
 function PinGlyph({ filled }: { filled: boolean }) {
   return (
@@ -87,6 +104,17 @@ export default function Sheet({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const wide = useMediaQuery('(min-width: 1024px)');
+  const token = useId();
+
+  /**
+   * The close handler is a new function on every parent render. Keeping it in a
+   * ref keeps it out of the history effect's dependencies: re-running that
+   * effect tore down the entry and pushed another one.
+   */
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   /**
    * The live offset lives in a ref, not state: a drag has to update the panel
@@ -207,25 +235,21 @@ export default function Sheet({
   }, [open]);
 
   /**
-   * Back closes the sheet instead of leaving the site. The pushed entry is only
-   * unwound when it is still the current one: picking a route from the menu
-   * pushes a new entry first, and going back there would undo the navigation.
+   * Back closes the sheet instead of leaving the site. The entry is the layer's,
+   * not this sheet's, so a handover between two sheets unwinds nothing.
    */
   useEffect(() => {
     if (!open || wide) return;
-    const here = window.location.href;
-    window.history.pushState({ tilawaSheet: true }, '');
+    sheetLayer.acquire(token, () => onCloseRef.current());
     const onPop = () => {
-      if (dialogRef.current?.open) onClose();
+      if (!sheetLayer.ours()) sheetLayer.popped();
     };
     window.addEventListener('popstate', onPop);
     return () => {
       window.removeEventListener('popstate', onPop);
-      if (window.history.state?.tilawaSheet && window.location.href === here) {
-        window.history.back();
-      }
+      sheetLayer.release(token);
     };
-  }, [open, wide, onClose]);
+  }, [open, wide, token]);
 
   /** Grab the header: 1:1 while the finger is down, damped past the top. */
   const onDragStart = (event: ReactPointerEvent<HTMLDivElement>) => {
