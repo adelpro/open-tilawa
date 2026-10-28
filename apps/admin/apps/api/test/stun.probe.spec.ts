@@ -101,6 +101,32 @@ describe('stun probe robustness', () => {
     }
   });
 
+  it('decodes an IPv4 XOR-MAPPED-ADDRESS whose high bit is set', async () => {
+    // 154.253.62.19 XOR'd with the magic cookie is 0xBBEF9A51 — a top bit set.
+    // A signed 32-bit XOR in the decoder turned that negative, writeUInt32BE
+    // threw, and a healthy TURN server on a 154.x address was reported as
+    // "malformed STUN reply" while answering perfectly.
+    const v4 = createSocket('udp4');
+    v4.on('message', (msg, rinfo) => {
+      const header = Buffer.concat([Buffer.from([0x01, 0x01, 0x00, 0x0c]), msg.subarray(4, 20)]);
+      const attr = Buffer.alloc(12);
+      attr.writeUInt16BE(0x0020, 0);
+      attr.writeUInt16BE(8, 2);
+      attr[5] = 0x01;
+      attr.writeUInt16BE(rinfo.port ^ 0x2112, 6);
+      attr.writeUInt32BE(0xbbef9a51, 8);
+      v4.send(Buffer.concat([header, attr]), rinfo.port, rinfo.address);
+    });
+    await new Promise<void>((resolve) => v4.bind(53476, '127.0.0.1', () => resolve()));
+    try {
+      const probe = await stunProbe({ host: '127.0.0.1', port: 53476, timeoutMs: 800 });
+      expect(probe.ok).toBe(true);
+      expect(probe.mappedAddress?.ip).toBe('154.253.62.19');
+    } finally {
+      v4.close();
+    }
+  });
+
   it('decodes an IPv6 XOR-MAPPED-ADDRESS without crashing', async () => {
     const v6 = createSocket('udp4');
     v6.on('message', (msg, rinfo) => {

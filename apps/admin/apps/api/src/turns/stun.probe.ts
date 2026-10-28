@@ -116,7 +116,10 @@ function readXorMapped(msg: Buffer): { ip: string; port: number } | null {
       const xport = msg.readUInt16BE(off + 6) ^ (MAGIC_COOKIE >>> 16);
       if (family === 0x01) {
         const ip4 = Buffer.alloc(4);
-        ip4.writeUInt32BE(msg.readUInt32BE(off + 8) ^ MAGIC_COOKIE, 0);
+        // `^` yields a *signed* 32-bit int: an address whose first octet is
+        // >= 0x80 XORs to a negative number, and writeUInt32BE rejects it.
+        // Coerce back to unsigned before laying down the four bytes.
+        ip4.writeUInt32BE((msg.readUInt32BE(off + 8) ^ MAGIC_COOKIE) >>> 0, 0);
         return { ip: `${ip4[0]}.${ip4[1]}.${ip4[2]}.${ip4[3]}`, port: xport };
       }
       if (family === 0x02 && attrLen >= 20) {
