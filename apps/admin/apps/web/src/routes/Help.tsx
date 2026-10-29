@@ -3,6 +3,13 @@ import { useI18n, type MessageKey } from '../lib/i18n';
 import { Panel } from '../components/Panel';
 import { CopyLine } from '../components/CopyLine';
 
+/**
+ * The diagrams live in the repo, not in the bundle: they explain the box, and the
+ * box differs per install. One constant, because the day these move behind a
+ * Pages deploy only this line changes.
+ */
+const DOCS_URL = 'https://github.com/adelpro/open-tilawa/tree/main/docs/how-it-works';
+
 const sections: { titleKey: MessageKey; bodyKey: MessageKey }[] = [
   { titleKey: 'help.seeders.title', bodyKey: 'help.seeders.body' },
   { titleKey: 'help.turns.title', bodyKey: 'help.turns.body' },
@@ -32,6 +39,26 @@ export function Help(): ReactElement {
           <p className="body muted">{t('help.lede')}</p>
         </div>
       </header>
+
+      <Panel>
+        <h2 className="group-title">{t('help.docsTitle')}</h2>
+        <p className="body" style={{ marginTop: 'var(--space-2)' }}>
+          {t('help.docsBody')}
+        </p>
+        <a
+          className="body"
+          href={DOCS_URL}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: 'inline-block',
+            marginTop: 'var(--space-2)',
+            textDecoration: 'underline',
+          }}
+        >
+          {t('help.docsLink')}
+        </a>
+      </Panel>
 
       {sections.map((s) => (
         <Panel key={s.titleKey}>

@@ -524,7 +524,11 @@ export const en = {
   'footer.copy': '© Tilawa Admin. All rights reserved.',
 
   'help.title': 'Help',
-  'help.lede': 'Documentation for every section of the dashboard.',
+  'help.lede': 'Documentation for every section of the console.',
+  'help.docsTitle': 'How it works',
+  'help.docsBody':
+    'Eight diagrams, one question each: what runs on the box, where the files live, and why the audio never passes through a server. The operator notes sit beside them.',
+  'help.docsLink': 'Read them on GitHub',
   'help.seeders.title': 'Seeders',
   'help.seeders.body':
     'Register seeder nodes with their host, port and Basic-auth credentials. The dashboard lists each node and can proxy its torrent inventory: add by magnet or infohash, drop what is no longer needed, or sync a reciter release in one action.',
