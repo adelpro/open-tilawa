@@ -6,7 +6,6 @@
 
 /*
  * Open Tilawa — one white screen.
- * See docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md.
  *
  * Seven values. No second surface, no shadow, no theme system: playback state
  * is expressed by weight and the play glyph only. The spectrum is the one place

@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 /**
  * The console audit's P0 items, as checks.
  *
- * `docs/superpowers/reviews/2026-10-28-admin-console-audit.md` measured five
- * breakages. Four of them are one missing rule each, and each one is the kind a
+ * The console audit measured five breakages. Four of them are one missing rule
+ * each, and each one is the kind a
  * build cannot see: a document that scrolls behind its own dialog, a touch rule
  * defeated by a later modifier, an English label in an Arabic screen, a select
  * wearing a class that does not exist. They are pinned here so they cannot come

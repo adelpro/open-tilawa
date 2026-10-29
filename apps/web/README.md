@@ -118,8 +118,7 @@ Then rebuild and re-check streaming.
 
 The site is one screen. There is no router, no shell, no queue column: the page
 *is* the player, and the surah and reciter lists are bottom sheets over it. The
-design source of truth is
-[`docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md`](../../docs/superpowers/specs/2026-10-26-tilawa-web-minimal-player-design.md).
+design source of truth is [`DESIGN.md`](../../DESIGN.md) at the repo root.
 
 - `src/app/player-page.tsx` — the whole surface: reciter line, surah name,
   scrubber, five transport controls, one line of error text when a torrent
