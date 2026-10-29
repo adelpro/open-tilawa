@@ -1,0 +1,4 @@
+# One document: the app is a hash-routed SPA, so every page is the same URL to a
+# crawler. Nothing here is private, and there is no server route to hide.
+User-agent: *
+Allow: /

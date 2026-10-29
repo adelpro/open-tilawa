@@ -11,6 +11,7 @@ const config: Config = {
         muted: 'var(--muted)',
         line: 'var(--line)',
         invert: 'var(--invert)',
+        danger: 'var(--danger)',
       },
       fontFamily: {
         sans: ['"IBM Plex Sans Arabic"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],

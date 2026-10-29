@@ -27,6 +27,9 @@
      the page, so the filled waves read as ink that happens to be blue. */
   --wave-front: #1c4d78;
   --wave-back: #5d97c9;
+  /* The one non-spectrum colour: a refusal, a destructive action, an error.
+     7:1 on the page so it never has to be a background to be readable. */
+  --danger: #b3261e;
   color-scheme: light;
 }
 
@@ -40,6 +43,7 @@
   --surface: #19191a;
   --wave-front: #a6c9ec;
   --wave-back: #3d6b96;
+  --danger: #f87171;
   color-scheme: dark;
 }
 
@@ -368,5 +372,50 @@ input[type='search']::-webkit-search-decoration {
   .app-shell[data-panel='open'] .theatre-title,
   .app-shell[data-panel='open'] .theatre-reciter {
     inset-inline-start: 360px;
+  }
+}
+
+/* ---------- theme switch ---------- */
+
+/*
+ * The palette is one attribute, so the change is a cross-fade rather than a
+ * flash. 180ms: long enough to read as one page changing clothes, short enough
+ * that it never delays the person who just chose dark. The hook skips the API
+ * under reduced motion; this is the belt to that suspenders.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* ---------- icons ---------- */
+
+/*
+ * One glyph, one slot. `flex: none` keeps a 16px icon from being the first thing
+ * a long Arabic label squeezes; `pointer-events: none` keeps it out of the way of
+ * the button that owns it. A direction (`back`, `forward`) flips with the
+ * document, so the same name points the right way in both languages.
+ */
+.icon {
+  flex: none;
+  pointer-events: none;
+  vertical-align: calc(0.5cap - 0.5em - 0.02em);
+}
+[dir='rtl'] .icon-dir {
+  transform: scaleX(-1);
+}
+.spinner {
+  animation: spin 900ms linear infinite;
+}
+@keyframes spin {
+  to {
+    rotate: 1turn;
   }
 }

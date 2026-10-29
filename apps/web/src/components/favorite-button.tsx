@@ -1,5 +1,4 @@
-import { Heart } from '@phosphor-icons/react';
-
+import Icon from '@/components/icons';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useLocale } from '@/hooks/use-locale';
 import { cn } from '@/utils/cn';
@@ -25,13 +24,12 @@ export default function FavoriteButton({
       aria-pressed={active}
       aria-label={active ? t.sheets.removeFavorite : t.sheets.addFavorite}
       title={active ? t.sheets.removeFavorite : t.sheets.addFavorite}
-      className={cn('press inline-flex h-11 w-11 items-center justify-center rounded-full active:bg-line', className)}
+      className={cn(
+        'press inline-flex h-11 w-11 items-center justify-center rounded-full active:bg-line',
+        className,
+      )}
     >
-      <Heart
-        size={17}
-        weight={active ? 'fill' : 'regular'}
-        className={active ? 'text-ink' : 'text-muted'}
-      />
+      <Icon name="heart" size={20} weight={active ? 'fill' : 'regular'} className={active ? 'text-ink' : 'text-muted'} />
     </button>
   );
 }

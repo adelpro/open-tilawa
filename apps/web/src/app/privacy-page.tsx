@@ -9,15 +9,15 @@ export default function PrivacyPage() {
       <div className="w-full max-w-[520px] lg:max-w-[700px]">
         <a
           href="#/"
-          className="inline-flex h-11 items-center gap-1 text-[14px] text-muted transition-colors hover:text-ink"
+          className="inline-flex min-h-11 items-center gap-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
         >
-          <Icon name="chevron-right" className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
+          <Icon name="back" className="text-muted" />
           {t.routes.listen}
         </a>
 
-        <h1 className="mt-6 text-[26px] font-semibold leading-tight text-ink lg:text-[32px]">{t.privacy.title}</h1>
+        <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">{t.privacy.title}</h1>
 
-        <ul className="mt-6 space-y-4 text-[15px] leading-relaxed text-ink">
+        <ul className="mt-6 space-y-4 text-[1rem] leading-relaxed text-ink">
           <li>لا حساب، ولا تسجيل، ولا بريد إلكتروني.</li>
           <li>لا تحليلات ولا تتبّع إعلاني ولا بكسلات قياس.</li>
           <li>

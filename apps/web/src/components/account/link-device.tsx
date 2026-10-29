@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createPairingTicket, encodeTicket, parseTicket, redeemTicket } from '@/gun/pairing';
+import { Field, TextArea } from '@/components/field';
+import { Spinner } from '@/components/icons';
 import { useGun } from '@/hooks/use-gun';
 import { useLocale } from '@/hooks/use-locale';
 import type { Messages } from '@/i18n/messages';
@@ -9,10 +11,9 @@ import { cn } from '@/utils/cn';
 
 const READER_ID = 'tilawa-qr-reader';
 const card = 'rounded-xl border border-line p-3';
-const action = 'mt-2.5 w-full rounded-xl px-3 py-2 text-[13px] transition-colors';
-const quiet = 'w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink';
-const field =
-  'w-full rounded-xl border border-line bg-transparent px-3 py-2 text-[13px] text-ink outline-none focus:border-ink';
+const action =
+  'mt-3 min-h-11 w-full rounded-lg px-3 py-2 text-[0.875rem] transition-colors disabled:opacity-45';
+const quiet = 'min-h-11 w-full rounded-lg px-3 py-2 text-[0.875rem] text-muted transition-colors hover:text-ink';
 
 type Mode = 'share' | 'scan';
 
@@ -64,27 +65,40 @@ function PasteForm({
   autoFocus?: boolean;
 }) {
   return (
-    <div className="space-y-2">
-      <p className="text-[11.5px] leading-relaxed text-muted">{copy.manualNote}</p>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={3}
-        dir="ltr"
-        autoFocus={autoFocus}
-        placeholder={copy.manualPlaceholder}
-        aria-label={copy.manualToggle}
-        className={cn(field, 'resize-none font-mono text-[11px]')}
-      />
+    <form
+      className="space-y-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (value.trim()) onJoin();
+      }}
+    >
+      <p className="text-[0.75rem] leading-relaxed text-muted">{copy.manualNote}</p>
+      <Field label={copy.manualToggle}>
+        {(id) => (
+          <TextArea
+            id={id}
+            required
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            rows={3}
+            dir="ltr"
+            autoFocus={autoFocus}
+            placeholder={copy.manualPlaceholder}
+            name="pairing-ticket"
+            autoComplete="off"
+            className="font-mono text-[0.875rem]"
+          />
+        )}
+      </Field>
       <button
-        type="button"
-        disabled={busy || !value.trim()}
-        onClick={onJoin}
-        className={cn(action, 'bg-ink text-invert', 'disabled:opacity-40')}
+        type="submit"
+        disabled={busy}
+        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-ink px-3 py-2 text-[0.875rem] text-invert disabled:opacity-45"
       >
-        {busy ? '…' : copy.manualAction}
+        {busy ? <Spinner size={16} /> : null}
+        {copy.manualAction}
       </button>
-    </div>
+    </form>
   );
 }
 
@@ -319,11 +333,11 @@ export default function LinkDevice({
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-2">
         <div className="flex items-center justify-between">
-          <p className="text-[13px] font-medium text-ink">{copy.scanTitle}</p>
+          <p className="text-[0.875rem] font-medium text-ink">{copy.scanTitle}</p>
           <button
             type="button"
             onClick={() => void leaveCamera()}
-            className="rounded-full border border-line px-3 py-1 text-[12px] text-ink transition-colors hover:bg-line"
+            className="rounded-full border border-line px-3 py-1 text-[0.75rem] text-ink transition-colors hover:bg-line"
           >
             {scanView === 'camera' && !fault ? copy.scanStop : copy.scanBack}
           </button>
@@ -345,8 +359,8 @@ export default function LinkDevice({
         {shown ? (
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-line p-4 text-center">
             <div role="status" className="space-y-2">
-              <p className="text-[13.5px] font-medium text-ink">{shown.title}</p>
-              <p className="max-w-[34ch] text-[12px] leading-relaxed text-muted">{shown.note}</p>
+              <p className="text-[0.875rem] font-medium text-ink">{shown.title}</p>
+              <p className="max-w-[34ch] text-[0.75rem] leading-relaxed text-muted">{shown.note}</p>
             </div>
             <button
               type="button"
@@ -385,7 +399,7 @@ export default function LinkDevice({
           </div>
         ) : (
           <>
-            <p className="text-center text-[11.5px] text-muted">
+            <p className="text-center text-[0.75rem] text-muted">
               {opening ? copy.scanOpening : copy.scanHint}
             </p>
             <button
@@ -394,7 +408,7 @@ export default function LinkDevice({
                 setFault(null);
                 setScanView('paste');
               }}
-              className="text-center text-[11.5px] text-muted underline underline-offset-2"
+              className="text-center text-[0.75rem] text-muted underline underline-offset-2"
             >
               {copy.manualToggle}
             </button>
@@ -402,7 +416,7 @@ export default function LinkDevice({
         )}
 
         {message ? (
-          <p role="status" aria-live="polite" className="text-center text-[12px] text-muted">
+          <p role="status" aria-live="polite" className="text-center text-[0.75rem] text-muted">
             {message}
           </p>
         ) : null}
@@ -411,11 +425,11 @@ export default function LinkDevice({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {mode === 'share' ? (
         <div className={card}>
-          <p className="text-[13px] font-medium text-ink">{copy.shareTitle}</p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.shareNote}</p>
+          <p className="text-[0.875rem] font-medium text-ink">{copy.shareTitle}</p>
+          <p className="mt-1 text-[0.75rem] leading-relaxed text-muted">{copy.shareNote}</p>
           <button
             type="button"
             onClick={() => void showTicket()}
@@ -426,8 +440,8 @@ export default function LinkDevice({
         </div>
       ) : (
         <div className={card}>
-          <p className="text-[13px] font-medium text-ink">{copy.joinTitle}</p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{copy.joinNote}</p>
+          <p className="text-[0.875rem] font-medium text-ink">{copy.joinTitle}</p>
+          <p className="mt-1 text-[0.75rem] leading-relaxed text-muted">{copy.joinNote}</p>
           <button
             type="button"
             onClick={() => {
@@ -445,13 +459,13 @@ export default function LinkDevice({
               setMessage(null);
               setManual((v) => !v);
             }}
-            className="mt-1.5 w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink"
+            className="mt-2 w-full rounded-xl px-3 py-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
           >
             {copy.manualToggle}
           </button>
 
           {manual ? (
-            <div className="mt-2 border-t border-line pt-2.5">
+            <div className="mt-2 border-t border-line pt-3">
               <PasteForm
                 copy={copy}
                 value={pasted}
@@ -465,7 +479,7 @@ export default function LinkDevice({
       )}
 
       {message ? (
-        <p ref={messageRef} role="status" aria-live="polite" className="text-[12px] text-muted">
+        <p ref={messageRef} role="status" aria-live="polite" className="text-[0.75rem] text-muted">
           {message}
         </p>
       ) : null}
@@ -487,7 +501,7 @@ export default function LinkDevice({
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-[300px] rounded-2xl border border-line bg-canvas p-4 text-center"
           >
-            <p className="text-[13px] font-medium text-ink">{copy.shareTitle}</p>
+            <p className="text-[0.875rem] font-medium text-ink">{copy.shareTitle}</p>
             <img
               src={qr}
               alt={copy.shareTitle}
@@ -495,25 +509,25 @@ export default function LinkDevice({
               height={240}
               className="mx-auto mt-3 rounded-lg bg-white p-2"
             />
-            <p className="mt-2 text-[11.5px] text-muted">{copy.expiresIn(secondsLeft)}</p>
+            <p className="mt-2 text-[0.75rem] text-muted">{copy.expiresIn(secondsLeft)}</p>
             <button
               type="button"
               onClick={() => void copyTicket()}
-              className="mt-3 w-full rounded-xl border border-line px-3 py-2 text-[13px] text-ink transition-colors hover:bg-line"
+              className="mt-3 w-full rounded-xl border border-line px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line"
             >
               {copied ? copy.copied : copy.copyCode}
             </button>
             <button
               type="button"
               onClick={() => void showTicket()}
-              className="mt-1.5 w-full rounded-xl px-3 py-2 text-[12.5px] text-ink transition-colors hover:bg-line"
+              className="mt-2 w-full rounded-xl px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line"
             >
               {copy.newCode}
             </button>
             <button
               type="button"
               onClick={() => setQr(null)}
-              className="mt-1 w-full rounded-xl px-3 py-2 text-[12.5px] text-muted transition-colors hover:text-ink"
+              className="mt-1 w-full rounded-xl px-3 py-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
             >
               {t.common.close}
             </button>

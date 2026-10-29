@@ -11,21 +11,21 @@ export default function AboutPage() {
       <div className="w-full max-w-[520px] lg:max-w-[700px]">
         <a
           href="#/"
-          className="inline-flex h-11 items-center gap-1 text-[14px] text-muted transition-colors hover:text-ink"
+          className="inline-flex min-h-11 items-center gap-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
         >
-          <Icon name="chevron-right" className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
+          <Icon name="back" className="text-muted" />
           {t.routes.listen}
         </a>
 
         {/* No second logo here: the header already carries the mark. */}
-        <h1 className="mt-6 text-[26px] font-semibold leading-tight text-ink lg:text-[32px]">{t.about.title}</h1>
+        <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">{t.about.title}</h1>
 
-        <p className="mt-6 text-[15px] leading-relaxed text-ink">{t.about.body1}</p>
-        <p className="mt-3 text-[15px] leading-relaxed text-muted">{t.about.body2}</p>
-        <p className="mt-3 text-[15px] leading-relaxed text-muted">{t.about.body3}</p>
-        <p className="mt-3 text-[15px] leading-relaxed text-muted">{t.about.body4}</p>
+        <p className="mt-6 text-[1rem] leading-relaxed text-ink">{t.about.body1}</p>
+        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body2}</p>
+        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body3}</p>
+        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body4}</p>
 
-        <div className="mt-8 flex flex-col gap-3 text-[15px]">
+        <div className="mt-8 flex flex-col gap-3 text-[1rem]">
           <a
             href="https://github.com/adelpro/open-tilawa"
             target="_blank"
@@ -39,7 +39,7 @@ export default function AboutPage() {
           </a>
         </div>
 
-        <p className="mt-8 text-[12px] leading-relaxed text-muted">
+        <p className="mt-8 text-[0.75rem] leading-relaxed text-muted">
           {t.about.license}{' '}
           <span className="tnum">{APP_VERSION}</span>.
         </p>

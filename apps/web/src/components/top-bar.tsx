@@ -1,17 +1,7 @@
 import { APP_VERSION } from '@/constants/version';
 import { useLocale } from '@/hooks/use-locale';
+import Icon from '@/components/icons';
 import { cn } from '@/utils/cn';
-import {
-  House,
-  BookOpen,
-  MicrophoneStage,
-  Gear,
-  Info,
-  ShieldCheck,
-  Key,
-  User,
-  DotsThreeVertical,
-} from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 
 /**
@@ -60,55 +50,59 @@ export default function TopBar({
 
   return (
     <header className="top-bar flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
-      <a href="#/" aria-label={`${t.brand} — ${t.routes.listen}`} className="flex items-center gap-2">
-        <img src="/images/icon.png" alt="" className="brand-mark h-6 w-auto" />
-        <span className="tnum text-[10px] leading-none text-muted">{APP_VERSION}</span>
+      {/* The wordmark is the link's name, so the version sits outside it: an
+          aria-label that left the visible "1.8.3" out failed WCAG 2.5.3. */}
+      <a href="#/" className="flex items-center gap-2">
+        <img src="/images/icon.png" alt={t.brand} className="brand-mark h-6 w-auto" />
+        <span aria-hidden="true" className="tnum text-[0.75rem] leading-none text-muted">
+          {APP_VERSION}
+        </span>
       </a>
 
       {/* Desktop navigation: three words, no sandwich. The two lists are the
           same panels the phone opens, just reachable from here as well. */}
-      <nav className="hidden items-center gap-1 text-[13px] text-muted lg:flex" aria-label={t.brand}>
+      <nav className="hidden items-center gap-1 text-[0.875rem] text-muted lg:flex" aria-label={t.brand}>
         <a
           href="#/"
           className={cn(
-            'flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink',
+            'flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink',
             isListen && 'text-ink',
           )}
         >
-          <House size={16} weight={isListen ? 'fill' : 'regular'} />
+          <Icon name="house" weight={isListen ? 'fill' : 'regular'} />
           {t.routes.listen}
         </a>
         <button
           type="button"
           onClick={onOpenReciters}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
+          className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
         >
-          <MicrophoneStage size={16} weight="regular" />
+          <Icon name="mic" />
           {t.sheets.reciters}
         </button>
         <button
           type="button"
           onClick={onOpenSurahs}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
+          className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
         >
-          <BookOpen size={16} weight="regular" />
+          <Icon name="book" />
           {t.sheets.surahs}
         </button>
         {onOpenAccount && (
           <button
             type="button"
             onClick={onOpenAccount}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
+            className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
           >
-            <User size={16} weight="regular" />
+            <Icon name="user" />
             {t.account.title}
           </button>
         )}
         <a
           href="#/settings"
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
+          className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
         >
-          <Gear size={16} weight="regular" />
+          <Icon name="gear" />
           {t.routes.settings}
         </a>
         <div className="relative" ref={moreRef}>
@@ -124,7 +118,7 @@ export default function TopBar({
               moreOpen && 'bg-line/50 text-ink',
             )}
           >
-            <DotsThreeVertical size={18} weight="bold" />
+            <Icon name="more" size={20} />
           </button>
           {moreOpen && (
             <div
@@ -135,18 +129,18 @@ export default function TopBar({
                 href="#/about"
                 role="menuitem"
                 onClick={() => setMoreOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 text-[13px] text-ink transition-colors hover:bg-line/50"
+                className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
               >
-                <Info size={16} weight="regular" />
+                <Icon name="info" />
                 {t.routes.about}
               </a>
               <a
                 href="#/privacy"
                 role="menuitem"
                 onClick={() => setMoreOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 text-[13px] text-ink transition-colors hover:bg-line/50"
+                className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
               >
-                <ShieldCheck size={16} weight="regular" />
+                <Icon name="shield" />
                 {t.routes.privacy}
               </a>
             </div>
@@ -159,7 +153,7 @@ export default function TopBar({
           title={t.keys.title}
           className="ml-1 flex h-7 w-7 items-center justify-center rounded-full border border-line text-muted transition-colors hover:bg-line/50 hover:text-ink"
         >
-          <Key size={16} weight="regular" />
+          <Icon name="key" />
         </button>
       </nav>
 

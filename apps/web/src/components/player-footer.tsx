@@ -50,28 +50,31 @@ export default function PlayerFooter({
     <footer className="theatre-footer shrink-0 border-t border-line pb-[env(safe-area-inset-bottom)]">
       {/* Same 16px gutter as the top bar: the ring should sit as far from the
           edge as the mark does, or it reads as pushed to the corner. */}
-      <div className="mx-auto flex min-h-14 w-full max-w-[520px] items-center gap-0.5 px-4">
+      <div className="mx-auto flex min-h-14 w-full max-w-[520px] items-center gap-1 px-4">
         <div className="theatre-names flex min-w-0 flex-1 flex-col">
           {/* Both rows start with an icon: the same shape means the same thing,
               so neither row reads as a caption. */}
+          {/* The name is the visible label, so it is the accessible name too:
+              the action rides along as a suffix. An aria-label of "list" over a
+              row that reads "الفاتحة" fails WCAG 2.5.3 (label in name). */}
           <button
             type="button"
             onClick={onOpenSurahs}
-            aria-label={t.footer.list}
-            className="press flex h-9 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[15px] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
+            className="press flex min-h-9 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[1rem] font-semibold text-ink transition-colors hover:bg-line active:bg-line"
           >
-            <Icon name="playlist" className="h-4 w-4 text-muted" />
+            <Icon name="book" className="text-muted" />
             <span className="min-w-0 flex-1 truncate">{surahName}</span>
+            <span className="sr-only">{`— ${t.footer.list}`}</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenReciters}
-            aria-label={t.footer.reciter}
-            className="press flex h-9 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[12.5px] text-muted transition-colors hover:bg-line active:bg-line"
+            className="press flex min-h-9 min-w-0 items-center gap-2 rounded-full px-2 text-start text-[0.875rem] text-muted transition-colors hover:bg-line active:bg-line"
           >
-            <Icon name="mic" className="h-4 w-4" />
+            <Icon name="mic" />
             <span className="min-w-0 flex-1 truncate">{reciterName}</span>
+            <span className="sr-only">{`— ${t.footer.reciter}`}</span>
           </button>
         </div>
 
@@ -85,7 +88,7 @@ export default function PlayerFooter({
             muted ? 'text-ink' : 'text-muted',
           )}
         >
-          <Icon name={muted ? 'volume-x' : 'volume'} className="h-[18px] w-[18px]" />
+          <Icon name={muted ? 'volume-x' : 'volume'} size={20} />
         </button>
 
         {Math.abs(rate - 1) > 0.001 && (
@@ -93,7 +96,7 @@ export default function PlayerFooter({
             type="button"
             onClick={onOpenRate}
             aria-label={t.footer.speedChange(`${Number(rate.toFixed(2))}x`)}
-            className="press tnum h-11 shrink-0 rounded-full bg-line px-3 text-[12px] font-semibold text-ink transition-colors hover:bg-line/70"
+            className="press tnum min-h-11 shrink-0 rounded-full bg-line px-3 text-[0.75rem] font-semibold text-ink transition-colors hover:bg-line/70"
           >
             {Number(rate.toFixed(2))}x
           </button>
@@ -137,7 +140,7 @@ export default function PlayerFooter({
               strokeDashoffset={ring * (1 - progress)}
             />
           </svg>
-          <StreamSourceIcon source={source} />
+          <StreamSourceIcon source={source} size={20} />
         </button>
       </div>
     </footer>

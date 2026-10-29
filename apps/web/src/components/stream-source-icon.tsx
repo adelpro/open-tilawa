@@ -1,4 +1,4 @@
-import Icon from '@/components/icons';
+import Icon, { type IconSize } from '@/components/icons';
 import type { StreamSource } from '@/utils/stream-source';
 import { iconForSource } from '@/utils/stream-source';
 
@@ -9,10 +9,12 @@ import { iconForSource } from '@/utils/stream-source';
  */
 export default function StreamSourceIcon({
   source,
+  size,
   className,
 }: {
   source: StreamSource;
+  size?: IconSize;
   className?: string;
 }) {
-  return <Icon name={iconForSource(source)} className={className} />;
+  return <Icon name={iconForSource(source)} size={size} className={className} />;
 }

@@ -1,9 +1,8 @@
 import { type PointerEvent as ReactPointerEvent, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { Headphones, Heart } from '@phosphor-icons/react';
 
 import type { IconName } from '@/components/icons';
-import Icon from '@/components/icons';
+import Icon, { Spinner } from '@/components/icons';
 import { SURAHS } from '@/constants/surah';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import type { Reciter } from '@/types';
@@ -56,32 +55,11 @@ const sheetLayer = createSheetLayer({
 });
 
 function PinGlyph({ filled }: { filled: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M9 3h6l-1 5 4 4H6l4-4-1-5Z"
-        fill={filled ? 'currentColor' : 'none'}
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path d="M12 12v9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
+  return <Icon name="pin" weight={filled ? 'fill' : 'regular'} />;
 }
 
 function CloseGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
-      <path
-        d="M6 6l12 12M18 6L6 18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Icon name="close" size={20} />;
 }
 
 /**
@@ -350,8 +328,8 @@ export default function Sheet({
           open ? 'flex' : 'hidden',
         )}
       >
-        <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-5">
-          <h2 className="text-[15px] font-semibold">{title}</h2>
+        <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-4">
+          <h2 className="text-[1rem] font-semibold">{title}</h2>
           <div className="flex items-center gap-1">
             {onTogglePin ? (
               <button
@@ -361,7 +339,7 @@ export default function Sheet({
                 aria-label={pinned ? t.common.unpin : t.common.pin}
                 title={pinned ? t.common.unpin : t.common.pin}
                 className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:text-ink',
+                  'flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:text-ink',
                   pinned ? 'text-ink' : 'text-muted',
                 )}
               >
@@ -421,13 +399,13 @@ export default function Sheet({
         }
       >
         <div
-          className="sheet-handle flex h-[52px] shrink-0 select-none items-center justify-between border-b border-line px-5"
+          className="sheet-handle flex h-[52px] shrink-0 select-none items-center justify-between border-b border-line px-4"
           onPointerDown={onDragStart}
           onPointerMove={onDragMove}
           onPointerUp={(event) => finishDrag(event, false)}
           onPointerCancel={(event) => finishDrag(event, true)}
         >
-          <h2 className="text-[15px] font-semibold">{title}</h2>
+          <h2 className="text-[1rem] font-semibold">{title}</h2>
           <div className="flex items-center gap-1">
             {onTogglePin ? (
               <button
@@ -437,7 +415,7 @@ export default function Sheet({
                 aria-label={pinned ? t.common.unpin : t.common.pin}
                 title={pinned ? t.common.unpin : t.common.pin}
                 className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:text-ink',
+                  'flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:text-ink',
                   pinned ? 'text-ink' : 'text-muted',
                 )}
               >
@@ -483,24 +461,24 @@ function SearchField({
   const { t } = useLocale();
 
   return (
-    <div className="flex h-11 shrink-0 items-center gap-3 border-b border-line px-4">
-      <Icon name="search" className="h-4 w-4 text-muted" />
+    <div className="flex min-h-11 shrink-0 items-center gap-3 border-b border-line px-4">
+      <Icon name="search" className="text-muted" />
       <input
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={label}
-        className="h-11 w-full min-w-0 bg-transparent text-[15px] text-ink placeholder:text-muted focus:outline-none"
+        className="min-h-11 w-full min-w-0 bg-transparent py-2 text-[1rem] text-ink placeholder:text-muted focus:outline-none"
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange('')}
           aria-label={t.sheets.clear}
-          className="-me-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
+          className="-me-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
         >
-          <Icon name="close" className="h-4 w-4" />
+          <Icon name="close" />
         </button>
       )}
     </div>
@@ -509,19 +487,19 @@ function SearchField({
 
 function Empty() {
   const { t } = useLocale();
-  return <p className="px-5 py-10 text-center text-[13px] text-muted">{t.sheets.empty}</p>;
+  return <p className="px-4 py-8 text-center text-[0.875rem] text-muted">{t.sheets.empty}</p>;
 }
 
 /** The roster is remote now: an outage must say so, not look like an empty list. */
 function RosterError({ onRetry }: { onRetry: () => void }) {
   const { t } = useLocale();
   return (
-    <div className="px-5 py-10 text-center">
-      <p className="text-[13px] text-muted">{t.sheets.recitersError}</p>
+    <div className="px-4 py-8 text-center">
+      <p className="text-[0.875rem] text-muted">{t.sheets.recitersError}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="mt-2 h-11 px-3 text-[13px] font-semibold text-ink underline underline-offset-4"
+        className="mt-2 min-h-11 px-3 text-[0.875rem] font-semibold text-ink underline underline-offset-4"
       >
         {t.player.retry}
       </button>
@@ -530,11 +508,11 @@ function RosterError({ onRetry }: { onRetry: () => void }) {
 }
 
 const row =
-  'press flex min-h-16 w-full items-center gap-3 px-5 py-2 text-start text-[16px] text-ink transition-colors hover:bg-line';
+  'press flex min-h-16 w-full items-center gap-3 px-4 py-2 text-start text-[1rem] text-ink transition-colors hover:bg-line';
 
-const meta = 'tnum mt-0.5 block text-[11.5px] text-muted';
+const meta = 'tnum mt-1 block text-[0.75rem] text-muted';
 
-const chip = 'press h-11 shrink-0 rounded-full border px-4 text-[12.5px] transition-colors';
+const chip = 'press min-h-11 shrink-0 rounded-full border px-4 text-[0.875rem] transition-colors';
 const chipOn = 'border-ink bg-ink font-semibold text-invert';
 const chipOff = 'border-line text-ink hover:border-ink/40';
 
@@ -616,7 +594,7 @@ export function SurahSheet({
                     </span>
                   </span>
                   {sizes?.[surah.id] ? (
-                    <span className="tnum shrink-0 text-[11px] text-muted">
+                    <span className="tnum shrink-0 text-[0.75rem] text-muted">
                       {formatBytes(sizes[surah.id])}
                     </span>
                   ) : null}
@@ -744,7 +722,7 @@ export function ReciterSheet({
             placeholder="ابحث باسم القارئ"
             label="بحث في القرّاء"
           />
-          <div className="flex flex-wrap gap-1.5 border-b border-line px-5 py-2.5">
+          <div className="flex flex-wrap gap-2 border-b border-line px-4 py-3">
             {[
               { key: 'all', label: t.sheets.all },
               ...riwayas.map((name) => ({ key: name, label: riwayaLabel(name) })),
@@ -760,7 +738,7 @@ export function ReciterSheet({
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap gap-1.5 border-b border-line px-5 py-2">
+          <div className="flex flex-wrap gap-2 border-b border-line px-4 py-2">
             {(
               [
                 ['default', t.sheets.sortDefault],
@@ -807,19 +785,19 @@ export function ReciterSheet({
                       <span className={cn('block truncate', isCurrent && 'font-semibold')}>
                         {reciter.name}
                       </span>
-                      <span className="mt-0.5 flex items-center gap-2 text-[11.5px] text-muted">
+                      <span className="mt-1 flex items-center gap-2 text-[0.75rem] text-muted">
                         <span>{reciter.complet ? t.sheets.complete : t.sheets.partial}</span>
-                        <span className="inline-flex items-center gap-0.5">
-                          <Heart size={11} weight="fill" aria-hidden="true" />
+                        <span className="inline-flex items-center gap-1">
+                          <Icon name="heart" size={16} weight="fill" />
                           <span className="tnum">{f}</span>
                         </span>
-                        <span className="inline-flex items-center gap-0.5">
-                          <Headphones size={11} aria-hidden="true" />
+                        <span className="inline-flex items-center gap-1">
+                          <Icon name="headphones" size={16} />
                           <span className="tnum">{v}</span>
                         </span>
                       </span>
                     </span>
-                    <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[10.5px] text-ink">
+                    <span className="shrink-0 rounded-full bg-line px-2 py-1 text-[0.75rem] text-ink">
                       {riwayaLabel(reciter.riwaya)}
                     </span>
                   </button>
@@ -832,27 +810,8 @@ export function ReciterSheet({
             <li>
               <div ref={sentinelRef} className="flex items-center justify-center py-4">
                 {loading ? (
-                  <div className="flex items-center gap-2 text-[13px] text-muted">
-                    <svg
-                      className="h-4 w-4 animate-spin"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                  <div className="flex items-center gap-2 text-[0.875rem] text-muted">
+                    <Spinner size={16} />
                     <span>جاري التحميل...</span>
                   </div>
                 ) : null}

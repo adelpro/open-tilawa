@@ -1,4 +1,3 @@
-import { Gear, Headphones, Info, ShieldCheck, User } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 
 import Icon from '@/components/icons';
@@ -28,11 +27,11 @@ export default function NavSheet({
   const { t } = useLocale();
 
   const items: { route?: Route; label: string; icon: ReactNode; action?: () => void }[] = [
-    { route: '/', label: t.routes.listen, icon: <Headphones size={18} /> },
-    { route: '/settings', label: t.routes.settings, icon: <Gear size={18} /> },
-    { label: t.account.title, icon: <User size={18} />, action: onOpenAccount },
-    { route: '/about', label: t.routes.about, icon: <Info size={18} /> },
-    { route: '/privacy', label: t.routes.privacy, icon: <ShieldCheck size={18} /> },
+    { route: '/', label: t.routes.listen, icon: <Icon name="house" /> },
+    { route: '/settings', label: t.routes.settings, icon: <Icon name="gear" /> },
+    { label: t.account.title, icon: <Icon name="user" />, action: onOpenAccount },
+    { route: '/about', label: t.routes.about, icon: <Icon name="info" /> },
+    { route: '/privacy', label: t.routes.privacy, icon: <Icon name="shield" /> },
   ];
 
   return (
@@ -56,13 +55,13 @@ export default function NavSheet({
               }}
               aria-current={current ? 'page' : undefined}
               className={cn(
-                'press flex h-12 w-full items-center gap-3 px-4 text-start text-[15px] text-ink transition-colors hover:bg-line',
+                'press flex min-h-12 w-full items-center gap-2 px-4 text-start text-[1rem] text-ink transition-colors hover:bg-line',
                 current && 'font-semibold',
               )}
             >
               <span className={cn('shrink-0', current ? 'text-ink' : 'text-muted')}>{item.icon}</span>
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              <Icon name="chevron-left" className="h-4 w-4 text-muted rtl:rotate-0 ltr:rotate-180" />
+              <Icon name="forward" className="text-muted" />
             </button>
           );
         })}

@@ -87,35 +87,35 @@ export default function StreamSheet({
 
   return (
     <Sheet title={t.stream.title} open={open} onClose={onClose} size="auto">
-      <div className="px-5 py-4">
-        <dl className="space-y-2.5">
+      <div className="px-4 py-4">
+        <dl className="space-y-3">
           <div className="flex items-center justify-between gap-6">
-            <dt className="flex items-center gap-2 text-[13px] text-muted">
-              <StreamSourceIcon source={source} className="h-4 w-4" />
+            <dt className="flex items-center gap-2 text-[0.875rem] text-muted">
+              <StreamSourceIcon source={source} />
               {t.stream.source}
             </dt>
-            <dd className="text-[13px] font-medium text-ink">{sourceLabel}</dd>
+            <dd className="text-[0.875rem] font-medium text-ink">{sourceLabel}</dd>
           </div>
           {rowsFor(torrent, t).map((row) => (
             <div key={row.label} className="flex items-center justify-between gap-6">
-              <dt className="flex items-center gap-2 text-[13px] text-muted">
-                <Icon name={row.icon as any} className="h-4 w-4" />
+              <dt className="flex items-center gap-2 text-[0.875rem] text-muted">
+                <Icon name={row.icon} />
                 {row.label}
               </dt>
-              <dd className="tnum text-[13px] text-ink">{row.value}</dd>
+              <dd className="tnum text-[0.875rem] text-ink">{row.value}</dd>
             </div>
           ))}
           <div className="flex items-center justify-between gap-6">
-            <dt className="flex items-center gap-2 text-[13px] text-muted">
-              <Icon name="link" className="h-4 w-4" />
+            <dt className="flex items-center gap-2 text-[0.875rem] text-muted">
+              <Icon name="link" />
               {t.stream.fallback}
             </dt>
-            <dd className="text-[13px] text-ink">{FALLBACK_LABEL[fallback](t)}</dd>
+            <dd className="text-[0.875rem] text-ink">{FALLBACK_LABEL[fallback](t)}</dd>
           </div>
         </dl>
 
         {source === 'waiting' && (
-          <p className="mt-3 text-[11.5px] leading-relaxed text-muted">{t.stream.waitingNote}</p>
+          <p className="mt-3 text-[0.75rem] leading-relaxed text-muted">{t.stream.waitingNote}</p>
         )}
       </div>
     </Sheet>

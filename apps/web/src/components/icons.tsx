@@ -1,11 +1,76 @@
 import type { ReactElement } from 'react';
+import {
+  BookOpen,
+  CaretDown,
+  CaretLeft,
+  CaretRight,
+  DownloadSimple,
+  DotsThreeVertical,
+  File,
+  Gauge,
+  GearSix,
+  GlobeHemisphereWest,
+  HardDrives,
+  Headphones,
+  Heart,
+  House,
+  Info,
+  Key,
+  LinkSimple,
+  MagnifyingGlass,
+  Microphone,
+  Moon,
+  MoonStars,
+  Pause,
+  PencilSimple,
+  Play,
+  Pulse,
+  PushPin,
+  ShieldCheck,
+  SpeakerHigh,
+  SpeakerSlash,
+  Sun,
+  UploadSimple,
+  User,
+  Users,
+  Waveform,
+  WifiHigh,
+  X,
+} from '@phosphor-icons/react';
+import type { Icon as PhosphorGlyph } from '@phosphor-icons/react';
 
 import { cn } from '@/utils/cn';
 
+/**
+ * The icon set: Phosphor, mapped through one name.
+ *
+ * Call sites say `<Icon name="heart" />` and never import the library, so the
+ * name is the app's vocabulary ("the favourite", "the list") and the glyph is a
+ * design decision made here, once.
+ *
+ * Three sizes, no more: 16 with text, 20 for a standalone control, 24 for a
+ * card or a section head. `regular` is the only weight; `fill` is a *state*
+ * (a favourite, the active tab), never an optical choice — bold at 18px is
+ * twice the stroke of regular at 16 and that mismatch is what made two glyph
+ * systems look like two apps.
+ *
+ * Phosphor renders a bare <svg> with no role and no aria, so every icon is
+ * hidden here: the label, the field name or the button's aria-label is the
+ * accessible name, and an icon that repeats it makes a screen reader say it
+ * twice.
+ *
+ * `wifi-waiting` is the one glyph Phosphor cannot supply: its arcs answer one
+ * after another while no peer is seeding, and the animation is CSS (`.wifi-arc`
+ * in globals.css) so the global reduced-motion rule can switch it off. It is
+ * drawn on the same 1/16 optical stroke as Phosphor regular, so it sits beside
+ * the rest without a seam.
+ */
 export type IconName =
-  | 'chevron-left'
-  | 'chevron-right'
-  | 'playlist'
+  | 'back'
+  | 'forward'
+  | 'expand'
+  | 'play'
+  | 'pause'
   | 'wifi'
   | 'wifi-waiting'
   | 'link'
@@ -19,120 +84,146 @@ export type IconName =
   | 'upload'
   | 'file'
   | 'activity'
-  | 'server';
-const STROKE = {
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.5,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-} as const;
+  | 'server'
+  | 'house'
+  | 'book'
+  | 'gear'
+  | 'info'
+  | 'shield'
+  | 'key'
+  | 'user'
+  | 'more'
+  | 'edit'
+  | 'sun'
+  | 'moon'
+  | 'globe'
+  | 'gauge'
+  | 'sleep'
+  | 'waveform'
+  | 'heart'
+  | 'headphones'
+  | 'pin';
 
-const GLYPHS = {
-  'chevron-left': <path {...STROKE} d="M15 5l-7 7 7 7" />,
-  search: (
-    <>
-      <circle {...STROKE} cx="11" cy="11" r="6.5" />
-      <path {...STROKE} d="M20 20l-4.4-4.4" />
-    </>
-  ),
-  close: <path {...STROKE} d="M6 6l12 12M18 6L6 18" />,
-  volume: (
-    <>
-      <path {...STROKE} d="M4 9.5h3.5L12 6v12L7.5 14.5H4z" />
-      <path {...STROKE} d="M15.5 9a4 4 0 0 1 0 6" />
-      <path {...STROKE} d="M18 6.5a7.5 7.5 0 0 1 0 11" />
-    </>
-  ),
-  "volume-x": (
-    <>
-      <path {...STROKE} d="M4 9.5h3.5L12 6v12L7.5 14.5H4z" />
-      <path {...STROKE} d="M16 9.5l5 5M21 9.5l-5 5" />
-    </>
-  ),
-  mic: (
-    <>
-      <rect {...STROKE} x="9" y="3" width="6" height="11" rx="3" />
-      <path {...STROKE} d="M5.5 11a6.5 6.5 0 0 0 13 0" />
-      <path {...STROKE} d="M12 17.5V21" />
-    </>
-  ),
-  'chevron-right': <path {...STROKE} d="M9 5l7 7-7 7" />,
-  playlist: (
-    <>
-      <path {...STROKE} d="M4 6h9M4 12h9M4 18h5" />
-      <path {...STROKE} d="M17 6v9.2" />
-      <circle {...STROKE} cx="15" cy="17" r="2" />
-    </>
-  ),
-  link: (
-    <>
-      <path {...STROKE} d="M10 13a4 4 0 0 0 5.7 0l3-3a4 4 0 1 0-5.7-5.7l-1 1" />
-      <path {...STROKE} d="M14 11a4 4 0 0 0-5.7 0l-3 3a4 4 0 1 0 5.7 5.7l1-1" />
-    </>
-  ),
-  wifi: (
-    <>
-      <path {...STROKE} d="M4.5 9.5a11 11 0 0 1 15 0" />
-      <path {...STROKE} d="M7.8 13a6.5 6.5 0 0 1 8.4 0" />
-      <path {...STROKE} d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0" />
-    </>
-  ),
-  /* Same geometry, but the arcs answer one after another while nothing is
-     seeding. The animation is CSS (`.wifi-arc`), not SMIL, so the global
-     reduced-motion rule can switch it off. */
-  'wifi-waiting': (
-    <>
-      <path {...STROKE} className="wifi-arc" d="M4.5 9.5a11 11 0 0 1 15 0" />
-      <path {...STROKE} className="wifi-arc wifi-arc-2" d="M7.8 13a6.5 6.5 0 0 1 8.4 0" />
-      <path {...STROKE} className="wifi-dot" d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0" />
-    </>
-  ),
-  users: (
-    <>
-      <circle {...STROKE} cx="9" cy="8" r="3" />
-      <path {...STROKE} d="M4 18c0-2.8 2.2-5 5-5s5 2.2 5 5" />
-      <circle {...STROKE} cx="16" cy="9" r="2.2" />
-      <path {...STROKE} d="M17 18c0-1.9-1.2-3.5-2.9-4.2" />
-    </>
-  ),
-  download: (
-    <>
-      <path {...STROKE} d="M12 3v10M7 10l5 5 5-5" />
-      <path {...STROKE} d="M5 18h14" />
-    </>
-  ),
-  upload: (
-    <>
-      <path {...STROKE} d="M12 13V3M7 6l5-3 5 3" />
-      <path {...STROKE} d="M5 18h14" />
-    </>
-  ),
-  file: (
-    <>
-      <path {...STROKE} d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" />
-      <path {...STROKE} d="M14 2v5h5" />
-    </>
-  ),
-  activity: (
-    <>
-      <path {...STROKE} d="M3 12h4l3-8 4 16 3-8h4" />
-    </>
-  ),
-  server: (
-    <>
-      <rect {...STROKE} x="4" y="4" width="16" height="6" rx="2" />
-      <rect {...STROKE} x="4" y="14" width="16" height="6" rx="2" />
-      <circle cx="8" cy="7" r="0.8" fill="currentColor" />
-      <circle cx="8" cy="17" r="0.8" fill="currentColor" />
-    </>
-  ),
-} satisfies Record<IconName, ReactElement>;
+/** 16 with text, 20 for a control, 24 for a card. Nothing else. */
+export type IconSize = 16 | 20 | 24;
 
-export default function Icon({ name, className }: { name: IconName; className?: string }) {
+const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
+  back: CaretLeft,
+  forward: CaretRight,
+  expand: CaretDown,
+  play: Play,
+  pause: Pause,
+  wifi: WifiHigh,
+  link: LinkSimple,
+  mic: Microphone,
+  search: MagnifyingGlass,
+  close: X,
+  volume: SpeakerHigh,
+  'volume-x': SpeakerSlash,
+  users: Users,
+  download: DownloadSimple,
+  upload: UploadSimple,
+  file: File,
+  activity: Pulse,
+  server: HardDrives,
+  house: House,
+  book: BookOpen,
+  gear: GearSix,
+  info: Info,
+  shield: ShieldCheck,
+  key: Key,
+  user: User,
+  more: DotsThreeVertical,
+  edit: PencilSimple,
+  sun: Sun,
+  moon: Moon,
+  globe: GlobeHemisphereWest,
+  gauge: Gauge,
+  sleep: MoonStars,
+  waveform: Waveform,
+  heart: Heart,
+  headphones: Headphones,
+  pin: PushPin,
+};
+
+/** The one local glyph: three arcs that answer in turn while nothing seeds. */
+function WifiGlyph({ size = 16 }: { size?: number }): ReactElement {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={cn('h-5 w-5 shrink-0', className)}>
-      {GLYPHS[name]}
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path className="wifi-arc" d="M4.5 9.5a11 11 0 0 1 15 0" />
+      <path className="wifi-arc wifi-arc-2" d="M7.8 13a6.5 6.5 0 0 1 8.4 0" />
+      <path className="wifi-dot" d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0" />
     </svg>
+  );
+}
+
+/** `back` and `forward` are directions, not sides: the arrow flips in RTL. */
+function isDirectional(name: IconName): boolean {
+  return name === 'back' || name === 'forward';
+}
+
+/**
+ * The one busy indicator: a ring with a gap, rotated by the compositor.
+ *
+ * It replaces the icon slot in a button so the label never moves, and it is
+ * aria-hidden because the control that owns it carries `aria-busy`. The global
+ * reduced-motion rule freezes it, which is fine: a button that says it is busy
+ * in words does not need a moving part.
+ */
+export function Spinner({ size = 14 }: { size?: number }): ReactElement {
+  return (
+    <svg
+      className="spinner"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="12" cy="12" r="9" opacity="0.25" />
+      <path d="M12 3a9 9 0 0 1 9 9" />
+    </svg>
+  );
+}
+
+export default function Icon({
+  name,
+  size = 16,
+  weight = 'regular',
+  className,
+}: {
+  name: IconName;
+  size?: IconSize;
+  weight?: 'regular' | 'fill';
+  className?: string;
+}): ReactElement {
+  if (name === 'wifi-waiting') {
+    return <WifiGlyph size={size} />;
+  }
+
+  const Glyph = GLYPHS[name];
+  return (
+    <Glyph
+      size={size}
+      weight={weight}
+      aria-hidden="true"
+      focusable="false"
+      className={cn('icon', isDirectional(name) && 'icon-dir', className)}
+    />
   );
 }

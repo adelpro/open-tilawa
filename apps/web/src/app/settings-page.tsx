@@ -1,4 +1,3 @@
-import { Gauge, GlobeHemisphereWest, Moon, MoonStars, Sun, Waveform } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 
 import Icon from '@/components/icons';
@@ -10,7 +9,7 @@ import { cn } from '@/utils/cn';
 import { formatCountdown, SLEEP_OPTIONS } from '@/utils/sleep-timer';
 import { type Visualiser, VISUALISERS } from '@/utils/visualiser-models';
 
-const chip = 'h-8 shrink-0 rounded-full border px-3 text-[13px] transition-colors';
+const chip = 'min-h-8 shrink-0 rounded-full border px-3 py-1 text-[0.875rem] transition-colors';
 const chipOn = 'border-ink bg-ink font-semibold text-invert';
 const chipOff = 'border-line text-ink hover:border-ink/40';
 
@@ -27,14 +26,14 @@ function Group({
 }) {
   return (
     <section className="border-t border-line py-5 first:border-t-0 first:pt-0">
-      <div className="mb-3 flex items-start gap-3">
-        <span className="mt-0.5 text-muted">{icon}</span>
+      <div className="mb-3 flex items-start gap-2">
+        <span className="mt-1 text-muted">{icon}</span>
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-          <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted">{hint}</p>
+          <h2 className="text-[1rem] font-semibold text-ink">{title}</h2>
+          <p className="mt-1 text-[0.875rem] leading-relaxed text-muted">{hint}</p>
         </div>
       </div>
-      <div className="flex flex-wrap gap-1.5 ps-8">{children}</div>
+      <div className="flex flex-wrap gap-2 ps-7">{children}</div>
     </section>
   );
 }
@@ -72,19 +71,19 @@ export default function SettingsPage({
       <div className="w-full max-w-[520px] lg:max-w-[700px]">
         <a
           href="#/"
-          className="inline-flex h-11 items-center gap-1 text-[14px] text-muted transition-colors hover:text-ink"
+          className="inline-flex min-h-11 items-center gap-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
         >
-          <Icon name="chevron-right" className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
+          <Icon name="back" className="text-muted" />
           {t.routes.listen}
         </a>
 
-        <h1 className="mt-4 text-[26px] font-semibold leading-tight text-ink lg:text-[32px]">
+        <h1 className="mt-4 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">
           {t.settings.pageTitle}
         </h1>
 
         <div className="mt-6">
           <Group
-            icon={<Sun size={18} weight="bold" />}
+            icon={<Icon name="sun" size={20} />}
             title={t.settings.appearance}
             hint={t.settings.appearanceHint}
           >
@@ -97,13 +96,13 @@ export default function SettingsPage({
                 className={cn(chip, theme === value ? chipOn : chipOff)}
               >
                 {value === 'light' ? (
-                  <span className="flex items-center gap-1.5">
-                    <Sun size={14} weight="bold" />
+                  <span className="flex items-center gap-2">
+                    <Icon name="sun" />
                     {t.settings.light}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5">
-                    <Moon size={14} weight="bold" />
+                  <span className="flex items-center gap-2">
+                    <Icon name="moon" />
                     {t.settings.dark}
                   </span>
                 )}
@@ -112,7 +111,7 @@ export default function SettingsPage({
           </Group>
 
           <Group
-            icon={<GlobeHemisphereWest size={18} weight="bold" />}
+            icon={<Icon name="globe" size={20} />}
             title={t.settings.language}
             hint={t.settings.languageHint}
           >
@@ -130,7 +129,7 @@ export default function SettingsPage({
           </Group>
 
           <Group
-            icon={<Gauge size={18} weight="bold" />}
+            icon={<Icon name="gauge" size={20} />}
             title={t.settings.speed}
             hint={t.settings.playbackHint}
           >
@@ -148,12 +147,12 @@ export default function SettingsPage({
           </Group>
 
           <Group
-            icon={<MoonStars size={18} weight="bold" />}
+            icon={<Icon name="sleep" size={20} />}
             title={t.settings.sleep}
             hint={`${t.settings.off} · ${t.settings.minutes(15)} · 30 · 60 · 90`}
           >
             {sleepActive && (
-              <span className="tnum me-1 self-center text-[13px] font-semibold text-ink">
+              <span className="tnum me-1 self-center text-[0.875rem] font-semibold text-ink">
                 {formatCountdown(sleepRemaining)}
               </span>
             )}
@@ -171,7 +170,7 @@ export default function SettingsPage({
           </Group>
 
           <Group
-            icon={<Waveform size={18} weight="bold" />}
+            icon={<Icon name="waveform" size={20} />}
             title={t.settings.shape}
             hint={t.settings.shapeHint}
           >

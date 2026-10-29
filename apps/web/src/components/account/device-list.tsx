@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { Input } from '@/components/field';
+
 import { useAtomValue } from 'jotai';
 import { userDevicesAtom, userDevicesMetaAtom } from '@/jotai/gun';
 import { useUserSync } from '@/hooks/use-user-sync';
@@ -53,12 +55,12 @@ export default function DeviceList() {
   };
 
   return (
-    <div className="space-y-2.5">
-      <p className="text-[12px] leading-relaxed text-muted">{copy.devicesNote}</p>
+    <div className="space-y-3">
+      <p className="text-[0.75rem] leading-relaxed text-muted">{copy.devicesNote}</p>
 
       <ul className="divide-y divide-line rounded-xl border border-line">
         {rows.length === 0 ? (
-          <li className="px-3 py-4 text-[13px] text-muted">{copy.noDevices}</li>
+          <li className="px-3 py-4 text-[0.875rem] text-muted">{copy.noDevices}</li>
         ) : (
           rows.map((device) => {
             const isThis = device.id === currentId;
@@ -66,36 +68,43 @@ export default function DeviceList() {
             return (
               <li key={device.id} className="px-3 py-3">
                 {editing === device.id ? (
-                  <input
+                  <Input
                     value={draft}
                     autoFocus
+                    aria-label={copy.rename}
+                    name="device-name"
+                    autoComplete="off"
+                    maxLength={40}
                     onChange={(e) => setDraft(e.target.value)}
                     onBlur={() => commitRename(device)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') commitRename(device);
+                      // Enter during an IME composition commits the candidate,
+                      // not the field. Arabic keyboards do not compose, but a
+                      // Japanese or Chinese one does, and this input is shared.
+                      if (e.key === 'Enter' && !e.nativeEvent.isComposing) commitRename(device);
                       if (e.key === 'Escape') setEditing(null);
                     }}
-                    className="w-full rounded-md border border-line bg-transparent px-2 py-1 text-[13px] text-ink outline-none focus:border-ink"
+                    className="px-2"
                   />
                 ) : (
                   <button
                     type="button"
                     onClick={() => startRename(device)}
-                    className="max-w-full truncate text-start text-[14px] font-medium text-ink"
-                    title={copy.devices}
+                    className="max-w-full truncate text-start text-[0.875rem] font-medium text-ink"
+                    title={copy.rename}
                   >
                     {device.name || 'Device'}
                   </button>
                 )}
-                <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11.5px] text-muted">
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-[0.75rem] text-muted">
                   <span>{copy.lastSeen(when(device.lastSeen))}</span>
                   {isThis ? (
-                    <span className="rounded-full bg-line px-1.5 py-0.5 text-[10.5px] text-ink">
+                    <span className="rounded-full bg-line px-2 py-1 text-[0.75rem] text-ink">
                       {copy.thisDevice}
                     </span>
                   ) : null}
                   {isPrimary ? (
-                    <span className="rounded-full bg-line px-1.5 py-0.5 text-[10.5px] text-ink">
+                    <span className="rounded-full bg-line px-2 py-1 text-[0.75rem] text-ink">
                       {copy.primary}
                     </span>
                   ) : null}

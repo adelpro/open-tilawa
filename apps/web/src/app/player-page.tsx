@@ -2,6 +2,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import PlayerFooter from '@/components/player-footer';
+import Icon from '@/components/icons';
 import Scrubber from '@/components/scrubber';
 import Sheet, { ReciterSheet, SurahSheet } from '@/components/sheet';
 import StreamSheet from '@/components/stream-sheet';
@@ -225,21 +226,20 @@ export default function PlayerPage({
                 type="button"
                 onClick={openSurahs}
                 aria-haspopup="dialog"
-                className="group inline-flex items-baseline gap-3"
+                className="group inline-flex items-center gap-3"
               >
                 {surah?.name ?? `سورة ${surahId}`}
-                <span
-                  aria-hidden="true"
-                  className="text-[18px] text-muted opacity-30 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-                >
-                  ▾
-                </span>
+                <Icon
+                  name="expand"
+                  size={20}
+                  className="text-muted opacity-30 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                />
               </button>
             ) : (
               surah?.name ?? `سورة ${surahId}`
             )}
           </h1>
-          <p className="hidden lg:fixed lg:inset-x-0 lg:top-[calc(22vh+72px)] lg:block lg:text-center lg:text-[16px] lg:text-muted">
+          <p className="hidden lg:fixed lg:inset-x-0 lg:top-[calc(22vh+72px)] lg:block lg:text-center lg:text-[1rem] lg:text-muted">
             <button
               type="button"
               onClick={openReciters}
@@ -247,12 +247,10 @@ export default function PlayerPage({
               className="group inline-flex items-center gap-2 hover:text-ink"
             >
               {reciter?.name ?? ''}
-              <span
-                aria-hidden="true"
-                className="text-[13px] opacity-30 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-              >
-                ▾
-              </span>
+              <Icon
+                name="expand"
+                className="opacity-30 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+              />
             </button>
           </p>
           <div className="theatre-horizon mb-4 flex justify-center">
@@ -282,23 +280,23 @@ export default function PlayerPage({
           />
 
           {reciters.length === 0 ? (
-            <div className="mt-6 text-center text-[13px] text-muted">
+            <div className="mt-6 text-center text-[0.875rem] text-muted">
               <p>{recitersError ? t.sheets.recitersError : t.player.noReciters}</p>
               <button
                 type="button"
                 onClick={retryReciters}
-                className="mt-1 h-11 px-3 font-semibold text-ink underline underline-offset-4"
+                className="mt-1 min-h-11 px-3 font-semibold text-ink underline underline-offset-4"
               >
                 {t.player.retry}
               </button>
             </div>
           ) : error ? (
-            <div className="mt-6 text-center text-[13px] text-muted">
+            <div className="mt-6 text-center text-[0.875rem] text-muted">
               <p title={error}>{t.player.error}</p>
               <button
                 type="button"
                 onClick={() => setRetrySignal((count) => count + 1)}
-                className="mt-1 h-11 px-3 font-semibold text-ink underline underline-offset-4"
+                className="mt-1 min-h-11 px-3 font-semibold text-ink underline underline-offset-4"
               >
                 {t.player.retry}
               </button>
@@ -306,7 +304,7 @@ export default function PlayerPage({
           ) : null}
 
           {hint && keyboard ? (
-            <p className="mt-6 text-center text-[11.5px] text-muted lg:mt-4">
+            <p className="mt-6 text-center text-[0.75rem] text-muted lg:mt-4">
               {t.keys.hint}
               <button
                 type="button"
@@ -362,7 +360,7 @@ export default function PlayerPage({
       />
 
       <Sheet title={t.keys.title} open={sheet === 'keys'} onClose={close} size="auto" pinned={pinned} onTogglePin={wide ? togglePin : undefined}>
-        <dl className="space-y-3 px-5 py-4">
+        <dl className="space-y-3 px-4 py-4">
           {[
             { key: 'Space', value: t.keys.playPause },
             { key: '← / →', value: t.keys.seek },
@@ -374,8 +372,8 @@ export default function PlayerPage({
             { key: 'Esc', value: t.keys.close },
           ].map((row) => (
             <div key={row.key} className="flex items-baseline justify-between gap-6">
-              <dt className="text-[13px] text-muted">{row.value}</dt>
-              <dd className="rounded-md border border-line px-2 py-0.5 font-mono text-[11.5px] text-ink">
+              <dt className="text-[0.875rem] text-muted">{row.value}</dt>
+              <dd className="rounded-md border border-line px-2 py-1 font-mono text-[0.75rem] text-ink">
                 {row.key}
               </dd>
             </div>
