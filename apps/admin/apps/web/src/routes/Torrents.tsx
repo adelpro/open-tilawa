@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -22,6 +22,11 @@ interface CatalogueRow {
 
 type RowState = 'healthy' | 'stale' | 'orphan';
 
+/** Severity, not spelling: sorting the labels would order them by alphabet. */
+const RANK: Record<RowState, number> = { healthy: 0, stale: 1, orphan: 2 };
+
+type SortKey = 'name' | 'size' | 'state' | 'peers';
+
 /**
  * One node, and only what is on it.
  *
@@ -41,6 +46,11 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
   const [busy, setBusy] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [confirmingUpdate, setConfirmingUpdate] = useState(false);
+  /** Column order. Clicking the active column flips it rather than resetting. */
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({
+    key: 'name',
+    dir: 'asc',
+  });
   /**
    * A software update runs on the host for minutes, so this screen polls for it.
    * The flag stops the loop writing state into a tree that is already gone.
@@ -173,20 +183,70 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
     }
   }
 
+  const byHash = useMemo(
+    () => new Map(catalogue.map((row) => [row.infohash.toLowerCase(), row])),
+    [catalogue],
+  );
+  const stateOf = useCallback(
+    (infoHash: string): RowState => {
+      const row = byHash.get(infoHash.toLowerCase());
+      if (!row) return 'orphan';
+      return row.published ? 'healthy' : 'stale';
+    },
+    [byHash],
+  );
+
+  /** The node's own list, ordered. A copy: the inventory is state, not ours to sort. */
+  const sorted = useMemo(() => {
+    const rows = [...(inventory?.torrents ?? [])];
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      switch (sort.key) {
+        case 'size':
+          return (a.size - b.size) * dir;
+        case 'peers':
+          return (a.peers - b.peers) * dir;
+        case 'state':
+          return (RANK[stateOf(a.infoHash)] - RANK[stateOf(b.infoHash)]) * dir;
+        default:
+          return a.name.localeCompare(b.name, locale) * dir;
+      }
+    });
+    return rows;
+  }, [inventory, sort, locale, stateOf]);
+
   if (!user) return <p className="body muted">{t('torrents.signInRequired')}</p>;
   if (!Number.isFinite(id)) return <p className="body muted">{t('torrents.noNode')}</p>;
-
-  const byHash = new Map(catalogue.map((row) => [row.infohash.toLowerCase(), row]));
-  const stateOf = (infoHash: string): RowState => {
-    const row = byHash.get(infoHash.toLowerCase());
-    if (!row) return 'orphan';
-    return row.published ? 'healthy' : 'stale';
-  };
 
   const hasPublishedCatalogue = catalogue.some((row) => row.published);
   const behind = Boolean(
     node?.version && node.desiredVersion && node.version !== node.desiredVersion,
   );
+
+  function toggleSort(key: SortKey): void {
+    setSort((current) =>
+      current.key === key ? { key, dir: current.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' },
+    );
+  }
+
+  /**
+   * A sortable column header. `aria-sort` is what tells a screen reader the
+   * table is ordered, so the arrow is decoration and the attribute is the fact.
+   */
+  const sortHeader = (label: string, key: SortKey): ReactElement => {
+    const active = sort.key === key;
+    return (
+      <th
+        scope="col"
+        aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      >
+        <button type="button" className="th-sort" onClick={() => toggleSort(key)}>
+          {label}
+          {active ? <Icon name={sort.dir === 'asc' ? 'up' : 'down'} /> : null}
+        </button>
+      </th>
+    );
+  };
 
   return (
     <div className="stack">
@@ -274,15 +334,15 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
               <table className="table">
                 <thead>
                   <tr>
-                    <th scope="col">{t('torrents.name')}</th>
-                    <th scope="col">{t('torrents.size')}</th>
-                    <th scope="col">{t('torrents.state')}</th>
-                    <th scope="col">{t('torrents.peers')}</th>
+                    {sortHeader(t('torrents.name'), 'name')}
+                    {sortHeader(t('torrents.size'), 'size')}
+                    {sortHeader(t('torrents.state'), 'state')}
+                    {sortHeader(t('torrents.peers'), 'peers')}
                     <th scope="col">{t('torrents.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {inventory.torrents.map((torrent) => {
+                  {sorted.map((torrent) => {
                     const state = stateOf(torrent.infoHash);
                     return (
                       <tr key={torrent.infoHash}>
