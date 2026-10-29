@@ -30,6 +30,17 @@ export function navItemsFor(role: AppRole | null): NavEntry[] {
     { to: '/help', labelKey: 'nav.help', icon: 'info', group: 'workspace' },
   ];
 
+  // Settings is administration, not workspace: an operator with the catalogue in
+  // front of them should not be one careless click from the mail transport.
+  if (role === 'admin' || role === 'super_admin') {
+    items.push({
+      to: '/console/settings',
+      labelKey: 'nav.settings',
+      icon: 'mail',
+      group: 'admin',
+    });
+  }
+
   if (role === 'admin') {
     items.push({
       to: '/console/admin',

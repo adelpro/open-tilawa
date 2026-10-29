@@ -41,6 +41,15 @@ describe('navigation by role', () => {
     assert.equal(consolePathFor('super_admin'), '/console/superadmin');
   });
 
+  it('offers settings to admins only, and keeps the console last', () => {
+    assert.equal(navItemsFor('user').some((item) => item.to === '/console/settings'), false);
+    for (const role of ['admin', 'super_admin']) {
+      const settings = navItemsFor(role).find((item) => item.to === '/console/settings');
+      assert.equal(settings?.group, 'admin');
+      assert.equal(settings?.labelKey, 'nav.settings');
+    }
+  });
+
   it('puts the console last, in its own group', () => {
     const items = navItemsFor('super_admin');
     assert.equal(items.at(-1)?.group, 'admin');
