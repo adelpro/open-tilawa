@@ -18,7 +18,7 @@ import type { Catalogue } from './en';
  */
 export const ar: Catalogue = {
   'app.brandShort': 'الإدارة',
-  'app.brand': 'تلاوة Admin',
+  'app.brand': 'لوحة الإدارة',
   'app.loading': 'جارٍ التحميل…',
 
   'nav.seeders': 'خوادم التوزيع',
