@@ -5,6 +5,7 @@ import { useLocale } from '@/hooks/use-locale';
 /** A page, not a sheet: it has a URL (`#/about`), so it can be linked and reloaded. */
 export default function AboutPage() {
   const { t } = useLocale();
+  const about = t.about;
 
   return (
     <main className="page-screen">
@@ -18,31 +19,81 @@ export default function AboutPage() {
         </a>
 
         {/* No second logo here: the header already carries the mark. */}
-        <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">{t.about.title}</h1>
+        <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">{about.title}</h1>
 
-        <p className="mt-6 text-[1rem] leading-relaxed text-ink">{t.about.body1}</p>
-        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body2}</p>
-        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body3}</p>
-        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body4}</p>
-        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.itqan}</p>
+        <p className="mt-6 text-[1rem] leading-relaxed text-ink">{about.lede}</p>
 
-        <div className="mt-8 flex flex-col gap-3 text-[1rem]">
-          <a
-            href="https://github.com/adelpro/open-tilawa"
-            target="_blank"
-            rel="noreferrer"
-            className="text-ink underline underline-offset-4"
-          >
-            {t.about.source}
-          </a>
-          <a href="mailto:adelpro@gmail.com" className="text-ink underline underline-offset-4">
-            adelpro@gmail.com
-          </a>
-        </div>
+        <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.how.title}</h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.how.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.how.p2}</p>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">
+            {about.noPeers.title}
+          </h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.noPeers.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.noPeers.p2}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.noPeers.p3}</p>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.ring.title}</h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.ring.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.ring.p2}</p>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.know.title}</h2>
+          <ul className="mt-3 space-y-3 text-[1rem] leading-relaxed text-muted">
+            {about.know.items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">
+            {about.sources.title}
+          </h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p2}</p>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.open.title}</h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.open.p1}</p>
+          <div className="mt-4 flex flex-col gap-2 text-[1rem] leading-relaxed">
+            <p className="text-muted">
+              {about.open.source}{' '}
+              <a
+                href="https://github.com/adelpro/open-tilawa"
+                target="_blank"
+                rel="noreferrer"
+                dir="ltr"
+                className="inline-block text-ink underline underline-offset-4"
+              >
+                github.com/adelpro/open-tilawa
+              </a>
+            </p>
+            <p className="text-muted">
+              {about.open.report}{' '}
+              <a
+                href="mailto:adelpro@gmail.com"
+                dir="ltr"
+                className="inline-block text-ink underline underline-offset-4"
+              >
+                adelpro@gmail.com
+              </a>
+            </p>
+          </div>
+        </section>
+
+        <p className="mt-10 text-[1rem] leading-relaxed text-ink">{about.closing}</p>
 
         <p className="mt-8 text-[0.75rem] leading-relaxed text-muted">
-          {t.about.license}{' '}
-          <span className="tnum">{APP_VERSION}</span>.
+          {about.license} <span className="tnum">{APP_VERSION}</span>.
         </p>
       </div>
     </main>

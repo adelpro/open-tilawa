@@ -181,18 +181,45 @@ const ar = {
     surah: (n: number) => `سورة ${n}`,
   },
   about: {
-    title: 'عن تلاوة',
-    body1:
-      'تلاوة مكان هادئ للاستماع إلى القرآن: تختار القارئ والسورة، فتمضي التلاوة إلى آخرها، ولا إعلان ولا شيء بينك وبين الصوت. وهي تعمل بلا حساب؛ فإن أردت أن تُزامَن الإعدادات والتفضيلات بين أجهزتك، وصلت أجهزتك بحلقة واحدة تجمعها.',
-    body2:
-      'هذه التسجيلات لا تُحفظ على خادم واحد كبير، بل على أجهزة عدة؛ بعضها للمشروع وبعضها لمستمعين أرادوا أن يعينوا، وكل صفحة مفتوحة تحمل الصوت إلى غيرها. ولذلك لا اشتراك ولا انتظار في طابور، وكلما زاد المستمعون استقرّ الصوت.',
-    body3:
-      'تلاوة اسم الفعل لا اسم التطبيق: القراءة المتأنية للقرآن. المهم الصوت والوقفة والآية، لا الشاشة.',
-    body4:
-      'وبُنيت في العلن: شيفرتها منشورة، ولا شيء فيها يطلب منك حساباً؛ فالحلقة اختيار لا شرط. وإن لم يعمل تسجيل أو غاب قارئ، فاكتب إلينا.',
-    itqan:
-      'التسجيلات من كتالوج مجتمع إتقان (itqan.dev)، والحقوق تبقى لأصحابها من القرّاء والناشرين.',
-    source: 'الكود المصدري',
+    title: 'تلاوة | القرآن أقرب',
+    lede: 'تلاوة مشغّل قرآن مجاني، بلا إعلانات ولا اشتراكات ولا حسابات تقليدية. اختر قارئك وسورتك، واستمع إلى التلاوات.',
+    how: {
+      title: 'كيف يعمل تلاوة؟',
+      p1: 'لا يعتمد تلاوة على خادم واحد لتوصيل الصوت. يستخدم WebTorrent لتبادل أجزاء التسجيلات بين المستمعين، فيستقبل جهازك الصوت من أجهزة أخرى تستمع إلى التسجيل نفسه، ويمكنه أن يشاركها الأجزاء التي استقبلها.',
+      p2: 'ولا تحتاج إلى انتظار اكتمال تنزيل السورة: يبدأ التشغيل مع وصول الأجزاء الأولى، ويمكنك التقديم والتأخير أثناء التنزيل.',
+    },
+    noPeers: {
+      title: 'ماذا لو لم يكن هناك مستمعون آخرون؟',
+      p1: 'إن لم يجد تلاوة أقراناً خلال ٨ ثوانٍ، بدأ بجلب أجزاء التسجيل من خادم المشروع، بحدّ أقصى مقداره ١ ميغابايت في الثانية للاتصال الواحد.',
+      p2: 'ويبقى الاتصال بالخادم قائماً بعد العثور على أقران، حتى لا يتوقف التشغيل إذا تعذّر الحصول على الأجزاء من الأجهزة الأخرى؛ وهذا مهم خصوصاً على الهواتف، حيث يتغيّر الاتصال عند الانتقال بين شبكة الواي فاي وبيانات الهاتف.',
+      p3: 'والأجزاء التي يستقبلها جهازك من الخادم يمكنه أن يشاركها مع مستمعين آخرين، وقد يصبح جهازك نفسه مصدراً للصوت لغيرك.',
+    },
+    ring: {
+      title: 'مزامنة أجهزتك',
+      p1: 'لا تحتاج إلى حساب للاستماع إلى القرآن. وإن أردت مزامنة مفضّلتك وإعداداتك بين جهازين، أنشئ حلقة وانقل مفتاحها برمز QR.',
+      p2: 'يُنشأ المفتاح على جهازك، ولا توجد خدمة حسابات تستطيع استعادته نيابةً عنك.',
+    },
+    know: {
+      title: 'ما الذي ينبغي معرفته؟',
+      items: [
+        'تُزامَن الإعدادات والمفضلة والمشاهدات بين أجهزة الحلقة.',
+        'إذا فقدت جميع الأجهزة التي تحتفظ بالمفتاح، لم تستطع استعادة الحلقة.',
+        'يُحفظ موضع توقفك في السورة في هذا المتصفح وحده، ولا يُزامَن بين الأجهزة.',
+      ],
+    },
+    sources: {
+      title: 'التسجيلات والروايات',
+      p1: 'تأتي التسجيلات في تطبيق تلاوة من كتالوج مجتمع إتقان (itqan.dev)، والحقوق تعود إلى أصحابها من القرّاء والناشرين.',
+      p2: 'وتظهر الرواية، مثل حفص أو ورش أو قالون، بجانب اسم القارئ عندما تكون معلومة؛ وإذا لم تتوفر المعلومة، لا نفترض رواية بعينها.',
+    },
+    open: {
+      title: 'مشروع مفتوح المصدر',
+      p1: 'تطبيق تلاوة مشروع مفتوح المصدر: يمكنك الاطلاع على الكود والمساهمة في تطويره.',
+      source: 'الكود المصدري:',
+      report: 'للإبلاغ عن تسجيل لا يعمل أو قارئ ناقص:',
+    },
+    closing:
+      'تلاوة يجعل الاستماع إلى القرآن بسيطاً، ويتيح للمستمعين أن يعين بعضهم بعضاً في إيصال الصوت، مع الاستعانة بخادم المشروع عند الحاجة.',
     license: 'الخطوط: IBM Plex Sans Arabic، رخصة SIL OFL 1.1. الإصدار',
   },
   privacy: {
@@ -381,18 +408,45 @@ const en: typeof ar = {
     surah: (n: number) => `Surah ${n}`,
   },
   about: {
-    title: 'About Tilawah',
-    body1:
-      'Tilawah is a quiet place to listen to the Quran: you choose the reciter and the surah, and the recitation plays to the end — no advert, nothing between you and the voice. It works without an account; and if you want your settings and preferences to follow your devices, connect them to one ring that syncs them.',
-    body2:
-      'The recordings do not sit on one large server. They rest on several machines, kept by the project and by listeners who wanted to help, and every page left open carries the sound to the next person. So there is no subscription and no queue, and it grows steadier as more people listen.',
-    body3:
-      'Tilawah is the Arabic word for recitation: the slow, measured reading of the Quran. The app is named after the act — what matters is the voice, the pause, the verse.',
-    body4:
-      'It is built in the open: the source is published, and nothing here asks you for an account — the ring is a choice, not a condition. If a recording will not play, or a reciter is missing, write to us.',
-    itqan:
-      'The recordings come from the Itqan community catalogue (itqan.dev); rights remain with the reciters and publishers.',
-    source: 'Source code',
+    title: 'Tilawah | the Quran, closer',
+    lede: 'Tilawah is a free Quran player — no adverts, no subscriptions, no conventional accounts. Choose your reciter and your surah, and listen.',
+    how: {
+      title: 'How does Tilawah work?',
+      p1: 'Tilawah does not rely on one server to carry the sound. It uses WebTorrent to exchange pieces of a recording between listeners, so your device receives the audio from other devices playing the same recording, and can share back the pieces it received.',
+      p2: 'You do not wait for the surah to finish downloading: playback starts as the first pieces arrive, and you can seek forward and back while it downloads.',
+    },
+    noPeers: {
+      title: 'What if nobody else is listening?',
+      p1: 'If Tilawah finds no peers within 8 seconds, it starts fetching the pieces from the project server, capped at 1 MB/s per connection.',
+      p2: 'The connection to the server stays open after peers appear, so playback does not stop when the other devices cannot supply a piece — which matters most on a phone, where the connection changes as you move between Wi-Fi and mobile data.',
+      p3: 'Pieces your device receives from the server can be shared with other listeners, so your device may itself become a source of the audio.',
+    },
+    ring: {
+      title: 'Syncing your devices',
+      p1: 'Listening to the Quran needs no account. If you want your favourites and settings synced between two devices, create a ring and carry its key across with a QR code.',
+      p2: 'The key is generated on your device, and no account service exists that could restore it for you.',
+    },
+    know: {
+      title: 'What you should know',
+      items: [
+        'Settings, favourites and recently played sync between the devices in a ring.',
+        'If you lose every device holding the key, the ring cannot be recovered.',
+        'Where you stopped in a surah is kept in this browser alone, and is not synced.',
+      ],
+    },
+    sources: {
+      title: 'Recordings and riwayat',
+      p1: 'The recordings in Tilawah come from the Itqan community catalogue (itqan.dev); rights remain with the reciters and publishers.',
+      p2: 'The riwaya — Hafs, Warsh, Qalon — appears beside the reciter when it is known; when it is not, no reading is assumed.',
+    },
+    open: {
+      title: 'Open source',
+      p1: 'Tilawah is an open-source project: you can read the code and contribute to it.',
+      source: 'Source code:',
+      report: 'To report a recording that will not play, or a missing reciter:',
+    },
+    closing:
+      'Tilawah keeps listening to the Quran simple, and lets listeners help each other carry the sound — with the project server there when it is needed.',
     license: 'Fonts: IBM Plex Sans Arabic, SIL OFL 1.1. Version',
   },
   privacy: {
