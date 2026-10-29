@@ -543,16 +543,27 @@ export const en = {
     'First sign-in uses a setup token printed in the API log. Recovery: password reset by email, the 2FA email code, or single-use recovery codes.',
   'footer.product': 'Product',
 
-  'about.title': 'About Tilawa Admin',
-  'about.version': 'About — v1.0',
-  'about.what.heading': 'What it is',
-  'about.what.body':
-    'Tilawa Admin is the operations console for Quran audio distribution: seeder nodes, TURN servers, the torrent catalogue and the reciters library in one place.',
+  'about.title': 'About Tilawa',
+  'about.lede':
+    'Tilawa is a quiet place to listen to the Quran: a recitation in full, without an account, an advert, or a company in the middle. This console is the back room, where the people who keep the sound running do their part.',
+  'about.idea.heading': 'The idea',
+  'about.idea.body':
+    'Quran audio belongs to everyone. The recordings we listen to were made to be heard, copied and passed on, not rented by the minute. Tilawa keeps that habit alive: you open it, you choose a reciter, and the recitation plays to the end.',
+  'about.how.heading': 'How the sound travels',
+  'about.how.body':
+    'Nothing sits on one large server. The recordings rest on several machines, kept by the project and by people who wanted to help, and each listener who leaves a page open carries the sound to the next one. There is no subscription and no queue; the more people listen, the steadier it gets.',
+  'about.name.heading': 'The name',
+  'about.name.body':
+    'Tilawa is the Arabic word for recitation: the slow, measured reading of the Quran. The app is named after the act, not itself — what matters is the voice, the pause, the verse.',
+  'about.console.heading': 'What this console does',
+  'about.console.body':
+    'It is where the project keeps its side of that promise: the machines that hold the recordings, the paths that bring them to a phone, the catalogue of reciters, and who is allowed in. None of it is meant to be noticed by a listener.',
   'about.who.heading': 'Who builds it',
   'about.who.body':
-    'Tilawa Admin is built by Adel Ben Yahia. Questions, feedback, or partnership inquiries are welcome.',
+    'Tilawa is built in the open by Adel Ben Yahia, with everyone who reports a recording that will not play, suggests a missing reciter, or keeps a machine running. The source is public; so is the list of reciters.',
   'about.contact.heading': 'Contact',
-  'about.contact.body': 'contact@adelpro.us.kg',
+  'about.contact.body':
+    'Write to contact@adelpro.us.kg about a reciter we are missing or a recording that will not play.',
 
   'privacy.title': 'Privacy Policy',
   'privacy.version': 'Privacy Policy — v1.0',

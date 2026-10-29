@@ -2489,6 +2489,14 @@ html[lang='ar'] .group-title {
   margin: 0 0 var(--space-4);
 }
 
+/* The opening paragraph of a page that explains rather than legislates. */
+.legal__lede {
+  font: var(--body);
+  color: var(--ink-secondary);
+  max-width: var(--measure);
+  margin: 0 0 var(--space-4);
+}
+
 .legal__section {
   margin-top: var(--space-4);
 }

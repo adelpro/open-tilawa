@@ -73,19 +73,35 @@
       "changefreq": "monthly",
       "en": {
         "lang": "en",
-        "title": "About Tilawa Admin",
-        "description": "Tilawa Admin is the operations console for Quran audio distribution: seeder nodes, TURN servers, the torrent catalogue and the reciters library in one place.",
+        "title": "About Tilawa",
+        "description": "Tilawa is a quiet place to listen to the Quran: a recitation in full, without an account, an advert, or a company in the middle.",
         "brand": "Tilawa Admin",
-        "h1": "About Tilawa Admin",
-        "lede": "Tilawa Admin is the operations console for Quran audio distribution: seeder nodes, TURN servers, the torrent catalogue and the reciters library in one place.",
+        "h1": "About Tilawa",
+        "lede": "Tilawa is a quiet place to listen to the Quran: a recitation in full, without an account, an advert, or a company in the middle. This console is the back room, where the people who keep the sound running do their part.",
         "features": [
           {
+            "title": "The idea",
+            "body": "Quran audio belongs to everyone. The recordings we listen to were made to be heard, copied and passed on, not rented by the minute. Tilawa keeps that habit alive: you open it, you choose a reciter, and the recitation plays to the end."
+          },
+          {
+            "title": "How the sound travels",
+            "body": "Nothing sits on one large server. The recordings rest on several machines, kept by the project and by people who wanted to help, and each listener who leaves a page open carries the sound to the next one. There is no subscription and no queue; the more people listen, the steadier it gets."
+          },
+          {
+            "title": "The name",
+            "body": "Tilawa is the Arabic word for recitation: the slow, measured reading of the Quran. The app is named after the act, not itself — what matters is the voice, the pause, the verse."
+          },
+          {
+            "title": "What this console does",
+            "body": "It is where the project keeps its side of that promise: the machines that hold the recordings, the paths that bring them to a phone, the catalogue of reciters, and who is allowed in. None of it is meant to be noticed by a listener."
+          },
+          {
             "title": "Who builds it",
-            "body": "Tilawa Admin is built by Adel Ben Yahia. Questions, feedback, or partnership inquiries are welcome."
+            "body": "Tilawa is built in the open by Adel Ben Yahia, with everyone who reports a recording that will not play, suggests a missing reciter, or keeps a machine running. The source is public; so is the list of reciters."
           },
           {
             "title": "Contact",
-            "body": "contact@adelpro.us.kg"
+            "body": "Write to contact@adelpro.us.kg about a reciter we are missing or a recording that will not play."
           }
         ],
         "steps": {
@@ -99,18 +115,34 @@
       "ar": {
         "lang": "ar",
         "title": "نبذة عن تلاوة",
-        "description": "لوحة الإدارة لتوزيع تلاوات القرآن: تدير خوادم التوزيع وخوادم TURN وفهرس ملفات التورنت ومكتبة القرّاء من مكان واحد.",
+        "description": "تلاوة مكان هادئ للاستماع إلى القرآن: تلاوة كاملة، بلا حساب ولا إعلان ولا وسيط بينك وبين الصوت.",
         "brand": "تلاوة",
         "h1": "نبذة عن تلاوة",
-        "lede": "لوحة الإدارة لتوزيع تلاوات القرآن: تدير خوادم التوزيع وخوادم TURN وفهرس ملفات التورنت ومكتبة القرّاء من مكان واحد.",
+        "lede": "تلاوة مكان هادئ للاستماع إلى القرآن: تلاوة كاملة، بلا حساب ولا إعلان ولا وسيط بينك وبين الصوت. وهذه اللوحة هي الغرفة الخلفية، حيث يعمل من يحفظ استمرار الصوت.",
         "features": [
           {
+            "title": "الفكرة",
+            "body": "صوت القرآن للناس جميعًا. هذه التسجيلات صُنعت لتُسمع وتُنسخ وتُتناقل، لا لتُستأجر بالدقيقة. وتلاوة تحفظ هذه العادة: تفتحها، وتختار قارئًا، فتمضي التلاوة إلى آخرها."
+          },
+          {
+            "title": "كيف يصل الصوت",
+            "body": "لا شيء يقيم على خادم واحد كبير: التسجيلات على أجهزة عدة، بعضها للمشروع وبعضها لمَن أراد أن يعين، وكل مستمع يُبقي صفحته مفتوحة يحمل الصوت إلى غيره. ولذلك لا اشتراك ولا انتظار في طابور؛ وكلما زاد المستمعون استقرّ الصوت."
+          },
+          {
+            "title": "الاسم",
+            "body": "تلاوة اسم الفعل لا اسم التطبيق: القراءة المتأنية للقرآن. المهم الصوت والوقفة والآية، لا الواجهة."
+          },
+          {
+            "title": "ما تفعله هذه اللوحة",
+            "body": "هنا يحفظ المشروع طرفه من هذا الوعد: الأجهزة التي تحمل التسجيلات، والسبل التي تبلغ بها التلاوة هاتفك، وفهرس القرّاء، ومن يُسمح له بالدخول. لا شيء هنا موجّه للمستمع، بل كل ما هنا حتى لا يحتاج المستمع إلى التفكير فيه."
+          },
+          {
             "title": "من يبنيها",
-            "body": "تلاوة من صنع عادل بن يحيى، ونرحّب بالأسئلة والاقتراحات وطلبات الشراكة."
+            "body": "يبني تلاوة عادل بن يحيى في العلن، ومع كل من ينبّه إلى تسجيل لا يعمل، أو يقترح قارئًا غائبًا، أو يُبقي جهازًا يعمل. الشيفرة منشورة، وقائمة القرّاء كذلك."
           },
           {
             "title": "اتصل بنا",
-            "body": "contact@adelpro.us.kg"
+            "body": "اكتب إلينا عن قارئ ينقصنا أو تسجيل لا يعمل: contact@adelpro.us.kg."
           }
         ],
         "steps": {
