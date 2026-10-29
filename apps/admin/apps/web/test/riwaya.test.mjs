@@ -42,6 +42,17 @@ describe('riwaya vocabulary', () => {
     assert.equal(riwayaLabel('WARSH', 'ar'), 'ورش');
   });
 
+  it('names the spelling the catalogue actually stores', () => {
+    // The import takes the riwaya as an argument, so the published row holds the
+    // spelling the operator typed (`al-Douri`), not the transliteration in this
+    // list (`al-Duri`). Both are the same reading, and both open the form on it.
+    assert.equal(riwayaLabel('al-Douri', 'ar'), 'الدوري');
+    assert.equal(riwayaLabel('al-Douri', 'en'), 'al-Douri');
+    assert.equal(riwayaValue('al-Douri'), 'al-Douri');
+    assert.equal(riwayaValue('al-Duri'), 'al-Douri');
+    assert.equal(riwayaOptions('al-Douri').length, RIWAYAT.length);
+  });
+
   it('shows an unknown legacy value exactly as it was stored', () => {
     assert.equal(riwayaLabel('حفص', 'en'), 'حفص');
     assert.equal(riwayaLabel('Jazari', 'ar'), 'Jazari');

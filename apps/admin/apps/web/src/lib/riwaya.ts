@@ -22,7 +22,7 @@ export const RIWAYAT: readonly Riwaya[] = [
   { value: 'Warsh', ar: 'ورش', en: 'Warsh' },
   { value: 'Qalon', ar: 'قالون', en: 'Qalun' },
   { value: 'Shubah an asim', ar: 'شعبة عن عاصم', en: 'Shu‘bah ‘an ‘Asim' },
-  { value: 'al-Duri', ar: 'الدوري', en: 'al-Duri' },
+  { value: 'al-Douri', ar: 'الدوري', en: 'al-Douri' },
   { value: 'unknown', ar: 'غير محدّد', en: 'Unspecified' },
 ];
 
@@ -31,7 +31,10 @@ const KEY = (value: string): string => value.trim().toLowerCase();
 const BY_VALUE = new Map(RIWAYAT.map((riwaya) => [KEY(riwaya.value), riwaya]));
 
 /** Spellings the catalogue already contains that mean a listed value. */
-const ALIASES = new Map([['qalun', 'qalon']]);
+const ALIASES = new Map([
+  ['qalun', 'qalon'],
+  ['al-duri', 'al-douri'],
+]);
 
 /**
  * The value a form should open with.

@@ -9,6 +9,7 @@ const NAMES: Record<string, string> = {
   qalun: 'قالون',
   unknown: 'غير محدّد',
   'shubah an asim': 'شعبة عن عاصم',
+  'al-douri': 'الدوري',
   'al-duri': 'الدوري',
 };
 
