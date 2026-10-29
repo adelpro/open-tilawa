@@ -1,0 +1,278 @@
+<!doctype html>
+<!--
+  النسخة العربية من البانر. Render it with `node docs/banner-render.mjs`, which
+  writes apps/web/public/banner-ar.png (1280x640 @2x) — the mirror of
+  banner.png, right-to-left.
+
+  Copy is the Arabic of the README intro, not a fresh description: the same
+  claim, phrased the way the app phrases it (سحابة الأقران، ندًّا بندًّا، البديل).
+-->
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      /* Four faces, both scripts: an Arabic headline in a Latin-only subset
+         silently falls back to the system font. */
+      @font-face {
+        font-family: 'IBM Plex Sans Arabic';
+        font-weight: 400;
+        src: url('../apps/web/public/fonts/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ys43PWrfQ.woff2') format('woff2');
+        unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+      }
+      @font-face {
+        font-family: 'IBM Plex Sans Arabic';
+        font-weight: 400;
+        src: url('../apps/web/public/fonts/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ys93PU.woff2') format('woff2');
+        unicode-range: U+0000-00FF;
+      }
+      @font-face {
+        font-family: 'IBM Plex Sans Arabic';
+        font-weight: 600;
+        src: url('../apps/web/public/fonts/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCRXMR5Kw.woff2') format('woff2');
+        unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+      }
+      @font-face {
+        font-family: 'IBM Plex Sans Arabic';
+        font-weight: 600;
+        src: url('../apps/web/public/fonts/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCUXMQ.woff2') format('woff2');
+        unicode-range: U+0000-00FF;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --ink: #1d1d1f;
+        --ink-soft: #6e6e73;
+        --hairline: #e0e0e0;
+        --paper: #ffffff;
+      }
+
+      body {
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+        background: var(--paper);
+        font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .banner { position: relative; width: 1280px; height: 640px; }
+
+      .wash {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(760px 560px at 16% 44%, #f6f7f9 0%, rgba(255, 255, 255, 0) 68%),
+          radial-gradient(560px 420px at 96% 6%, #fafafc 0%, rgba(255, 255, 255, 0) 70%);
+      }
+
+      .copy {
+        position: absolute;
+        right: 72px;
+        top: 50%;
+        transform: translateY(-58%);
+        width: 620px;
+        z-index: 3;
+        text-align: right;
+      }
+
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      .lockup img { height: 34px; width: auto; display: block; }
+
+      .lockup .rule { width: 1px; height: 24px; background: var(--hairline); }
+
+      .lockup .word {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0;
+        color: var(--ink-soft);
+        padding-top: 3px;
+      }
+
+      h1 {
+        font-size: 31px;
+        /* Arabic needs the taller leading; nothing negative below the baseline. */
+        line-height: 1.5;
+        font-weight: 600;
+        letter-spacing: 0;
+        margin-bottom: 14px;
+      }
+
+      p.lede {
+        font-size: 16.5px;
+        line-height: 1.75;
+        color: var(--ink-soft);
+        max-width: 560px;
+        text-wrap: pretty;
+      }
+
+      .label {
+        position: absolute;
+        right: 72px;
+        bottom: 46px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 16px;
+        border: 1px solid var(--hairline);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        font-size: 12.5px;
+        color: var(--ink);
+        z-index: 4;
+      }
+
+      .label .dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--ink-soft);
+        flex: none;
+      }
+
+      .label .site { font-weight: 600; }
+
+      .mono { direction: ltr; unicode-bidi: isolate; }
+
+      .phone {
+        position: absolute;
+        left: 104px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 286px;
+        padding: 9px;
+        border-radius: 44px;
+        background: #111113;
+        box-shadow:
+          0 34px 70px rgba(16, 24, 40, 0.2),
+          0 2px 6px rgba(16, 24, 40, 0.14),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+        z-index: 2;
+      }
+
+      .phone img { display: block; width: 100%; border-radius: 36px; }
+
+      .phone::after {
+        content: '';
+        position: absolute;
+        top: 19px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 82px;
+        height: 21px;
+        border-radius: 999px;
+        background: #111113;
+      }
+
+      .waves {
+        position: absolute;
+        left: -40px;
+        bottom: -34px;
+        width: 780px;
+        height: 300px;
+        z-index: 1;
+        -webkit-mask-image: linear-gradient(to left, transparent 0%, #000 42%);
+        mask-image: linear-gradient(to left, transparent 0%, #000 42%);
+      }
+
+      .waves svg { display: block; width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <div class="wash"></div>
+
+      <div class="waves">
+        <svg viewBox="0 0 780 300" preserveAspectRatio="none" aria-hidden="true">
+          <g id="layers"></g>
+        </svg>
+      </div>
+
+      <div class="copy">
+        <div class="lockup">
+          <img src="../apps/web/public/images/icon.png" alt="تلاوة" />
+          <span class="rule"></span>
+          <span class="word">مفتوح المصدر</span>
+        </div>
+
+        <h1>
+          بنية تحتية تستضيفها بنفسك لمنظومة <bdi style="white-space: nowrap">Open Tilawa</bdi> على
+          WebTorrent
+        </h1>
+
+        <p class="lede">
+          مشغّل تلاوات القرآن الكريم يبثّ الصوت مباشرةً بين المستمعين عبر WebTorrent، وخادمك بديلٌ
+          جاهزٌ إن تعذّر ذلك.
+        </p>
+      </div>
+
+      <div class="phone">
+        <img
+          src="../apps/web/public/screenshots/player-narrow.png"
+          alt="تلاوة تعرض سورة الفاتحة"
+        />
+      </div>
+
+      <div class="label">
+        <span class="mono">contact@tilawah.cc</span>
+        <span class="dot"></span>
+        <span class="mono site">tilawah.cc</span>
+      </div>
+    </div>
+
+    <script>
+      /* Same ribbon as banner.html, mirrored: the waves lean the other way. */
+      const front = [28, 77, 120];
+      const back = [93, 151, 201];
+
+      const mix = (t) =>
+        front
+          .map((channel, index) => Math.round(channel + (back[index] - channel) * t))
+          .map((value) => value.toString(16).padStart(2, '0'))
+          .join('');
+
+      const layers = [
+        { gain: 1, shift: 0, phase: 0.4, opacity: 0.42 },
+        { gain: 0.8, shift: 44, phase: 1.9, opacity: 0.46 },
+        { gain: 0.6, shift: 104, phase: 3.4, opacity: 0.5 },
+        { gain: 0.42, shift: 172, phase: 5.1, opacity: 0.56 },
+      ];
+
+      const width = 780;
+      const height = 300;
+      const target = document.getElementById('layers');
+      const NS = 'http://www.w3.org/2000/svg';
+
+      layers.forEach((layer, index) => {
+        const points = [];
+        for (let x = 0; x <= width; x += 6) {
+          const s = (x + layer.shift) / width;
+          const y =
+            height -
+            (18 +
+              (Math.sin(s * 13.5 + layer.phase) * 0.5 + 0.5) * 92 * layer.gain +
+              Math.sin(s * 34.2 + layer.phase * 1.7) * 20 * layer.gain +
+              Math.sin(s * 71.5 + layer.phase * 0.6) * 9 * layer.gain);
+          points.push([x, y]);
+        }
+
+        const d =
+          points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x} ${y.toFixed(1)}`).join(' ') +
+          ` L${width} ${height} L0 ${height} Z`;
+
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', '#' + mix(index / (layers.length - 1)));
+        path.setAttribute('opacity', String(layer.opacity));
+        target.appendChild(path);
+      });
+    </script>
+  </body>
+</html>

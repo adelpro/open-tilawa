@@ -1,5 +1,7 @@
 # open-tilawa
 
+![Tilawah — the Open Tilawa player on a phone, playing Surah Al-Fatiha](apps/web/public/banner.png)
+
 Self-hostable infrastructure for the **Open Tilawa WebTorrent stack**: a
 peer-to-peer Quran recitation player that streams audio from WebTorrent peers,
 with the operator's own node as the HTTP safety net.
