@@ -24,6 +24,7 @@ export default function AboutPage() {
         <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body2}</p>
         <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body3}</p>
         <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.body4}</p>
+        <p className="mt-3 text-[1rem] leading-relaxed text-muted">{t.about.itqan}</p>
 
         <div className="mt-8 flex flex-col gap-3 text-[1rem]">
           <a

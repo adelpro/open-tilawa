@@ -183,23 +183,25 @@ const ar = {
   about: {
     title: 'عن تلاوة',
     body1:
-      'تلاوة مكان هادئ للاستماع إلى القرآن. تختار القارئ، وتختار السورة، فتمضي التلاوة إلى آخرها: لا حساب، ولا إعلان، ولا شيء بينك وبين الصوت.',
+      'تلاوة مكان هادئ للاستماع إلى القرآن: تختار القارئ والسورة، فتمضي التلاوة إلى آخرها، ولا إعلان ولا شيء بينك وبين الصوت. وهي تعمل بلا حساب؛ فإن أردت أن تُزامَن الإعدادات والتفضيلات بين أجهزتك، وصلت أجهزتك بحلقة واحدة تجمعها.',
     body2:
       'هذه التسجيلات لا تُحفظ على خادم واحد كبير، بل على أجهزة عدة؛ بعضها للمشروع وبعضها لمستمعين أرادوا أن يعينوا، وكل صفحة مفتوحة تحمل الصوت إلى غيرها. ولذلك لا اشتراك ولا انتظار في طابور، وكلما زاد المستمعون استقرّ الصوت.',
     body3:
       'تلاوة اسم الفعل لا اسم التطبيق: القراءة المتأنية للقرآن. المهم الصوت والوقفة والآية، لا الشاشة.',
     body4:
-      'وبُنيت في العلن: شيفرتها منشورة، ولا شيء فيها يطلب منك تسجيلًا. وإن لم يعمل تسجيل أو غاب قارئ، فاكتب إلينا.',
+      'وبُنيت في العلن: شيفرتها منشورة، ولا شيء فيها يطلب منك حساباً؛ فالحلقة اختيار لا شرط. وإن لم يعمل تسجيل أو غاب قارئ، فاكتب إلينا.',
+    itqan:
+      'التسجيلات من كتالوج مجتمع إتقان (itqan.dev)، والحقوق تبقى لأصحابها من القرّاء والناشرين.',
     source: 'الكود المصدري',
     license: 'الخطوط: IBM Plex Sans Arabic، رخصة SIL OFL 1.1. الإصدار',
   },
   privacy: {
     title: 'الخصوصية',
     items: [
-      'لا حساب، ولا تسجيل، ولا بريد إلكتروني.',
+      'الاستماع لا يطلب منك حساباً. والحلقة اختيارية: إن وصلت أجهزتك بها زامنت الإعدادات والمفضّلة بينها.',
       'لا تحليلات ولا تتبّع إعلاني ولا بكسلات قياس.',
-      'موضع الاستماع والقارئ المختار يُخزَّنان في متصفحك وحده (localStorage)، ويُحذفان بمسح بيانات الموقع.',
-      'الاتصالات الخارجة ثلاثة فقط: كتالوج القرّاء، وشبكة التورنت (الأقران ومواقع الويب)، وروابط MP3 عند اختيار قارئ بلا ملف تورنت.',
+      'موضع الاستماع (أين توقفت) يبقى في هذا المتصفح وحده، ويُحذف بمسح بيانات الموقع؛ وما تُزامنه الحلقة يحفظه خادم المزامنة.',
+      'الاتصالات الخارجة ثلاثة في الاستماع وحده: كتالوج القرّاء، وشبكة التورنت (الأقران ومواقع الويب)، وروابط MP3 عند اختيار قارئ بلا ملف تورنت. وإن وصلت حلقة أُضيف اتصال رابع بخادم المزامنة، ولا يُفتح إلا معها.',
       'لا نبيع شيئاً ولا نرسل بياناتك إلى أي طرف ثالث.',
     ],
   },
@@ -381,23 +383,25 @@ const en: typeof ar = {
   about: {
     title: 'About Tilawah',
     body1:
-      'Tilawah is a quiet place to listen to the Quran. You choose a reciter, you choose a surah, and the recitation plays to the end — no account, no advert, nothing in the middle.',
+      'Tilawah is a quiet place to listen to the Quran: you choose the reciter and the surah, and the recitation plays to the end — no advert, nothing between you and the voice. It works without an account; and if you want your settings and preferences to follow your devices, connect them to one ring that syncs them.',
     body2:
       'The recordings do not sit on one large server. They rest on several machines, kept by the project and by listeners who wanted to help, and every page left open carries the sound to the next person. So there is no subscription and no queue, and it grows steadier as more people listen.',
     body3:
       'Tilawah is the Arabic word for recitation: the slow, measured reading of the Quran. The app is named after the act — what matters is the voice, the pause, the verse.',
     body4:
-      'It is built in the open: the source is published, and nothing here asks you to sign up. If a recording will not play, or a reciter is missing, write to us.',
+      'It is built in the open: the source is published, and nothing here asks you for an account — the ring is a choice, not a condition. If a recording will not play, or a reciter is missing, write to us.',
+    itqan:
+      'The recordings come from the Itqan community catalogue (itqan.dev); rights remain with the reciters and publishers.',
     source: 'Source code',
     license: 'Fonts: IBM Plex Sans Arabic, SIL OFL 1.1. Version',
   },
   privacy: {
     title: 'Privacy',
     items: [
-      'No account, no sign-up, no email.',
+      'Listening needs no account. A ring is optional: connect your devices to one and your settings and favourites sync between them.',
       'No analytics, no ad tracking, no pixels.',
-      'Your position and chosen reciter live in this browser only (localStorage), and go when you clear site data.',
-      'Three outbound calls only: the reciter catalogue, the torrent network (peers and web seeds), and MP3 links when a reciter has no torrent.',
+      'Where you stopped listening stays in this browser and goes when you clear site data; whatever a ring syncs is held by the sync relay.',
+      'Three outbound calls while listening: the reciter catalogue, the torrent network (peers and web seeds), and MP3 links when a reciter has no torrent. Connecting a ring adds a fourth, to the sync relay, and only while it is connected.',
       'Nothing is sold, and nothing about you is sent to a third party.',
     ],
   },
