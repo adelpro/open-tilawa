@@ -315,7 +315,7 @@ it with evidence rather than taste:
 
 ## Implementation status — 2026-10-28
 
-Batch A of `docs/superpowers/plans/2026-10-28-admin-console-audit-fixes.md` is applied and
+Batch A of the fixes is applied and
 re-measured on the same fixture:
 
 | item | state | evidence |
@@ -338,7 +338,7 @@ re-measured on the same fixture:
 | #15 the 24-hour strip has no reference | **fixed** | the strip's `aria-label` is translated and the number beside it names the window: `الجهوزية (24 ساعة): 99%` |
 | #16 two notes claim the type scale is broken | **fixed** | `tokens.css` and the earlier audit's status row now carry the measurement |
 | #17 the console's actions column has no header | **fixed** | `الإجراءات`; the account's device table got the same treatment |
-| — | done | the audit's plan (`docs/superpowers/plans/2026-10-28-admin-console-audit-fixes.md`) is complete: batches A–E |
+| — | done | the fixes are complete: batches A–E |
 
 ## How to re-verify
 
