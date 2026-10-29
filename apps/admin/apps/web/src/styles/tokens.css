@@ -108,6 +108,8 @@
   /* status */
   --error: #d70015;
   --success: #0f7b3f;
+  /* The partial hour in the 24h strip: a graphic, never a word. */
+  --warning: #b45309;
   --warning-surface: #ffefc4;
   /* Tints carry status as a wash behind a word, never as the word itself. */
   --error-tint: rgba(215, 0, 21, 0.08);
@@ -201,6 +203,7 @@
     --hairline: #3a3a3c;
     --error: #ff7b72;
     --success: #30d158;
+    --warning: #e0a44a;
     --warning-surface: #2c2618;
     --error-tint: rgba(255, 123, 114, 0.14);
     --success-tint: rgba(48, 209, 88, 0.14);
@@ -225,6 +228,7 @@
   --hairline: #3a3a3c;
   --error: #ff7b72;
   --success: #30d158;
+  --warning: #e0a44a;
   --warning-surface: #2c2618;
   --error-tint: rgba(255, 123, 114, 0.14);
   --success-tint: rgba(48, 209, 88, 0.14);

@@ -2973,7 +2973,7 @@ select:focus {
   background: var(--success);
 }
 .timeline__bar[data-state='partial'] {
-  background: var(--warning, #b45309);
+  background: var(--warning);
 }
 .timeline__bar[data-state='down'] {
   background: var(--error);
