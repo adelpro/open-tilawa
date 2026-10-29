@@ -21,7 +21,7 @@ Three apps ship independently and carry their own version:
 | App | Package | Version also in |
 |---|---|---|
 | `apps/web` | `apps/web/package.json` | nothing else: `APP_VERSION` is imported from it at build, and the header and about page read that |
-| `apps/admin` | `apps/admin/package.json` (workspaces: `apps/api`, `apps/web`, `libs/core`) | injected at build by Vite (`__APP_VERSION__`) |
+| `apps/admin` | four package files: `apps/admin/package.json`, `apps/api`, `apps/web`, `libs/core` | `apps/web` injects it at build (`__APP_VERSION__`); `apps/api` reports its own at `/health` |
 | `apps/seeder` | `apps/seeder/package.json` | `/health` reports it as `version`; the Dockerfile carries a `LABEL version` |
 
 ## Lock the version
@@ -35,6 +35,15 @@ A version is two fields that must agree, or the release lies about itself:
 There is no third copy. `apps/web/src/constants/version.ts` imports the version
 from `package.json`, so the number in the header, the about page and the build is
 the same number — bumping the package is the whole job.
+
+**Admin is the exception, and it bites.** The console is four workspaces and all
+four `package.json` files carry the version: `apps/admin/package.json`,
+`apps/api`, `apps/web`, `libs/core`. Two of them are observable, and each one
+lies about a different surface — `apps/web` feeds `__APP_VERSION__` (the console
+footer), `apps/api` answers `/health`. `npm version` only knows web and seeder,
+so admin is four edits and a rebuild of both images. Release 1.8.0 shipped with
+one of the four bumped; `/health` answered the old number while everything else
+looked green.
 
 ## Tag
 
@@ -54,8 +63,12 @@ Earlier tags are plain `v1.x` and are therefore ambiguous when two apps share a
 number — `v1.3.2` is the seeder release, `v1.3.0` the web one. Do not reuse an
 existing tag; add the prefix instead.
 
-A `v*` tag on `apps/seeder/**` also publishes the multi-arch image through
-`.github/workflows/publish-seeder.yml`, in addition to `:latest` and `:sha`.
+A `v*` tag publishes the multi-arch seeder image through
+`.github/workflows/publish-seeder.yml` — **the tag alone is the trigger**,
+whether or not the seeder changed. A push to `main` that touches
+`apps/seeder/**`, `deploy-node.sh` or that workflow publishes too. Both emit
+`:latest`, `:sha` and the tag name, built for amd64 and arm64 because seeders are
+often single-board computers.
 
 ## Order
 
@@ -80,6 +93,31 @@ docker compose up -d --build web          # or admin-web, admin-api, seeder
 `develop` and `main` are kept identical: `main` is fast-forwarded, never merged
 into by hand, so `git rev-list --count main..develop` is 0 between releases.
 
+## Verify the deploy
+
+A container that started is not a release that shipped. Three reads answer it:
+
+```bash
+curl -s https://console.tilawah.cc/health        # admin-api version
+curl -s https://console.tilawah.cc/api/public/reciters | head -c 200
+docker exec open-tilawa-seeder node -e \
+  "fetch('http://127.0.0.1:8085/health').then(r => r.json()).then(console.log)"
+```
+
+For the web copy, read the bundle the page actually serves rather than the
+source — Vite hashes the asset, so a stale `index-*.js` is a deploy that did not
+land:
+
+```bash
+asset=$(curl -s https://tilawah.cc/ | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' | head -1)
+curl -s "https://tilawah.cc/$asset" | grep -c '<a string you changed>'
+```
+
+The version lines are the ones that catch a half-done bump, because each app
+surface reads a different file. 1.8.0 shipped with three of admin's four
+`package.json` files left on the previous version; every screen looked right
+except `/health`.
+
 ## The stack
 
 One Compose project. During the alpha there is no staging deployment; production
@@ -95,6 +133,10 @@ TURN is an overlay of the same project, not a stack of its own:
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.turn.yml up -d turn
 ```
+
+`edge` renders its vhosts with `envsubst` when it starts, so a change to `.env`
+needs `docker compose up -d --force-recreate edge`. A restart re-runs the same
+rendered config, which is how a new hostname "does nothing".
 
 Rules that survive from the two-stack period, because each one cost production an
 outage or a scare:
