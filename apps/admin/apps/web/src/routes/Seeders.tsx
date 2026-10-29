@@ -17,6 +17,7 @@ import { Panel } from '../components/Panel';
 import { FormModal } from '../components/FormModal';
 import { SkeletonRows } from '../components/Skeleton';
 import { missingPerNode, totalMissing } from '../lib/coverage';
+import { statusKey, statusTone } from '../lib/seeder-status';
 import type { CoverageReciter } from '../lib/coverage';
 import type { PushPlan, Seeder } from '../lib/types-seeders';
 
@@ -29,20 +30,6 @@ import type { PushPlan, Seeder } from '../lib/types-seeders';
 const INSTALL_COMMAND =
   'curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder';
 const FIREWALL_COMMAND = 'ufw allow 8085/tcp && ufw allow 6881/tcp && ufw allow 6881/udp';
-
-function statusTone(status: Seeder['status']): 'ok' | 'bad' | 'notice' {
-  return status === 'online' ? 'ok' : status === 'offline' ? 'bad' : 'notice';
-}
-
-function statusKey(
-  status: Seeder['status'],
-): 'seeders.statusOnline' | 'seeders.statusOffline' | 'seeders.statusUnknown' {
-  return status === 'online'
-    ? 'seeders.statusOnline'
-    : status === 'offline'
-      ? 'seeders.statusOffline'
-      : 'seeders.statusUnknown';
-}
 
 /**
  * Seeder nodes. The URL is public (its `/health` is); the admin credentials are
@@ -74,9 +61,10 @@ export function Seeders(): ReactElement {
   const [newUrl, setNewUrl] = useState('');
   const [newUser, setNewUser] = useState('');
   const [newPass, setNewPass] = useState('');
-  // Default on: a node that is registered but empty is the usual mistake, and
-  // the push endpoint only adds what the node is missing.
-  const [newFill, setNewFill] = useState(true);
+  // Default off: registering a node is a cheap, reversible act, while queueing
+  // the whole published catalogue is a multi-gigabyte download the operator
+  // should ask for. The node's own screen offers it the moment the node is empty.
+  const [newFill, setNewFill] = useState(false);
   const [editing, setEditing] = useState<Seeder | null>(null);
   const [editName, setEditName] = useState('');
   const [editUrl, setEditUrl] = useState('');
@@ -143,7 +131,7 @@ export function Seeders(): ReactElement {
         }
       }
       setMessage([t('seeders.added'), filled].filter(Boolean).join(' '));
-      setNewFill(true);
+      setNewFill(false);
       await load();
       // Next step is the node's own screen: the catalogue checklist is there,
       // already ticked for everything the new node is missing.

@@ -31,6 +31,10 @@ export interface Seeder {
   updateMode: 'build' | 'pull';
   /** The version the deployment says this node should run. */
   desiredVersion: string | null;
+  /** True while a software update is running on this host. */
+  updating: boolean;
+  /** The last update's failure, kept until the next one starts. */
+  updateError: string | null;
 }
 
 export interface Turn {

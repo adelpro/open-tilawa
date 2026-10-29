@@ -158,7 +158,7 @@ export const en = {
   'seeders.loading': 'Loading seeders',
   'seeders.empty': 'No nodes yet. Add the first one; its install steps are in the add dialog.',
   'seeders.added': 'Seeder added.',
-  'seeders.fillOnAdd': 'Add the catalogue to this node',
+  'seeders.fillOnAdd': 'Add the catalogue’s recitations to this node',
   'seeders.fillOnAddHint':
     'Queues every recitation this node is missing, right after it is registered. Nothing is removed, and the push stops at 90% of its quota.',
   'seeders.fillQueued': '{count} queued for download.',
@@ -178,7 +178,7 @@ export const en = {
   'torrents.removeConfirm': 'Delete',
   'torrents.noNode': 'Pick a node from the fleet.',
   'torrents.nodeTitle': 'Node',
-  'torrents.asOf': 'snapshot of {time}',
+  'torrents.asOf': 'Last probe: {time}',
   'torrents.stateHealthy': 'In catalogue',
   'torrents.stateStale': 'Not published',
   'torrents.stateOrphan': 'Not in catalogue',
@@ -195,7 +195,7 @@ export const en = {
   'torrents.add': 'Add torrent',
   'torrents.cancel': 'Cancel',
   'torrents.addSubmit': 'Add to node',
-  'torrents.refresh': 'Refresh',
+  'torrents.probe': 'Probe node',
   'torrents.node': 'Node',
   'torrents.nodeHint': 'Torrent operations run against this seeder.',
   'torrents.addMode': 'Source',
@@ -214,6 +214,9 @@ export const en = {
   'torrents.summary': '{count} torrents · {peers} peers',
   'torrents.loading': 'Loading the node inventory',
   'torrents.empty': 'The node holds no torrents yet.',
+  'torrents.emptyNode':
+    "This node is empty. Add the catalogue's recitations so it can start seeding.",
+  'torrents.fillNode': 'Add catalogue recitations',
   'torrents.noSeeders': 'Add a seeder first — torrents are managed on a node.',
   'torrents.added': 'Added {name}.',
   'torrents.removed': 'Torrent removed from the node.',
@@ -376,11 +379,14 @@ export const en = {
   'seeders.versionUnknown': 'version unknown',
   'seeders.updateSoftware': 'Update software',
   'seeders.updateTitle': 'Update this seeder?',
-  'seeders.updateBody':
-    'The node pulls/builds the seeder image and restarts. Torrents stay on the volume; downloads resume afterwards. The node is offline for a few seconds.',
+  'seeders.updateBodyBuild':
+    "Rebuilds the node's image from the repository checkout on this host, then restarts it. The files stay on disk; seeding pauses until the node is back.",
+  'seeders.updateBodyPull':
+    'Pulls the newest image from the registry, then restarts the node. The files stay on disk; seeding pauses until the node is back.',
   'seeders.updateCurrent': 'Currently running {version}.',
   'seeders.updateConfirm': 'Update and restart',
   'seeders.updatedSoftware': 'Node updated — now running {version}.',
+  'seeders.updateError': 'The software update failed: {error}',
 
   'reciters.push': 'Push to nodes',
   'reciters.pushTitle': 'Push the catalogue',

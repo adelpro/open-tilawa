@@ -6,13 +6,13 @@ broken console.
 
 ## The stack
 
-| Service     | Role                                              | Port (host)             |
-| ----------- | ------------------------------------------------- | ----------------------- |
-| `admin-edge`| single door: `/` → SPA, `/api/` → API, `/health`  | `127.0.0.1:9400`        |
-| `admin-api` | NestJS API, SQLite at `/data/tilawa-admin.sqlite` | internal `9410`         |
-| `admin-web` | built SPA served by nginx                         | internal `80`           |
-| `seeder`    | WebTorrent node + its own admin API               | `127.0.0.1:8085`        |
-| `turn`      | coturn (STUN/TURN)                                | host networking, `3478` |
+| Service      | Role                                              | Port (host)             |
+| ------------ | ------------------------------------------------- | ----------------------- |
+| `admin-edge` | single door: `/` → SPA, `/api/` → API, `/health`  | `127.0.0.1:9400`        |
+| `admin-api`  | NestJS API, SQLite at `/data/tilawa-admin.sqlite` | internal `9410`         |
+| `admin-web`  | built SPA served by nginx                         | internal `80`           |
+| `seeder`     | WebTorrent node + its own admin API               | `127.0.0.1:8085`        |
+| `turn`       | coturn (STUN/TURN)                                | host networking, `3478` |
 
 Only the edge is published. The seeder's admin port is loopback-bound on purpose:
 the console reaches it over the compose network (`http://seeder:8085`), so it
@@ -81,18 +81,30 @@ screen stores them on every probe, so the row tells you which release a node
 runs and whether it has room for the next release.
 
 **From the console** — open the node's own screen (**Seeders →** click the row)
-and use *Update software*. Lifecycle actions live there, not on the list row: the
-list is for the fleet's state, that screen is for one node. The action is
+and use _Update software_. Lifecycle actions live there, not on the list row: the
+list is for the fleet's state, that screen is for one node. The button appears
+only when the node is **this host's own** (its URL host matches `SEEDER_SERVICE`)
+and its version differs from the one the deployment expects. The action is
 intentionally narrow and off by default:
 
 - it needs `SEEDER_UPDATE=1`, the host's Docker socket, and the repository
   mounted read-only at `/host` (all three are in the compose `admin-api` block);
 - it runs exactly one fixed command pair against the `seeder` service, with no
   user input: `docker compose … pull|build seeder` then `up -d --no-deps
-  --force-recreate seeder`;
+--force-recreate seeder`;
 - `SEEDER_UPDATE_MODE=build` compiles from the mounted tree (a checkout);
   `pull` fetches `SEEDER_IMAGE` (a fleet node);
 - the request is admin-only, CSRF-guarded and written to the audit trail.
+
+It cannot be applied to a remote node, and asking for one answers 400: the
+command drives the Docker socket of the host the console runs on. A second
+request while one is running answers 409.
+
+The request returns **202 as soon as the job starts** — a build takes minutes, and
+the console answers through a proxy that gives up long before that. Progress is
+the row's `updating` flag, which the node screen polls; the outcome is the
+`seeder:update` audit entry, with `status: error` and the compose output tail when
+it fails, and `updateError` on the row until the next attempt.
 
 A Docker socket is root-equivalent on the host. If that is not acceptable on a
 given installation, leave `SEEDER_UPDATE` unset — the button answers 503 and the
@@ -103,15 +115,12 @@ node is updated by hand.
 1. Manual, on schedule:
 2. Automatic: re-run `deploy-node.sh` once with `WATCHTOWER=1` (or add the
    service by hand). It runs `containrrr/watchtower --label-enable --interval
-   600`, scoped to the seeder label, so a new `latest` image recreates the node
+600`, scoped to the seeder label, so a new `latest` image recreates the node
    and nothing else on the host is touched.
 
 ```bash
 cd /opt/tilawa-seeder && docker compose pull && docker compose up -d
 ```
-
-The console's own Update button remains local-only: it drives the Docker socket
-of the host the admin runs on, not a remote node's.
 
 Tag a release (`v1.21.0`) to publish `ghcr.io/adelpro/open-tilawa-seeder:1.21.0`
 (multi-arch: amd64 + arm64) through the `Publish Seeder Image` workflow; nodes
@@ -174,11 +183,11 @@ hostname; the old `trackerf` alias has been removed from DNS and the edge.
 
 ## Troubleshooting
 
-| Symptom | Meaning |
-| ------------------------------- | ------------------------------------------------------- |
-| Seeder 502 “no credentials stored” | The row has no admin user/password — edit it and add them. |
-| Seeder 502 “refused the stored credentials” | Credentials no longer match the node's `ADMIN_PASS`. |
-| Seeder 502 “unreachable” | Wrong URL or node down; try `curl` from the API container: `docker exec open-tilawa-admin-api wget -qO- http://seeder:8085/health`. |
-| `SQLITE_READONLY_DIRECTORY` on boot | The volume's root directory is root-owned; `chown -R 1000:1000 /data`. |
-| TURN row stuck offline | UDP blocked, wrong host/port, or a `turns:`/IPv6 endpoint (the probe is udp4). |
-| Signup / reset answers 503 | Mail is not configured — set `EMAIL` and `EMAIL_APP_SPECIFIC_PASS`. |
+| Symptom                                     | Meaning                                                                                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Seeder 502 “no credentials stored”          | The row has no admin user/password — edit it and add them.                                                                          |
+| Seeder 502 “refused the stored credentials” | Credentials no longer match the node's `ADMIN_PASS`.                                                                                |
+| Seeder 502 “unreachable”                    | Wrong URL or node down; try `curl` from the API container: `docker exec open-tilawa-admin-api wget -qO- http://seeder:8085/health`. |
+| `SQLITE_READONLY_DIRECTORY` on boot         | The volume's root directory is root-owned; `chown -R 1000:1000 /data`.                                                              |
+| TURN row stuck offline                      | UDP blocked, wrong host/port, or a `turns:`/IPv6 endpoint (the probe is udp4).                                                      |
+| Signup / reset answers 503                  | Mail is not configured — set `EMAIL` and `EMAIL_APP_SPECIFIC_PASS`.                                                                 |

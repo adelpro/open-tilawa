@@ -159,7 +159,7 @@ export const ar: Catalogue = {
   'seeders.loading': 'جارٍ تحميل خوادم التوزيع',
   'seeders.empty': 'ليست هناك خوادم توزيع بعد، أضف أول خادم (خطوات تثبيته في نافذة الإضافة).',
   'seeders.added': 'أُضيف خادم التوزيع.',
-  'seeders.fillOnAdd': 'أضف الفهرس إلى هذا الخادم',
+  'seeders.fillOnAdd': 'أضف تلاوات الفهرس إلى هذا الخادم',
   'seeders.fillOnAddHint':
     'يضع في قائمة الانتظار كل تلاوة يفتقدها الخادم فور تسجيله. لا يحذف شيئًا، ولا يتجاوز 90% من حصته.',
   'seeders.fillQueued': 'أُضيف {count} إلى قائمة التنزيل.',
@@ -179,7 +179,7 @@ export const ar: Catalogue = {
   'torrents.removeConfirm': 'احذف',
   'torrents.noNode': 'اختر خادمًا من قائمة الخوادم.',
   'torrents.nodeTitle': 'الخادم',
-  'torrents.asOf': 'لقطة من {time}',
+  'torrents.asOf': 'آخر فحص: {time}',
   'torrents.stateHealthy': 'في الفهرس',
   'torrents.stateStale': 'غير منشور',
   'torrents.stateOrphan': 'ليس في الفهرس',
@@ -194,7 +194,7 @@ export const ar: Catalogue = {
   'torrents.add': 'إضافة ملف',
   'torrents.cancel': 'إلغاء',
   'torrents.addSubmit': 'أضف إلى الخادم',
-  'torrents.refresh': 'تحديث',
+  'torrents.probe': 'افحص الخادم',
   'torrents.node': 'الخادم',
   'torrents.nodeHint': 'تُنفَّذ عمليات التورنت على خادم التوزيع هذا.',
   'torrents.addMode': 'المصدر',
@@ -213,6 +213,8 @@ export const ar: Catalogue = {
   'torrents.summary': '{count} ملف · {peers} قرين',
   'torrents.loading': 'جارٍ تحميل محتوى الخادم',
   'torrents.empty': 'لا ملفات تورنت على الخادم بعد.',
+  'torrents.emptyNode': 'هذا الخادم فارغ. أضف إليه تلاوات الفهرس ليبدأ التوزيع.',
+  'torrents.fillNode': 'أضف تلاوات الفهرس',
   'torrents.noSeeders': 'أضف خادم توزيع أولًا — تُدار ملفات التورنت على خادم.',
   'torrents.added': 'أُضيف {name}.',
   'torrents.removed': 'أُزيل الملف من الخادم.',
@@ -371,11 +373,14 @@ export const ar: Catalogue = {
   'seeders.versionUnknown': 'الإصدار غير معروف',
   'seeders.updateSoftware': 'تحديث البرنامج',
   'seeders.updateTitle': 'أتحدّث خادم التوزيع هذا؟',
-  'seeders.updateBody':
-    'يسحب الخادم صورة التوزيع أو يبنيها ثم يعيد التشغيل. تبقى الملفات على القرص ويستأنف التنزيل بعدها. ينقطع الخادم ثوانٍ قليلة.',
+  'seeders.updateBodyBuild':
+    'يُعاد بناء صورة الخادم من نسخة المستودع المثبّتة على هذا الجهاز، ثم يُعاد تشغيله. تبقى الملفات على القرص، وينقطع التوزيع حتى يعود الخادم.',
+  'seeders.updateBodyPull':
+    'يسحب الخادم أحدث صورة من سجل الصور ثم يعيد تشغيله. تبقى الملفات على القرص، وينقطع التوزيع حتى يعود الخادم.',
   'seeders.updateCurrent': 'يعمل الآن بالإصدار {version}.',
   'seeders.updateConfirm': 'حدّث وأعد التشغيل',
   'seeders.updatedSoftware': 'حُدّث الخادم — يعمل الآن بالإصدار {version}.',
+  'seeders.updateError': 'فشل تحديث البرنامج: {error}',
 
   'reciters.push': 'أرسل إلى الخوادم',
   'reciters.pushTitle': 'أرسل الفهرس',

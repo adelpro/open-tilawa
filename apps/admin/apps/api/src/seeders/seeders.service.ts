@@ -1,5 +1,7 @@
 import {
   BadGatewayException,
+  BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -34,7 +36,10 @@ export function assertSeederUrl(raw: string): string {
   return raw.replace(/\/$/, '');
 }
 
-type BaseSeeder = Omit<Seeder, 'pinned' | 'updateMode' | 'desiredVersion'>;
+type BaseSeeder = Omit<
+  Seeder,
+  'pinned' | 'updateMode' | 'desiredVersion' | 'updating' | 'updateError'
+>;
 
 export interface Seeder {
   id: number;
@@ -71,6 +76,10 @@ export interface Seeder {
   updateMode: 'build' | 'pull';
   /** The version the operator's source of truth says it should run. */
   desiredVersion: string | null;
+  /** True while a software update is running on this host. */
+  updating: boolean;
+  /** The last update's failure, kept until the next one starts. */
+  updateError: string | null;
 }
 
 /** One torrent as the seeder reports it. */
@@ -101,6 +110,11 @@ export interface SeederInventory {
 @Injectable()
 export class SeedersService {
   private readonly logger = new Logger(SeedersService.name);
+  /**
+   * Software updates in flight, keyed by node. Presence is the progress the
+   * console shows; the error survives the run so the screen can report it.
+   */
+  private readonly updates = new Map<number, { running: boolean; error: string | null }>();
 
   constructor(
     @Inject(SQLITE_DB) private readonly db: Db,
@@ -179,6 +193,8 @@ export class SeedersService {
       pinned: isServiceHost(seeder.url, service),
       updateMode: mode,
       desiredVersion: mode === 'build' ? treeVersion() : tagVersion(imageTag()),
+      updating: this.updates.get(seeder.id)?.running ?? false,
+      updateError: this.updates.get(seeder.id)?.error ?? null,
     };
   }
 
@@ -430,45 +446,74 @@ export class SeedersService {
    * Deliberately narrow: one service, one compose file, no user input. It is off
    * unless `SEEDER_UPDATE=1` is set, because it needs the daemon socket and that
    * is a decision the deployment makes, not a default.
+   *
+   * Only the node this console runs may be updated here. The command drives the
+   * host's Docker socket, so running it for a remote row would rebuild the local
+   * seeder and then report a version that never changed.
+   *
+   * It returns as soon as the job starts. A build takes minutes and the console
+   * answers through a proxy that gives up long before that, so progress is the
+   * row's `updating` flag and the outcome is the audit entry.
    */
   async updateSoftware(
     id: number,
     actorId?: number,
-  ): Promise<{ output: string; version: string | null }> {
-    if (!this.get(id)) throw new NotFoundException('seeder not found');
+  ): Promise<{ started: true; mode: 'build' | 'pull' }> {
+    const seeder = this.get(id);
+    if (!seeder) throw new NotFoundException('seeder not found');
+    if (!seeder.pinned) {
+      throw new BadRequestException("only this host's own node can be updated from here");
+    }
     if (this.config.get<string>('SEEDER_UPDATE') !== '1') {
       throw new ServiceUnavailableException(
         'node updates are not enabled on this deployment (set SEEDER_UPDATE=1 and mount the Docker socket)',
       );
     }
+    if (this.updates.get(id)?.running) {
+      throw new ConflictException('an update is already running on this node');
+    }
     const mode = this.config.get<string>('SEEDER_UPDATE_MODE') === 'build' ? 'build' : 'pull';
-    const result = await updateSeederService({
-      composeFile: this.config.get<string>('SEEDER_COMPOSE_FILE') ?? '/host/docker-compose.yml',
-      project: this.config.get<string>('SEEDER_COMPOSE_PROJECT') ?? 'open-tilawa',
-      service: this.config.get<string>('SEEDER_SERVICE') ?? 'seeder',
-      mode,
-      timeoutMs: Number(this.config.get<string>('SEEDER_UPDATE_TIMEOUT_MS') ?? 600_000),
-    });
-    // The node comes back on a new image; re-read /health so the row shows the
-    // version it is actually running rather than the one it had before. The
-    // container is only "started" when compose returns, so give the process a
-    // few seconds to bind its port before calling the absence of an answer a
-    // failed update.
-    let updated = await this.poll(id);
-    for (let attempt = 0; attempt < 12 && updated?.status !== 'online'; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      updated = await this.poll(id);
+    this.updates.set(id, { running: true, error: null });
+    void this.runUpdate(id, mode, actorId);
+    return { started: true, mode };
+  }
+
+  /** Never rejects: the job reports itself through the row and the audit trail. */
+  private async runUpdate(id: number, mode: 'build' | 'pull', actorId?: number): Promise<void> {
+    let error: string | null = null;
+    try {
+      await updateSeederService({
+        composeFile: this.config.get<string>('SEEDER_COMPOSE_FILE') ?? '/host/docker-compose.yml',
+        project: this.config.get<string>('SEEDER_COMPOSE_PROJECT') ?? 'open-tilawa',
+        service: this.config.get<string>('SEEDER_SERVICE') ?? 'seeder',
+        mode,
+        timeoutMs: Number(this.config.get<string>('SEEDER_UPDATE_TIMEOUT_MS') ?? 600_000),
+      });
+      // The node comes back on a new image; re-read /health so the row shows the
+      // version it is actually running rather than the one it had before. The
+      // container is only "started" when compose returns, so give the process a
+      // few seconds to bind its port before calling the absence of an answer a
+      // failed update.
+      let updated = await this.poll(id);
+      for (let attempt = 0; attempt < 12 && updated?.status !== 'online'; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        updated = await this.poll(id);
+      }
+      this.logger.log(`seeder ${id} updated (${mode}) -> ${updated?.version ?? 'unknown'}`);
+    } catch (err) {
+      error = (err as Error).message;
+      this.logger.warn(`seeder ${id} update failed: ${error}`);
+    } finally {
+      this.updates.set(id, { running: false, error });
     }
     this.audit.record({
       actorId: actorId ?? null,
       userId: id,
       action: 'seeder:update',
       target: String(id),
-      status: 'ok',
-      after: { mode: result.mode, version: updated?.version ?? null },
+      status: error ? 'error' : 'ok',
+      after: { mode, error, version: this.get(id)?.version ?? null },
     });
-    this.logger.log(`seeder ${id} updated (${result.mode}) -> ${updated?.version ?? 'unknown'}`);
-    return { output: result.output, version: updated?.version ?? null };
   }
 
   // ---------- proxy: the seeder's own admin API, on the console's behalf ----------
@@ -533,11 +578,9 @@ export class SeedersService {
   async removeTorrent(id: number, infoHash: string, keepData = false): Promise<void> {
     const seeder = await this.requireSeeder(id);
     const suffix = keepData ? '?keepData=1' : '';
-    const res = await this.call(
-      seeder,
-      `/api/torrents/${encodeURIComponent(infoHash)}${suffix}`,
-      { method: 'DELETE' },
-    );
+    const res = await this.call(seeder, `/api/torrents/${encodeURIComponent(infoHash)}${suffix}`, {
+      method: 'DELETE',
+    });
     if (res.status === 404) throw new NotFoundException('the seeder does not hold that torrent');
   }
 

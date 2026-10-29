@@ -315,13 +315,29 @@ describe('seeder proxy', () => {
     expect(row.headroomBytes).toBe(35 * 1024 ** 3);
   });
 
-  it('refuses to update the software unless the deployment enabled it', async () => {
+  it('refuses to update a node this host does not run', async () => {
     const res = await agent
       .post(`/api/seeders/${seederId}/update`)
       .set('x-csrf-token', csrf)
+      .expect(400);
+    expect(res.body.message).toContain('own node');
+    await agent.post('/api/seeders/9999/update').set('x-csrf-token', csrf).expect(404);
+  });
+
+  it('refuses to update the host node unless the deployment enabled it', async () => {
+    // The pinned node is the one whose URL host is SEEDER_SERVICE — the container
+    // this console runs in. No request reaches it: the capability check comes
+    // before the job starts.
+    const { body } = await agent
+      .post('/api/seeders')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'self', url: 'http://seeder:8085' })
+      .expect(201);
+    const res = await agent
+      .post(`/api/seeders/${body.id}/update`)
+      .set('x-csrf-token', csrf)
       .expect(503);
     expect(res.body.message).toContain('SEEDER_UPDATE');
-    await agent.post('/api/seeders/9999/update').set('x-csrf-token', csrf).expect(404);
   });
 
   it('plans and applies a catalogue push without removing anything', async () => {

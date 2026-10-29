@@ -34,20 +34,24 @@
 .cluster--center {
   justify-content: center;
 }
+/* Title first, actions beneath it, both on the inline-start edge. The eye starts
+ * at the heading, so the verbs belong under it rather than in the far corner —
+ * and that is the order the narrow layout already used, so one rule now serves
+ * both widths. `align-items: stretch` keeps the lede full width; the cluster
+ * hugs the start by itself. */
 .page-head {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-4);
-  flex-wrap: wrap;
 }
 .page-head > div {
-  flex: 1 1 320px;
   min-width: 0;
 }
 .page-head > .btn,
 .page-head > .cluster {
   flex: 0 0 auto;
+  align-self: flex-start;
 }
 .panel-head {
   display: flex;
@@ -2131,9 +2135,6 @@ button.chip[aria-pressed='true'] {
   .editor-actions {
     margin-inline: calc(var(--space-4) * -1);
     padding-inline: var(--space-4);
-  }
-  .page-head {
-    align-items: flex-start;
   }
   .page-head > .btn,
   .page-head > .cluster {
