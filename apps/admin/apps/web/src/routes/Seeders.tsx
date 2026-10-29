@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
-import { navigate } from '../lib/router';
+import { linkProps, navigate } from '../lib/router';
 import { bytes } from '../lib/format';
 import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
@@ -11,10 +11,22 @@ import { Chip, Notice } from '../components/Chip';
 import { NodeCard } from '../components/NodeCard';
 import type { NodeMetric } from '../components/NodeCard';
 import { Icon } from '../components/icons';
+import { CopyLine } from '../components/CopyLine';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { Panel } from '../components/Panel';
 import { FormModal } from '../components/FormModal';
 import { SkeletonRows } from '../components/Skeleton';
 import type { Seeder } from '../lib/types-seeders';
+
+/**
+ * The install command, copy-paste rather than paraphrased. Defaults are the script's:
+ * port 8085, admin user `admin`, peer port 6881, and no disk cap unless --disk is
+ * passed. ADMIN_PASS is deliberately omitted — the script generates one and prints
+ * it, which is the only moment the operator can read it.
+ */
+const INSTALL_COMMAND =
+  'curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder';
+const FIREWALL_COMMAND = 'ufw allow 8085/tcp && ufw allow 6881/tcp && ufw allow 6881/udp';
 
 function statusTone(status: Seeder['status']): 'ok' | 'bad' | 'notice' {
   return status === 'online' ? 'ok' : status === 'offline' ? 'bad' : 'notice';
@@ -45,6 +57,8 @@ export function Seeders(): ReactElement {
   const [completing, setCompleting] = useState(false);
   /** Shown after a bulk top-up that had to stop at the 90% cap. */
   const [completeNote, setCompleteNote] = useState<string | null>(null);
+  /** The bulk push runs on every node, so it asks before it starts. */
+  const [confirmingComplete, setConfirmingComplete] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -174,6 +188,7 @@ export function Seeders(): ReactElement {
    * silent.
    */
   async function makeComplete(): Promise<void> {
+    setConfirmingComplete(false);
     setCompleting(true);
     setError(null);
     setMessage(null);
@@ -243,7 +258,7 @@ export function Seeders(): ReactElement {
           <Button
             variant="secondary"
             busy={completing}
-            onClick={() => void makeComplete()}
+            onClick={() => setConfirmingComplete(true)}
           >
             {t('seeders.complete')}
           </Button>
@@ -292,7 +307,7 @@ export function Seeders(): ReactElement {
                 />
               )}
             </Field>
-            <Field label={t('seeders.adminUser')} hint={t('torrents.credentialsHint')}>
+            <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsHint')}>
               {(id) => (
                 <Input
                   id={id}
@@ -322,6 +337,23 @@ export function Seeders(): ReactElement {
               </label>
               <p className="fine-print">{t('seeders.fillOnAddHint')}</p>
             </div>
+
+            {/* The same disclosure TURN uses, because "install it first" is the same
+                problem: the command is copy-paste, and the password is printed once. */}
+            <details>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+                {t('seeders.deployTitle')}
+              </summary>
+              <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
+                <p className="body muted">{t('seeders.deployHint')}</p>
+                <CopyLine value={INSTALL_COMMAND} label={t('help.copy')} />
+                <CopyLine value={FIREWALL_COMMAND} label={t('help.copy')} />
+                <p className="fine-print">{t('seeders.deployNote')}</p>
+                <a className="fine-print" {...linkProps('/help')}>
+                  {t('seeders.deployMore')}
+                </a>
+              </div>
+            </details>
         </FormModal>
       ) : null}
 
@@ -378,6 +410,17 @@ export function Seeders(): ReactElement {
               )}
             </Field>
         </FormModal>
+      ) : null}
+
+      {confirmingComplete ? (
+        <ConfirmModal
+          title={t('seeders.completeTitle')}
+          body={t('seeders.completeBody')}
+          confirmLabel={t('seeders.completeConfirm')}
+          busy={completing}
+          onClose={() => setConfirmingComplete(false)}
+          onConfirm={() => void makeComplete()}
+        />
       ) : null}
 
       {seeders === null ? (

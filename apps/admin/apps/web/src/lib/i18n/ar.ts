@@ -108,6 +108,12 @@ export const ar: Catalogue = {
   'seeders.lede':
     'خادم التوزيع حاسوب مستقلّ يحتفظ بملفات التلاوات ويبثّها إلى المستمعين عبر التورنت. اللوحة لا تخزّن الصوت بنفسها: تسجّل عنوان كل خادم وبيانات دخوله، وتفحص حالته، وتدير ما يحمله من تلاوات.',
   'seeders.add': 'إضافة خادم توزيع',
+  'seeders.deployTitle': 'تحتاج خادمًا أولًا؟ ثبّت واحدًا',
+  'seeders.deployHint':
+    'ثبّت الخادم على جهاز Linux ثم أدخل عنوانه وبيانات الدخول في هذا النموذج.',
+  'seeders.deployNote':
+    'يطبع سكربت التثبيت كلمة المرور في آخر التثبيت، فانسخها إلى الحقلين أعلاه. ولتحديد حصة، أضف إلى الأمر --disk 500؛ وبدونها يعمل الخادم بلا حدّ حتى تمتلئ مساحة القرص.',
+  'seeders.deployMore': 'اقرأ الشرح الكامل في صفحة المساعدة',
   'seeders.cancel': 'إلغاء',
   'seeders.addSubmit': 'إضافة',
   'seeders.pollAll': 'افحص الكل الآن',
@@ -127,6 +133,10 @@ export const ar: Catalogue = {
   'seeders.credentialsMissing': 'غير مخزّنة',
   'seeders.statusHeading': 'الحالة',
   'seeders.complete': 'أضف التلاوات الناقصة إلى كل الخوادم',
+  'seeders.completeTitle': 'أضف التلاوات الناقصة إلى كل الخوادم؟',
+  'seeders.completeBody':
+    'يقارن كل خادم في القائمة بالفهرس المنشور، ثم يضيف إليه التلاوات التي تنقصه فقط، ويتوقف عند 90% من حصته. لا يحذف شيئًا مما يحمله الخادم، ويتخطّى الخادم غير المتصل ويذكر ذلك بعد الانتهاء.',
+  'seeders.completeConfirm': 'أضف',
   'seeders.completeDone': 'أُضيفت {added} تلاوة.',
   'seeders.completeSkipped': 'تُركت {count} تلاوة: الخادم سيتجاوز 90% من حصته.',
   'seeders.completeFailed': 'تعذّر إكمال الخوادم.',
@@ -333,9 +343,6 @@ export const ar: Catalogue = {
   'turns.openHint': 'فتح سجل الخادم',
   'seeders.manage': 'التورنت',
   'torrents.backToSeeders': 'كل خوادم التوزيع',
-  'torrents.credentialsHint':
-    'هذه بيانات دخول خادم التوزيع نفسه، كما يطبعها سكربت التثبيت أو كما هي في docker-compose.yml الخاص بالخادم. ليست حسابك في هذه اللوحة؛ ودونها تفحص اللوحة حالة الخادم فقط، ولا تدير تورنتاته.',
-
   'turns.host': 'المضيف',
   'turns.hostHint': 'اسم DNS أو عنوان IP لخادم TURN — سجل A عادي غير مُمرَّر عبر Cloudflare.',
   'turns.port': 'المنفذ',

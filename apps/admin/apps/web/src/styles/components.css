@@ -2043,6 +2043,10 @@ button.chip[aria-pressed='true'] {
   padding: var(--space-3);
   overflow-x: auto;
   white-space: pre;
+  /* A command reads left to right in both locales: without this the block starts
+     scrolled to the end in an RTL page, showing the tail of the command. */
+  direction: ltr;
+  text-align: start;
 }
 
 /* ---------- callouts ---------- */

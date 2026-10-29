@@ -103,6 +103,12 @@ export const en = {
   'seeders.lede':
     'A node is a machine that keeps the recitation files and streams them to listeners over BitTorrent. The dashboard stores no audio: you register each node’s address and credentials here, and it watches status and manages what the node holds.',
   'seeders.add': 'Add seeder',
+  'seeders.deployTitle': 'Need a node first? Install one',
+  'seeders.deployHint':
+    'Install the node on a Linux machine, then enter its address and credentials here.',
+  'seeders.deployNote':
+    'The install script prints the admin password at the end — copy it into the two fields above. Add --disk 500 to cap the node at that many gigabytes; without it the node fills the disk.',
+  'seeders.deployMore': 'Read the full guide on the help page',
   'seeders.cancel': 'Cancel',
   'seeders.addSubmit': 'Add',
   'seeders.pollAll': 'Probe all now',
@@ -123,6 +129,10 @@ export const en = {
   'seeders.credentialsMissing': 'Not stored',
   'seeders.statusHeading': 'Status',
   'seeders.complete': 'Add missing recitations to all nodes',
+  'seeders.completeTitle': 'Add the missing recitations to every node?',
+  'seeders.completeBody':
+    'Each node is compared with the published catalogue and receives only the recitations it is missing, stopping at 90% of its quota. Nothing it already holds is deleted; offline nodes are skipped and reported when it finishes.',
+  'seeders.completeConfirm': 'Add',
   'seeders.completeDone': 'Added {added} recitation(s).',
   'seeders.completeSkipped':
     '{count} recitation(s) left out: the node would pass 90% of its quota.',
@@ -333,9 +343,6 @@ export const en = {
   'turns.openHint': 'Open the server history',
   'seeders.manage': 'Torrents',
   'torrents.backToSeeders': 'All seeders',
-  'torrents.credentialsHint':
-    'These are the node’s own credentials, as the install script prints them or as set in the node’s docker-compose.yml. Not your dashboard account; without them the dashboard can only read status, not manage torrents.',
-
   'turns.host': 'Host',
   'turns.hostHint':
     'The DNS name or IP of the TURN server — a plain A record, not proxied through Cloudflare.',

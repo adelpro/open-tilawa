@@ -161,6 +161,8 @@ logical properties.
 - Use logical properties: `inset-inline-start`, `border-inline-end`, `padding-inline`.
 - A physical side is a bug in an RTL page: `left`, `right` and `inset 3px 0` draw the
   marker on the wrong edge. Pinned bars, accents and dividers are `inline-start`/`end`.
+- Code blocks, URLs and identifiers stay LTR even in an RTL page (`.code-line` sets
+  `direction: ltr`), otherwise a scrolling block opens on the tail of the command.
 - Arabic heading: `letter-spacing: 0`, taller leading (1.6–1.8).
 - No negative tracking on Arabic.
 - `html[lang='ar']` overrides `--font-sans` with `--font-arabic`.
