@@ -83,14 +83,14 @@ services:
       UPLOAD_LIMIT_KBPS: ${UPLOAD_LIMIT_KBPS:-0}
       DOWNLOAD_LIMIT_KBPS: ${DOWNLOAD_LIMIT_KBPS:-0}
       ADMIN_UI: ${ADMIN_UI:-1}
-      # Stamped into /health so the dashboard can tell which commit a node runs.
+      # Stamped into /health so the console can tell which commit a node runs.
       # Without it the fleet compares versions and the sha column reads "dev".
       BUILD_SHA: ${GIT_SHA:-dev}
     volumes:
       - seed_downloads:/data/downloads
       - seed_torrents:/data/torrents
     ports:
-      # Loopback only: the dashboard reaches the seeder over the compose network,
+      # Loopback only: the console reaches the seeder over the compose network,
       # so the admin API (which can add and delete torrents) has no business on
       # every interface.
       - "127.0.0.1:8085:8085" 
@@ -143,7 +143,7 @@ services:
     volumes:
       - admin_data:/data
       # A socket mount is root-equivalent on the host — that is the cost of
-      # "update the seeder from the dashboard", and it is why the endpoint is
+      # "update the seeder from the console", and it is why the endpoint is
       # admin-only, CSRF-guarded, audited, and fixed to one compose service.
       - /var/run/docker.sock:/var/run/docker.sock
       # Read-only source tree: the compose file and the seeder build context.

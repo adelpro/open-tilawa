@@ -4,12 +4,12 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 /**
  * Routing without a routing library.
  *
- * The dashboard has a dozen screens, no nested layouts and no data loaders on
+ * The console has a dozen screens, no nested layouts and no data loaders on
  * navigation, so `history.pushState` plus `popstate` is the whole requirement —
  * and it keeps the bundle at React and nothing else. `BASE` is where the edge
  * mounts the SPA.
  */
-export const BASE = '/dashboard';
+export const BASE = '/console';
 
 function normalise(pathname: string): string {
   if (!pathname.startsWith(BASE)) return pathname === '/' ? BASE : pathname;
@@ -37,10 +37,10 @@ export function useRouter(): {
   }, []);
 
   // Segments after the base, so a screen can read its own parameters:
-  // `/dashboard/profiles/7` → ["profiles", "7"].
+  // `/console/profiles/7` → ["profiles", "7"].
   //
   // The base is stripped only when it is there. Mail links point at
-  // `/reset-password/<token>` and `/activate/<token>` — off the dashboard mount on
+  // `/reset-password/<token>` and `/activate/<token>` — off the console mount on
   // purpose, because those tokens arrive before anyone is signed in — and slicing
   // ten characters off a path that never had them produced garbage segments, so
   // both links landed on the sign-in screen with the token thrown away.

@@ -112,9 +112,9 @@ function Screens(): ReactElement {
     if (!user) return;
     const target = consolePathFor(user.role);
     if (!target) return;
-    if (first === 'admin' && target !== '/dashboard/admin') {
+    if (first === 'admin' && target !== '/console/admin') {
       navigate(target, { replace: true });
-    } else if (first === 'superadmin' && target !== '/dashboard/superadmin') {
+    } else if (first === 'superadmin' && target !== '/console/superadmin') {
       navigate(target, { replace: true });
     }
   }, [first, user]);
@@ -221,9 +221,9 @@ function Screens(): ReactElement {
         <div className="shell__bar">
           <a
             className="shell__brand"
-            href="/dashboard"
+            href="/console"
             onClick={(event) => {
-              go('/dashboard')(event);
+              go('/console')(event);
             }}
           >
             <BrandLabel version={version} />
@@ -238,9 +238,9 @@ function Screens(): ReactElement {
       <header className="shell__topbar">
         <a
           className="shell__brand"
-          href="/dashboard"
+          href="/console"
           onClick={(event) => {
-            go('/dashboard')(event);
+            go('/console')(event);
           }}
         >
           <BrandLabel version={version} />
@@ -334,10 +334,10 @@ function Screen({
   if (first === 'status') return <Status />;
   if (first === 'help') return <Help />;
   const consolePath = consolePathFor(role);
-  if (first === 'admin' && consolePath === '/dashboard/admin') {
+  if (first === 'admin' && consolePath === '/console/admin') {
     return <AdminConsole isSuper={false} />;
   }
-  if (first === 'superadmin' && consolePath === '/dashboard/superadmin') {
+  if (first === 'superadmin' && consolePath === '/console/superadmin') {
     return <AdminConsole isSuper />;
   }
   return <Seeders />;
@@ -476,8 +476,8 @@ function NavLink({
 }): ReactElement {
   const { path } = useRouter();
   const active =
-    to === '/dashboard'
-      ? path === '/dashboard' || path.startsWith('/dashboard/profiles')
+    to === '/console'
+      ? path === '/console' || path.startsWith('/console/profiles')
       : path === to || path.startsWith(`${to}/`);
   return (
     <a

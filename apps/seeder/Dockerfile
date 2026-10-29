@@ -4,7 +4,7 @@ LABEL maintainer="Adelpro <adelpro@gmail.com>"
 LABEL name="open-tilawa-seeder"
 LABEL version="1.4.3"
 
-# Stamped into /health so the dashboard can tell a node's release from its image.
+# Stamped into /health so the console can tell a node's release from its image.
 ARG BUILD_SHA=dev
 ENV BUILD_SHA=${BUILD_SHA}
 

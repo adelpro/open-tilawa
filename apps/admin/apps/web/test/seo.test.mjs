@@ -71,7 +71,7 @@ describe('crawler files', () => {
   it('writes robots.txt that disallows the app and names the sitemap', () => {
     const robots = readFileSync(join(dist, 'robots.txt'), 'utf-8');
     assert.match(robots, /^User-agent: \*$/m);
-    assert.match(robots, /^Disallow: \/dashboard$/m);
+    assert.match(robots, /^Disallow: \/console$/m);
     assert.match(robots, /^Disallow: \/api\/$/m);
     assert.match(robots, new RegExp(`^Sitemap: ${data.site}/sitemap\\.xml$`, 'm'));
     // A robots.txt that is HTML is what the site served before this phase.
@@ -159,7 +159,7 @@ describe('the edge no longer answers everything with the app', () => {
   it('falls back to the shell only for app routes', () => {
     assert.match(
       conf,
-      /location ~ \^\/\(dashboard\|reset-password\|activate\|2fa\|setup\|oauth\|about\|privacy\|terms\|signin\|signup\)\(/,
+      /location ~ \^\/\(console\|reset-password\|activate\|2fa\|setup\|oauth\|about\|privacy\|terms\|signin\|signup\)\(/,
     );
   });
 

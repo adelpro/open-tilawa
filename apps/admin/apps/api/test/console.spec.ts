@@ -1,7 +1,7 @@
 import { bootHarness, type Harness } from './harness';
 
 /**
- * The dashboard's own surface, driven over HTTP.
+ * The console's own surface, driven over HTTP.
  *
  * The point of this suite is the session plumbing every screen depends on: that
  * the CSRF pair actually refuses a mutation, and that the endpoints the SPA
@@ -9,7 +9,7 @@ import { bootHarness, type Harness } from './harness';
  * surface does not.
  */
 
-describe('dashboard api', () => {
+describe('console api', () => {
   let h: Harness;
   let agent: ReturnType<Harness['agent']>;
   const account = { email: 'writer@example.com', password: 'Password123' };
@@ -20,7 +20,7 @@ describe('dashboard api', () => {
     agent = h.agent();
     await agent
       .post('/api/auth/local/signin')
-      .set('X-Fingerprint', 'dashboard-a')
+      .set('X-Fingerprint', 'console-a')
       .send({ user: account })
       .expect(200);
   });

@@ -13,5 +13,5 @@ export const CSRF_HEADER = 'x-csrf-token';
 /** Methods that change state. Everything else is exempt: a GET must never mutate. */
 export const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/** Long enough that a dashboard tab keeps it across a working day. */
+/** Long enough that a console tab keeps it across a working day. */
 export const CSRF_TTL_MS = 12 * 60 * 60 * 1000;

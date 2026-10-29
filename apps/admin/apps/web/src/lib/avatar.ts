@@ -9,7 +9,7 @@
  * serial numbers into our database.
  */
 
-/** The edge we store. A 512 px square is sharp at the largest size the dashboard draws. */
+/** The edge we store. A 512 px square is sharp at the largest size the console draws. */
 export const AVATAR_EDGE = 512;
 
 /** Matches the server's cap: this file lands at 40–90 KB, so the margin is wide. */

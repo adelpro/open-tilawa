@@ -135,7 +135,7 @@ publishes the admin port and the peer port `6881` (TCP+UDP) and keeps
 `/data/torrents` and `/data/downloads` on separate host volumes, so a recreate or
 a Watchtower update never discards downloaded audio.
 
-Then add to dashboard:
+Then add to console:
 1. Go to https://admin-tilawa.quran.us.kg
 2. Navigate to **Seeders** → **Add Seeder**
 3. Name: server hostname
@@ -144,7 +144,7 @@ Then add to dashboard:
    is missing as soon as it is registered
 
 The node's version, build SHA, disk, quota and headroom appear on the seeders
-screen after the first probe. **Unlink** removes the node from the dashboard only;
+screen after the first probe. **Unlink** removes the node from the console only;
 the node keeps seeding.
 
 ### TURN Server (Native)
@@ -153,7 +153,7 @@ the node keeps seeding.
 curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type turn --turn-realm turn.quran.us.kg --turn-user opentilawa --turn-pass YOUR_PASSWORD
 ```
 
-Then add to dashboard:
+Then add to console:
 1. Go to https://admin-tilawa.quran.us.kg
 2. Navigate to **TURN Servers** → **Add TURN Server**
 3. Name: `hostname-turn`

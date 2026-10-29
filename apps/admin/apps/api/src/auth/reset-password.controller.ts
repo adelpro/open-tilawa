@@ -4,7 +4,7 @@ import { ResetPasswordService } from './reset-password.service';
 import { ResetPasswordDTO, SendResetEmailDTO } from './dtos/reset-password.dto';
 
 /**
- * The public forgot-password routes the dashboard links to. Both answers are
+ * The public forgot-password routes the console links to. Both answers are
  * generic on purpose — see `ResetPasswordService`.
  */
 @Controller('reset-password')

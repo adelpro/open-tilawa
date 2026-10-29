@@ -1,8 +1,8 @@
 # Admin nodes — provision, operate, release
 
-The dashboard is one artefact with three containers. This file is the operator's
+The console is one artefact with three containers. This file is the operator's
 half: what to run, what to put in `.env`, and how to tell a broken node from a
-broken dashboard.
+broken console.
 
 ## The stack
 
@@ -15,7 +15,7 @@ broken dashboard.
 | `turn`      | coturn (STUN/TURN)                                | host networking, `3478` |
 
 Only the edge is published. The seeder's admin port is loopback-bound on purpose:
-the dashboard reaches it over the compose network (`http://seeder:8085`), so it
+the console reaches it over the compose network (`http://seeder:8085`), so it
 never needs to be reachable from outside.
 
 ## Environment
@@ -40,7 +40,7 @@ and the routes that need mail (activation, password reset, email 2FA) answer
 Root `.env` feeds the seeder and TURN containers:
 
 - `ADMIN_USER`, `ADMIN_PASS` — the seeder's Basic-auth credentials. `ADMIN_PASS`
-  is also what you enter in the dashboard's seeder row; both must agree.
+  is also what you enter in the console's seeder row; both must agree.
 - `TURN_REALM`, `TURN_USERNAME`, `TURN_PASSWORD`, `TURN_EXTERNAL_IP`.
 
 ## Provisioning a seeder node
@@ -50,7 +50,7 @@ Root `.env` feeds the seeder and TURN containers:
    compose default `change-me-in-prod` is a placeholder, not a credential).
 3. `docker compose up -d --build seeder`
 4. `curl -s http://127.0.0.1:8085/health` → `{"status":"ok", ...}`
-5. In the dashboard, **Seeders → Add seeder**: URL `http://seeder:8085` when it
+5. In the console, **Seeders → Add seeder**: URL `http://seeder:8085` when it
    runs on the same compose network, or `http://<host>:8085` for a remote node
    whose port you have opened deliberately. Enter the same admin user/password.
 6. The status chip turns **Online** within a minute (the row's `/health` is
@@ -65,9 +65,9 @@ keep what is stored; **Clear credentials** removes them).
 1. Set `TURN_REALM`, `TURN_USERNAME`, `TURN_PASSWORD`, `TURN_EXTERNAL_IP`.
 2. `docker compose -f docker-compose.turn.yml up -d`
 3. Open `3478/udp`, `3478/tcp`, `5349/tcp` and `49160:49200/udp`.
-4. Register it in the dashboard as `turn:<host>:3478`.
+4. Register it in the console as `turn:<host>:3478`.
 
-The dashboard probes each server with a real STUN binding request every five
+The console probes each server with a real STUN binding request every five
 minutes (and once at boot), storing status, latency and a 24-hour history
 (288 checks). **Online means the UDP path answered a binding request with our
 transaction id** — not that a TCP port was open. Plain `turn:` over UDP only; a
@@ -80,7 +80,7 @@ The seeder reports `version`, `sha` and its free disk in `/health`; the Seeders
 screen stores them on every probe, so the row tells you which release a node
 runs and whether it has room for the next release.
 
-**From the dashboard** — open the node's own screen (**Seeders →** click the row)
+**From the console** — open the node's own screen (**Seeders →** click the row)
 and use *Update software*. Lifecycle actions live there, not on the list row: the
 list is for the fleet's state, that screen is for one node. The action is
 intentionally narrow and off by default:
@@ -110,7 +110,7 @@ node is updated by hand.
 cd /opt/tilawa-seeder && docker compose pull && docker compose up -d
 ```
 
-The dashboard's own Update button remains local-only: it drives the Docker socket
+The console's own Update button remains local-only: it drives the Docker socket
 of the host the admin runs on, not a remote node's.
 
 Tag a release (`v1.21.0`) to publish `ghcr.io/adelpro/open-tilawa-seeder:1.21.0`
@@ -119,7 +119,7 @@ pin `SEEDER_IMAGE` to that tag for reproducible rollbacks.
 
 ## Node limits (quota and bandwidth)
 
-A node enforces its own limits — a dashboard-side cap would only be a wish:
+A node enforces its own limits — a console-side cap would only be a wish:
 
 - `DISK_QUOTA_GB=150` (or `MAX_DISK_BYTES`) caps what the node holds. The check
   runs twice: the magnet's `xl` before adding, and the real length when metadata
@@ -128,15 +128,15 @@ A node enforces its own limits — a dashboard-side cap would only be a wish:
 - `UPLOAD_LIMIT_KBPS` / `DOWNLOAD_LIMIT_KBPS` throttle the WebTorrent client
   (0 = unlimited). The node's own admin page prints the cap beside the live rate.
 - `/health` reports `quotaBytes`, `usedBytes`, `headroomBytes` and `limits`; the
-  dashboard plans pushes against that headroom and skips a node that cannot fit
+  console plans pushes against that headroom and skips a node that cannot fit
   the releases.
 - `ADMIN_UI=0` hides the browsable admin page on a community node; `/api` stays
-  available to the dashboard.
+  available to the console.
 
 ## Trackers
 
-The tracker list lives in the dashboard (Reciters → **Trackers**): one `ws://` or
-`wss://` URL per line. Every magnet the dashboard builds — reciter save, catalogue
+The tracker list lives in the console (Reciters → **Trackers**): one `ws://` or
+`wss://` URL per line. Every magnet the console builds — reciter save, catalogue
 import, the torrent tool — announces to it, and saving rewrites existing
 catalogue magnets so no row keeps an old list. `tracker.quran.us.kg` is the one
 hostname; the old `trackerf` alias has been removed from DNS and the edge.

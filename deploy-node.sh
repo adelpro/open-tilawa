@@ -13,7 +13,7 @@ ADMIN_PASS="${ADMIN_PASS:-}"
 TURN_REALM="${TURN_REALM:-turn.quran.us.kg}"
 TURN_USER="${TURN_USER:-opentilawa}"
 TURN_PASS="${TURN_PASS:-}"
-# Empty means "no cap": the node reports its headroom and the dashboard plans
+# Empty means "no cap": the node reports its headroom and the console plans
 # against it. A number caps the node at that many gigabytes.
 DISK_GB="${DISK_GB:-}"
 UPLOAD_KBPS="${UPLOAD_KBPS:-0}"
@@ -48,7 +48,7 @@ done
 if [[ "$TYPE" == "seeder" && -z "$ADMIN_PASS" ]]; then
   ADMIN_PASS="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)"
   echo "Generated ADMIN_PASS for this node: $ADMIN_PASS"
-  echo "Store it now — the dashboard needs it to manage the node."
+  echo "Store it now — the console needs it to manage the node."
 fi
 
 echo "=== Tilawa Node Deployer ==="
@@ -161,7 +161,7 @@ fi
     fi
     echo ""
     echo "=== Next step ==="
-    echo "Add this seeder to your dashboard:"
+    echo "Add this seeder to your console:"
     echo "  1. Go to https://admin-tilawa.quran.us.kg"
     echo "  2. Navigate to Seeders"
     echo "  3. Click 'Add Seeder'"
@@ -224,7 +224,7 @@ EOF
     echo "Realm:     $TURN_REALM"
     echo ""
     echo "=== Next step ==="
-    echo "Add this TURN server to your dashboard:"
+    echo "Add this TURN server to your console:"
     echo "  1. Go to https://admin-tilawa.quran.us.kg"
     echo "  2. Navigate to TURN Servers"
     echo "  3. Click 'Add TURN Server'"
@@ -244,7 +244,7 @@ echo "To make services start on boot, run:"
 echo "  sudo systemctl enable docker"
 echo "  sudo systemctl start docker"
 echo ""
-echo "For the cloudflared tunnel (dashboard access), create a systemd service:"
+echo "For the cloudflared tunnel (console access), create a systemd service:"
 echo "  sudo cp /home/adelpro/.cloudflared/tilawa-admin.service /etc/systemd/system/tilawa-admin-tunnel.service"
 echo "  sudo systemctl daemon-reload"
 echo "  sudo systemctl enable tilawa-admin-tunnel"

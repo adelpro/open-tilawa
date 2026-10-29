@@ -12,7 +12,7 @@ import createTorrent from 'create-torrent';
  * Regression: the admin server listed torrents for every method on
  * `/api/torrents`, so `POST` was swallowed by the inventory branch and the add
  * endpoint was unreachable over HTTP. These checks start the real script and
- * speak to it the way the dashboard does.
+ * speak to it the way the console does.
  *
  * The client side stays offline (empty torrent directory, no tracker traffic):
  * this is the HTTP contract, not swarm behaviour.

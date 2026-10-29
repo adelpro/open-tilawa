@@ -3,7 +3,7 @@
 ## Overview
 
 Open Tilawa is a Quran recitation player. The interface is a reading surface,
-not a dashboard: warm paper, single blue accent, hairline separators, and
+not a console: warm paper, single blue accent, hairline separators, and
 restrained motion. The register is "quiet desk" — closer to a printed mushaf
 than to a streaming app.
 

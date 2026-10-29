@@ -21,7 +21,7 @@ const REQUIRED_IN_PRODUCTION = ['COOKIE_JWT_SECRET', 'TEMP_JWT_SECRET', 'TILAWA_
 
 /**
  * Mail is a capability, not a boot requirement: an instance whose operator has
- * not configured a provider must still serve sign-in and the dashboard, and the
+ * not configured a provider must still serve sign-in and the console, and the
  * mailer already refuses loudly (503 + a warning) on the routes that need it.
  */
 const MAIL_KEYS = ['EMAIL', 'EMAIL_APP_SPECIFIC_PASS'] as const;

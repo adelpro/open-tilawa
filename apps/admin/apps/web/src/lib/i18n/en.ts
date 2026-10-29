@@ -64,7 +64,7 @@ export const en = {
   'turns.cancel': 'Cancel',
   'turns.addSubmit': 'Add',
   'turns.removeTitle': 'Remove this TURN server?',
-  'turns.removeBody': 'It leaves the dashboard and its history; the server keeps running.',
+  'turns.removeBody': 'It leaves the console and its history; the server keeps running.',
   'turns.removeConfirm': 'Remove',
   'turns.pollAll': 'Probe all now',
   'turns.poll': 'Probe',
@@ -98,7 +98,7 @@ export const en = {
 
   'seeders.title': 'Seeder nodes',
   'seeders.lede':
-    'A node is a machine that keeps the recitation files and streams them to listeners over BitTorrent. The dashboard stores no audio: you register each node’s address and credentials here, and it watches status and manages what the node holds.',
+    'A node is a machine that keeps the recitation files and streams them to listeners over BitTorrent. The console stores no audio: you register each node’s address and credentials here, and it watches status and manages what the node holds.',
   'seeders.add': 'Add seeder',
   'seeders.deployTitle': 'Need a node first? Install one',
   'seeders.deployHint':
@@ -119,7 +119,7 @@ export const en = {
   'seeders.unlinkConfirm': 'Unlink this node',
   'seeders.unlink': 'Unlink',
   'seeders.unlinkHint':
-    'Removes the node from this dashboard. The node keeps running and keeps seeding.',
+    'Removes the node from this console. The node keeps running and keeps seeding.',
   'seeders.name': 'Name',
   'seeders.url': 'URL',
   'seeders.urlHint': 'Base URL of the seeder, e.g. http://192.168.1.100:8085.',
@@ -290,17 +290,17 @@ export const en = {
   'help.seeder.step2':
     'Size the disk first. Every reciter is one torrent covering the whole mushaf — 1.3 to 1.7 GB — and partial hosting is not possible, so a 20 GB node holds roughly twelve. Set DISK_QUOTA_GB below the free space you actually have; a quota larger than the disk is a promise the machine cannot keep.',
   'help.seeder.step3':
-    'Set the admin credentials, the quota, a reserve, and the bandwidth caps in the root .env. The dashboard uses the credentials for every torrent operation on this node.',
+    'Set the admin credentials, the quota, a reserve, and the bandwidth caps in the root .env. The console uses the credentials for every torrent operation on this node.',
   'help.seeder.step4':
     'Build and start the seeder container. Publish 6881/tcp and 6881/udp — without the UDP mapping the node only ever dials out, so peers that cannot reach it see one fewer seeder.',
   'help.seeder.step5':
-    'Confirm the node answers its health check. It needs no credentials, and it reports version, disk, quota and headroom — the numbers the dashboard plans against.',
+    'Confirm the node answers its health check. It needs no credentials, and it reports version, disk, quota and headroom — the numbers the console plans against.',
   'help.seeder.step6':
     'To hand a .torrent over, copy it into the node. A torrent added through the console is stored the same way, so it survives a restart.',
   'help.seeder.step7':
     'Register it under Nodes with the same URL and credentials, then go to Reciters and tick the nodes that should carry each reciter. Placement is recorded: pending until the node confirms, failed if it never does, or if the node stops reporting it.',
   'help.seeder.step8':
-    'The dashboard never fills a node past 90 % of its quota. When a bulk top-up stops short it says how many reciters it left out, so an incomplete node is never silent.',
+    'The console never fills a node past 90 % of its quota. When a bulk top-up stops short it says how many reciters it left out, so an incomplete node is never silent.',
   'help.turn.title': 'Tutorial — a TURN server',
   'help.turn.step1':
     'Set the realm, credentials and public IP in the root .env. The realm is what the server calls itself; the IP is how peers outside your network reach it.',
@@ -308,7 +308,7 @@ export const en = {
   'help.turn.step3':
     'Open the signalling port and the relay range on the firewall: 3478 UDP and TCP for STUN/TURN, 5349 for TLS, and 49160–49200 UDP for relays.',
   'help.turn.step4':
-    'Register it under TURN servers as turn:<host>:3478. The dashboard probes it over STUN every five minutes and records latency, so "online" here means the UDP path answered — not just that a port was open.',
+    'Register it under TURN servers as turn:<host>:3478. The console probes it over STUN every five minutes and records latency, so "online" here means the UDP path answered — not just that a port was open.',
   'help.publish.title': 'Tutorial — publishing a release',
   'help.publish.step1':
     'Create the .torrent for the folder of audio (any torrent client can do it) and keep the folder where the seeder can read it.',
@@ -353,7 +353,7 @@ export const en = {
   'turns.transportTls': 'TLS (turns)',
   'turns.presetStandard': 'Standard — UDP 3478',
   'turns.presetTls': 'TLS — 5349',
-  'turns.urlPreview': 'The dashboard will register {url}.',
+  'turns.urlPreview': 'The console will register {url}.',
   'turns.urlPreviewEmpty': 'Fill in the host to see the address that gets registered.',
   'turns.deployTitle': 'Need a server first? Deploy one',
   'turns.deployHint':
@@ -465,7 +465,7 @@ export const en = {
   'reciters.trackers': 'Trackers',
   'reciters.trackersTitle': 'Tracker list',
   'reciters.trackersBody':
-    'One WebSocket tracker per line. Every magnet the dashboard builds announces to this list.',
+    'One WebSocket tracker per line. Every magnet the console builds announces to this list.',
   'reciters.trackersLabel': 'wss:// trackers',
   'reciters.trackersHint': 'Only ws:// or wss:// — browsers cannot announce to udp:// or http://.',
   'reciters.trackersEffect':
@@ -531,10 +531,10 @@ export const en = {
   'help.docsLink': 'Read them on GitHub',
   'help.seeders.title': 'Seeders',
   'help.seeders.body':
-    'Register seeder nodes with their host, port and Basic-auth credentials. The dashboard lists each node and can proxy its torrent inventory: add by magnet or infohash, drop what is no longer needed, or sync a reciter release in one action.',
+    'Register seeder nodes with their host, port and Basic-auth credentials. The console lists each node and can proxy its torrent inventory: add by magnet or infohash, drop what is no longer needed, or sync a reciter release in one action.',
   'help.turns.title': 'TURN servers',
   'help.turns.body':
-    'Register TURN servers and keep an eye on them: the dashboard probes each one over STUN every five minutes, records status and latency, and keeps the recent history so an outage is visible at a glance.',
+    'Register TURN servers and keep an eye on them: the console probes each one over STUN every five minutes, records status and latency, and keeps the recent history so an outage is visible at a glance.',
   'help.torrents.title': 'Torrents',
   'help.torrents.body':
     'Torrent work happens from the Torrents section: see what a seeder already holds, add new files for a release, and remove them when a release retires. Actions talk to the seeder directly — nothing to install client-side.',
@@ -598,7 +598,7 @@ export const en = {
   'terms.version': 'Terms of Service — v1.0',
   'terms.service.heading': 'The service',
   'terms.service.body':
-    'Tilawa Admin provides a dashboard for Quran audio distribution infrastructure. You use it at your own discretion. The service is provided "as is" without warranty of any kind.',
+    'Tilawa Admin provides a console for Quran audio distribution infrastructure. You use it at your own discretion. The service is provided "as is" without warranty of any kind.',
   'terms.account.heading': 'Your account',
   'terms.account.body':
     'You are responsible for keeping your credentials secure. One account per person.',
@@ -660,7 +660,7 @@ export const en = {
   'activate.ok': 'Account activated.',
   'activate.failedTitle': 'That did not work.',
   'activate.okBody': 'You are signed in. Your default profile is ready to use.',
-  'activate.dashboard': 'Go to your dashboard',
+  'activate.console': 'Go to your console',
   'activate.hint':
     'Activation links expire. Sign in with your email address to have a fresh one sent.',
   'activate.noToken': 'This link has no token in it. Open the link from your email again.',
@@ -836,13 +836,13 @@ export const en = {
   'landing.note': 'One login, two factors, one audit trail.',
   'landing.feature1.title': 'Seeders under control',
   'landing.feature1.body':
-    'Add a seeder node, watch its health and its speeds, and manage its torrents without leaving the dashboard.',
+    'Add a seeder node, watch its health and its speeds, and manage its torrents without leaving the console.',
   'landing.feature2.title': 'TURN, always watched',
   'landing.feature2.body':
-    'The dashboard probes every TURN server over STUN every five minutes and keeps the latency history, so an outage is a fact, not a surprise.',
+    'The console probes every TURN server over STUN every five minutes and keeps the latency history, so an outage is a fact, not a surprise.',
   'landing.steps.title': 'Three steps, once.',
   'landing.step1': 'Deploy a seeder or TURN node with one script.',
-  'landing.step2': 'Register it in the dashboard with its address.',
+  'landing.step2': 'Register it in the console with its address.',
   'landing.step3': 'Manage torrents and watch health from your account.',
   'landing.banner.title': 'One console. Every node.',
   'app.tagline': 'The Quran audio distribution control room.',

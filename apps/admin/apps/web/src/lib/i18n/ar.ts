@@ -657,7 +657,7 @@ export const ar: Catalogue = {
   'activate.ok': 'تم تفعيل الحساب.',
   'activate.failedTitle': 'لم ينجح ذلك.',
   'activate.okBody': 'تم تسجيل دخولك. ملفك الافتراضي جاهز للاستخدام.',
-  'activate.dashboard': 'انتقل إلى لوحتك',
+  'activate.console': 'انتقل إلى لوحة التحكم',
   'activate.hint': 'روابط التفعيل تنتهي صلاحيتها. سجّل الدخول ببريدك ليُرسل إليك رابط جديد.',
   'activate.noToken': 'هذا الرابط لا يحتوي على رمز. افتح الرابط من بريدك مرة أخرى.',
   'activate.failed': 'تعذّر التفعيل.',

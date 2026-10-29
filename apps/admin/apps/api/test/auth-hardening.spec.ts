@@ -38,7 +38,7 @@ describe('auth hardening (audit train)', () => {
     await agent.post('/api/auth/signout').set('x-csrf-token', csrf).expect(200);
     await agent.get('/api/me').set('X-Fingerprint', 'harden-device').expect(401);
     // The old cookie jar still carries a dead CSRF cookie; the sign-in continues
-    // on a clean jar (the dashboards own a fresh tab after signout too).
+    // on a clean jar (the consoles own a fresh tab after signout too).
     const fresh = h.agent();
     const token = (await fresh.get('/api/csrf').expect(200)).body.token as string;
     await fresh

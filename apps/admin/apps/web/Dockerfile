@@ -16,7 +16,7 @@ RUN yarn workspace @tilawa-admin/core build && yarn workspace @tilawa-admin/web 
 FROM nginx:alpine
 # The nginx image's entrypoint renders /etc/nginx/templates/*.template through
 # envsubst into conf.d. Without this copy the container ran the stock config:
-# every SPA deep link (/dashboard/turns/1, a reload, a bookmark) answered 404,
+# every SPA deep link (/console/turns/1, a reload, a bookmark) answered 404,
 # and the CSP/referrer headers the template declares were never sent.
 COPY apps/web/templates/default.conf.template /etc/nginx/templates/default.conf.template
 ENV PORT=80

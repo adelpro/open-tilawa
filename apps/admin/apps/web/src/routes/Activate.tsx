@@ -54,7 +54,7 @@ export function Activate({ token: fromPath }: { token: string | null }): ReactEl
         {state === 'ok' ? (
           <>
             <Notice tone="ok">{t('activate.okBody')}</Notice>
-            <Button onClick={() => navigate('/')}>{t('activate.dashboard')}</Button>
+            <Button onClick={() => navigate('/')}>{t('activate.console')}</Button>
           </>
         ) : null}
 

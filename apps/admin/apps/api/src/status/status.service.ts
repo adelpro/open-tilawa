@@ -41,7 +41,7 @@ export interface ServiceOverview {
  * Service health with a timeline.
  *
  * Most of the stack is reached over HTTP — the public site, the tracker's /stats, the
- * admin API's /health and the dashboard — so an HTTP check answers for them.
+ * admin API's /health and the console — so an HTTP check answers for them.
  *
  * The GunDB relay is the exception: it speaks WebSocket at /gun and has no status
  * page at all, so a GET proves nothing. It is checked with a handshake, because that
@@ -102,7 +102,7 @@ export class StatusService {
       { name: 'Public site', url: 'https://tilawa.quran.us.kg/', kind: 'http' },
       { name: 'Tracker', url: 'https://tracker.quran.us.kg/stats', kind: 'http' },
       { name: 'Admin API', url: `http://127.0.0.1:${port}/api/health`, kind: 'http' },
-      { name: 'Admin dashboard', url: 'http://admin-web:80/', kind: 'http' },
+      { name: 'Admin console', url: 'http://admin-web:80/', kind: 'http' },
       { name: 'GunDB relay', url: 'wss://gundb-relay.quran.us.kg/gun', kind: 'ws' },
     ];
     const insert = this.db.prepare(

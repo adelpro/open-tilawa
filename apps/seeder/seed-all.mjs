@@ -12,7 +12,7 @@ import { readFileSync as readFile, statfsSync } from 'fs';
 /**
  * What this artefact is, stamped at build time.
  *
- * The dashboard compares it with the tag it expects, so "is this node running
+ * The console compares it with the tag it expects, so "is this node running
  * the release I just published?" is answerable without opening a shell on the
  * node. BUILD_SHA is set by the image workflow; SEEDER_VERSION falls back to the
  * package version, which the image already carries.
@@ -30,7 +30,7 @@ const BUILD_SHA = process.env.BUILD_SHA || 'dev';
 /**
  * Free/total bytes on the data volume.
  *
- * The dashboard plans assignments against this: a node with 40 GB left should
+ * The console plans assignments against this: a node with 40 GB left should
  * not be handed a 60 GB reciter. Reported as bytes so the client formats it.
  */
 /** Everything the node holds, by torrent length — the number the quota is about. */
@@ -51,7 +51,7 @@ import WebTorrent from 'webtorrent';
 const TORRENT_DIR = process.env.TORRENT_DIR || '/data/torrents';
 const DOWNLOAD_PATH = process.env.DOWNLOAD_PATH || '/app/downloads';
 const ADMIN_PORT = process.env.ADMIN_PORT || 8085;
-/** 0 = unlimited. Enforced here, on the node, because a dashboard-side cap is a promise. */
+/** 0 = unlimited. Enforced here, on the node, because a console-side cap is a promise. */
 const QUOTA_BYTES = quotaFromEnv();
 const DISK_RESERVE_BYTES = Math.floor(Number(process.env.DISK_RESERVE_GB || 1) * 1024 ** 3);
 /** A community node can keep the API and hide the browsable UI. */
@@ -364,7 +364,7 @@ const server = http.createServer((req, res) => {
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(payload));
     };
-    // A magnet that never resolves must fail visibly, not hang the dashboard.
+    // A magnet that never resolves must fail visibly, not hang the console.
     const timer = setTimeout(() => answer(504, { error: 'timed out waiting for torrent metadata' }), 20000);
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
@@ -443,7 +443,7 @@ const server = http.createServer((req, res) => {
    * POST /api/metadata { magnet } -> { name, infoHash, size, files, magnet }
    *
    * Resolves a magnet far enough to know what it is, then destroys it. The
-   * dashboard uses this to learn a release's size before adding it, and for the
+   * console uses this to learn a release's size before adding it, and for the
    * magnet converter, so it must not keep the data: `destroyStore` removes
    * whatever was fetched while the metadata handshake ran.
    */

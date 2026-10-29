@@ -1,4 +1,4 @@
-/** The shapes the API returns, as the dashboard consumes them. */
+/** The shapes the API returns, as the console consumes them. */
 
 export type ToolchainBuiltin = 'avoid-ai-writing' | 'remove-ai-marks' | 'fasaha' | 'voice-tune';
 export const TOOLCHAIN_BUILTINS = [

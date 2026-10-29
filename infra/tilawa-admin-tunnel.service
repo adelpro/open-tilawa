@@ -1,5 +1,5 @@
 [Unit]
-Description=Cloudflare Tunnel for Tilawa Admin Dashboard
+Description=Cloudflare Tunnel for Tilawa Admin Console
 After=network-online.target
 Wants=network-online.target
 

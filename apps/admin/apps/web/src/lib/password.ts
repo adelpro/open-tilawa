@@ -2,7 +2,7 @@
  * The password rules, mirrored from the API.
  *
  * `apps/api/src/auth/dtos/password.policy.ts` is the authority — it is what a signup,
- * a reset and a password change are all validated against. The dashboard needs the same
+ * a reset and a password change are all validated against. The console needs the same
  * numbers to say "eight characters" and to score a password as it is typed, so they are
  * repeated here; `test/password.test.mjs` reads the API file and fails if the two drift.
  */

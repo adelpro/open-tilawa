@@ -12,11 +12,11 @@ import { SQLITE_DB } from '../store/store.module';
 import { AuditRepository, isExpired, nextPlacementState, type Db } from '@tilawa-admin/core';
 import { updateSeederService } from './seeder-update';
 
-/** Seeder admin calls are bounded: a hung seeder must not hang the dashboard. */
+/** Seeder admin calls are bounded: a hung seeder must not hang the console. */
 const SEEDER_TIMEOUT_MS = 8000;
 
 /**
- * A seeder URL must be an http(s) origin. The dashboard makes server-side requests
+ * A seeder URL must be an http(s) origin. The console makes server-side requests
  * to it, so anything else (file:, gopher:) is a proxy primitive we do not need;
  * private hosts are legitimate here (nodes live inside the operator's network),
  * which is why this validates the scheme rather than the address.
@@ -62,7 +62,7 @@ export interface Seeder {
   /** How much more the node will accept right now (quota and disk combined). */
   headroomBytes: number | null;
   /**
-   * The node the dashboard itself runs. Pinned to the top of the fleet because
+   * The node the console itself runs. Pinned to the top of the fleet because
    * if it is down the site is dead, and recognised by its URL host matching
    * SEEDER_SERVICE rather than by a flag someone has to remember to set.
    */
@@ -167,7 +167,7 @@ export class SeedersService {
   }
 
   /**
-   * Adds the two facts that are not in the row: whether this is the dashboard's
+   * Adds the two facts that are not in the row: whether this is the console's
    * own node, and which version the deployment says it should be running.
    */
   private decorate(seeder: BaseSeeder): Seeder {
@@ -471,14 +471,14 @@ export class SeedersService {
     return { output: result.output, version: updated?.version ?? null };
   }
 
-  // ---------- proxy: the seeder's own admin API, on the dashboard's behalf ----------
+  // ---------- proxy: the seeder's own admin API, on the console's behalf ----------
 
   async inventory(id: number): Promise<SeederInventory> {
     const seeder = await this.requireSeeder(id);
     const res = await this.call(seeder, '/api/torrents', { method: 'GET' });
     const body = await this.json<SeederInventory>(res);
     // A wrong URL that happens to answer 200 (any web UI) must not reach the
-    // dashboard as a half-shaped object: the screen dereferences stats.torrents.
+    // console as a half-shaped object: the screen dereferences stats.torrents.
     if (!Array.isArray(body.torrents) || typeof body.stats !== 'object' || body.stats === null) {
       throw new BadGatewayException('the seeder answered, but not with a torrent inventory');
     }
@@ -565,7 +565,7 @@ export class SeedersService {
 
   /**
    * One HTTP call to the seeder, authenticated with the row's stored Basic
-   * credentials. Failures are translated at the boundary so the dashboard can
+   * credentials. Failures are translated at the boundary so the console can
    * tell "the node is unreachable" from "the node refused the credentials".
    */
   private async call(
@@ -620,7 +620,7 @@ function emptyToNull(value: string | null): string | null {
   return value.trim() === '' ? null : value;
 }
 
-/** `http://seeder:8085` is the node this dashboard manages, in its own project. */
+/** `http://seeder:8085` is the node this console manages, in its own project. */
 function isServiceHost(url: string, service: string): boolean {
   try {
     return new URL(url).hostname.toLowerCase() === service.toLowerCase();

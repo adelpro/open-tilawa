@@ -69,7 +69,7 @@ async function bootstrap(): Promise<void> {
     new DocumentBuilder()
       .setTitle('Tilawa Admin API')
       .setDescription(
-        'The HTTP API behind the Tilawa Admin dashboard. Authentication is a ' +
+        'The HTTP API behind the Tilawa Admin console. Authentication is a ' +
           'session cookie (POST /api/auth/local/signin). Every route except /api/health ' +
           'and the auth entry points requires one.',
       )

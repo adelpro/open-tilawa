@@ -6,7 +6,7 @@ import type { Db } from '@tilawa-admin/core';
  * Trackers a generated magnet announces to.
  *
  * They are configuration, not code: a new tracker domain is an edit here, and
- * every magnet the dashboard builds (reciter save, catalogue import, the torrent
+ * every magnet the console builds (reciter save, catalogue import, the torrent
  * tool) appends the same set. Web players can only use `ws://`/`wss://`; the
  * validator is strict so a `udp://` line cannot silently produce a magnet the
  * browser ignores.

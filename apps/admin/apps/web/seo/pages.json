@@ -17,18 +17,18 @@
         "features": [
           {
             "title": "Seeders under control",
-            "body": "Add a seeder node, watch its health and its speeds, and manage its torrents without leaving the dashboard."
+            "body": "Add a seeder node, watch its health and its speeds, and manage its torrents without leaving the console."
           },
           {
             "title": "TURN, always watched",
-            "body": "The dashboard probes every TURN server over STUN every five minutes and keeps the latency history, so an outage is a fact, not a surprise."
+            "body": "The console probes every TURN server over STUN every five minutes and keeps the latency history, so an outage is a fact, not a surprise."
           }
         ],
         "steps": {
           "title": "Three steps, once.",
           "items": [
             "Deploy a seeder or TURN node with one script.",
-            "Register it in the dashboard with its address.",
+            "Register it in the console with its address.",
             "Manage torrents and watch health from your account."
           ]
         },

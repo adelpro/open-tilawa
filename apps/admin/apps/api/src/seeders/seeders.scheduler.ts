@@ -7,7 +7,7 @@ import { SeedersService } from './seeders.service';
  *
  * The seeder rows are a snapshot: torrent count, disk, version, and now the
  * inventory behind every placement. Before this scheduler existed they were only
- * refreshed when an operator happened to act on a node, so the dashboard showed
+ * refreshed when an operator happened to act on a node, so the console showed
  * "22 torrents · 32.7 GB" for a node holding three.
  */
 @Injectable()

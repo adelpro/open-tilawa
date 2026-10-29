@@ -440,7 +440,7 @@
   background: var(--canvas);
   box-shadow: var(--shadow-premium);
 }
-/* The node this dashboard runs. Pinned to the top and washed, because if it is
+/* The node this console runs. Pinned to the top and washed, because if it is
    down the site is down — it should not look like one of the volunteers. */
 .node-card--pinned {
   background: var(--canvas-parchment);
@@ -1130,7 +1130,7 @@ button.chip[aria-pressed='true'] {
 
 /*
  * The public page. It is deliberately not a marketing template: same paper, same
- * hairlines, same type scale as the dashboard, because the product is one thing and
+ * hairlines, same type scale as the console, because the product is one thing and
  * its front door should not promise a different one.
  */
 .landing {

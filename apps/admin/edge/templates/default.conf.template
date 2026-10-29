@@ -51,7 +51,7 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 
-  # The dashboard: everything else.
+  # The console: everything else.
   location / {
     set $web_upstream http://admin-web:80;
     proxy_pass $web_upstream;

@@ -19,7 +19,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { TurnsService } from './turns.service';
 
 /**
- * Every route is dashboard-only: these verbs mutate infrastructure records,
+ * Every route is console-only: these verbs mutate infrastructure records,
  * so an unauthenticated mutation would let a stranger register or delete them.
  */
 @UseGuards(JWTAuthGuard, RoleGuard)

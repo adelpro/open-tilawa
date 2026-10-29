@@ -24,7 +24,7 @@ export interface Seeder {
   /** How much more it will accept right now (quota and disk combined). */
   headroomBytes: number | null;
   /**
-   * The node this dashboard runs, recognised by its URL host matching
+   * The node this console runs, recognised by its URL host matching
    * SEEDER_SERVICE. Pinned to the top: if it is down the site is down.
    */
   pinned: boolean;

@@ -1,5 +1,5 @@
 /**
- * The only place the dashboard talks to the API.
+ * The only place the console talks to the API.
  *
  * Two rules live here. Every request carries `credentials: 'include'` — the
  * session is an httpOnly cookie, so nothing in JS can hold it. And every

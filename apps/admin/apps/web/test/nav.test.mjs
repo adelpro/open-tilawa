@@ -31,19 +31,19 @@ describe('navigation by role', () => {
     const labels = navItemsFor('admin').map((item) => item.labelKey);
     assert.ok(labels.includes('nav.admin'));
     assert.equal(labels.includes('nav.superadmin'), false);
-    assert.equal(consolePathFor('admin'), '/dashboard/admin');
+    assert.equal(consolePathFor('admin'), '/console/admin');
   });
 
   it('gives a super admin only the super-admin console', () => {
     const labels = navItemsFor('super_admin').map((item) => item.labelKey);
     assert.ok(labels.includes('nav.superadmin'));
     assert.equal(labels.includes('nav.admin'), false);
-    assert.equal(consolePathFor('super_admin'), '/dashboard/superadmin');
+    assert.equal(consolePathFor('super_admin'), '/console/superadmin');
   });
 
   it('puts the console last, in its own group', () => {
     const items = navItemsFor('super_admin');
     assert.equal(items.at(-1)?.group, 'admin');
-    assert.equal(items.at(-1)?.to, '/dashboard/superadmin');
+    assert.equal(items.at(-1)?.to, '/console/superadmin');
   });
 });

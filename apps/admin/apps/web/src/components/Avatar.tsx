@@ -74,7 +74,7 @@ export function Avatar({
         alt=""
         width={size}
         height={size}
-        // Gravatar should see the request, not the dashboard URL it came from.
+        // Gravatar should see the request, not the console URL it came from.
         referrerPolicy="no-referrer"
         onError={() => setStep('monogram')}
       />

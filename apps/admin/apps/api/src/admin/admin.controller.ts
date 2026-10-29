@@ -22,7 +22,7 @@ import { AdminChangeRoleDTO, AdminCreateUserDTO } from './admin.dto';
 import { AdminActor, AdminService, PublicUser } from './admin.service';
 
 /**
- * `/admin` is the support surface; `/superadmin` in the dashboard maps onto the
+ * `/admin` is the support surface; `/superadmin` in the console maps onto the
  * same routes, and the difference is enforced per method rather than per path.
  *
  * `@Roles` is read from the handler by `RoleGuard`, and comparison is by rank, so

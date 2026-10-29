@@ -118,7 +118,7 @@ export function SignUp(): ReactElement {
         <p className="fine-print">
           {t('signup.haveOne')}{' '}
           <a
-            href="/dashboard/signin"
+            href="/console/signin"
             onClick={(event) => {
               event.preventDefault();
               navigate('/signin');

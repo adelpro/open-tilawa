@@ -6,7 +6,7 @@ import { TurnsService } from './turns.service';
  * The turn probe runs on its own: nobody should have to remember to press
  * "check" to learn a node went down. Every five minutes each registered server
  * gets one STUN binding probe; the outcome and its latency land in the history
- * the dashboard renders.
+ * the console renders.
  */
 @Injectable()
 export class TurnsScheduler {

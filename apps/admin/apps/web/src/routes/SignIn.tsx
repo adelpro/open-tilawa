@@ -10,7 +10,7 @@ import { Notice } from '../components/Chip';
 
 /**
  * Sign in. Four answers matter and each has its own destination:
- * 200 → the dashboard, 430 → the 2FA code screen, 403 → "activate first",
+ * 200 → the console, 430 → the 2FA code screen, 403 → "activate first",
  * 409 → this account belongs to a provider, and the message says which one.
  */
 export function SignIn(): ReactElement {
@@ -102,7 +102,7 @@ export function SignIn(): ReactElement {
           {t('auth.signIn.noAccount')}{' '}
           <a
             className="link"
-            href="/dashboard/signup"
+            href="/console/signup"
             onClick={(event) => {
               event.preventDefault();
               navigate('/signup');

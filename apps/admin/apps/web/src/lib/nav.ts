@@ -1,7 +1,7 @@
 import type { IconName } from '../components/icons';
 import type { MessageKey } from './i18n';
 
-/** The dashboard's role vocabulary, mirrored from the session payload. */
+/** The console's role vocabulary, mirrored from the session payload. */
 export type AppRole = 'user' | 'admin' | 'super_admin';
 
 export interface NavEntry {
@@ -21,25 +21,25 @@ export interface NavEntry {
  */
 export function navItemsFor(role: AppRole | null): NavEntry[] {
   const items: NavEntry[] = [
-    { to: '/dashboard/seeders', labelKey: 'nav.seeders', icon: 'monitor', group: 'workspace' },
-    { to: '/dashboard/turns', labelKey: 'nav.turns', icon: 'globe', group: 'workspace' },
-    { to: '/dashboard/reciters', labelKey: 'nav.reciters', icon: 'user', group: 'workspace' },
-    { to: '/dashboard/status', labelKey: 'nav.status', icon: 'monitor', group: 'workspace' },
-    { to: '/dashboard/tools', labelKey: 'nav.tools', icon: 'key', group: 'workspace' },
-    { to: '/dashboard/account', labelKey: 'nav.account', icon: 'settings', group: 'workspace' },
+    { to: '/console/seeders', labelKey: 'nav.seeders', icon: 'monitor', group: 'workspace' },
+    { to: '/console/turns', labelKey: 'nav.turns', icon: 'globe', group: 'workspace' },
+    { to: '/console/reciters', labelKey: 'nav.reciters', icon: 'user', group: 'workspace' },
+    { to: '/console/status', labelKey: 'nav.status', icon: 'monitor', group: 'workspace' },
+    { to: '/console/tools', labelKey: 'nav.tools', icon: 'key', group: 'workspace' },
+    { to: '/console/account', labelKey: 'nav.account', icon: 'settings', group: 'workspace' },
     { to: '/help', labelKey: 'nav.help', icon: 'globe', group: 'workspace' },
   ];
 
   if (role === 'admin') {
     items.push({
-      to: '/dashboard/admin',
+      to: '/console/admin',
       labelKey: 'nav.admin',
       icon: 'shield',
       group: 'admin',
     });
   } else if (role === 'super_admin') {
     items.push({
-      to: '/dashboard/superadmin',
+      to: '/console/superadmin',
       labelKey: 'nav.superadmin',
       icon: 'shield',
       group: 'admin',
@@ -51,7 +51,7 @@ export function navItemsFor(role: AppRole | null): NavEntry[] {
 
 /** The console URL for a role, or null when the role has no console. */
 export function consolePathFor(role: AppRole): string | null {
-  if (role === 'admin') return '/dashboard/admin';
-  if (role === 'super_admin') return '/dashboard/superadmin';
+  if (role === 'admin') return '/console/admin';
+  if (role === 'super_admin') return '/console/superadmin';
   return null;
 }

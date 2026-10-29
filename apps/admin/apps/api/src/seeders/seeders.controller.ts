@@ -20,7 +20,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { SeedersService } from './seeders.service';
 
 /**
- * Seeder nodes and the torrent operations the dashboard runs against them.
+ * Seeder nodes and the torrent operations the console runs against them.
  *
  * The torrent verbs are a proxy: credentials live on the seeder row, the call is
  * made server-side, and the browser never holds a seeder password.

@@ -2,7 +2,7 @@
   "name": "@tilawa-admin/web",
   "version": "1.26.4",
   "private": true,
-  "description": "Tilawa Admin dashboard — Vite + React.",
+  "description": "Tilawa Admin console — Vite + React.",
   "license": "MIT",
   "type": "module",
   "scripts": {

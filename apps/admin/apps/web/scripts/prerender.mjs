@@ -142,7 +142,7 @@ function body(copy) {
         </section>`
     : '';
   const cta = copy.cta
-    ? `<p class="cluster"><a class="btn btn--primary" href="/dashboard/signup">${escape(copy.cta)}</a><a class="btn btn--tertiary" href="/dashboard/signin">${escape(copy.secondary)}</a></p>`
+    ? `<p class="cluster"><a class="btn btn--primary" href="/console/signup">${escape(copy.cta)}</a><a class="btn btn--tertiary" href="/console/signin">${escape(copy.secondary)}</a></p>`
     : '';
   const note = copy.note ? `<p class="fine-print">${escape(copy.note)}</p>` : '';
 
@@ -212,11 +212,11 @@ ${urls}
 
 writeFileSync(
   join(DIST, 'robots.txt'),
-  `# The public pages are the only thing worth indexing. Everything under /dashboard is
+  `# The public pages are the only thing worth indexing. Everything under /console is
 # behind a session, and the API and MCP endpoint have nothing for a crawler.
 User-agent: *
 Allow: /$
-Disallow: /dashboard
+Disallow: /console
 Disallow: /api/
 Disallow: /mcp
 Disallow: /reset-password
@@ -244,7 +244,7 @@ writeFileSync(
 > ${data.pages[0].en.lede}
 
 The console itself requires an account. The pages below describe what it does and
-how it is run; \`/dashboard\`, the API and the MCP endpoint are not public.
+how it is run; \`/console\`, the API and the MCP endpoint are not public.
 
 ## Pages
 ${lines.join('\n')}
@@ -276,7 +276,7 @@ writeFileSync(
       // PNG on cream/teal palette; captured from the product, not mocks.
       screenshots: [
         {
-          src: '/screenshots/dashboard-wide.png',
+          src: '/screenshots/console-wide.png',
           sizes: '1280x720',
           type: 'image/png',
           form_factor: 'wide',

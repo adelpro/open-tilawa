@@ -2,13 +2,13 @@
  * The riwaya vocabulary: stored in Latin, shown in the reading language.
  *
  * The public app owns the display map (`apps/web/src/utils/riwaya.ts`); this list
- * is the same set, so anything the dashboard writes is something the reader can
+ * is the same set, so anything the console writes is something the reader can
  * name. Hafs, Warsh and Qalon are the three the pipeline actually carries — the
  * other two are here because the reader already knows how to render them.
  *
  * Stored values are not localised: `Hafs` is the value in the database, in the
  * torrent import script's whitelist and in the public catalogue, whatever the
- * dashboard happens to be showing.
+ * console happens to be showing.
  */
 export interface Riwaya {
   /** Stored value, exactly as the catalogue and the import scripts expect it. */

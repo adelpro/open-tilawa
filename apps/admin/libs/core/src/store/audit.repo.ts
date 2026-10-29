@@ -91,7 +91,7 @@ export class AuditRepository {
   }
 
   /**
-   * Aggregates for the (and only the) caller's dashboard (the same isolation rule
+   * Aggregates for the (and only the) caller's console (the same isolation rule
    * recentForUser enforces). Range is a whitelist: 7 | 30 | 90 days.
    * Day buckets are UTC days (SQLite date() on the ISO-8601 stamp), zero-filled —
    * a gap in the chart is "no requests", never a missing day.

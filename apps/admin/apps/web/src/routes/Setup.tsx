@@ -142,7 +142,7 @@ export function Setup(): ReactElement {
         <p className="fine-print">
           {t('setup.haveOne')}{' '}
           <a
-            href="/dashboard/signin"
+            href="/console/signin"
             onClick={(event) => {
               event.preventDefault();
               navigate('/signin');

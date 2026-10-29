@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 /**
- * The dashboard's password rules mirror the API's.
+ * The console's password rules mirror the API's.
  *
  * Two copies of a rule is a bug waiting to be found by a user, so this file makes the drift
  * loud: it reads `apps/api/src/auth/dtos/password.policy.ts` and fails if the length, the
@@ -47,13 +47,13 @@ describe('the rules match the API', () => {
       'Password123',
     ]) {
       const apiAccepts = pattern.test(sample);
-      const dashboardAccepts = ['length', 'upper', 'lower', 'digit'].every(
+      const consoleAccepts = ['length', 'upper', 'lower', 'digit'].every(
         (rule) => checkPassword(sample).find((check) => check.rule === rule)?.met,
       );
       assert.equal(
-        dashboardAccepts,
+        consoleAccepts,
         apiAccepts,
-        `${sample}: API ${apiAccepts}, dashboard ${dashboardAccepts}`,
+        `${sample}: API ${apiAccepts}, console ${consoleAccepts}`,
       );
     }
   });

@@ -9,7 +9,7 @@ import {
 } from '../src/lib/riwaya.ts';
 
 /**
- * The riwaya list is the dashboard's half of a contract the public app already
+ * The riwaya list is the console's half of a contract the public app already
  * implements (`apps/web/src/utils/riwaya.ts`): stored in Latin, shown in the
  * reading language. Three rules matter more than the words themselves — an
  * unclassified row stays unclassified, a legacy spelling that names a listed

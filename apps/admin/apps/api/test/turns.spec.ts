@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { bootHarness, type Harness } from './harness';
 
 /**
- * The TURN monitor surface, driven over HTTP like the dashboard drives it.
+ * The TURN monitor surface, driven over HTTP like the console drives it.
  *
  * Real STUN wires up a throwaway UDP responder, so "online" in these tests is
  * earned the same way it is in production: a Binding Request answered with the
