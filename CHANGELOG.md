@@ -1,5 +1,55 @@
 # Changelog
 
+## 1.7.0 — 2026-10-29
+
+Minor. App versions: **web 1.9.0**, **admin 1.27.0**, **seeder 1.4.3**.
+
+One icon language, one rhythm, one form anatomy — and the bugs that only showed
+up once the two apps were put side by side.
+
+### Changed
+
+- **One icon system.** Both apps take Phosphor through `components/icons.tsx` at
+  16, 20 or 24, `regular` weight, `fill` only as a state. The player's 17
+  hand-drawn glyphs, its four inline SVGs and the `▾ ✎` characters are gone;
+  `wifi-waiting` stays because Phosphor cannot animate its arcs.
+- **One spacing rhythm, in rem.** The 4px scale in both apps, six type steps in
+  the player, and `<meta name="text-scale">` so the OS text setting reaches the
+  page. The sheet's search icon now lines up with its rows.
+- **One form anatomy.** 44px controls, 16px input text, visible labels,
+  `aria-describedby`/`aria-invalid` wired by the field itself, tokenised errors.
+  The create-ring and paste-ticket flows are real `<form>`s.
+- **The theme switch cross-fades** in 180ms through the View Transitions API,
+  skipped under reduced motion.
+- **Cards have a heading and a footer.** `NodeCard` names itself with an `<h2>`
+  and puts its actions in a `<footer>`.
+
+### Fixed
+
+- **The skip buttons pointed the wrong way in English.** They were hardcoded
+  left/right and only correct in Arabic; `back`/`forward` now flip with the
+  document.
+- **The footer named the action, not the surah.** "قائمة السور" replaced the
+  visible surah name in the accessible name — a WCAG 2.5.3 failure Lighthouse
+  found on three nodes.
+- **An admin field's error was announced with no field attached.** `Field`
+  rendered the hint and the error and associated neither; the control now gets
+  both ids, and the hardcoded English "Error: " prefix is gone.
+- **The admin wordmark was squeezed into a 28px square** (512×240 pinned to both
+  sides).
+- **The admin back links pointed left in Arabic.** They use the mirrored `back`
+  glyph now.
+
+### Verified
+
+- Lighthouse, production builds: web a11y 100 / SEO 100 / best-practices 96,
+  admin a11y 100 / SEO 100 / best-practices 96. The remaining console error is
+  the roster fetch CORS-blocked from localhost, not a page defect.
+- 200% text scale: no horizontal overflow and no clipped text on the player,
+  settings or about.
+- `test/icons.test.ts` guards the contract: one import site, the size scale, no
+  glyph characters, rem type, no half-step spacing.
+
 ## 1.6.2 — 2026-10-29
 
 Patch. App versions: **web 1.8.1**, **admin 1.25.2**, **seeder 1.4.3**.
