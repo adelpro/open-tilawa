@@ -18,6 +18,8 @@ interface ServiceOverview {
   id: number;
   name: string;
   url: string;
+  /** 'ws' services are checked with a handshake, not a request. */
+  kind: 'http' | 'ws';
   ok: boolean | null;
   latencyMs: number | null;
   version: string | null;
@@ -191,7 +193,12 @@ export function Status(): ReactElement {
             {overview.services.map((service) => (
               <Panel key={service.id}>
                 <div className="spread" style={{ marginBottom: 'var(--space-2)' }}>
-                  <span className="row__label">{service.name}</span>
+                  <span className="cluster">
+                    <span className="row__label">{service.name}</span>
+                    {service.kind === 'ws' ? (
+                      <Chip tone="info">{t('status.wsChip')}</Chip>
+                    ) : null}
+                  </span>
                   <Chip tone={service.ok === null ? 'notice' : service.ok ? 'ok' : 'bad'}>
                     {t(
                       service.ok === null
@@ -213,7 +220,7 @@ export function Status(): ReactElement {
                     </>
                   ) : null}
                   {t('status.uptime')}:{' '}
-                  <bdi>
+                  <bdi dir="ltr">
                     {service.uptime24h === null
                       ? t('status.noChecks')
                       : `${Math.round(service.uptime24h * 100)}%`}
@@ -332,7 +339,7 @@ export function Status(): ReactElement {
                           )}
                         </td>
                         <td className="num">
-                          <bdi>
+                          <bdi dir="ltr">
                             {turn.uptime24h === null
                               ? t('status.noChecks')
                               : `${Math.round(turn.uptime24h * 100)}%`}

@@ -71,8 +71,6 @@ export const en = {
   'turns.remove': 'Remove',
   'turns.history': 'History',
   'turns.name': 'Name',
-  'turns.url': 'URL',
-  'turns.urlHint': 'turn:host:port or turns:host:port — port defaults to 3478.',
   'turns.statusHeading': 'Status',
   'turns.statusOnline': 'Online',
   'turns.statusOffline': 'Offline',
@@ -81,7 +79,6 @@ export const en = {
   'turns.latencyUnknown': '—',
   'turns.lastSeen': 'Last check',
   'turns.never': 'Never',
-  'turns.actions': 'Actions',
   'turns.loading': 'Loading TURN servers',
   'turns.empty': 'No TURN servers yet. Add one to start monitoring it.',
   'turns.added': 'TURN server added.',
@@ -340,7 +337,6 @@ export const en = {
   'turns.back': 'All TURN servers',
   'turns.detailFailed': 'Could not load this TURN server.',
   'turns.notFound': 'That TURN server no longer exists.',
-  'turns.openHint': 'Open the server history',
   'seeders.manage': 'Torrents',
   'torrents.backToSeeders': 'All seeders',
   'turns.host': 'Host',
@@ -367,7 +363,6 @@ export const en = {
   'turns.updateFailed': 'Could not update the TURN server.',
 
   'seeders.versionUnknown': 'version unknown',
-  'seeders.diskFree': '{free} free of {total}',
   'seeders.updateSoftware': 'Update software',
   'seeders.updateTitle': 'Update this seeder?',
   'seeders.updateBody':
@@ -492,7 +487,9 @@ export const en = {
   'status.addSubmit': 'Add',
   'status.name': 'Name',
   'status.url': 'URL',
-  'status.urlHint': 'An absolute http(s) URL that answers 2xx when healthy.',
+  'status.wsChip': 'WebSocket',
+  'status.urlHint':
+    'An absolute URL: http(s) is checked with a request and must answer 2xx; ws(s) is checked with a WebSocket handshake.',
   'status.remove': 'Remove',
   'status.services': 'Services',
   'status.nodes': 'Seeder nodes',

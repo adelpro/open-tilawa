@@ -76,8 +76,6 @@ export const ar: Catalogue = {
   'turns.remove': 'إزالة',
   'turns.history': 'السجل',
   'turns.name': 'الاسم',
-  'turns.url': 'الرابط',
-  'turns.urlHint': 'turn:host:port أو turns:host:port — والمنفذ الافتراضي 3478.',
   'turns.statusHeading': 'الحالة',
   'turns.statusOnline': 'متصل',
   'turns.statusOffline': 'غير متصل',
@@ -86,7 +84,6 @@ export const ar: Catalogue = {
   'turns.latencyUnknown': 'غير معروف',
   'turns.lastSeen': 'آخر فحص',
   'turns.never': 'أبدًا',
-  'turns.actions': 'إجراءات',
   'turns.loading': 'جارٍ تحميل خوادم TURN',
   'turns.empty': 'لا خوادم TURN بعد. أضف واحدًا لتبدأ مراقبته.',
   'turns.added': 'أُضيف خادم TURN.',
@@ -340,7 +337,6 @@ export const ar: Catalogue = {
   'turns.back': 'كل خوادم TURN',
   'turns.detailFailed': 'تعذّر تحميل خادم TURN هذا.',
   'turns.notFound': 'لم يعد خادم TURN هذا موجودًا.',
-  'turns.openHint': 'فتح سجل الخادم',
   'seeders.manage': 'التورنت',
   'torrents.backToSeeders': 'كل خوادم التوزيع',
   'turns.host': 'المضيف',
@@ -366,7 +362,6 @@ export const ar: Catalogue = {
   'turns.updateFailed': 'تعذّر تحديث خادم TURN.',
 
   'seeders.versionUnknown': 'الإصدار غير معروف',
-  'seeders.diskFree': 'متاح {free} من أصل {total}',
   'seeders.updateSoftware': 'تحديث البرنامج',
   'seeders.updateTitle': 'أتحدّث خادم التوزيع هذا؟',
   'seeders.updateBody':
@@ -491,7 +486,9 @@ export const ar: Catalogue = {
   'status.addSubmit': 'إضافة',
   'status.name': 'الاسم',
   'status.url': 'الرابط',
-  'status.urlHint': 'رابط http(s) مطلق يعيد 2xx وهو سليم.',
+  'status.wsChip': 'WebSocket',
+  'status.urlHint':
+    'رابط مطلق: http(s) يُفحص بطلب ويعيد 2xx وهو سليم، أو ws(s) يُفحص بمصافحة WebSocket.',
   'status.remove': 'إزالة',
   'status.services': 'الخدمات',
   'status.nodes': 'خوادم التوزيع',

@@ -6,17 +6,27 @@ import type { Db } from '@tilawa-admin/core';
 const RETENTION_DAYS = 7;
 const CHECK_TIMEOUT_MS = 8_000;
 
+export type ServiceKind = 'http' | 'ws';
+
 export interface ServiceRow {
   id: number;
   name: string;
   url: string;
+  /** How the check talks to it: an HTTP request, or a WebSocket handshake. */
+  kind: ServiceKind;
   enabled: boolean;
+}
+
+/** A service is checked with the protocol it names; sockets get a handshake. */
+export function serviceKind(protocol: string): ServiceKind {
+  return protocol === 'ws:' || protocol === 'wss:' ? 'ws' : 'http';
 }
 
 export interface ServiceOverview {
   id: number;
   name: string;
   url: string;
+  kind: ServiceKind;
   ok: boolean | null;
   latencyMs: number | null;
   version: string | null;
@@ -30,10 +40,14 @@ export interface ServiceOverview {
 /**
  * Service health with a timeline.
  *
- * Everything is an HTTP check, because everything in this stack is reached over
- * HTTP — the public site, the tracker's /stats, the admin API's /health and the
- * dashboard. Nodes and TURN keep their own monitors (richer than a HEAD request);
- * the overview joins them rather than duplicating their probes.
+ * Most of the stack is reached over HTTP — the public site, the tracker's /stats, the
+ * admin API's /health and the dashboard — so an HTTP check answers for them.
+ *
+ * The GunDB relay is the exception: it speaks WebSocket at /gun and has no status
+ * page at all, so a GET proves nothing. It is checked with a handshake, because that
+ * is the whole path accounts depend on (DNS → Cloudflare → tunnel → gun). Nodes and
+ * TURN keep their own monitors (richer than a probe); the overview joins them rather
+ * than duplicating theirs.
  */
 @Injectable()
 export class StatusService {
@@ -45,6 +59,7 @@ export class StatusService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         url TEXT NOT NULL UNIQUE,
+        kind TEXT NOT NULL DEFAULT 'http',
         enabled INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
@@ -59,33 +74,66 @@ export class StatusService {
       );
       CREATE INDEX IF NOT EXISTS service_checks_service_idx ON service_checks (service_id, id DESC);
     `);
+    this.ensureKindColumn();
     this.seedDefaults();
   }
 
-  /** A fresh install should open the status page with something on it. */
+  /**
+   * The table predates the WebSocket kind: an install that already has services gets
+   * the column rather than a fresh database.
+   */
+  private ensureKindColumn(): void {
+    const columns = this.db.prepare('PRAGMA table_info(services)').all() as { name: string }[];
+    if (columns.some((column) => column.name === 'kind')) return;
+    this.db.exec("ALTER TABLE services ADD COLUMN kind TEXT NOT NULL DEFAULT 'http'");
+  }
+
+  /**
+   * A fresh install should open the status page with something on it.
+   *
+   * The relay is seeded on every start rather than only on an empty table: accounts,
+   * pairing and counters are dead without it, and it is the one dependency a console
+   * must not be able to be blind to. Removing the row therefore lasts until the next
+   * restart, which is the honest behaviour for a required backend.
+   */
   private seedDefaults(): void {
-    const count = (this.db.prepare('SELECT COUNT(*) AS n FROM services').get() as { n: number }).n;
-    if (count > 0) return;
     const port = process.env.PORT ?? '9410';
-    const defaults = [
-      { name: 'Public site', url: 'https://tilawa.quran.us.kg/' },
-      { name: 'Tracker', url: 'https://tracker.quran.us.kg/stats' },
-      { name: 'Admin API', url: `http://127.0.0.1:${port}/api/health` },
-      { name: 'Admin dashboard', url: 'http://admin-web:80/' },
+    const defaults: { name: string; url: string; kind: ServiceKind }[] = [
+      { name: 'Public site', url: 'https://tilawa.quran.us.kg/', kind: 'http' },
+      { name: 'Tracker', url: 'https://tracker.quran.us.kg/stats', kind: 'http' },
+      { name: 'Admin API', url: `http://127.0.0.1:${port}/api/health`, kind: 'http' },
+      { name: 'Admin dashboard', url: 'http://admin-web:80/', kind: 'http' },
+      { name: 'GunDB relay', url: 'wss://gundb-relay.quran.us.kg/gun', kind: 'ws' },
     ];
-    const insert = this.db.prepare('INSERT INTO services (name, url) VALUES (?, ?)');
-    for (const service of defaults) insert.run(service.name, service.url);
+    const insert = this.db.prepare(
+      'INSERT OR IGNORE INTO services (name, url, kind) VALUES (?, ?, ?)',
+    );
+    const count = (this.db.prepare('SELECT COUNT(*) AS n FROM services').get() as { n: number }).n;
+    for (const service of defaults) {
+      // On a populated table only the relay is enforced; the other four stay choices.
+      if (count > 0 && service.kind !== 'ws') continue;
+      insert.run(service.name, service.url, service.kind);
+    }
   }
 
   list(): ServiceRow[] {
     return (
-      this.db.prepare('SELECT id, name, url, enabled FROM services ORDER BY id').all() as {
+      this.db
+        .prepare('SELECT id, name, url, kind, enabled FROM services ORDER BY id')
+        .all() as {
         id: number;
         name: string;
         url: string;
+        kind: string;
         enabled: number;
       }[]
-    ).map((row) => ({ id: row.id, name: row.name, url: row.url, enabled: row.enabled === 1 }));
+    ).map((row) => ({
+      id: row.id,
+      name: row.name,
+      url: row.url,
+      kind: row.kind === 'ws' ? 'ws' : 'http',
+      enabled: row.enabled === 1,
+    }));
   }
 
   add(name: string, url: string): ServiceRow {
@@ -98,22 +146,28 @@ export class StatusService {
     } catch {
       throw new BadRequestException('the URL must be absolute (http:// or https://)');
     }
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      throw new BadRequestException('the URL must use http:// or https://');
+    if (!['http:', 'https:', 'ws:', 'wss:'].includes(parsed.protocol)) {
+      throw new BadRequestException('the URL must use http(s):// or ws(s)://');
     }
+    const kind = serviceKind(parsed.protocol);
     try {
       const info = this.db
-        .prepare('INSERT INTO services (name, url) VALUES (?, ?)')
-        .run(cleanName, cleanUrl);
+        .prepare('INSERT INTO services (name, url, kind) VALUES (?, ?, ?)')
+        .run(cleanName, cleanUrl, kind);
       const service = this.db
-        .prepare('SELECT id, name, url, enabled FROM services WHERE id = ?')
+        .prepare('SELECT id, name, url, kind, enabled FROM services WHERE id = ?')
         .get(Number(info.lastInsertRowid)) as {
         id: number;
         name: string;
         url: string;
+        kind: string;
         enabled: number;
       };
-      return { ...service, enabled: service.enabled === 1 };
+      return {
+        ...service,
+        kind: service.kind === 'ws' ? 'ws' : 'http',
+        enabled: service.enabled === 1,
+      };
     } catch {
       throw new BadRequestException('a service with that URL already exists');
     }
@@ -142,18 +196,24 @@ export class StatusService {
     let version: string | null = null;
     let detail: string | null = null;
     try {
-      const response = await fetch(service.url, {
-        redirect: 'follow',
-        signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
-        headers: { 'User-Agent': 'tilawa-status/1' },
-      });
-      ok = response.ok;
-      const type = response.headers.get('content-type') ?? '';
-      if (type.includes('application/json')) {
-        const body = (await response.json().catch(() => null)) as { version?: unknown } | null;
-        if (body && typeof body.version === 'string') version = body.version;
+      if (service.kind === 'ws') {
+        const probe = await this.handshake(service.url);
+        ok = probe.ok;
+        detail = probe.detail;
+      } else {
+        const response = await fetch(service.url, {
+          redirect: 'follow',
+          signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
+          headers: { 'User-Agent': 'tilawa-status/1' },
+        });
+        ok = response.ok;
+        const type = response.headers.get('content-type') ?? '';
+        if (type.includes('application/json')) {
+          const body = (await response.json().catch(() => null)) as { version?: unknown } | null;
+          if (body && typeof body.version === 'string') version = body.version;
+        }
+        detail = ok ? `${response.status}` : `${response.status} ${response.statusText}`.trim();
       }
-      detail = ok ? `${response.status}` : `${response.status} ${response.statusText}`.trim();
     } catch (err) {
       detail = (err as Error).message;
     }
@@ -164,6 +224,40 @@ export class StatusService {
       )
       .run(service.id, ok ? 1 : 0, ok ? latency : null, version, detail?.slice(0, 200) ?? null);
     if (!ok) this.logger.debug(`${service.name} down: ${detail}`);
+  }
+
+  /**
+   * A WebSocket handshake and nothing more: open the socket, time it, close it.
+   *
+   * The relay has no HTTP surface, so this is the only check that proves the whole
+   * path a client takes — DNS, Cloudflare, the tunnel and the gun container. A GET
+   * would report a 200 from the tunnel page or hang; neither says "accounts work".
+   */
+  private handshake(url: string): Promise<{ ok: boolean; detail: string | null }> {
+    return new Promise((resolve) => {
+      let settled = false;
+      let socket: WebSocket | null = null;
+      const finish = (ok: boolean, detail: string | null): void => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        try {
+          socket?.close();
+        } catch {
+          // Already closed by the peer, which is the normal case.
+        }
+        resolve({ ok, detail });
+      };
+      const timer = setTimeout(() => finish(false, 'handshake timed out'), CHECK_TIMEOUT_MS);
+      try {
+        socket = new WebSocket(url);
+      } catch (err) {
+        finish(false, (err as Error).message);
+        return;
+      }
+      socket.addEventListener('open', () => finish(true, 'handshake ok'));
+      socket.addEventListener('error', () => finish(false, 'handshake failed'));
+    });
   }
 
   /** Current state plus 24 hourly buckets, oldest first. */
@@ -214,6 +308,7 @@ export class StatusService {
         id: service.id,
         name: service.name,
         url: service.url,
+        kind: service.kind,
         ok: latest ? latest.ok === 1 : null,
         latencyMs: latest?.latency_ms ?? null,
         version: latest?.version ?? null,
