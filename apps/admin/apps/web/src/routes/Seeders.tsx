@@ -346,8 +346,18 @@ export function Seeders(): ReactElement {
               </summary>
               <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
                 <p className="body muted">{t('seeders.deployHint')}</p>
-                <CopyLine value={INSTALL_COMMAND} label={t('help.copy')} />
-                <CopyLine value={FIREWALL_COMMAND} label={t('help.copy')} />
+                <CopyLine
+                  value={INSTALL_COMMAND}
+                  label={t('help.copy')}
+                  title={t('seeders.installTitle')}
+                  hint={t('seeders.installHint')}
+                />
+                <CopyLine
+                  value={FIREWALL_COMMAND}
+                  label={t('help.copy')}
+                  title={t('seeders.portsTitle')}
+                  hint={t('seeders.portsHint')}
+                />
                 <p className="fine-print">{t('seeders.deployNote')}</p>
                 <a className="fine-print" {...linkProps('/help')}>
                   {t('seeders.deployMore')}

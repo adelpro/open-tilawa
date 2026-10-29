@@ -10,9 +10,17 @@ import { Button } from './Button';
 export function CopyLine({
   value,
   label = 'Copy',
+  title,
+  hint,
 }: {
   value: string;
   label?: string;
+  /**
+   * What this command does, in words. Two commands that both start with `curl`
+   * look interchangeable until each one is named.
+   */
+  title?: string;
+  hint?: string;
 }): ReactElement {
   const [copied, setCopied] = useState(false);
 
@@ -28,7 +36,9 @@ export function CopyLine({
 
   return (
     <div className="stack stack--tight">
+      {title ? <p className="code-line__title">{title}</p> : null}
       <pre className="code-line">{value}</pre>
+      {hint ? <p className="fine-print">{hint}</p> : null}
       <div>
         <Button variant="secondary" small onClick={() => void copy()}>
           {copied ? 'Copied' : label}

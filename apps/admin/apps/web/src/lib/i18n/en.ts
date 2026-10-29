@@ -106,6 +106,11 @@ export const en = {
   'seeders.deployNote':
     'The install script prints the admin password at the end — copy it into the two fields above. Add --disk 500 to cap the node at that many gigabytes; without it the node fills the disk.',
   'seeders.deployMore': 'Read the full guide on the help page',
+  'seeders.installTitle': 'Install command',
+  'seeders.installHint': 'Downloads the install script from the repository and runs it on the node.',
+  'seeders.portsTitle': 'Open the ports',
+  'seeders.portsHint':
+    'Opens 8085 for admin and 6881 (TCP and UDP) for torrent traffic. Only applies to nodes running ufw.',
   'seeders.cancel': 'Cancel',
   'seeders.addSubmit': 'Add',
   'seeders.pollAll': 'Probe all now',

@@ -111,6 +111,11 @@ export const ar: Catalogue = {
   'seeders.deployNote':
     'يطبع سكربت التثبيت كلمة المرور في آخر التثبيت، فانسخها إلى الحقلين أعلاه. ولتحديد حصة، أضف إلى الأمر --disk 500؛ وبدونها يعمل الخادم بلا حدّ حتى تمتلئ مساحة القرص.',
   'seeders.deployMore': 'اقرأ الشرح الكامل في صفحة المساعدة',
+  'seeders.installTitle': 'أمر التثبيت',
+  'seeders.installHint': 'ينزّل سكربت التثبيت من المستودع ويشغّله على الخادم.',
+  'seeders.portsTitle': 'أمر فتح المنافذ',
+  'seeders.portsHint':
+    'يفتح المنفذ 8085 لإدارة الخادم، والمنفذ 6881 (TCP وUDP) لتبادل التورنت؛ وهو خاصّ بالخوادم التي تستخدم ufw.',
   'seeders.cancel': 'إلغاء',
   'seeders.addSubmit': 'إضافة',
   'seeders.pollAll': 'افحص الكل الآن',

@@ -2035,6 +2035,11 @@ button.chip[aria-pressed='true'] {
   margin: var(--space-3) 0;
 }
 
+.code-line__title {
+  font: var(--caption-strong);
+  color: var(--ink);
+}
+
 .code-line {
   font: var(--code);
   background: var(--surface-pearl);
