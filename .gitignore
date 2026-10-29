@@ -34,5 +34,10 @@ dist/
 # Local plan-execution scratch (ledgers/briefs)
 .superpowers/
 
+# Internal notes — positioning, launch plans, audits, specs.
+# Kept outside the repo; never published.
+.agents/
+docs/superpowers/
+
 # Screenshots captured while auditing; never part of a change
 .playwright-mcp/
