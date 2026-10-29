@@ -106,8 +106,7 @@ export const ar: Catalogue = {
     'خادم التوزيع حاسوب مستقلّ يحتفظ بملفات التلاوات ويبثّها إلى المستمعين عبر التورنت. اللوحة لا تخزّن الصوت بنفسها: تسجّل عنوان كل خادم وبيانات دخوله، وتفحص حالته، وتدير ما يحمله من تلاوات.',
   'seeders.add': 'إضافة خادم توزيع',
   'seeders.deployTitle': 'تحتاج خادمًا أولًا؟ ثبّت واحدًا',
-  'seeders.deployHint':
-    'ثبّت الخادم على جهاز Linux ثم أدخل عنوانه وبيانات الدخول في هذا النموذج.',
+  'seeders.deployHint': 'ثبّت الخادم على جهاز Linux ثم أدخل عنوانه وبيانات الدخول في هذا النموذج.',
   'seeders.deployNote':
     'يطبع سكربت التثبيت كلمة المرور في آخر التثبيت، فانسخها إلى الحقلين أعلاه. ولتحديد حصة، أضف إلى الأمر --disk 500؛ وبدونها يعمل الخادم بلا حدّ حتى تمتلئ مساحة القرص.',
   'seeders.deployMore': 'اقرأ الشرح الكامل في صفحة المساعدة',
@@ -135,13 +134,18 @@ export const ar: Catalogue = {
   'seeders.credentialsMissing': 'غير مخزّنة',
   'seeders.statusHeading': 'الحالة',
   'seeders.complete': 'أضف التلاوات الناقصة إلى كل الخوادم',
+  'seeders.completeHint':
+    'يضيف إلى كل خادم ما ينقصه من الفهرس المنشور، حتى 90% من حصته. لا يعدّل الفهرس ولا يحذف شيئًا.',
   'seeders.completeTitle': 'أضف التلاوات الناقصة إلى كل الخوادم؟',
-  'seeders.completeBody':
-    'يقارن كل خادم في القائمة بالفهرس المنشور، ثم يضيف إليه التلاوات التي تنقصه فقط، ويتوقف عند 90% من حصته. لا يحذف شيئًا مما يحمله الخادم، ويتخطّى الخادم غير المتصل ويذكر ذلك بعد الانتهاء.',
   'seeders.completeConfirm': 'أضف',
   'seeders.completeDone': 'أُضيفت {added} تلاوة.',
   'seeders.completeSkipped': 'تُركت {count} تلاوة: الخادم سيتجاوز 90% من حصته.',
+  'seeders.completeNothing': 'كل الخوادم تحمل الفهرس المنشور كاملًا.',
   'seeders.completeFailed': 'تعذّر إكمال الخوادم.',
+  'seeders.planNodeAdd': 'إضافة {count}',
+  'seeders.planNodeSkip': 'ترك {count}',
+  'seeders.planSkipped': 'سيُتخطّى',
+  'seeders.planCap': 'تُترك التلاوات التي لا تتسع لها حصة الخادم عند 90%.',
   'seeders.dismiss': 'إخفاء',
   'seeders.upToDate': 'محدّث',
   'seeders.behind': 'متأخر عن {version}',
@@ -153,8 +157,7 @@ export const ar: Catalogue = {
   'seeders.torrentCount': '{count} ملف',
   'seeders.peerCount': '{count} قرين',
   'seeders.loading': 'جارٍ تحميل خوادم التوزيع',
-  'seeders.empty':
-    'ليست هناك خوادم توزيع بعد، أضف أول خادم (خطوات تثبيته في نافذة الإضافة).',
+  'seeders.empty': 'ليست هناك خوادم توزيع بعد، أضف أول خادم (خطوات تثبيته في نافذة الإضافة).',
   'seeders.added': 'أُضيف خادم التوزيع.',
   'seeders.fillOnAdd': 'أضف الفهرس إلى هذا الخادم',
   'seeders.fillOnAddHint':
@@ -185,10 +188,8 @@ export const ar: Catalogue = {
   'torrents.close': 'إغلاق',
   'torrents.cataloguePublishedHint':
     'التلاوات المنشورة وحدها: على الخادم أن يحمل ما يعرضه الموقع بالضبط.',
-  'torrents.catalogueNoPublished':
-    'لا توجد تلاوة منشورة بعد. انشر واحدة من شاشة التلاوات.',
-  'torrents.missingPublished':
-    'يعرض الفهرس {count} تلاوات لا يحملها هذا الخادم.',
+  'torrents.catalogueNoPublished': 'لا توجد تلاوة منشورة بعد. انشر واحدة من شاشة التلاوات.',
+  'torrents.missingPublished': 'يعرض الفهرس {count} تلاوات لا يحملها هذا الخادم.',
   'torrents.review': 'راجع',
   'torrents.add': 'إضافة ملف',
   'torrents.cancel': 'إلغاء',
@@ -229,7 +230,8 @@ export const ar: Catalogue = {
   'reciters.name': 'اسم التورنت',
   'reciters.nameHint': 'ما يحمله ملف التورنت (غالباً اسم مجلّد لاتيني). للمرجع فقط.',
   'reciters.nameAr': 'الاسم العربي',
-  'reciters.nameArHint': 'الاسم الذي يراه المستمع في المشغّل. اتركه فارغاً للرجوع إلى جدول الأسماء.',
+  'reciters.nameArHint':
+    'الاسم الذي يراه المستمع في المشغّل. اتركه فارغاً للرجوع إلى جدول الأسماء.',
   'reciters.riwaya': 'الرواية',
   'reciters.riwayaHint': 'الرواية المنقولة؛ «غير محدّد» أصدق من تخمين.',
   'reciters.infohash': 'بصمة الملف',
@@ -254,8 +256,7 @@ export const ar: Catalogue = {
   'reciters.scopePublishedHint': 'ما يعرضه الموقع. {count} مسودة غير منشورة مخفية.',
   'reciters.scopeDraftsHint': 'تلاوات لا يعرضها الموقع.',
   'reciters.pushConfirmTitle': 'أتريد إرسال الفهرس إلى الخوادم؟',
-  'reciters.pushConfirmBody':
-    'ستُضاف {add} تلاوة إلى {nodes} خادم. وستُترك {skip} عند سقف 90%.',
+  'reciters.pushConfirmBody': 'ستُضاف {add} تلاوة إلى {nodes} خادم. وستُترك {skip} عند سقف 90%.',
   'reciters.placeOnlyNode': 'هذا الخادم الوحيد. أضف غيره من صفحة الخوادم.',
   'reciters.coverage': 'الخوادم',
   'reciters.onNodes': '{count} خوادم',
@@ -276,7 +277,8 @@ export const ar: Catalogue = {
   'reciters.unplace': 'أوقف التوزيع',
   'reciters.noRoom': 'لا مساحة تكفي {size}',
   'reciters.placeFailed': 'تعذّر تغيير التوزيع.',
-  'reciters.deleteNodesHint': 'احذف الملفات من هذه الخوادم أيضًا. تركها دون تأشير يبقيها ملفات يتيمة.',
+  'reciters.deleteNodesHint':
+    'احذف الملفات من هذه الخوادم أيضًا. تركها دون تأشير يبقيها ملفات يتيمة.',
   'reciters.deleteSelectAll': 'اختر كل الخوادم',
   'reciters.removeFailed': 'تعذّرت إزالة القارئ.',
   'reciters.signInRequired': 'يلزم تسجيل الدخول.',

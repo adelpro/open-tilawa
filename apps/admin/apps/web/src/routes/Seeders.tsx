@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -16,7 +16,9 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { Panel } from '../components/Panel';
 import { FormModal } from '../components/FormModal';
 import { SkeletonRows } from '../components/Skeleton';
-import type { Seeder } from '../lib/types-seeders';
+import { missingPerNode, totalMissing } from '../lib/coverage';
+import type { CoverageReciter } from '../lib/coverage';
+import type { PushPlan, Seeder } from '../lib/types-seeders';
 
 /**
  * The install command, copy-paste rather than paraphrased. Defaults are the script's:
@@ -59,6 +61,14 @@ export function Seeders(): ReactElement {
   const [completeNote, setCompleteNote] = useState<string | null>(null);
   /** The bulk push runs on every node, so it asks before it starts. */
   const [confirmingComplete, setConfirmingComplete] = useState(false);
+  /**
+   * The plan behind the dialog. Fetched when the operator asks, shown before they
+   * confirm, and reused for the "left out" count afterwards — one computation, so
+   * the promise and the result cannot disagree.
+   */
+  const [plan, setPlan] = useState<PushPlan | null>(null);
+  /** Cached coverage, for the "nothing to do" hint. Never a request to a node. */
+  const [catalogue, setCatalogue] = useState<CoverageReciter[] | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -75,12 +85,20 @@ export function Seeders(): ReactElement {
 
   const load = useCallback(async () => {
     setError(null);
-    try {
-      setSeeders(await api<Seeder[]>('/seeders'));
-    } catch (caught) {
-      setSeeders([]);
-      setError(caught instanceof Error ? caught.message : t('seeders.loadFailed'));
+    // The two reads fail independently: a console that cannot read the catalogue
+    // still has to show the fleet, and must not disable an action that is valid.
+    const [fleet, coverage] = await Promise.allSettled([
+      api<Seeder[]>('/seeders'),
+      api<CoverageReciter[]>('/reciters'),
+    ]);
+    setCatalogue(coverage.status === 'fulfilled' ? coverage.value : null);
+    if (fleet.status === 'fulfilled') {
+      setSeeders(fleet.value);
+      return;
     }
+    setSeeders([]);
+    const caught: unknown = fleet.reason;
+    setError(caught instanceof Error ? caught.message : t('seeders.loadFailed'));
   }, [t]);
 
   useEffect(() => {
@@ -182,21 +200,44 @@ export function Seeders(): ReactElement {
   }
 
   /**
+   * Ask what a top-up would do, then show it. The dialog carries the plan, so the
+   * operator sees which node receives how many recitations and what the 90% cap
+   * will leave out — the question the button's own label cannot answer.
+   */
+  async function openComplete(): Promise<void> {
+    setBusy('complete-plan');
+    setError(null);
+    setMessage(null);
+    setCompleteNote(null);
+    try {
+      const next = await api<PushPlan>('/reciters/push/plan', { method: 'POST', body: {} });
+      if (!next.nodes.some((node) => node.toAdd.length > 0)) {
+        // Nothing to ask about: a dialog whose only answer is "nothing" is noise.
+        setMessage(t('seeders.completeNothing'));
+        return;
+      }
+      setPlan(next);
+      setConfirmingComplete(true);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.completeFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /**
    * Top up every node with the published catalogue, stopping at 90 % of each
-   * node's quota. A node that cannot take everything says so: the notice after
-   * the run names how many releases were left out, so "incomplete" is never
-   * silent.
+   * node's quota. The plan shown in the dialog is the plan acted on; the run only
+   * recomputes server-side to stay safe, and its result is what gets reported.
    */
   async function makeComplete(): Promise<void> {
+    if (!plan) return;
     setConfirmingComplete(false);
     setCompleting(true);
     setError(null);
     setMessage(null);
     setCompleteNote(null);
     try {
-      const plan = await api<{
-        nodes: { skipped: number; toAdd: { infohash: string }[] }[];
-      }>('/reciters/push/plan', { method: 'POST', body: {} });
       const applied = await api<{ applied?: { added: number }[] }>('/reciters/push', {
         method: 'POST',
         body: {},
@@ -205,6 +246,7 @@ export function Seeders(): ReactElement {
       const skipped = plan.nodes.reduce((sum, row) => sum + row.skipped, 0);
       setMessage(t('seeders.completeDone', { added: String(added) }));
       if (skipped > 0) setCompleteNote(t('seeders.completeSkipped', { count: String(skipped) }));
+      setPlan(null);
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.completeFailed'));
@@ -237,6 +279,23 @@ export function Seeders(): ReactElement {
     }
   }
 
+  // Hooks stay above the early return. Coverage is null until the catalogue loads,
+  // and "unknown" must never render as "complete".
+  const coverage = useMemo(
+    () =>
+      catalogue && seeders
+        ? missingPerNode(
+            catalogue,
+            seeders.map((seeder) => seeder.id),
+          )
+        : null,
+    [catalogue, seeders],
+  );
+  const nothingToDo = coverage !== null && totalMissing(coverage) === 0;
+  // An empty fleet is not "complete": the button would push to nobody, and the
+  // panel below already says to add the first node.
+  const noNodes = seeders !== null && seeders.length === 0;
+
   if (!user) return <p className="body muted">{t('seeders.signInRequired')}</p>;
 
   return (
@@ -257,8 +316,10 @@ export function Seeders(): ReactElement {
           </Button>
           <Button
             variant="secondary"
-            busy={completing}
-            onClick={() => setConfirmingComplete(true)}
+            busy={busy === 'complete-plan' || completing}
+            disabled={noNodes || nothingToDo}
+            aria-describedby="complete-hint"
+            onClick={() => void openComplete()}
           >
             {t('seeders.complete')}
           </Button>
@@ -267,6 +328,12 @@ export function Seeders(): ReactElement {
           </Button>
         </div>
       </header>
+
+      {/* The button's own sentence: what it does, in which direction, and what it
+          leaves alone. It doubles as the reason the button is disabled. */}
+      <p className="fine-print" id="complete-hint">
+        {nothingToDo ? t('seeders.completeNothing') : t('seeders.completeHint')}
+      </p>
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
@@ -288,82 +355,74 @@ export function Seeders(): ReactElement {
           busy={busy === 'add'}
           disabled={!newName.trim() || !newUrl.trim()}
         >
-            <Field label={t('seeders.name')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={newName}
-                  onChange={(event) => setNewName(event.target.value)}
-                />
-              )}
-            </Field>
-            <Field label={t('seeders.url')} hint={t('seeders.urlHint')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={newUrl}
-                  onChange={(event) => setNewUrl(event.target.value)}
-                  placeholder="http://192.168.1.100:8085"
-                />
-              )}
-            </Field>
-            <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsHint')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={newUser}
-                  onChange={(event) => setNewUser(event.target.value)}
-                />
-              )}
-            </Field>
-            <Field label={t('seeders.adminPass')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  type="password"
-                  value={newPass}
-                  onChange={(event) => setNewPass(event.target.value)}
-                />
-              )}
-            </Field>
-            <div className="stack">
-              <label className="cluster">
-                <input
-                  type="checkbox"
-                  checked={newFill}
-                  onChange={(event) => setNewFill(event.target.checked)}
-                />
-                <span>{t('seeders.fillOnAdd')}</span>
-              </label>
-              <p className="fine-print">{t('seeders.fillOnAddHint')}</p>
-            </div>
+          <Field label={t('seeders.name')}>
+            {(id) => (
+              <Input id={id} value={newName} onChange={(event) => setNewName(event.target.value)} />
+            )}
+          </Field>
+          <Field label={t('seeders.url')} hint={t('seeders.urlHint')}>
+            {(id) => (
+              <Input
+                id={id}
+                value={newUrl}
+                onChange={(event) => setNewUrl(event.target.value)}
+                placeholder="http://192.168.1.100:8085"
+              />
+            )}
+          </Field>
+          <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsHint')}>
+            {(id) => (
+              <Input id={id} value={newUser} onChange={(event) => setNewUser(event.target.value)} />
+            )}
+          </Field>
+          <Field label={t('seeders.adminPass')}>
+            {(id) => (
+              <Input
+                id={id}
+                type="password"
+                value={newPass}
+                onChange={(event) => setNewPass(event.target.value)}
+              />
+            )}
+          </Field>
+          <div className="stack">
+            <label className="cluster">
+              <input
+                type="checkbox"
+                checked={newFill}
+                onChange={(event) => setNewFill(event.target.checked)}
+              />
+              <span>{t('seeders.fillOnAdd')}</span>
+            </label>
+            <p className="fine-print">{t('seeders.fillOnAddHint')}</p>
+          </div>
 
-            {/* The same disclosure TURN uses, because "install it first" is the same
+          {/* The same disclosure TURN uses, because "install it first" is the same
                 problem: the command is copy-paste, and the password is printed once. */}
-            <details>
-              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
-                {t('seeders.deployTitle')}
-              </summary>
-              <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
-                <p className="body muted">{t('seeders.deployHint')}</p>
-                <CopyLine
-                  value={INSTALL_COMMAND}
-                  label={t('help.copy')}
-                  title={t('seeders.installTitle')}
-                  hint={t('seeders.installHint')}
-                />
-                <CopyLine
-                  value={FIREWALL_COMMAND}
-                  label={t('help.copy')}
-                  title={t('seeders.portsTitle')}
-                  hint={t('seeders.portsHint')}
-                />
-                <p className="fine-print">{t('seeders.deployNote')}</p>
-                <a className="fine-print" {...linkProps('/help')}>
-                  {t('seeders.deployMore')}
-                </a>
-              </div>
-            </details>
+          <details>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              {t('seeders.deployTitle')}
+            </summary>
+            <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
+              <p className="body muted">{t('seeders.deployHint')}</p>
+              <CopyLine
+                value={INSTALL_COMMAND}
+                label={t('help.copy')}
+                title={t('seeders.installTitle')}
+                hint={t('seeders.installHint')}
+              />
+              <CopyLine
+                value={FIREWALL_COMMAND}
+                label={t('help.copy')}
+                title={t('seeders.portsTitle')}
+                hint={t('seeders.portsHint')}
+              />
+              <p className="fine-print">{t('seeders.deployNote')}</p>
+              <a className="fine-print" {...linkProps('/help')}>
+                {t('seeders.deployMore')}
+              </a>
+            </div>
+          </details>
         </FormModal>
       ) : null}
 
@@ -382,53 +441,82 @@ export function Seeders(): ReactElement {
             ) : null
           }
         >
-            <Field label={t('seeders.name')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={editName}
-                  onChange={(event) => setEditName(event.target.value)}
-                />
-              )}
-            </Field>
-            <Field label={t('seeders.url')} hint={t('seeders.urlHint')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={editUrl}
-                  onChange={(event) => setEditUrl(event.target.value)}
-                />
-              )}
-            </Field>
-            <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsKeepHint')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={editUser}
-                  onChange={(event) => setEditUser(event.target.value)}
-                />
-              )}
-            </Field>
-            <Field label={t('seeders.adminPass')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  type="password"
-                  value={editPass}
-                  onChange={(event) => setEditPass(event.target.value)}
-                />
-              )}
-            </Field>
+          <Field label={t('seeders.name')}>
+            {(id) => (
+              <Input
+                id={id}
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+              />
+            )}
+          </Field>
+          <Field label={t('seeders.url')} hint={t('seeders.urlHint')}>
+            {(id) => (
+              <Input id={id} value={editUrl} onChange={(event) => setEditUrl(event.target.value)} />
+            )}
+          </Field>
+          <Field label={t('seeders.adminUser')} hint={t('seeders.credentialsKeepHint')}>
+            {(id) => (
+              <Input
+                id={id}
+                value={editUser}
+                onChange={(event) => setEditUser(event.target.value)}
+              />
+            )}
+          </Field>
+          <Field label={t('seeders.adminPass')}>
+            {(id) => (
+              <Input
+                id={id}
+                type="password"
+                value={editPass}
+                onChange={(event) => setEditPass(event.target.value)}
+              />
+            )}
+          </Field>
         </FormModal>
       ) : null}
 
-      {confirmingComplete ? (
+      {confirmingComplete && plan ? (
         <ConfirmModal
           title={t('seeders.completeTitle')}
-          body={t('seeders.completeBody')}
+          body={
+            <div className="stack stack--tight">
+              <p className="body muted">{t('seeders.completeHint')}</p>
+              <ul
+                className="stack stack--tight"
+                style={{ listStyle: 'none', margin: 0, padding: 0 }}
+              >
+                {plan.nodes.map((node) => (
+                  <li key={node.seederId} className="cluster">
+                    <span className="row__label">{node.name}</span>
+                    {node.toAdd.length > 0 ? (
+                      <Chip tone="ok">
+                        {t('seeders.planNodeAdd', { count: node.toAdd.length })}
+                      </Chip>
+                    ) : null}
+                    {node.skipped > 0 ? (
+                      <Chip tone="notice">
+                        {t('seeders.planNodeSkip', { count: node.skipped })}
+                      </Chip>
+                    ) : null}
+                    {node.skipReason && node.skipReason !== 'low_space' ? (
+                      <Chip tone="notice">{t('seeders.planSkipped')}</Chip>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              {plan.nodes.some((node) => node.skipped > 0) ? (
+                <p className="fine-print">{t('seeders.planCap')}</p>
+              ) : null}
+            </div>
+          }
           confirmLabel={t('seeders.completeConfirm')}
           busy={completing}
-          onClose={() => setConfirmingComplete(false)}
+          onClose={() => {
+            setConfirmingComplete(false);
+            setPlan(null);
+          }}
           onConfirm={() => void makeComplete()}
         />
       ) : null}
@@ -449,8 +537,7 @@ export function Seeders(): ReactElement {
               // A node that has never answered reports null, which is "unknown", not 0.
               const used = seeder.usedBytes;
               const quota = seeder.quotaBytes;
-              const ratio =
-                used !== null && quota !== null && quota > 0 ? used / quota : undefined;
+              const ratio = used !== null && quota !== null && quota > 0 ? used / quota : undefined;
               const metrics: NodeMetric[] = [
                 {
                   label: t('seeders.quotaLabel'),

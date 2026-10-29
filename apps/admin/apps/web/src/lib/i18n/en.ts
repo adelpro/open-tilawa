@@ -107,7 +107,8 @@ export const en = {
     'The install script prints the admin password at the end — copy it into the two fields above. Add --disk 500 to cap the node at that many gigabytes; without it the node fills the disk.',
   'seeders.deployMore': 'Read the full guide on the help page',
   'seeders.installTitle': 'Install command',
-  'seeders.installHint': 'Downloads the install script from the repository and runs it on the node.',
+  'seeders.installHint':
+    'Downloads the install script from the repository and runs it on the node.',
   'seeders.portsTitle': 'Open the ports',
   'seeders.portsHint':
     'Opens 8085 for admin and 6881 (TCP and UDP) for torrent traffic. Only applies to nodes running ufw.',
@@ -131,14 +132,19 @@ export const en = {
   'seeders.credentialsMissing': 'Not stored',
   'seeders.statusHeading': 'Status',
   'seeders.complete': 'Add missing recitations to all nodes',
+  'seeders.completeHint':
+    'Adds to each node only what it is missing from the published catalogue, stopping at 90% of its quota. It never edits the catalogue and never deletes.',
   'seeders.completeTitle': 'Add the missing recitations to every node?',
-  'seeders.completeBody':
-    'Each node is compared with the published catalogue and receives only the recitations it is missing, stopping at 90% of its quota. Nothing it already holds is deleted; offline nodes are skipped and reported when it finishes.',
   'seeders.completeConfirm': 'Add',
   'seeders.completeDone': 'Added {added} recitation(s).',
   'seeders.completeSkipped':
     '{count} recitation(s) left out: the node would pass 90% of its quota.',
+  'seeders.completeNothing': 'Every node already holds the full published catalogue.',
   'seeders.completeFailed': 'Could not top up the nodes.',
+  'seeders.planNodeAdd': 'add {count}',
+  'seeders.planNodeSkip': '{count} left out',
+  'seeders.planSkipped': 'will be skipped',
+  'seeders.planCap': 'Recitations that would take the node past 90% of its quota are left out.',
   'seeders.dismiss': 'Dismiss',
   'seeders.upToDate': 'Current',
   'seeders.behind': 'Behind {version}',
@@ -150,8 +156,7 @@ export const en = {
   'seeders.torrentCount': '{count} torrents',
   'seeders.peerCount': '{count} peers',
   'seeders.loading': 'Loading seeders',
-  'seeders.empty':
-    'No nodes yet. Add the first one; its install steps are in the add dialog.',
+  'seeders.empty': 'No nodes yet. Add the first one; its install steps are in the add dialog.',
   'seeders.added': 'Seeder added.',
   'seeders.fillOnAdd': 'Add the catalogue to this node',
   'seeders.fillOnAddHint':
@@ -224,9 +229,11 @@ export const en = {
   'reciters.cancel': 'Cancel',
   'reciters.addSubmit': 'Add',
   'reciters.name': 'Torrent name',
-  'reciters.nameHint': 'What the torrent file carries — usually a Latin folder name. Reference only.',
+  'reciters.nameHint':
+    'What the torrent file carries — usually a Latin folder name. Reference only.',
   'reciters.nameAr': 'Arabic name',
-  'reciters.nameArHint': 'The name listeners see in the player. Leave empty to fall back to the name table.',
+  'reciters.nameArHint':
+    'The name listeners see in the player. Leave empty to fall back to the name table.',
   'reciters.riwaya': 'Riwaya',
   'reciters.riwayaHint': 'The transmission. “Unspecified” beats a guess.',
   'reciters.infohash': 'Infohash',
@@ -248,8 +255,7 @@ export const en = {
   'reciters.scopePublished': 'Published ({count})',
   'reciters.scopeDrafts': 'Drafts ({count})',
   'reciters.scopeAll': 'All ({count})',
-  'reciters.scopePublishedHint':
-    'What the site serves. {count} unpublished draft(s) are hidden.',
+  'reciters.scopePublishedHint': 'What the site serves. {count} unpublished draft(s) are hidden.',
   'reciters.scopeDraftsHint': 'Reciters the site does not list.',
   'reciters.pushConfirmTitle': 'Send the catalogue to the nodes?',
   'reciters.pushConfirmBody':

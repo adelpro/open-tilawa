@@ -73,3 +73,31 @@ export interface SeederInventory {
     downloadSpeed: number;
   };
 }
+
+/** Why a node will be left alone by a catalogue push. */
+export type PushSkipReason = 'offline' | 'no_credentials' | 'low_space' | 'unreachable';
+
+/**
+ * What a push would do to one node, computed server-side from a live inventory.
+ * The screen shows this before the operator confirms, so the numbers on the
+ * button's dialog are the numbers the run will act on.
+ */
+export interface PushNodePlan {
+  seederId: number;
+  name: string;
+  url: string;
+  /** Published reciters the node does not hold; these are what an apply adds. */
+  toAdd: { infohash: string; name: string }[];
+  /** Catalogue entries the node already carries. */
+  present: number;
+  skipReason: PushSkipReason | null;
+  /** Reciters left out because they would pass 90% of the node's quota. */
+  skipped: number;
+  capBytes: number | null;
+  detail: string | null;
+}
+
+export interface PushPlan {
+  catalogue: number;
+  nodes: PushNodePlan[];
+}
