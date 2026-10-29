@@ -24,6 +24,12 @@ export interface MailTransport {
   /** `smtp` sends; `null` refuses with MailNotConfiguredError. */
   readonly kind: 'smtp' | 'null';
   send(message: MailMessage): Promise<{ messageId: string }>;
+  /**
+   * Drops any cached client so the next send rebuilds from current settings.
+   * Optional: a stateless transport (a test recorder, the null transport) has
+   * nothing to drop.
+   */
+  reload?(): void;
 }
 
 export class MailNotConfiguredError extends Error {
