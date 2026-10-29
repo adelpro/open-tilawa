@@ -1,5 +1,9 @@
 # GunDB Multi-Device Sync + Global Counts
 
+![Where your account lives](how-it-works/07-where-accounts-live.png)
+
+*One relay, two graphs. [The full page](how-it-works/07-where-accounts-live.md).*
+
 ## 1) Device Pairing Flow
 
 The core idea: treat the SEA keypair as the identity. Any device authenticated with the same pair is the same user.
@@ -82,6 +86,14 @@ Treat each field differently based on conflict tolerance. Don't try to force one
 
 
 ## 4) Handling Global Counts (Views & Favorites)
+
+![One tap, two counters](how-it-works/08-favourites-and-views.png)
+
+*What one tap writes, and how often. [The full page](how-it-works/08-favourites-and-views.md).*
+
+> **As built:** the dedup state is a per-identity set in `localStorage`
+> (`utils/favorites-local.ts`), not `favMeta` in the user graph. The graph stores
+> the list; the local set remembers what this identity already counted.
 
 This is the most important part. **Global counts must remain anonymous and outside the user graph**. The fix is client-side deduplication by identity.
 

@@ -4,6 +4,10 @@ One page, one `<audio>`, one WebTorrent client, one service worker. The reciter
 list is remote, the audio is a torrent, and the only fallback is a web seed on
 our own origin.
 
+![How the audio gets to you](how-it-works/02-audio-path.png)
+
+*The request is small; the audio is not. [The full page](how-it-works/02-audio-path.md).*
+
 ```
 admin catalogue ──► GET /api/public/reciters (published rows, id, magnet, riwaya)
         │

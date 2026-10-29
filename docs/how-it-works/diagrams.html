@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>open-tilawa · how it works — diagrams</title>
+<style>
+  html, body { margin: 0; background: #fff; color: #111; }
+  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .sheet { position: relative; width: 1600px; height: 1000px; background: #fff; overflow: hidden; }
+  .sheet svg { display: block; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const INK = '#111', GRAY = '#6b6b6b', FAINT = '#f4f4f4';
+
+const SHEETS = [
+  /* ------------------------------------------------------------------ 01 */
+  { id: '01-what-runs', file: '01-what-runs',
+    title: 'WHAT RUNS ON THE BOX',
+    sub: 'One host. Five jobs in the compose project, and the relay that sits beside it.',
+    frames: [
+      { x: 120, y: 190, w: 1360, h: 650, label: 'host' },
+      { x: 160, y: 236, w: 1000, h: 570, label: 'compose project' }
+    ],
+    boxes: [
+      { x: 190, y: 276, w: 940, h: 80, title: 'edge', sub: ['the only way in — terminates TLS, proxies to the others'] },
+      { x: 190, y: 386, w: 290, h: 130, title: 'web', sub: ['serves the player', 'reads the catalogue'] },
+      { x: 510, y: 386, w: 290, h: 130, title: 'tracker', sub: ['tells peers about each other', 'keeps no state'] },
+      { x: 830, y: 386, w: 300, h: 130, title: 'seeder', sub: ['holds the audio files', 'announces to the tracker'] },
+      { x: 190, y: 546, w: 940, h: 226, nested: true, label: 'admin · three containers' },
+      { x: 220, y: 636, w: 270, h: 90, title: 'console', sub: ['the page you click'] },
+      { x: 525, y: 636, w: 270, h: 90, title: 'api', sub: ['catalogue, nodes, turn'] },
+      { x: 830, y: 636, w: 270, h: 90, title: 'door', sub: ['its own way in'] },
+      { x: 1200, y: 276, w: 240, h: 160, dashed: true, title: 'gun relay', sub: ['accounts and counters', 'cloudflared · :8765'] }
+    ],
+    notes: [[120, 880, 'The relay is its own container, not part of the compose project: rebuilding the app never touches the accounts.']]
+  },
+
+  /* ------------------------------------------------------------------ 07 */
+  { id: '07-where-accounts-live', file: '07-where-accounts-live',
+    title: 'WHERE YOUR ACCOUNT LIVES',
+    sub: 'One relay, two graphs: yours, and the anonymous counters.',
+    boxes: [
+      { x: 120, y: 260, w: 300, h: 100, title: 'device', sub: ['one keypair'] },
+      { x: 120, y: 400, w: 300, h: 100, title: 'device', sub: ['the same keypair'] },
+      { x: 620, y: 290, w: 280, h: 150, title: 'relay', sub: ['gundb-relay.quran.us.kg', 'gun :8765'] },
+      { x: 1060, y: 220, w: 380, h: 160, title: 'your graph', sub: ['~your public key', 'favourites · name · settings'] },
+      { x: 1060, y: 440, w: 380, h: 160, title: 'public counters', sub: ['anonymous totals', 'views · favourites'] }
+    ],
+    links: [
+      { from: [420, 310], to: [620, 330], label: 'sync', lx: 520, ly: 300 },
+      { from: [420, 450], to: [620, 410], label: 'sync', lx: 520, ly: 458 },
+      { from: [900, 340], to: [1060, 300], label: 'read · write', lx: 960, ly: 300 },
+      { from: [900, 400], to: [1060, 520], label: 'read · write', lx: 960, ly: 484 }
+    ],
+    notes: [[120, 640, 'The graph is signed, not encrypted: anyone who knows your public key can read it.'],
+            [120, 668, 'The counters live outside your graph, so they survive an account and are writable by anyone.']]
+  },
+
+  /* ------------------------------------------------------------------ 08 */
+  { id: '08-favourites-and-views', file: '08-favourites-and-views',
+    title: 'ONE TAP, TWO COUNTERS',
+    sub: 'The list is local first. The counters are public, and each one counts once.',
+    boxes: [
+      { x: 120, y: 250, w: 240, h: 110, title: 'tap the heart', sub: [''] },
+      { x: 440, y: 250, w: 260, h: 110, title: 'your list', sub: ['on this device', 'works signed out'] },
+      { x: 780, y: 250, w: 260, h: 110, title: 'your graph', sub: ['only if signed in'] },
+      { x: 1120, y: 250, w: 300, h: 110, title: 'favourite count', sub: ['once per person'] },
+      { x: 120, y: 520, w: 240, h: 110, title: 'open a reciter', sub: [''] },
+      { x: 440, y: 520, w: 260, h: 110, title: 'this tab', sub: ['remembered once'] },
+      { x: 780, y: 520, w: 300, h: 110, title: 'view count', sub: ['once per session'] }
+    ],
+    links: [
+      { from: [360, 305], to: [440, 305], label: 'toggle', lx: 400, ly: 293 },
+      { from: [700, 305], to: [780, 305], dashed: true, label: 'merge', lx: 740, ly: 293 },
+      { from: [570, 360], via: [[570, 405], [1270, 405], [1270, 360]], to: [1270, 360], label: 'a real change only', lx: 930, ly: 395 },
+      { from: [360, 575], to: [440, 575], label: 'once', lx: 400, ly: 563 },
+      { from: [700, 575], to: [780, 575] }
+    ],
+    notes: [[120, 740, 'The list is the source of truth, so favourites work signed out; signing in merges, it never replaces.'],
+            [120, 768, 'A favourite counts once per person, even from two linked devices. A view counts once per tab.']]
+  },
+
+  /* ------------------------------------------------------------------ 06 */
+  { id: '06-servers-and-links', file: '06-servers-and-links',
+    title: 'ONE HOST, OR MORE?',
+    sub: 'The host is not special. A node is the same seeder image, run somewhere else.',
+    boxes: [
+      { x: 120, y: 300, w: 360, h: 200, title: 'primary host', sub: ['runs every service', 'and holds the volumes'] },
+      { x: 640, y: 280, w: 220, h: 140, title: 'tracker', sub: ['the switchboard'] },
+      { x: 1000, y: 250, w: 380, h: 360, nested: true, label: 'other nodes' },
+      { x: 1020, y: 300, w: 340, h: 110, title: 'seeder node', sub: ['same image · another machine'], dashed: true },
+      { x: 1020, y: 430, w: 340, h: 110, title: 'seeder node', sub: ['same image · another machine'], dashed: true },
+      { x: 120, y: 600, w: 360, h: 120, title: 'console', sub: ['reaches every node directly'] }
+    ],
+    links: [
+      { from: [480, 360], to: [640, 340], label: 'announce · wss', lx: 556, ly: 336 },
+      { from: [1000, 320], to: [860, 320], label: 'announce · wss', lx: 930, ly: 306 },
+      { from: [480, 660], via: [[920, 660], [920, 580]], to: [1000, 580], label: 'api · 8085 · each node', lx: 908, ly: 648 }
+    ],
+    notes: [[120, 820, 'A node updates itself. Only the one running here can be updated from the console.'],
+            [120, 848, 'turn runs on the host too, but only relays listeners — it is never a tracker.']]
+  },
+
+  /* ------------------------------------------------------------------ 03 */
+  { id: '03-where-files-live', file: '03-where-files-live',
+    title: 'WHERE THE FILES LIVE',
+    sub: 'Three volumes. Containers are rebuilt; these three are not.',
+    boxes: [
+      { x: 160, y: 250, w: 1280, h: 150, plate: true, align: 'left', title: 'seed_downloads', sub: ['the audio itself — the expensive one · read and written by the seeder, served read-only by web'] },
+      { x: 160, y: 430, w: 1280, h: 150, plate: true, align: 'left', title: 'seed_torrents', sub: ['.torrent files — cheap to rebuild · the seeder writes them, web hands them out'] },
+      { x: 160, y: 610, w: 1280, h: 150, plate: true, align: 'left', title: 'admin_data', sub: ['one sqlite file: the catalogue and the node list · only the api writes here'] }
+    ],
+    notes: [[160, 830, 'Recreating a container keeps all three. Renaming the compose project orphans them.']]
+  },
+
+  /* ------------------------------------------------------------------ 02 */
+  { id: '02-audio-path', file: '02-audio-path',
+    title: 'HOW THE AUDIO GETS TO YOU',
+    sub: 'The request is small. The audio never passes through the web container.',
+    boxes: [
+      { x: 120, y: 320, w: 280, h: 120, title: 'listener', sub: ['a browser'] },
+      { x: 500, y: 320, w: 240, h: 120, title: 'cloudflare', sub: ['names, TLS, websockets'] },
+      { x: 840, y: 320, w: 240, h: 120, title: 'edge', sub: ['the door'] },
+      { x: 1180, y: 210, w: 300, h: 120, title: 'web', sub: ['serves the player', 'and the catalogue'] },
+      { x: 700, y: 560, w: 240, h: 110, title: 'tracker', sub: ['who has the file'] },
+      { x: 1180, y: 560, w: 300, h: 110, title: 'seeder', sub: ['and other listeners'] }
+    ],
+    links: [
+      { from: [400, 380], to: [500, 380], label: 'https', lx: 450, ly: 368 },
+      { from: [740, 380], to: [840, 380], label: 'tunnel', lx: 790, ly: 368 },
+      { from: [1080, 380], via: [[1130, 380], [1130, 270]], to: [1180, 270], label: 'the app', lx: 1140, ly: 330 },
+      { from: [200, 440], via: [[200, 530], [820, 530]], to: [820, 560], dashed: true, label: 'who has this?', lx: 520, ly: 516 },
+      { from: [330, 440], via: [[330, 780], [1330, 780]], to: [1330, 670], label: 'the audio · bittorrent', lx: 700, ly: 766 },
+      { from: [1180, 600], to: [940, 600], label: 'announce', lx: 1060, ly: 588 }
+    ],
+    notes: [[120, 880, 'Most bytes come from the seeder or from other listeners. The web container only hands over the app.']]
+  },
+
+  /* ------------------------------------------------------------------ 04 */
+  { id: '04-admin-path', file: '04-admin-path',
+    title: 'WHAT THE CONSOLE CAN TOUCH',
+    sub: 'One page, one API, and a socket it only uses for updates.',
+    boxes: [
+      { x: 120, y: 340, w: 300, h: 120, title: 'browser', sub: ['the console'] },
+      { x: 520, y: 340, w: 280, h: 120, title: 'admin door', sub: ['its own way in'] },
+      { x: 900, y: 340, w: 280, h: 120, title: 'api', sub: ['catalogue · nodes · turn'] },
+      { x: 1240, y: 260, w: 260, h: 120, title: 'seeder', sub: ['add and remove torrents'], dashed: true },
+      { x: 1240, y: 500, w: 260, h: 120, title: 'docker', sub: ['the local daemon'], dashed: true }
+    ],
+    links: [
+      { from: [420, 400], to: [520, 400], label: 'tunnel', lx: 470, ly: 388 },
+      { from: [800, 400], to: [900, 400], label: 'api', lx: 850, ly: 388 },
+      { from: [1180, 370], via: [[1210, 370], [1210, 320]], to: [1240, 320], label: '8085 · basic auth', lx: 1040, ly: 356 },
+      { from: [1040, 460], via: [[1040, 560]], to: [1240, 560], dashed: true, label: 'docker socket', lx: 1140, ly: 548 }
+    ],
+    notes: [[120, 760, 'Unlink only drops the row in the console. The node keeps its files and keeps seeding.'],
+            [120, 788, 'That is why the button is called Unlink and not Remove.']]
+  },
+
+  /* ------------------------------------------------------------------ 05 */
+  { id: '05-public-names', file: '05-public-names',
+    title: 'WHAT IS ACTUALLY PUBLIC',
+    sub: 'Four names. Two doors. One of them bypasses the tunnel on purpose.',
+    boxes: [
+      { x: 120, y: 220, w: 300, h: 80, title: 'tilawa', sub: ['the player'] },
+      { x: 120, y: 340, w: 300, h: 80, title: 'tracker', sub: ['the switchboard'] },
+      { x: 120, y: 460, w: 300, h: 80, title: 'admin-tilawa', sub: ['the console'] },
+      { x: 120, y: 640, w: 300, h: 80, title: 'turn', sub: ['relay'] },
+      { x: 620, y: 210, w: 260, h: 160, title: 'edge', sub: [':8084', 'loopback'] },
+      { x: 620, y: 450, w: 260, h: 100, title: 'admin door', sub: [':9400 · loopback'] },
+      { x: 1020, y: 180, w: 300, h: 90, title: 'web', sub: [':80'] },
+      { x: 1020, y: 300, w: 300, h: 90, title: 'tracker', sub: [':8083'] },
+      { x: 1020, y: 440, w: 300, h: 120, title: 'admin', sub: ['console :80', 'api :9410'] },
+      { x: 1020, y: 640, w: 300, h: 90, title: 'coturn', sub: [':3478 · udp/tcp'] }
+    ],
+    links: [
+      { from: [420, 260], to: [620, 260] },
+      { from: [420, 380], via: [[560, 380], [560, 330]], to: [620, 330] },
+      { from: [420, 500], to: [620, 500] },
+      { from: [880, 240], to: [1020, 240] },
+      { from: [880, 300], via: [[950, 300], [950, 345]], to: [1020, 345] },
+      { from: [880, 500], to: [1020, 500] },
+      { from: [420, 683], to: [1020, 683], dashed: true, label: 'direct A record — no tunnel', lx: 720, ly: 668 }
+    ],
+    notes: [[120, 800, 'Two doors face the internet: 8084 (edge) and 9400 (admin). Everything else stays on loopback.'],
+            [120, 828, 'turn is the exception: listeners reach it over UDP, straight from the internet.']]
+  }
+];
+
+/* ---------------------------------------------------------------- renderer */
+const NS = 'http://www.w3.org/2000/svg';
+function mk(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(svg, x, y, s, size, fill, o) {
+  o = o || {};
+  const t = mk('text', Object.assign({
+    x: x, y: y, 'font-size': size, fill: fill || INK,
+    'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif',
+    'letter-spacing': o.ls == null ? '.02em' : o.ls,
+    'font-weight': o.w || 400,
+    'text-anchor': o.anchor || 'start'
+  }, o.attrs || {}), svg);
+  t.textContent = s;
+  return t;
+}
+
+function render(sheet) {
+  const sec = document.createElement('section');
+  sec.className = 'sheet';
+  sec.id = sheet.id;
+
+  const svg = mk('svg', { width: 1600, height: 1000, viewBox: '0 0 1600 1000' }, sec);
+  const defs = mk('defs', {}, svg);
+  const m = mk('marker', { id: 'ar-' + sheet.id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 8, markerHeight: 8, orient: 'auto-start-reverse', markerUnits: 'userSpaceOnUse' }, defs);
+  mk('path', { d: 'M1,1.5 L9,5 L1,8.5 z', fill: INK }, m);
+
+  txt(svg, 120, 108, sheet.title, 30, INK, { ls: '.16em' });
+  txt(svg, 120, 138, sheet.sub, 15, GRAY, { ls: '.01em' });
+
+  // frames go under everything
+  (sheet.frames || (sheet.frame ? [sheet.frame] : [])).forEach(f => {
+    mk('rect', { x: f.x, y: f.y, width: f.w, height: f.h, rx: 22, fill: 'none', stroke: INK, 'stroke-width': 1.2 }, svg);
+    txt(svg, f.x + 24, f.y + 32, f.label, 12, GRAY, { ls: '.2em' });
+  });
+
+  (sheet.links || []).forEach(l => {
+    const pts = [l.from].concat(l.via || []).concat([l.to]);
+    mk('polyline', {
+      points: pts.map(p => p[0] + ',' + p[1]).join(' '),
+      fill: 'none', stroke: l.dashed ? GRAY : INK,
+      'stroke-width': l.dashed ? 1.1 : 1.4,
+      'stroke-dasharray': l.dashed ? '7 5' : null,
+      'marker-end': l.plain ? null : 'url(#ar-' + sheet.id + ')',
+      'stroke-linejoin': 'round'
+    }, svg);
+    if (l.label) {
+      const a = pts[0], b = pts[pts.length - 1];
+      txt(svg, l.lx == null ? (a[0] + b[0]) / 2 : l.lx, l.ly == null ? (a[1] + b[1]) / 2 - 10 : l.ly, l.label, 12, GRAY, { anchor: 'middle', ls: '.04em' });
+    }
+  });
+
+  sheet.boxes.forEach(b => {
+    const t = 14, s = 12.5;
+    mk('rect', {
+      x: b.x, y: b.y, width: b.w, height: b.h, rx: b.nested ? 14 : 12,
+      fill: b.plate ? FAINT : '#fff', stroke: b.dashed ? GRAY : INK,
+      'stroke-width': b.dashed ? 1.1 : 1.5,
+      'stroke-dasharray': b.dashed ? '7 5' : null
+    }, svg);
+
+    if (b.nested) {
+      txt(svg, b.x + 24, b.y + 32, b.label, 12, GRAY, { ls: '.2em' });
+      return;
+    }
+
+    const lines = b.sub || [];
+    const blockH = t + (lines.length ? lines.length * 18 + 6 : 0);
+
+    if (b.align === 'left') {
+      const x = b.x + 32;
+      const cy = b.y + b.h / 2 - blockH / 2 + t * 0.85;
+      txt(svg, x, cy, b.title, 16, INK, { ls: '.14em', attrs: { style: 'text-transform:uppercase' } });
+      lines.forEach((ln, i) => txt(svg, x, cy + 26 + i * 20, ln, 13.5, GRAY, { ls: '.01em' }));
+      return;
+    }
+
+    const cy = b.y + b.h / 2 - blockH / 2 + t * 0.85;
+    txt(svg, b.x + b.w / 2, cy, b.title, t, INK, { anchor: 'middle', ls: '.12em', attrs: { style: 'text-transform:uppercase' } });
+    lines.forEach((ln, i) => txt(svg, b.x + b.w / 2, cy + 22 + i * 18, ln, s, GRAY, { anchor: 'middle', ls: '.01em' }));
+  });
+
+  (sheet.notes || []).forEach(([x, y, s]) => txt(svg, x, y, s, 13, GRAY, { ls: '.01em' }));
+
+  txt(svg, 120, 946, 'open-tilawa · how it works', 11, '#9a9a9a', { ls: '.16em' });
+  txt(svg, 1480, 946, sheet.file, 11, '#9a9a9a', { ls: '.16em', anchor: 'end' });
+
+  return sec;
+}
+
+const root = document.getElementById('root');
+SHEETS.forEach(s => root.appendChild(render(s)));
+window.__SHEETS__ = SHEETS.map(s => s.id);
+window.__READY__ = true;
+</script>
+</body>
+</html>

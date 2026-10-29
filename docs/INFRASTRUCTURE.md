@@ -1,32 +1,22 @@
 # Infrastructure — how every part fits
 
-One host, one set of containers, three public entry points. This is the map: what
+One host, one set of containers, four public names. This is the map: what
 each piece does, which port it listens on, and how data moves between them.
 
-```
-                    Cloudflare (TLS, WebSockets)
-        ┌───────────────────────┼────────────────────────┐
-        │                       │                        │
- tilawa.quran.us.kg     tracker.quran.us.kg      admin-tilawa.quran.us.kg
-        │                       │                        │
-        └──────────► open-tilawa-edge :8084 (host loopback) ◄──┘
-                             │
-        ┌────────────────────┼─────────────────────┐
-        ▼                    ▼                     ▼
-   web :80            tracker :8083         admin-edge :9400 (host)
- (public SPA)        (bittorrent-tracker)          │
-        │                                     ┌────┴─────┐
-        │                                     ▼          ▼
-        │                              admin-api :9410  admin-web :80
-        │                              (SQLite volume)   (dashboard SPA)
-        │                                     │
-        │                                     │ docker socket (updates only)
-        └──── torrents ⇄ seeder :8085 ◄───────┘
-                              │
-                        /data volume (audio + .torrent)
-                              │
-                        TURN :3478 (host network, opt-in relay)
-```
+![What runs on the box](how-it-works/01-what-runs.png)
+
+*The compose project, and the Gun relay beside it. Plain-language version:
+[What runs on the box](how-it-works/01-what-runs.md).*
+
+![One host, or more?](how-it-works/06-servers-and-links.png)
+
+*The host is not special: a seeder node is the same image on another machine.
+[One host, or more?](how-it-works/06-servers-and-links.md).*
+
+![What is actually public](how-it-works/05-public-names.png)
+
+*Four names, two doors, one exception. Ports stay in the table in §7; the story is
+in [What is actually public](how-it-works/05-public-names.md).*
 
 ## 1. Public site — `web`
 
@@ -73,7 +63,7 @@ each piece does, which port it listens on, and how data moves between them.
   none).
 - **What `/health` answers:** `version`, `sha`, `disk {free,total}`,
   `quotaBytes`, `usedBytes`, `headroomBytes`, `limits`, plus live counters. The
-  dashboard stores these on every probe.
+  console stores these on every probe.
 - **Disk policy:** `DISK_QUOTA_GB` (or `MAX_DISK_BYTES`) caps what the node will
   hold. Enforcement happens on the node: a magnet's `xl` is checked before
   adding, and the real length is checked the moment metadata arrives — over the
@@ -81,13 +71,13 @@ each piece does, which port it listens on, and how data moves between them.
 - **Bandwidth:** `UPLOAD_LIMIT_KBPS` / `DOWNLOAD_LIMIT_KBPS` throttle the
   WebTorrent client (0 = unlimited). The admin page shows the cap next to the
   live speed.
-- **Admin UI:** `ADMIN_UI=0` keeps `/api` for the dashboard but stops serving the
+- **Admin UI:** `ADMIN_UI=0` keeps `/api` for the console but stops serving the
   browsable page.
 - **Announce:** the node announces every torrent it seeds to the tracker list in
   `constants/TRACKERS.js` (canonical: `wss://tracker.quran.us.kg`) in addition to
   the trackers inside each `.torrent`. A remote node without the internal
   `tracker` service simply has one unreachable entry; the rest still announce.
-- **Add/remove:** normally driven by the dashboard (it proxies with the stored
+- **Add/remove:** normally driven by the console (it proxies with the stored
   credentials); the node's own API remains the authority.
 
 ## 4. TURN — `turn`
@@ -108,7 +98,7 @@ each piece does, which port it listens on, and how data moves between them.
 - **`admin-api`**: NestJS. SQLite at `/data/tilawa-admin.sqlite` (volume
   `open-tilawa_admin_data`). Production env (`NODE_ENV=production`), secrets in
   `apps/admin/.env`.
-- **`admin-web`**: the dashboard SPA; its nginx template provides the SPA
+- **`admin-web`**: the console SPA; its nginx template provides the SPA
   fallback (deep links) and the CSP.
 - **What it manages:** seeder nodes (status, version, disk/quota/headroom,
   credentials, torrents, software update), TURN servers (status/latency/history),
@@ -118,7 +108,7 @@ each piece does, which port it listens on, and how data moves between them.
   skips what will not fit. The node's own screen shows its reported version and
   build SHA, so "is this the release I published?" needs no shell.
 - **Unlinking:** the Remove action is called **Unlink** because that is all it
-  does — `DELETE /api/seeders/:id` drops the dashboard row, and the node keeps
+  does — `DELETE /api/seeders/:id` drops the console row, and the node keeps
   running and seeding. Node-side data is removed per torrent, deliberately.
 - **Software updates:** `POST /api/seeders/:id/update` runs a fixed compose pair
   against the host daemon through a mounted socket. It is admin-only,
@@ -131,16 +121,16 @@ each piece does, which port it listens on, and how data moves between them.
 ## 6. Data flows
 
 **Catalogue → node**
-1. A reciter is added/edited in the dashboard: name, riwaya, infohash, magnet,
+1. A reciter is added/edited in the console: name, riwaya, infohash, magnet,
    size. The magnet is normalised to the configured tracker list.
 2. *Push to nodes* or the per-node checklist adds what the node is missing, by
    magnet, through the node's API.
 3. The node resolves metadata, checks its quota, downloads into `/data`, and
-   starts seeding. The dashboard reads the node's live inventory — never a copy.
+   starts seeding. The console reads the node's live inventory — never a copy.
 
 **Magnet → facts**
 `POST /api/metadata` on a node resolves a magnet just far enough to report name,
-size and file count, then destroys it; the dashboard uses it to fill a reciter
+size and file count, then destroys it; the console uses it to fill a reciter
 form and to power the converter.
 
 **Torrent → magnet**
@@ -161,7 +151,7 @@ from another source still plays.
 | --- | --- | --- | --- |
 | 8084 | 127.0.0.1 | edge (public site + tracker vhost) | via tunnel |
 | 8083 | 127.0.0.1 | tracker | via edge |
-| 8085 | 127.0.0.1 / node IP | seeder admin API | dashboard only |
+| 8085 | 127.0.0.1 / node IP | seeder admin API | console only |
 | 6881 | node | peer traffic (TCP/UDP) | yes, on nodes |
 | 3478, 5349, 49160-49200 | host | TURN | yes (UDP direct) |
 | 9400 | 127.0.0.1 | admin edge | via tunnel |
@@ -200,5 +190,5 @@ Root `.env` (seeder + tracker + turn): `ADMIN_USER`, `ADMIN_PASS`,
 - `/media` serves the seeder in the same compose stack (the primary node), not
   the whole fleet: a published reciter absent from that node has no HTTP
   fallback. Per-node web seeds or an infohash proxy are the upgrade path.
-- Remote nodes update themselves; the dashboard's update button is local only.
+- Remote nodes update themselves; the console's update button is local only.
 - Catalogue manifests are not signed yet.
