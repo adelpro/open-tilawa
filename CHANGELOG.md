@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.8.2 — 2026-10-29
+
+Patch. App versions: **web 1.9.3**, **admin 1.27.2**, **seeder 1.4.3**.
+
+### Changed
+
+- **The About page answers what a listener actually asks.** Six sections replace
+  the four paragraphs: how the sound reaches you, what happens when nobody else
+  is listening, what a ring syncs and what nobody can restore for you, what to
+  know before relying on it, where the recordings come from, and that the code
+  is open. Every number in it is a number in the code — the 8-second grace
+  before the web seed, the 1 MB/s per-connection cap, the seed that stays
+  attached after peers appear — and the riwaya line states the rule the
+  catalogue already keeps: an unknown reading is not guessed at.
+
 ## 1.8.1 — 2026-10-29
 
 Patch. App versions: **web 1.9.2**, **admin 1.27.2**, **seeder 1.4.3**.
