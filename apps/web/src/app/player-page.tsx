@@ -256,7 +256,7 @@ export default function PlayerPage({
             </button>
           </p>
           <div className="theatre-horizon mb-4 flex justify-center">
-            <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 64} />
+            <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 96} />
           </div>
 
           <div className="mt-10 lg:mx-auto lg:mt-0 lg:w-[560px]">

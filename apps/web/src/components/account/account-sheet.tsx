@@ -35,12 +35,14 @@ const BODY = 'h-[min(72dvh,30rem)] px-5 pb-5 pt-3';
 export default function AccountSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useLocale();
   const copy = t.account;
-  const { loggedIn, name, loading, error, createAccount, logout } = useGun();
+  const { loggedIn, name, loading, error, createAccount, renameAccount, logout } = useGun();
   const devices = useAtomValue(userDevicesAtom) as Record<string, { id?: string }>;
   const [tab, setTab] = useState<Tab>('devices');
   const [confirmText, setConfirmText] = useState('');
   const [camera, setCamera] = useState(false);
   const [ringName, setRingName] = useState(() => getOrCreateDeviceName());
+  const [editingName, setEditingName] = useState(false);
+  const [draftName, setDraftName] = useState('');
 
   const deviceCount = Object.values(devices || {}).filter((d) => d?.id).length;
   const isLastDevice = deviceCount <= 1;
@@ -49,7 +51,20 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
   const close = () => {
     setConfirmText('');
     setCamera(false);
+    setEditingName(false);
     onClose();
+  };
+
+  const startRenaming = () => {
+    setDraftName(name ?? '');
+    setEditingName(true);
+  };
+
+  const saveName = () => {
+    const trimmed = draftName.trim();
+    if (!trimmed) return;
+    renameAccount(trimmed);
+    setEditingName(false);
   };
 
   return (
@@ -65,9 +80,53 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
         {loggedIn ? (
           <>
             <div className="flex items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate text-[12.5px] text-muted">
-                {copy.ringOf} <span className="text-ink">{name || '—'}</span>
-              </p>
+              {editingName ? (
+                <form
+                  className="flex min-w-0 flex-1 items-center gap-1.5 self-center"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    saveName();
+                  }}
+                >
+                  <input
+                    autoFocus
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    placeholder={copy.ringName}
+                    aria-label={copy.ringName}
+                    maxLength={40}
+                    className="min-w-0 flex-1 rounded-lg border border-line bg-transparent px-2 py-1 text-[16px] text-ink outline-none focus:border-ink"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!draftName.trim()}
+                    className="shrink-0 rounded-lg border border-ink px-2 py-1 text-[11.5px] font-medium text-ink disabled:opacity-40"
+                  >
+                    {copy.renameSave}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingName(false)}
+                    className="shrink-0 px-1 py-1 text-[11.5px] text-muted"
+                  >
+                    {copy.renameCancel}
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startRenaming}
+                  title={copy.rename}
+                  aria-label={copy.rename}
+                  className="group flex min-w-0 items-baseline gap-1.5 text-[12.5px] text-muted hover:text-ink"
+                >
+                  <span className="shrink-0">{copy.ringOf}</span>
+                  <span className="truncate text-ink">{name || '…'}</span>
+                  <span aria-hidden="true" className="shrink-0 opacity-40 group-hover:opacity-100">
+                    ✎
+                  </span>
+                </button>
+              )}
               <span className="shrink-0 text-[11.5px] text-muted">
                 {copy.deviceCount(deviceCount)}
               </span>

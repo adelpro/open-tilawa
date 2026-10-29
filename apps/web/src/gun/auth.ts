@@ -5,11 +5,12 @@ import { gun, user, type GunAck } from './index';
 import { ensureUserSchema } from './ensure-user-schema';
 import { touchDevice } from '@/hooks/use-user-sync';
 import { gunLoggedInAtom, gunUserPubAtom, gunUserAliasAtom } from '@/jotai/gun';
-import { getOrCreateDeviceName } from '@/utils/device/device-name';
 
 const store = getDefaultStore();
 
 let started = false;
+/** The account pub whose `profile.name` is already being watched. */
+let listenedPub: string | null = null;
 
 export function authPair(pair: unknown): Promise<GunAck> {
   return new Promise((resolve) => {
@@ -22,17 +23,53 @@ export function authPair(pair: unknown): Promise<GunAck> {
 }
 
 /**
+ * The ring's name lives in `profile.name`, not in the keypair, so every device
+ * reads it back from the account.
+ *
+ * A one-shot read is the wrong tool here. It used to be issued while a fresh
+ * ring's profile was still empty — and `.once()` on a path the relay has not
+ * answered may never call back at all — so the sheet was left holding whatever
+ * placeholder had been written first. A subscription is registered per account
+ * pub instead: it fires when the local write lands, when the relay echoes the
+ * profile to another device, and when the name is edited in the sheet.
+ */
+function watchRingName(pub: string): void {
+  if (listenedPub === pub) return;
+  listenedPub = pub;
+  // A different account: the old name must not survive the switch.
+  store.set(gunUserAliasAtom, null);
+  // `on` is attached to this account's own chain, not the root, so it needs no
+  // removal — and `gun.off()` is never an option: it would strip the relay's
+  // listeners too.
+  user
+    .get('profile')
+    .get('name')
+    .on((stored: unknown) => {
+      if (typeof stored === 'string' && stored.trim()) {
+        store.set(gunUserAliasAtom, stored.trim());
+      }
+    });
+}
+
+/** Optimistic write of a name we already know (create and rename). */
+export function setRingName(name: string | null): void {
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  store.set(gunUserAliasAtom, trimmed || null);
+}
+
+/**
  * Mirrors Gun's auth state into atoms.
  *
- * The name is not part of the keypair — SEA stores only the pair — so it lives
- * in the account profile and every linked device reads it back. Falls back to a
- * short key so the sheet is never blank.
+ * Until the account's name arrives the atom stays null: the sheet shows a
+ * loading mark rather than pretending the device name is the ring's name.
  */
 function publish(): void {
   if (!user.is) {
     store.set(gunLoggedInAtom, false);
     store.set(gunUserPubAtom, null);
     store.set(gunUserAliasAtom, null);
+    // Signing back into the same ring must re-read it, not wait for an edit.
+    listenedPub = null;
     return;
   }
 
@@ -44,15 +81,7 @@ function publish(): void {
     store.set(gunUserAliasAtom, null);
     return;
   }
-  // Never leave the sheet showing an em dash: the device name is a truthful
-  // placeholder until the account's own name arrives from the relay.
-  store.set(gunUserAliasAtom, getOrCreateDeviceName());
-  user
-    .get('profile')
-    .get('name')
-    .once((stored: unknown) => {
-      if (typeof stored === 'string' && stored.trim()) store.set(gunUserAliasAtom, stored);
-    });
+  watchRingName(pub);
 }
 
 /**

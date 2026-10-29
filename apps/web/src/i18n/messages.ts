@@ -38,6 +38,9 @@ const ar = {
     createTitle: 'حلقة جديدة',
     createAction: 'إنشاء حلقة',
     ringName: 'اسم الحلقة',
+    rename: 'تسمية الحلقة',
+    renameSave: 'حفظ',
+    renameCancel: 'إلغاء',
     createNote:
       'الحلقة مفتاح يُولَّد هنا ويُحفظ في هذا المتصفح — لا اسم مستخدم ولا كلمة مرور. أضف جهازاً آخر إليها الآن إن أردت أن تبقى الحلقة ومفضّلاتها بعد فقد هذا الجهاز.',
     joinTitle: 'الانضمام إلى حلقة',
@@ -229,6 +232,9 @@ const en: typeof ar = {
     createTitle: 'New ring',
     createAction: 'Create ring',
     ringName: 'Ring name',
+    rename: 'Rename the ring',
+    renameSave: 'Save',
+    renameCancel: 'Cancel',
     createNote:
       'A ring is a key generated here and kept in this browser — no username, no password. Add another device now if you want the ring and its favourites to outlive this one.',
     joinTitle: 'Join a ring',

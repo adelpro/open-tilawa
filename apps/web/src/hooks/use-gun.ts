@@ -3,7 +3,7 @@ import { useAtom } from 'jotai';
 
 import { gun, SEA, user } from '@/gun';
 import { clearStoredPair, storePair } from '@/gun/account-store';
-import { authPair, publishAuthState, startAuthBridge } from '@/gun/auth';
+import { authPair, publishAuthState, setRingName, startAuthBridge } from '@/gun/auth';
 import { touchDevice } from '@/hooks/use-user-sync';
 import { getOrCreateDeviceName } from '@/utils/device/device-name';
 import {
@@ -58,11 +58,14 @@ export function useGun() {
         const ack = await authPair(pair);
         if (!ack.err) {
           storePair(pair);
+          const name = (ringName || '').trim() || getOrCreateDeviceName();
           user.get('profile').put({
-            name: (ringName || '').trim() || getOrCreateDeviceName(),
+            name,
             createdAt: Date.now(),
             updatedAt: Date.now(),
           });
+          // The relay may take a round trip to echo it back; we already know it.
+          setRingName(name);
         }
         return ack;
       }),
@@ -83,6 +86,7 @@ export function useGun() {
     const trimmed = next.trim();
     if (!trimmed) return;
     user.get('profile').put({ name: trimmed, updatedAt: Date.now() });
+    setRingName(trimmed);
   }, []);
 
   const logout = useCallback(() => {

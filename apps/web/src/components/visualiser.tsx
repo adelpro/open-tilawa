@@ -72,8 +72,9 @@ export default function Visualiser({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
-  const levels = useRef<number[]>(new Array(BARS).fill(0.08));
-  const peaks = useRef<number[]>(new Array(BARS).fill(0.08));
+  // A bar starts at the floor: silence is zero height, not a stub.
+  const levels = useRef<number[]>(new Array(BARS).fill(0));
+  const peaks = useRef<number[]>(new Array(BARS).fill(0));
   const waves = useRef<Float32Array[]>(
     WAVES.map(() => new Float32Array(WAVE_POINTS).fill(128)),
   );
@@ -124,9 +125,9 @@ export default function Visualiser({
     /**
      * A quiet passage still has to be legible: the level is lifted by a gamma
      * before it becomes pixels, so an ordinary voice reads at half height instead
-     * of a hairline, while true silence stays at the floor.
+     * of a hairline, while true silence stays at the floor — zero, not a stub.
      */
-    const barHeightFor = (level: number) => Math.max(3, Math.pow(level, 0.65) * height);
+    const barHeightFor = (level: number) => Math.pow(level, 0.65) * height;
 
     const drawBars = () => {
       ctx.fillStyle = tokens.tints[0];
@@ -139,6 +140,9 @@ export default function Visualiser({
     const drawPeaks = () => {
       drawBars();
       peaks.current.forEach((level, index) => {
+        // A peak at zero is nothing; drawing it would leave a bar floating
+        // above the floor on silence.
+        if (level <= 0) return;
         const y = height - barHeightFor(level);
         ctx.fillRect(xFor(index), y - 2, barWidth, 1.5);
       });
@@ -150,9 +154,11 @@ export default function Visualiser({
      * its depth without any layer having to be drawn as a hairline.
      */
     const drawWaves = () => {
-      const amplitude = height - 12;
+      // The strip uses the whole block: only the top pixels are left empty so
+      // the loudest silhouette does not sit flush against the edge.
+      const amplitude = height - 6;
       const step = width / (WAVE_POINTS - 1);
-      const floor = height - 1;
+      const floor = height;
 
       // Back to front, so the deepest tint is the nearest silhouette.
       for (let layer = WAVES.length - 1; layer >= 0; layer -= 1) {
@@ -168,7 +174,10 @@ export default function Visualiser({
             Math.abs((samples[i] - 128) / 128) * auto * style.gain * FILL_GAIN,
           );
           const x = width - i * step;
-          const y = height - Math.max(1.5, Math.pow(value, 0.7) * amplitude);
+          // Silence is the floor itself: no 1.5px stub, so a paused strip or a
+          // gap between ayat does not leave a bar hovering above the bottom.
+          const lift = Math.pow(value, 0.7) * amplitude;
+          const y = height - lift;
           ctx.lineTo(x, y);
         }
         ctx.lineTo(0, floor);
@@ -186,6 +195,11 @@ export default function Visualiser({
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
       ctx.globalAlpha = 1;
+      // Paused and idle are the same picture: nothing at all, not even the floor
+      // line. Clearing here rather than in a separate branch matters because the
+      // ResizeObserver also calls `draw`, and it used to paint the floor back
+      // after the paused state had cleared the canvas.
+      if (!playing) return;
       if (model === 'peaks') drawPeaks();
       else if (model === 'ribbon') drawWaves();
       else drawBars();
@@ -210,8 +224,6 @@ export default function Visualiser({
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
     if (!playing) {
-      // Nothing is playing, so nothing is drawn — not even the old shape.
-      ctx.clearRect(0, 0, width, height);
       return () => {
         observer.disconnect();
         theme.disconnect();
@@ -227,7 +239,7 @@ export default function Visualiser({
       if (analyser && !reduced && frame % DATA_EVERY === 0) {
         analyser.getByteFrequencyData(bins);
         downsample(bins, BARS).forEach((target, index) => {
-          const level = Math.max(0.06, target);
+          const level = target;
           const current = levels.current[index];
           // Rise quickly, fall slowly: the same shape with less flicker.
           levels.current[index] += (level - current) * (level > current ? 0.5 : 0.14);
