@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { Icon } from './icons';
 import { useI18n } from '../lib/i18n';
 import { checkPassword, scorePassword } from '../lib/password';
 import type { PasswordRule } from '../lib/password';
@@ -87,7 +88,7 @@ export function PasswordStrength({
             const check = checks.find((entry) => entry.rule === rule);
             return (
               <li key={rule} className={check?.met ? 'is-met' : undefined}>
-                <span aria-hidden="true">{check?.met ? '✓' : '·'}</span> {ruleLabel(t, rule)}
+                {check?.met ? <Icon name="check" /> : <span aria-hidden="true">·</span>} {ruleLabel(t, rule)}
               </li>
             );
           })}

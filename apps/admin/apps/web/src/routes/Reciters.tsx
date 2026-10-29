@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useI18n, type MessageKey } from '../lib/i18n';
 import { Button } from '../components/Button';
+import { Icon } from '../components/icons';
 import { Field, Input, TextArea } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
@@ -392,7 +393,7 @@ export function Reciters(): ReactElement {
       >
         <button type="button" className="th-sort" onClick={() => toggleSort(key)}>
           {label}
-          <span aria-hidden="true">{active ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : ''}</span>
+          {active ? <Icon name={sort.dir === 'asc' ? 'up' : 'down'} /> : null}
         </button>
       </th>
     );
@@ -486,7 +487,9 @@ export function Reciters(): ReactElement {
           <Button variant="secondary" onClick={() => void openPush()} busy={pushBusy === 'load'}>
             {t('reciters.push')}
           </Button>
-          <Button onClick={() => setShowAdd(true)}>{t('reciters.add')}</Button>
+          <Button icon={<Icon name="plus" />} onClick={() => setShowAdd(true)}>
+            {t('reciters.add')}
+          </Button>
         </div>
       </header>
 

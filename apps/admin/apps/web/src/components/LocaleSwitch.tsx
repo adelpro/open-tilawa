@@ -12,7 +12,7 @@ const SHORT: Record<Locale, string> = { en: 'EN', ar: 'AR' };
  * available languages; the current one is marked active.
  */
 export function LocaleSwitch({ className = '' }: { className?: string }): ReactElement {
-  const { locale, setLocale, t } = useI18n();
+  const { locale, setLocale } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -46,7 +46,7 @@ export function LocaleSwitch({ className = '' }: { className?: string }): ReactE
         aria-haspopup="menu"
         onClick={() => setOpen((o) => !o)}
       >
-        <Icon name="globe" size={18} />
+        <Icon name="globe" size={16} />
         <span className="locale-switch__current">{SHORT[locale]}</span>
       </button>
       {open && (

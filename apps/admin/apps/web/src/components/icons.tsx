@@ -1,28 +1,26 @@
 import type { ReactElement } from 'react';
 import {
   ArrowClockwiseIcon,
-  ArrowDownIcon,
-  ArrowSquareOutIcon,
-  ArrowUpIcon,
-  ChartBarIcon,
+  CaretDownIcon,
+  CaretLeftIcon,
+  CaretUpIcon,
   CheckIcon,
-  CopyIcon,
   DesktopIcon,
   EnvelopeIcon,
   EyeIcon,
   EyeSlashIcon,
   GearSixIcon,
   GlobeIcon,
+  InfoIcon,
   KeyIcon,
   ListIcon,
   LockIcon,
   MoonIcon,
-  PencilSimpleIcon,
   PlusIcon,
+  PulseIcon,
   ShieldCheckIcon,
   SignOutIcon,
   SunIcon,
-  TrashIcon,
   UserIcon,
   XIcon,
 } from '@phosphor-icons/react';
@@ -31,35 +29,30 @@ import type { Icon as PhosphorGlyph } from '@phosphor-icons/react';
 /**
  * The icon set: Phosphor, mapped through one name.
  *
- * Call sites say `<Icon name="trash" />` and never import the library. The mapping
- * is the whole point: the name is the app's vocabulary ("the bin", "the shield"),
+ * Call sites say `<Icon name="shield" />` and never import the library. The mapping
+ * is the whole point: the name is the app's vocabulary ("the shield", "the key"),
  * while the glyph is a design decision that can be replaced here, once. Phosphor is
  * MIT and tree-shakes, so only the glyphs below reach the bundle.
  *
  * Icons are decoration: the label or the field name is the accessible name, so every
  * one is `aria-hidden`. An icon-only button gets its own `aria-label` at the call
- * site. The default `regular` weight is 1px at 16px, within a hair of the 1.75/24
- * stroke of the glyphs this replaced; the heavier weights are there for emphasis,
- * not as the house default. Each glyph carries all six weights, so the 25 names below
- * cost about 17 kB gzipped — the price of not drawing and maintaining them.
+ * site. `regular` is the only weight; `fill` is a state, not an emphasis. The 23
+ * names below are the whole vocabulary — a name that no screen renders is deleted,
+ * not kept for later, because every name in this map is a glyph in the bundle.
  */
 export type IconName =
+  | 'back'
   | 'plus'
   | 'refresh'
-  | 'copy'
-  | 'edit'
-  | 'trash'
   | 'key'
   | 'lock'
   | 'mail'
   | 'check'
-  | 'external'
   | 'eye'
   | 'eyeOff'
   | 'menu'
   | 'close'
   | 'user'
-  | 'chart'
   | 'settings'
   | 'shield'
   | 'logout'
@@ -67,26 +60,24 @@ export type IconName =
   | 'sun'
   | 'moon'
   | 'monitor'
+  | 'info'
+  | 'pulse'
   | 'up'
   | 'down';
 
 const GLYPHS: Record<IconName, PhosphorGlyph> = {
+  back: CaretLeftIcon,
   plus: PlusIcon,
   refresh: ArrowClockwiseIcon,
-  copy: CopyIcon,
-  edit: PencilSimpleIcon,
-  trash: TrashIcon,
   key: KeyIcon,
   lock: LockIcon,
   mail: EnvelopeIcon,
   check: CheckIcon,
-  external: ArrowSquareOutIcon,
   eye: EyeIcon,
   eyeOff: EyeSlashIcon,
   menu: ListIcon,
   close: XIcon,
   user: UserIcon,
-  chart: ChartBarIcon,
   settings: GearSixIcon,
   shield: ShieldCheckIcon,
   logout: SignOutIcon,
@@ -94,8 +85,10 @@ const GLYPHS: Record<IconName, PhosphorGlyph> = {
   sun: SunIcon,
   moon: MoonIcon,
   monitor: DesktopIcon,
-  up: ArrowUpIcon,
-  down: ArrowDownIcon,
+  info: InfoIcon,
+  pulse: PulseIcon,
+  up: CaretUpIcon,
+  down: CaretDownIcon,
 };
 
 export function Icon({
@@ -107,12 +100,12 @@ export function Icon({
   name: IconName;
   size?: number;
   className?: string;
-  weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone';
+  weight?: 'regular' | 'fill';
 }): ReactElement {
   const Glyph = GLYPHS[name];
   return (
     <Glyph
-      className={`icon ${className}`.trim()}
+      className={`icon${name === 'back' ? ' icon-dir' : ''} ${className}`.trim()}
       size={size}
       weight={weight ?? 'regular'}
       aria-hidden="true"

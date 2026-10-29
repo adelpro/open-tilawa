@@ -313,9 +313,6 @@
   font: var(--fine-print);
   color: var(--error);
 }
-.field__error::before {
-  content: 'Error: ';
-}
 
 /* ---------- panels ---------- */
 
@@ -457,6 +454,7 @@
 }
 .node-card__title-line {
   display: flex;
+  margin: 0;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
@@ -492,7 +490,9 @@ a.node-card__name:hover {
 /* A two-part reading (up, down) keeps one part per line: a middot at the wrap
    point is worse than a second line. */
 .node-card__line {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .node-card__note {
   font: var(--fine-print);
@@ -593,6 +593,9 @@ a.node-card__name:hover {
 }
 /* A sortable column header keeps the table's type; only the arrow moves. */
 .th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: none;
   border: 0;
   padding: 0;
@@ -1638,8 +1641,14 @@ button.chip[aria-pressed='true'] {
   box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.18);
 }
 .landing__shot-brand {
-  width: 28px;
+  /* The wordmark is 512x240. Pinning both sides to 28 squeezed it by half; the
+     height sets the scale and the width follows the artwork. */
   height: 28px;
+  width: auto;
+  /* The parent is a stretched flex column, so `width: auto` alone still filled
+     the row. The ratio plus `align-self` is what keeps the artwork's shape. */
+  aspect-ratio: 512 / 240;
+  align-self: flex-start;
   color: var(--primary);
 }
 .landing__shot-title {
@@ -1749,8 +1758,8 @@ button.chip[aria-pressed='true'] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   margin-bottom: var(--space-4);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
@@ -2226,7 +2235,18 @@ button.chip[aria-pressed='true'] {
  */
 .icon {
   flex: none;
-  vertical-align: -0.15em;
+  pointer-events: none;
+  vertical-align: calc(0.5cap - 0.5em - 0.02em);
+}
+/* A direction, not a side: back points left in English and right in Arabic. */
+[dir='rtl'] .icon-dir {
+  transform: scaleX(-1);
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
 }
 .btn__icon {
   display: inline-flex;

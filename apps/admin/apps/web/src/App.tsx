@@ -489,7 +489,7 @@ function NavLink({
         onNavigate?.();
       }}
     >
-      <Icon name={icon} size={18} className="nav__icon" />
+      <Icon name={icon} size={16} className="nav__icon" />
       <span>{label}</span>
     </a>
   );

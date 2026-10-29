@@ -553,10 +553,12 @@ export function Seeders(): ReactElement {
                   value: (
                     <>
                       <bdi className="node-card__line">
-                        ↑ {bytes(seeder.uploadSpeed, locale, true)}
+                        <Icon name="up" />
+                        {bytes(seeder.uploadSpeed, locale, true)}
                       </bdi>
                       <bdi className="node-card__line">
-                        ↓ {bytes(seeder.downloadSpeed, locale, true)}
+                        <Icon name="down" />
+                        {bytes(seeder.downloadSpeed, locale, true)}
                       </bdi>
                     </>
                   ),

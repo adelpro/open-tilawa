@@ -50,7 +50,7 @@ export function NodeCard({
   return (
     <article className={pinned ? 'node-card node-card--pinned' : 'node-card'}>
       <div className="node-card__identity">
-        <span className="node-card__title-line">
+        <h2 className="node-card__title-line">
           {href ? (
             <a className="node-card__name" {...linkProps(href)}>
               {title}
@@ -60,7 +60,7 @@ export function NodeCard({
           )}
           <Chip tone={statusTone}>{statusLabel}</Chip>
           {badges}
-        </span>
+        </h2>
         {url ? (
           <span className="node-card__url" title={url}>
             <bdi>{url}</bdi>
@@ -82,7 +82,7 @@ export function NodeCard({
         ))}
       </dl>
 
-      {actions ? <div className="node-card__actions">{actions}</div> : null}
+      {actions ? <footer className="node-card__actions">{actions}</footer> : null}
     </article>
   );
 }

@@ -165,14 +165,16 @@
   --radius-sm: 8px;
   --radius-lg: 18px;
   --radius-pill: 999px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-12: 48px;
-  --space-16: 64px;
+  /* The 4px rhythm, in rem so it follows the user's text scale: at the default
+     16px root these are still 4/8/12/16/24/32/48/64. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
   /* Three durations, three jobs. Press is on the input path and must feel immediate;
      hover is feedback and can take a frame or two; enter is the longest thing the
      interface does. One curve, so nothing looks like it came from a different app. */

@@ -5,6 +5,7 @@ import { useSession } from '../lib/session';
 import { useI18n } from '../lib/i18n';
 import { bytes, relative } from '../lib/format';
 import { Button } from '../components/Button';
+import { Icon } from '../components/icons';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
@@ -191,8 +192,9 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
     <div className="stack">
       <header className="page-head">
         <div>
-          <a className="fine-print" {...linkProps('/seeders')}>
-            ← {t('torrents.backToSeeders')}
+          <a className="fine-print back-link" {...linkProps('/seeders')}>
+            <Icon name="back" />
+            {t('torrents.backToSeeders')}
           </a>
           <h1 className="display-lg">{node?.name ?? t('torrents.nodeTitle')}</h1>
           {node ? (
@@ -207,11 +209,17 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           ) : null}
         </div>
         <div className="cluster">
-          <Button variant="secondary" onClick={() => void probe()} busy={busy === 'probe'}>
+          <Button
+            variant="secondary"
+            icon={<Icon name="refresh" />}
+            onClick={() => void probe()}
+            busy={busy === 'probe'}
+          >
             {t('torrents.probe')}
           </Button>
           {node?.pinned && (behind || node.updating) ? (
             <Button
+              icon={<Icon name="refresh" />}
               busy={busy === 'update' || node.updating}
               onClick={() => setConfirmingUpdate(true)}
             >

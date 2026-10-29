@@ -270,7 +270,7 @@ export function Landing({ version }: { version: string | null }): ReactElement {
           {features.map((feature, index) => (
             <article key={feature.title} className="landing__feature">
               <span className="landing__feature-icon" aria-hidden="true">
-                <Icon name={featureIconNames[index]} size={20} />
+                <Icon name={featureIconNames[index]} size={24} />
               </span>
               <h2 className="display-sm">{feature.title}</h2>
               <p className="body muted">{feature.body}</p>

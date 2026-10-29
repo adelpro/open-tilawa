@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { useI18n } from '../lib/i18n';
 import { navigate, linkProps } from '../lib/router';
 import { Button } from '../components/Button';
+import { Icon } from '../components/icons';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
@@ -88,8 +89,9 @@ export function TurnDetail({ id }: { id: number }): ReactElement {
     <div className="stack">
       <header className="page-head">
         <div>
-          <a className="fine-print" {...linkProps('/turns')}>
-            ← {t('turns.back')}
+          <a className="fine-print back-link" {...linkProps('/turns')}>
+            <Icon name="back" />
+            {t('turns.back')}
           </a>
           <h1 className="display-lg">{turn?.name ?? t('turns.loading')}</h1>
           <p className="body muted">{turn?.url ?? ''}</p>

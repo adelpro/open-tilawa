@@ -24,10 +24,10 @@ export function navItemsFor(role: AppRole | null): NavEntry[] {
     { to: '/console/seeders', labelKey: 'nav.seeders', icon: 'monitor', group: 'workspace' },
     { to: '/console/turns', labelKey: 'nav.turns', icon: 'globe', group: 'workspace' },
     { to: '/console/reciters', labelKey: 'nav.reciters', icon: 'user', group: 'workspace' },
-    { to: '/console/status', labelKey: 'nav.status', icon: 'monitor', group: 'workspace' },
+    { to: '/console/status', labelKey: 'nav.status', icon: 'pulse', group: 'workspace' },
     { to: '/console/tools', labelKey: 'nav.tools', icon: 'key', group: 'workspace' },
     { to: '/console/account', labelKey: 'nav.account', icon: 'settings', group: 'workspace' },
-    { to: '/help', labelKey: 'nav.help', icon: 'globe', group: 'workspace' },
+    { to: '/help', labelKey: 'nav.help', icon: 'info', group: 'workspace' },
   ];
 
   if (role === 'admin') {

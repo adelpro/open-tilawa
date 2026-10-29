@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { Icon } from './icons';
+import { useFieldProps } from './Field';
 import { useI18n } from '../lib/i18n';
 
 /**
@@ -37,6 +38,7 @@ export function PasswordInput({
   minLength?: number;
 }): ReactElement {
   const { t } = useI18n();
+  const field = useFieldProps();
   const [shown, setShown] = useState(false);
 
   return (
@@ -51,8 +53,8 @@ export function PasswordInput({
         autoCapitalize="none"
         autoCorrect="off"
         required={required}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
+        aria-invalid={invalid || field.invalid || undefined}
+        aria-describedby={describedBy ?? field.describedBy}
         minLength={minLength}
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -65,7 +67,7 @@ export function PasswordInput({
         title={shown ? t('common.hidePassword') : t('common.showPassword')}
         onClick={() => setShown((current) => !current)}
       >
-        <Icon name={shown ? 'eyeOff' : 'eye'} size={18} />
+        <Icon name={shown ? 'eyeOff' : 'eye'} size={16} />
       </button>
     </>
   );

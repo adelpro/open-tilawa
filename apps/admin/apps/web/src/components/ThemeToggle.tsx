@@ -56,7 +56,7 @@ export function ThemeToggle({ className = '' }: { className?: string }): ReactEl
         aria-haspopup="menu"
         onClick={() => setOpen((o) => !o)}
       >
-        <Icon name={ICON_MAP[theme]} size={18} />
+        <Icon name={ICON_MAP[theme]} size={16} />
       </button>
       {open && (
         <div className="theme-toggle__menu" role="menu">
