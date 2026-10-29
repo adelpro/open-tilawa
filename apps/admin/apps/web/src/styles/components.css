@@ -2950,16 +2950,24 @@ select:focus {
 /* ---------- status timeline ---------- */
 .timeline {
   display: flex;
-  align-items: stretch;
+  align-items: flex-end;
   gap: 2px;
-  height: 18px;
+  /* Room for the current-hour bar: it shares the baseline and rises above it. */
+  height: 26px;
   margin-top: var(--space-2);
 }
 .timeline__bar {
   flex: 1 1 0;
   min-width: 3px;
+  height: 18px;
   border-radius: 2px;
   background: var(--hairline);
+}
+/* "Now" is the tallest bar, standing on the same baseline as the rest. Height means
+   nothing in this strip — the colour is the verdict — so the extra 8px cannot be read
+   as a percentage. */
+.timeline__bar--now {
+  height: 26px;
 }
 .timeline__bar[data-state='up'] {
   background: var(--success);
@@ -2972,6 +2980,16 @@ select:focus {
 }
 .timeline__bar[data-state='empty'] {
   background: var(--hairline);
+}
+/* The two ends, in logical order: the first child sits at inline-start, which is
+   the right edge in Arabic — the same edge the oldest bucket starts from. */
+.timeline__ends {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: 2px;
+  font: var(--fine-print);
+  color: var(--ink-secondary);
 }
 .grid--cards {
   display: grid;

@@ -122,10 +122,11 @@ logical properties.
 - Bars are equal height; colour is the verdict (`--success`, `--warning`, `--error`,
   `--hairline` for no data). Height carries no value, so a taller "now" bar lies about
   nothing.
-- The current hour is the tallest bar (26px inside an 18px strip, centred) and the strip
-  is captioned at both ends with logical properties: "24 hours ago" / "now". The labels,
-  not the direction, are what make the reading order unambiguous — RTL flips the newest
-  bucket to the left edge.
+- The current hour is the tallest bar: 26px against an 18px strip, standing on the
+  same baseline so it rises above the row instead of floating in the middle. Only the
+  oldest end is captioned («قبل 24 ساعة», inline-start); the raised bar is the other
+  end. The label, not the direction, is what makes the reading order unambiguous — RTL
+  flips the newest bucket to the left edge.
 
 ### Dividers
 - `--hairline` (#e0e0e0) wherever content is separated.

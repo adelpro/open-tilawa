@@ -202,14 +202,22 @@ export function Status(): ReactElement {
                     )}
                   </Chip>
                 </div>
-                <p className="row__id">{service.url}</p>
+                <p className="row__id">
+                  <bdi>{service.url}</bdi>
+                </p>
                 <p className="fine-print">
                   {service.version ? `v${service.version} · ` : ''}
-                  {service.latencyMs !== null ? `${service.latencyMs} ms · ` : ''}
+                  {service.latencyMs !== null ? (
+                    <>
+                      <bdi>{`${service.latencyMs} ms`}</bdi> ·{' '}
+                    </>
+                  ) : null}
                   {t('status.uptime')}:{' '}
-                  {service.uptime24h === null
-                    ? t('status.noChecks')
-                    : `${Math.round(service.uptime24h * 100)}%`}
+                  <bdi>
+                    {service.uptime24h === null
+                      ? t('status.noChecks')
+                      : `${Math.round(service.uptime24h * 100)}%`}
+                  </bdi>
                 </p>
                 <Timeline buckets={service.timeline} />
                 <div className="cluster" style={{ marginTop: 'var(--space-2)' }}>
@@ -317,12 +325,18 @@ export function Status(): ReactElement {
                           </Chip>
                         </td>
                         <td className="num">
-                          {turn.latencyMs === null ? '—' : `${turn.latencyMs} ms`}
+                          {turn.latencyMs === null ? (
+                            '—'
+                          ) : (
+                            <bdi>{`${turn.latencyMs} ms`}</bdi>
+                          )}
                         </td>
                         <td className="num">
-                          {turn.uptime24h === null
-                            ? t('status.noChecks')
-                            : `${Math.round(turn.uptime24h * 100)}%`}
+                          <bdi>
+                            {turn.uptime24h === null
+                              ? t('status.noChecks')
+                              : `${Math.round(turn.uptime24h * 100)}%`}
+                          </bdi>
                         </td>
                         <td>
                           <Timeline buckets={turn.timeline} />
@@ -354,18 +368,35 @@ export function Status(): ReactElement {
   );
 }
 
-/** 24 hourly buckets, oldest first; an empty hour is a hairline, not a verdict. */
+/**
+ * 24 hourly buckets, oldest first; an empty hour is a hairline, not a verdict.
+ *
+ * The current hour is the tallest bar and the strip is captioned at both ends,
+ * because the DOM order is the only thing that says "newest" — and RTL flips
+ * which edge that lands on. Height carries no value here (colour is the verdict),
+ * so the emphasis cannot be mistaken for a reading.
+ */
 function Timeline({ buckets }: { buckets: (number | null)[] }): ReactElement {
   const { t } = useI18n();
+  const last = buckets.length - 1;
   return (
-    <div className="timeline" role="img" aria-label={t('status.timeline')}>
-      {buckets.map((ratio, index) => (
-        <span
-          key={index}
-          className="timeline__bar"
-          data-state={ratio === null ? 'empty' : ratio >= 1 ? 'up' : ratio > 0 ? 'partial' : 'down'}
-        />
-      ))}
+    <div className="timeline-block">
+      <div className="timeline" role="img" aria-label={t('status.timeline')}>
+        {buckets.map((ratio, index) => (
+          <span
+            key={index}
+            className={index === last ? 'timeline__bar timeline__bar--now' : 'timeline__bar'}
+            data-state={
+              ratio === null ? 'empty' : ratio >= 1 ? 'up' : ratio > 0 ? 'partial' : 'down'
+            }
+          />
+        ))}
+      </div>
+      {/* One end is labelled; the raised bar is the other end. The aria-label above
+          says in words what the eye reads from the height. */}
+      <div className="timeline__ends" aria-hidden="true">
+        <span>{t('status.timelineStart')}</span>
+      </div>
     </div>
   );
 }
