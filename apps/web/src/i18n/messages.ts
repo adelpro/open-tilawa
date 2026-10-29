@@ -206,7 +206,7 @@ const ar = {
 };
 
 const en: typeof ar = {
-  brand: 'Tilawa',
+  brand: 'Tilawah',
   menu: { open: 'Menu', close: 'Close menu', more: 'More' },
   common: {
     close: 'Close',
@@ -226,7 +226,7 @@ const en: typeof ar = {
     hint: 'Space to play · ←/→ 15 seconds · ? for more',
     dismiss: 'Dismiss',
   },
-  routes: { listen: 'Listen', settings: 'Settings', about: 'About Tilawa', privacy: 'Privacy' },
+  routes: { listen: 'Listen', settings: 'Settings', about: 'About Tilawah', privacy: 'Privacy' },
   account: {
     title: 'Account',
     ringOf: 'Your ring:',
@@ -379,13 +379,13 @@ const en: typeof ar = {
     surah: (n: number) => `Surah ${n}`,
   },
   about: {
-    title: 'About Tilawa',
+    title: 'About Tilawah',
     body1:
-      'Tilawa is a quiet place to listen to the Quran. You choose a reciter, you choose a surah, and the recitation plays to the end — no account, no advert, nothing in the middle.',
+      'Tilawah is a quiet place to listen to the Quran. You choose a reciter, you choose a surah, and the recitation plays to the end — no account, no advert, nothing in the middle.',
     body2:
       'The recordings do not sit on one large server. They rest on several machines, kept by the project and by listeners who wanted to help, and every page left open carries the sound to the next person. So there is no subscription and no queue, and it grows steadier as more people listen.',
     body3:
-      'Tilawa is the Arabic word for recitation: the slow, measured reading of the Quran. The app is named after the act — what matters is the voice, the pause, the verse.',
+      'Tilawah is the Arabic word for recitation: the slow, measured reading of the Quran. The app is named after the act — what matters is the voice, the pause, the verse.',
     body4:
       'It is built in the open: the source is published, and nothing here asks you to sign up. If a recording will not play, or a reciter is missing, write to us.',
     source: 'Source code',

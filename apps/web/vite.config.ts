@@ -28,8 +28,8 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
       manifest: {
-        name: 'Open Tilawa',
-        short_name: 'Tilawa',
+        name: 'Tilawah',
+        short_name: 'Tilawah',
         description: 'Quran recitations streamed over WebTorrent',
         lang: 'ar',
         dir: 'rtl',

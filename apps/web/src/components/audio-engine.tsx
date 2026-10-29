@@ -278,8 +278,8 @@ export default function AudioEngine() {
           ? `سورة ${surah.name}`
           : SURAH_NAMES_EN[surah.id] ?? surah.name
         : t.player.surah(surahId),
-      artist: reciter?.name || 'Open Tilawa',
-      album: 'Open Tilawa',
+      artist: reciter?.name || 'Tilawah',
+      album: 'Tilawah',
       // The lock screen and the media notification use the square mark, not the
       // wide wordmark raster: at thumbnail size the wordmark is a smudge.
       artwork: [{ src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
@@ -300,7 +300,7 @@ export default function AudioEngine() {
   useEffect(() => {
     const surah = surahById(surahId);
     const name = surah ? (locale === 'ar' ? surah.name : SURAH_NAMES_EN[surah.id] ?? surah.name) : '';
-    document.title = name ? `${name} — Open Tilawa` : 'Open Tilawa';
+    document.title = name ? `${name} — Tilawah` : 'Tilawah';
   }, [surahId, locale]);
 
   return (
