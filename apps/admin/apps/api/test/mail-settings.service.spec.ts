@@ -50,11 +50,16 @@ describe('mail settings', () => {
 
   it('encrypts the password and never stores it in clear', () => {
     const { db, settings } = build();
-    settings.setMailConfig({ host: 'smtp.example.com', port: 587, tls: 'starttls', password: 'hunter2' });
+    settings.setMailConfig({
+      host: 'smtp.example.com',
+      port: 587,
+      tls: 'starttls',
+      password: 'hunter2',
+    });
 
-    const row = db
-      .prepare("SELECT value FROM app_settings WHERE key = 'mail.pass'")
-      .get() as { value: string };
+    const row = db.prepare("SELECT value FROM app_settings WHERE key = 'mail.pass'").get() as {
+      value: string;
+    };
     expect(row.value.startsWith('v1:')).toBe(true);
     expect(row.value).not.toContain('hunter2');
     expect(settings.getMailConfig().password).toBe('hunter2');
@@ -90,10 +95,20 @@ describe('mail settings', () => {
     const { db, settings } = build();
     delete process.env.MAIL_SECRET;
     expect(() =>
-      settings.setMailConfig({ host: 'smtp.example.com', port: 587, tls: 'starttls', password: 'x' }),
+      settings.setMailConfig({
+        host: 'smtp.example.com',
+        port: 587,
+        tls: 'starttls',
+        password: 'x',
+      }),
     ).toThrow(/MAIL_SECRET/);
     expect(() =>
-      settings.setMailConfig({ host: 'smtp.example.com', port: 587, tls: 'starttls', password: 'x' }),
+      settings.setMailConfig({
+        host: 'smtp.example.com',
+        port: 587,
+        tls: 'starttls',
+        password: 'x',
+      }),
     ).toThrow(BadRequestException);
     const rows = db.prepare("SELECT value FROM app_settings WHERE key LIKE 'mail.%'").all();
     expect(rows).toHaveLength(0);
@@ -101,7 +116,12 @@ describe('mail settings', () => {
 
   it('reports password null instead of throwing when the key was rotated', () => {
     const { settings } = build();
-    settings.setMailConfig({ host: 'smtp.example.com', port: 587, tls: 'starttls', password: 'hunter2' });
+    settings.setMailConfig({
+      host: 'smtp.example.com',
+      port: 587,
+      tls: 'starttls',
+      password: 'hunter2',
+    });
 
     process.env.MAIL_SECRET = OTHER_KEY.toString('base64');
     const config = settings.getMailConfig();
@@ -111,7 +131,9 @@ describe('mail settings', () => {
 
   it('rejects an out-of-range port and an unknown tls mode', () => {
     const { settings } = build();
-    expect(() => settings.setMailConfig({ host: 'h', port: 70000, tls: 'ssl' })).toThrow(BadRequestException);
+    expect(() => settings.setMailConfig({ host: 'h', port: 70000, tls: 'ssl' })).toThrow(
+      BadRequestException,
+    );
     expect(() =>
       settings.setMailConfig({ host: 'h', port: 587, tls: 'ssl3' as unknown as 'ssl' }),
     ).toThrow(BadRequestException);

@@ -40,7 +40,12 @@ interface AlertRow {
   notifyError: string | null;
 }
 
-const KINDS: AlertKind[] = ['service.down', 'seeder.offline', 'seeder.disk', 'seeder.update_failed'];
+const KINDS: AlertKind[] = [
+  'service.down',
+  'seeder.offline',
+  'seeder.disk',
+  'seeder.update_failed',
+];
 
 const KIND_KEY: Record<AlertKind, MessageKey> = {
   'service.down': 'settings.alerts.kind.service.down',
@@ -301,7 +306,9 @@ export function Settings(): ReactElement {
 
           <Field
             label={t('settings.mail.password')}
-            hint={mail?.hasPassword ? t('settings.mail.passwordSet') : t('settings.mail.passwordKeep')}
+            hint={
+              mail?.hasPassword ? t('settings.mail.passwordSet') : t('settings.mail.passwordKeep')
+            }
           >
             {(id) => (
               <Input
@@ -380,7 +387,10 @@ export function Settings(): ReactElement {
                 </Field>
               </div>
 
-              <Field label={t('settings.alerts.recipients')} hint={t('settings.alerts.recipientsHint')}>
+              <Field
+                label={t('settings.alerts.recipients')}
+                hint={t('settings.alerts.recipientsHint')}
+              >
                 {(id) => (
                   <TextArea
                     id={id}
@@ -411,7 +421,9 @@ export function Settings(): ReactElement {
                       <span className="row__label">{row.title}</span>
                       <span className="row__meta">
                         {new Date(row.openedAt).toLocaleString(locale)}
-                        {row.notifyError ? ` · ${t('settings.alerts.notifyFailed')}: ${row.notifyError}` : ''}
+                        {row.notifyError
+                          ? ` · ${t('settings.alerts.notifyFailed')}: ${row.notifyError}`
+                          : ''}
                       </span>
                     </span>
                     <Chip tone={row.state === 'open' ? 'bad' : 'ok'}>

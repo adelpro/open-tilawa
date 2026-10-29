@@ -28,9 +28,19 @@ never needs to be reachable from outside.
 - `DB_PATH=/data/tilawa-admin.sqlite`, `NODE_ENV=production` (the compose file
   sets the latter so a dev `.env` cannot leak non-secure cookies into prod).
 
-Mail (`EMAIL`, `EMAIL_APP_SPECIFIC_PASS`) is optional. Without it the API boots,
-and the routes that need mail (activation, password reset, email 2FA) answer
-**503** with the variable names in the body.
+Mail is configured in the console at **/console/settings** and takes effect on the
+next message — no restart. The password is stored encrypted under `MAIL_SECRET`
+(32 random bytes, base64); without that variable the console refuses to save one.
+
+`EMAIL` + `EMAIL_APP_SPECIFIC_PASS` (Gmail) remain the bootstrap: a fresh deploy
+mails its first setup token before any admin can sign in, so the environment is
+the only configuration that exists at that point. Clearing the console
+configuration falls back to it. With neither, the API still boots and the routes
+that need mail (activation, password reset, email 2FA) answer **503**.
+
+The same screen sends the four operational alerts (service down, node offline,
+disk headroom, failed node update) to every active admin plus any extra
+addresses, one message when a condition starts and one when it clears.
 
 - `WEBSITE` — the public origin stamped into activation and reset links. The
   compose file sets it to `${ADMIN_WEBSITE:-https://console.tilawah.cc}`
@@ -190,4 +200,6 @@ hostname; the old `trackerf` alias has been removed from DNS and the edge.
 | Seeder 502 “unreachable”                    | Wrong URL or node down; try `curl` from the API container: `docker exec open-tilawa-admin-api wget -qO- http://seeder:8085/health`. |
 | `SQLITE_READONLY_DIRECTORY` on boot         | The volume's root directory is root-owned; `chown -R 1000:1000 /data`.                                                              |
 | TURN row stuck offline                      | UDP blocked, wrong host/port, or a `turns:`/IPv6 endpoint (the probe is udp4).                                                      |
-| Signup / reset answers 503                  | Mail is not configured — set `EMAIL` and `EMAIL_APP_SPECIFIC_PASS`.                                                                 |
+| Signup / reset answers 503                  | Mail is not configured — set it at `/console/settings`; `EMAIL` / `EMAIL_APP_SPECIFIC_PASS` only cover the first-run setup token.   |
+| Console mail save refused, names `MAIL_SECRET` | Add `MAIL_SECRET` (32 random bytes, base64) to `apps/admin/.env` and recreate `admin-api`; the password cannot be stored without it. |
+| Panel says “Environment (Gmail)” after saving | The stored password does not decrypt (rotated `MAIL_SECRET`), so the environment is in use — re-enter the password.                |

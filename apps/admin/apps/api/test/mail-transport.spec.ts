@@ -29,11 +29,10 @@ function build(initial: MailConfig, env: { email?: string; pass?: string } = {})
   const state = { config: initial };
   const smtp = jest.fn((_c: MailConfig) => recorder('smtp'));
   const gmail = jest.fn((_e: string, _p: string) => recorder('gmail'));
-  const transport = new ConfiguredMailTransport(
-    { getMailConfig: () => state.config },
-    env,
-    { smtp, gmail },
-  );
+  const transport = new ConfiguredMailTransport({ getMailConfig: () => state.config }, env, {
+    smtp,
+    gmail,
+  });
   return { transport, smtp, gmail, state };
 }
 

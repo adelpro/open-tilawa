@@ -75,9 +75,10 @@ export class AlertsService {
   ) {}
 
   openKeys(): { kind: AlertKind; subject: string }[] {
-    return this.db
-      .prepare("SELECT kind, subject FROM alerts WHERE state = 'open'")
-      .all() as { kind: AlertKind; subject: string }[];
+    return this.db.prepare("SELECT kind, subject FROM alerts WHERE state = 'open'").all() as {
+      kind: AlertKind;
+      subject: string;
+    }[];
   }
 
   recent(limit = 20): AlertRow[] {
@@ -152,7 +153,11 @@ export class AlertsService {
     return Date.now() - at(previous.resolved_notified_at) < REOPEN_COOLDOWN_MS;
   }
 
-  private async deliver(row: AlertRecord, event: AlertEvent, action: 'open' | 'resolve'): Promise<void> {
+  private async deliver(
+    row: AlertRecord,
+    event: AlertEvent,
+    action: 'open' | 'resolve',
+  ): Promise<void> {
     const recipients = this.recipients();
     if (recipients.length === 0) {
       this.logger.warn(`alert ${row.kind} ${row.subject} fired with no active admin to tell`);
@@ -175,9 +180,7 @@ export class AlertsService {
         delivered += 1;
       } catch (error) {
         lastError = (error as Error).message;
-        this.logger.error(
-          `alert mail to ${recipient.email} failed: ${lastError}`,
-        );
+        this.logger.error(`alert mail to ${recipient.email} failed: ${lastError}`);
       }
     }
 

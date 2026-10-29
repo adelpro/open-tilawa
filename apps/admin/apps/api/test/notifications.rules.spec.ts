@@ -11,7 +11,11 @@ function observation(overrides: Partial<Observation> = {}): Observation {
     services: [],
     seeders: [],
     open: [],
-    settings: { enabled: ['service.down', 'seeder.offline', 'seeder.disk', 'seeder.update_failed'], serviceFailures: 3, diskFloorBytes: 20 * GiB },
+    settings: {
+      enabled: ['service.down', 'seeder.offline', 'seeder.disk', 'seeder.update_failed'],
+      serviceFailures: 3,
+      diskFloorBytes: 20 * GiB,
+    },
     ...overrides,
   };
 }
@@ -87,7 +91,11 @@ describe('evaluate', () => {
 
     const stale = seeder({ status: 'offline', lastSeen: '2026-10-29T11:40:00.000Z' });
     const events = evaluate(observation({ seeders: [stale] }));
-    expect(events[0]).toMatchObject({ action: 'open', kind: 'seeder.offline', subject: 'seeder:7' });
+    expect(events[0]).toMatchObject({
+      action: 'open',
+      kind: 'seeder.offline',
+      subject: 'seeder:7',
+    });
 
     const never = seeder({ status: 'offline', lastSeen: null });
     expect(evaluate(observation({ seeders: [never] }))[0]).toMatchObject({ action: 'open' });
@@ -113,7 +121,9 @@ describe('evaluate', () => {
     // Between the floor and floor * 1.1: holding is the point of hysteresis.
     const between = seeder({ headroomBytes: 21 * GiB });
     expect(
-      evaluate(observation({ seeders: [between], open: [{ kind: 'seeder.disk', subject: 'seeder:7' }] })),
+      evaluate(
+        observation({ seeders: [between], open: [{ kind: 'seeder.disk', subject: 'seeder:7' }] }),
+      ),
     ).toEqual([]);
 
     const recovered = seeder({ headroomBytes: 23 * GiB });
@@ -133,7 +143,12 @@ describe('evaluate', () => {
 
     const clean = seeder({ updateError: null });
     expect(
-      evaluate(observation({ seeders: [clean], open: [{ kind: 'seeder.update_failed', subject: 'seeder:7' }] }))[0],
+      evaluate(
+        observation({
+          seeders: [clean],
+          open: [{ kind: 'seeder.update_failed', subject: 'seeder:7' }],
+        }),
+      )[0],
     ).toMatchObject({ action: 'resolve', kind: 'seeder.update_failed' });
   });
 
@@ -141,7 +156,10 @@ describe('evaluate', () => {
     const events = evaluate(
       observation({
         services: [service([false, false, false])],
-        seeders: [seeder({ status: 'offline', lastSeen: null }), { ...seeder({ id: 8 }), name: 'node-2', status: 'offline', lastSeen: null }],
+        seeders: [
+          seeder({ status: 'offline', lastSeen: null }),
+          { ...seeder({ id: 8 }), name: 'node-2', status: 'offline', lastSeen: null },
+        ],
       }),
     );
     expect(events.map((event) => `${event.kind}:${event.subject}`)).toEqual([

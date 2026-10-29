@@ -115,7 +115,13 @@ export class MailSettingsController {
       actorId: Number(user.id),
       action: 'settings.mail.updated',
       target: saved.host ?? undefined,
-      after: { host: saved.host, port: saved.port, tls: saved.tls, user: saved.user, from: saved.from },
+      after: {
+        host: saved.host,
+        port: saved.port,
+        tls: saved.tls,
+        user: saved.user,
+        from: saved.from,
+      },
     });
     return this.publicState();
   }

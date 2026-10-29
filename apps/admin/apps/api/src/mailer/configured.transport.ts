@@ -8,8 +8,7 @@ type Builders = {
   gmail: (email: string, pass: string) => MailTransport;
 };
 
-const NOT_CONFIGURED =
-  'Mail is not configured — set it in the console at /console/settings';
+const NOT_CONFIGURED = 'Mail is not configured — set it in the console at /console/settings';
 
 /** Stands in for "nothing is configured", so `kind` and `send` agree. */
 const NULL_TRANSPORT: MailTransport = {

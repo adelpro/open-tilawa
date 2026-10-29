@@ -52,7 +52,9 @@ describe('operator alerts', () => {
   it('mails again when the service recovers', async () => {
     // Older than the ten-minute damping window, so the mail is not suppressed.
     h.db
-      .prepare("UPDATE alerts SET opened_at = strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 minutes') WHERE state = 'open'")
+      .prepare(
+        "UPDATE alerts SET opened_at = strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 minutes') WHERE state = 'open'",
+      )
       .run();
     pass(2);
     await scheduler.run();
@@ -63,7 +65,8 @@ describe('operator alerts', () => {
   });
 
   it('suppresses the resolve mail when the alert was open under ten minutes', async () => {
-    const other = (h.db.prepare('SELECT id FROM services ORDER BY id').all() as { id: number }[])[1].id;
+    const other = (h.db.prepare('SELECT id FROM services ORDER BY id').all() as { id: number }[])[1]
+      .id;
     const insertFail = h.db.prepare('INSERT INTO service_checks (service_id, ok) VALUES (?, 0)');
     const insertPass = h.db.prepare('INSERT INTO service_checks (service_id, ok) VALUES (?, 1)');
     for (let index = 0; index < 3; index += 1) insertFail.run(other);
@@ -72,7 +75,9 @@ describe('operator alerts', () => {
 
     // Backdate the open alert so the damping threshold is what decides, not the clock.
     h.db
-      .prepare("UPDATE alerts SET opened_at = strftime('%Y-%m-%dT%H:%M:%fZ','now','-4 minutes') WHERE subject = ? AND state = 'open'")
+      .prepare(
+        "UPDATE alerts SET opened_at = strftime('%Y-%m-%dT%H:%M:%fZ','now','-4 minutes') WHERE subject = ? AND state = 'open'",
+      )
       .run(`service:${other}`);
     insertPass.run(other);
     insertPass.run(other);
@@ -83,7 +88,8 @@ describe('operator alerts', () => {
 
   it('writes the alert even with no recipients, and does not throw', async () => {
     h.db.prepare("UPDATE users SET status = 'disabled'").run();
-    const other = (h.db.prepare('SELECT id FROM services ORDER BY id').all() as { id: number }[])[2].id;
+    const other = (h.db.prepare('SELECT id FROM services ORDER BY id').all() as { id: number }[])[2]
+      .id;
     const insertFail = h.db.prepare('INSERT INTO service_checks (service_id, ok) VALUES (?, 0)');
     for (let index = 0; index < 3; index += 1) insertFail.run(other);
     const before = h.mail.sent.length;

@@ -57,7 +57,12 @@ describe('mail settings API', () => {
       .send({ ...UNREACHABLE, user: 'ops', password: SECRET, force: true })
       .expect(200);
 
-    expect(body).toMatchObject({ host: '127.0.0.1', source: 'db', hasPassword: true, verifiedAt: null });
+    expect(body).toMatchObject({
+      host: '127.0.0.1',
+      source: 'db',
+      hasPassword: true,
+      verifiedAt: null,
+    });
   });
 
   it('never returns the password or its ciphertext', async () => {

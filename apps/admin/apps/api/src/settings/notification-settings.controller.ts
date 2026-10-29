@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Put, UseGuards } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { JWTAuthGuard } from '@/auth/guards/jwt.guard';

@@ -69,7 +69,7 @@ export function envValidate(config: Record<string, unknown>): EnvConfigDTO {
     }
     if (MAIL_KEYS.some((key) => !config[key])) {
       logger.warn(
-        'mail is not configured (EMAIL, EMAIL_APP_SPECIFIC_PASS): activation, password reset and email 2FA will answer 503',
+        'mail is not configured — set it at /console/settings (the EMAIL pair only bootstraps the setup token); activation, password reset and email 2FA will answer 503 until then',
       );
     }
   } else {

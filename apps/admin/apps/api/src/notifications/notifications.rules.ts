@@ -123,7 +123,8 @@ export function evaluate(observation: Observation): AlertEvent[] {
     if (enabled.has('seeder.offline')) {
       const isOpen = open.has(`seeder.offline|${subject}`);
       const lastSeen = seeder.lastSeen ? Date.parse(seeder.lastSeen) : null;
-      const stale = lastSeen === null || Number.isNaN(lastSeen) || now.getTime() - lastSeen >= OFFLINE_AFTER_MS;
+      const stale =
+        lastSeen === null || Number.isNaN(lastSeen) || now.getTime() - lastSeen >= OFFLINE_AFTER_MS;
 
       if (!isOpen && seeder.status === 'offline' && stale) {
         emit({

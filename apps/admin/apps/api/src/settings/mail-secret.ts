@@ -19,9 +19,7 @@ const KEY_BYTES = 32;
 export function readMailKey(env: NodeJS.ProcessEnv): Buffer | null {
   const raw = env.MAIL_SECRET?.trim();
   if (!raw) return null;
-  const buffer = /^[0-9a-f]{64}$/i.test(raw)
-    ? Buffer.from(raw, 'hex')
-    : Buffer.from(raw, 'base64');
+  const buffer = /^[0-9a-f]{64}$/i.test(raw) ? Buffer.from(raw, 'hex') : Buffer.from(raw, 'base64');
   return buffer.length === KEY_BYTES ? buffer : null;
 }
 
