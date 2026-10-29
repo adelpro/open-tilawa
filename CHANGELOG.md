@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.1 — 2026-10-29
+
+Patch. App versions: **web 1.9.2**, **admin 1.27.2**, **seeder 1.4.3**.
+
+### Changed
+
+- **The node's torrent table sorts.** الاسم، الحجم، على الخادم and الأقران are
+  buttons now, the same contract as the reciter table: clicking the active
+  column flips the direction instead of resetting it, `aria-sort` carries the
+  ordering for a screen reader, and the arrow is decoration. "على الخادم" orders
+  by severity — healthy, stale, orphan — because sorting the labels would group
+  rows by spelling.
+
 ## 1.8.0 — 2026-10-29
 
 Minor. App versions: **web 1.9.2**, **admin 1.27.1**, **seeder 1.4.3**.
