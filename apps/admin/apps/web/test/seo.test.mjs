@@ -167,6 +167,10 @@ describe('the edge no longer answers everything with the app', () => {
     assert.match(conf, /try_files \$uri \$uri\/ =404;/);
   });
 
+  it('serves a prerendered page at its own URL, without a trailing slash', () => {
+    assert.match(conf, /try_files \$uri \$uri\/index\.html \/index\.html;/);
+  });
+
   it('serves robots and sitemap with their own types', () => {
     assert.match(conf, /location = \/robots\.txt \{\s*default_type text\/plain;/);
     assert.match(conf, /location = \/sitemap\.xml \{\s*default_type application\/xml;/);
@@ -185,6 +189,9 @@ describe('the build actually produces these files', () => {
     assert.ok(existsSync(join(built, 'sitemap.xml')));
     assert.ok(existsSync(join(built, 'robots.txt')));
     assert.ok(existsSync(join(built, 'og.png')));
+    for (const entry of data.pages.slice(1)) {
+      assert.ok(existsSync(join(built, entry.file)), `${entry.file} was not prerendered`);
+    }
   });
 
   it('writes an llms.txt that names every public page', { skip: !existsSync(built) }, () => {

@@ -65,7 +65,10 @@ server {
   # 404s (every invented URL answering 200 with the app) into a real answer.
   location ~ ^/(dashboard|reset-password|activate|2fa|setup|oauth|about|privacy|terms|signin|signup)(/|$) {
     expires -1;
-    try_files $uri $uri/ /index.html;
+    # $uri/index.html before $uri/: a prerendered page is a directory, and matching
+    # the directory first made nginx 301 /about to /about/, while the canonical and
+    # the sitemap both say /about.
+    try_files $uri $uri/index.html /index.html;
   }
 
   location / {
