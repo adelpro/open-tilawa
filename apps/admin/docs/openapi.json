@@ -10,9 +10,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Health"
-        ]
+        "tags": ["Health"]
       }
     },
     "/api/users": {
@@ -24,9 +22,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/users/{id}": {
@@ -47,9 +43,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       },
       "put": {
         "operationId": "UsersController_update",
@@ -78,9 +72,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       },
       "delete": {
         "operationId": "UsersController_delete",
@@ -99,9 +91,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/auth/local/signin": {
@@ -161,9 +151,7 @@
           }
         },
         "summary": "Local signin",
-        "tags": [
-          "Auth"
-        ]
+        "tags": ["Auth"]
       }
     },
     "/api/auth/local/signup": {
@@ -205,10 +193,8 @@
             }
           }
         },
-        "summary": "Local signup \u2014 creates the account and mails the activation link",
-        "tags": [
-          "Auth"
-        ]
+        "summary": "Local signup — creates the account and mails the activation link",
+        "tags": ["Auth"]
       }
     },
     "/api/auth/local/activate": {
@@ -231,9 +217,7 @@
           }
         },
         "summary": "Activate an account with the emailed token",
-        "tags": [
-          "Auth"
-        ]
+        "tags": ["Auth"]
       }
     },
     "/api/auth/local/resend-activation": {
@@ -246,9 +230,7 @@
           }
         },
         "summary": "Re-send the activation link (always answered generically)",
-        "tags": [
-          "Auth"
-        ]
+        "tags": ["Auth"]
       }
     },
     "/api/auth/signout": {
@@ -261,9 +243,7 @@
           }
         },
         "summary": "Signout user",
-        "tags": [
-          "Auth"
-        ]
+        "tags": ["Auth"]
       }
     },
     "/api/auth/protected": {
@@ -276,9 +256,7 @@
           }
         },
         "summary": "Protected route, only autheticated user with role:user can access this route",
-        "tags": [
-          "Auth"
-        ]
+        "tags": ["Auth"]
       }
     },
     "/api/reset-password/send-email": {
@@ -304,9 +282,7 @@
           }
         },
         "summary": "Send a single-use password reset link by email",
-        "tags": [
-          "ResetPassword"
-        ]
+        "tags": ["ResetPassword"]
       }
     },
     "/api/reset-password/validate": {
@@ -332,9 +308,7 @@
           }
         },
         "summary": "Consume an emailed reset link and set a new password",
-        "tags": [
-          "ResetPassword"
-        ]
+        "tags": ["ResetPassword"]
       }
     },
     "/api/tokens": {
@@ -357,9 +331,7 @@
           }
         },
         "summary": "List the devices currently signed in",
-        "tags": [
-          "tokens"
-        ]
+        "tags": ["tokens"]
       }
     },
     "/api/tokens/{id}": {
@@ -381,9 +353,7 @@
           }
         },
         "summary": "Delete one device and forget its 2FA trust",
-        "tags": [
-          "tokens"
-        ]
+        "tags": ["tokens"]
       }
     },
     "/api/me": {
@@ -396,9 +366,7 @@
           }
         },
         "summary": "Get the current user",
-        "tags": [
-          "Me"
-        ]
+        "tags": ["Me"]
       },
       "patch": {
         "operationId": "MeController_updateMe",
@@ -429,9 +397,7 @@
           }
         },
         "summary": "Update the current user",
-        "tags": [
-          "Me"
-        ]
+        "tags": ["Me"]
       },
       "delete": {
         "operationId": "MeController_deleteMe",
@@ -452,9 +418,7 @@
           }
         },
         "summary": "Delete the current user",
-        "tags": [
-          "Me"
-        ]
+        "tags": ["Me"]
       }
     },
     "/api/me/update-password": {
@@ -467,9 +431,7 @@
           }
         },
         "summary": "Update password (revokes every other session)",
-        "tags": [
-          "Me"
-        ]
+        "tags": ["Me"]
       }
     },
     "/api/seeders": {
@@ -481,9 +443,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       },
       "post": {
         "operationId": "SeedersController_add",
@@ -493,9 +453,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/{id}": {
@@ -516,9 +474,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       },
       "delete": {
         "operationId": "SeedersController_remove",
@@ -537,9 +493,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/{id}/poll": {
@@ -560,9 +514,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/poll-all": {
@@ -574,9 +526,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/{id}/update": {
@@ -597,9 +547,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/{id}/torrents": {
@@ -620,9 +568,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       },
       "post": {
         "operationId": "SeedersController_addTorrent",
@@ -641,9 +587,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/{id}/torrents/{infoHash}": {
@@ -672,9 +616,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/{id}/metadata": {
@@ -695,9 +637,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/seeders/{id}/files": {
@@ -718,9 +658,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Seeders"
-        ]
+        "tags": ["Seeders"]
       }
     },
     "/api/tools/torrent-info": {
@@ -732,9 +670,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Tools"
-        ]
+        "tags": ["Tools"]
       }
     },
     "/api/tools/magnet-info": {
@@ -746,9 +682,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Tools"
-        ]
+        "tags": ["Tools"]
       }
     },
     "/api/tools/magnet": {
@@ -760,9 +694,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Tools"
-        ]
+        "tags": ["Tools"]
       }
     },
     "/api/status": {
@@ -774,9 +706,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Status"
-        ]
+        "tags": ["Status"]
       }
     },
     "/api/status/check": {
@@ -788,9 +718,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Status"
-        ]
+        "tags": ["Status"]
       }
     },
     "/api/status/services": {
@@ -802,9 +730,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Status"
-        ]
+        "tags": ["Status"]
       }
     },
     "/api/status/services/{id}": {
@@ -825,9 +751,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Status"
-        ]
+        "tags": ["Status"]
       }
     },
     "/api/turns": {
@@ -839,9 +763,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       },
       "post": {
         "operationId": "TurnsController_add",
@@ -851,9 +773,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       }
     },
     "/api/turns/{id}": {
@@ -874,9 +794,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       },
       "patch": {
         "operationId": "TurnsController_update",
@@ -895,9 +813,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       },
       "delete": {
         "operationId": "TurnsController_remove",
@@ -916,9 +832,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       }
     },
     "/api/turns/{id}/history": {
@@ -947,9 +861,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       }
     },
     "/api/turns/{id}/poll": {
@@ -970,9 +882,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       }
     },
     "/api/turns/poll-all": {
@@ -984,9 +894,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Turns"
-        ]
+        "tags": ["Turns"]
       }
     },
     "/api/reciters": {
@@ -998,9 +906,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Reciters"
-        ]
+        "tags": ["Reciters"]
       },
       "post": {
         "operationId": "RecitersController_add",
@@ -1010,9 +916,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Reciters"
-        ]
+        "tags": ["Reciters"]
       }
     },
     "/api/reciters/import": {
@@ -1024,9 +928,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Reciters"
-        ]
+        "tags": ["Reciters"]
       }
     },
     "/api/reciters/push/plan": {
@@ -1038,9 +940,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Reciters"
-        ]
+        "tags": ["Reciters"]
       }
     },
     "/api/reciters/push": {
@@ -1052,9 +952,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Reciters"
-        ]
+        "tags": ["Reciters"]
       }
     },
     "/api/reciters/{id}": {
@@ -1075,9 +973,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Reciters"
-        ]
+        "tags": ["Reciters"]
       },
       "delete": {
         "operationId": "RecitersController_remove",
@@ -1089,15 +985,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "purge",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "'all' purges every node, '1,2' exactly those, omitted keeps the catalogue only."
           }
         ],
         "responses": {
@@ -1105,9 +992,57 @@
             "description": ""
           }
         },
-        "tags": [
-          "Reciters"
-        ]
+        "tags": ["Reciters"]
+      }
+    },
+    "/api/reciters/{id}/place": {
+      "post": {
+        "operationId": "RecitersController_place",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
+      }
+    },
+    "/api/reciters/{id}/place/{seederId}": {
+      "delete": {
+        "operationId": "RecitersController_unplace",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seederId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Reciters"]
       }
     },
     "/api/settings/trackers": {
@@ -1119,9 +1054,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Settings"
-        ]
+        "tags": ["Settings"]
       },
       "put": {
         "operationId": "SettingsController_setTrackers",
@@ -1131,23 +1064,44 @@
             "description": ""
           }
         },
-        "tags": [
-          "Settings"
-        ]
+        "tags": ["Settings"]
       }
     },
     "/api/public/reciters": {
       "get": {
         "operationId": "PublicRecitersController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "range",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "PublicReciters"
-        ]
+        "tags": ["PublicReciters"]
       }
     },
     "/api/2fa/enable": {
@@ -1159,9 +1113,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "TwoFa"
-        ]
+        "tags": ["TwoFa"]
       }
     },
     "/api/2fa/verify": {
@@ -1183,9 +1135,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "TwoFa"
-        ]
+        "tags": ["TwoFa"]
       }
     },
     "/api/2fa/email-code": {
@@ -1197,9 +1147,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "TwoFa"
-        ]
+        "tags": ["TwoFa"]
       }
     },
     "/api/2fa/email-code/verify": {
@@ -1221,9 +1169,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "TwoFa"
-        ]
+        "tags": ["TwoFa"]
       }
     },
     "/api/2fa/recovery": {
@@ -1245,9 +1191,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "TwoFa"
-        ]
+        "tags": ["TwoFa"]
       }
     },
     "/api/2fa/disable": {
@@ -1269,9 +1213,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "TwoFa"
-        ]
+        "tags": ["TwoFa"]
       }
     },
     "/api/2fa/recovery/regenerate": {
@@ -1293,9 +1235,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "TwoFa"
-        ]
+        "tags": ["TwoFa"]
       }
     },
     "/api/admin/users": {
@@ -1317,9 +1257,7 @@
           }
         },
         "summary": "List users, optionally filtered by name or email",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       },
       "post": {
         "operationId": "AdminController_createUser",
@@ -1340,9 +1278,7 @@
           }
         },
         "summary": "Create a user (a super_admin may create an admin)",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/users/{id}": {
@@ -1364,9 +1300,7 @@
           }
         },
         "summary": "One user",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       },
       "delete": {
         "operationId": "AdminController_deleteUser",
@@ -1386,9 +1320,7 @@
           }
         },
         "summary": "Delete a user and everything they own (super_admin only)",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/users/{id}/disable": {
@@ -1410,9 +1342,7 @@
           }
         },
         "summary": "Disable a user and revoke their keys and sessions",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/users/{id}/enable": {
@@ -1434,9 +1364,7 @@
           }
         },
         "summary": "Re-enable a user",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/users/{id}/role": {
@@ -1468,9 +1396,7 @@
           }
         },
         "summary": "Change a role (super_admin only, audited, last one protected)",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/audit": {
@@ -1492,9 +1418,7 @@
           }
         },
         "summary": "Recent audit rows (a super_admin sees every actor)",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/setup/status": {
@@ -1507,9 +1431,7 @@
           }
         },
         "summary": "Whether the initial super-admin setup is still required",
-        "tags": [
-          "Setup"
-        ]
+        "tags": ["Setup"]
       }
     },
     "/api/setup": {
@@ -1525,9 +1447,7 @@
           }
         },
         "summary": "Consume a setup token and create the super_admin account",
-        "tags": [
-          "Setup"
-        ]
+        "tags": ["Setup"]
       }
     },
     "/api/csrf": {
@@ -1540,91 +1460,14 @@
           }
         },
         "summary": "Issue a CSRF token (echo it in x-csrf-token)",
-        "tags": [
-          "csrf"
-        ]
-      }
-    },
-    "/api/reciters/{id}/place": {
-      "post": {
-        "operationId": "RecitersController_place",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "seederIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    }
-                  }
-                },
-                "required": [
-                  "seederIds"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "reciters"
-        ]
-      }
-    },
-    "/api/reciters/{id}/place/{seederId}": {
-      "delete": {
-        "operationId": "RecitersController_unplace",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "seederId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "reciters"
-        ]
+        "tags": ["csrf"]
       }
     }
   },
   "info": {
     "title": "Tilawa Admin API",
     "description": "",
-    "version": "1.22.0",
+    "version": "1.26.5",
     "contact": {}
   },
   "tags": [],
@@ -1649,10 +1492,7 @@
             "description": "The password of the person"
           }
         },
-        "required": [
-          "email",
-          "password"
-        ]
+        "required": ["email", "password"]
       },
       "signinUserDTO": {
         "type": "object",
@@ -1661,9 +1501,7 @@
             "$ref": "#/components/schemas/SigninDTO"
           }
         },
-        "required": [
-          "user"
-        ]
+        "required": ["user"]
       },
       "AuthenticatedUserResponseDTO": {
         "type": "object",
@@ -1699,14 +1537,7 @@
             "description": "The provider used for authentication."
           }
         },
-        "required": [
-          "id",
-          "email",
-          "name",
-          "isActivated",
-          "isTwoFAEnabled",
-          "provider"
-        ]
+        "required": ["id", "email", "name", "isActivated", "isTwoFAEnabled", "provider"]
       },
       "ErrorResponseDTO": {
         "type": "object",
@@ -1727,11 +1558,7 @@
             "description": "The response error"
           }
         },
-        "required": [
-          "statusCode",
-          "message",
-          "error"
-        ]
+        "required": ["statusCode", "message", "error"]
       },
       "SignupDTO": {
         "type": "object",
@@ -1752,11 +1579,7 @@
             "description": "The password of the person"
           }
         },
-        "required": [
-          "name",
-          "email",
-          "password"
-        ]
+        "required": ["name", "email", "password"]
       },
       "SignupUserDTO": {
         "type": "object",
@@ -1765,9 +1588,7 @@
             "$ref": "#/components/schemas/SignupDTO"
           }
         },
-        "required": [
-          "user"
-        ]
+        "required": ["user"]
       },
       "SendResetEmailDTO": {
         "type": "object",
@@ -1777,9 +1598,7 @@
             "example": "johndoe@email.com"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "ResetPasswordDTO": {
         "type": "object",
@@ -1794,10 +1613,7 @@
             "description": "The new password; the one policy for every password entry point"
           }
         },
-        "required": [
-          "token",
-          "password"
-        ]
+        "required": ["token", "password"]
       },
       "MyTokensResponseDTO": {
         "type": "object",
@@ -1823,12 +1639,7 @@
             "description": "When the token expires."
           }
         },
-        "required": [
-          "id",
-          "label",
-          "createdAt",
-          "expiresAt"
-        ]
+        "required": ["id", "label", "createdAt", "expiresAt"]
       },
       "TwoFaTOTPDTO": {
         "type": "object",
@@ -1839,9 +1650,7 @@
             "description": "The six-digit authenticator code"
           }
         },
-        "required": [
-          "TOTP"
-        ]
+        "required": ["TOTP"]
       },
       "TwoFaEmailCodeVerifyDTO": {
         "type": "object",
@@ -1852,9 +1661,7 @@
             "description": "The six-digit emailed code"
           }
         },
-        "required": [
-          "code"
-        ]
+        "required": ["code"]
       },
       "TwoFaRecoveryDTO": {
         "type": "object",
@@ -1865,9 +1672,7 @@
             "description": "An unused recovery code"
           }
         },
-        "required": [
-          "code"
-        ]
+        "required": ["code"]
       },
       "TwoFaDisableDTO": {
         "type": "object",
@@ -1882,10 +1687,7 @@
             "description": "A current authenticator code"
           }
         },
-        "required": [
-          "password",
-          "TOTP"
-        ]
+        "required": ["password", "TOTP"]
       },
       "TwoFaRegenerateDTO": {
         "type": "object",
@@ -1896,9 +1698,7 @@
             "description": "A current authenticator code"
           }
         },
-        "required": [
-          "code"
-        ]
+        "required": ["code"]
       },
       "AdminCreateUserDTO": {
         "type": "object",
@@ -1916,33 +1716,20 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "user",
-              "admin",
-              "super_admin"
-            ]
+            "enum": ["user", "admin", "super_admin"]
           }
         },
-        "required": [
-          "name",
-          "email"
-        ]
+        "required": ["name", "email"]
       },
       "AdminChangeRoleDTO": {
         "type": "object",
         "properties": {
           "role": {
             "type": "string",
-            "enum": [
-              "user",
-              "admin",
-              "super_admin"
-            ]
+            "enum": ["user", "admin", "super_admin"]
           }
         },
-        "required": [
-          "role"
-        ]
+        "required": ["role"]
       }
     }
   }
