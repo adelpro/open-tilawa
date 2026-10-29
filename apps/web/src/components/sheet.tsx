@@ -22,7 +22,7 @@ import { myFavoritesAtom, myRecentAtom } from '@/jotai/gun';
  * `mine` and `recent` are the listener's own lists; the other three order the
  * whole roster by a public number.
  */
-type ReciterScope = 'default' | 'mine' | 'recent' | 'favorites' | 'views';
+export type ReciterScope = 'default' | 'mine' | 'recent' | 'favorites' | 'views';
 
 type SheetProps = {
   title: string;
@@ -622,6 +622,7 @@ export function ReciterSheet({
   onLoadMore,
   loading,
   hasMore,
+  initialScope = 'default',
 }: {
   open: boolean;
   reciters: Reciter[];
@@ -635,6 +636,8 @@ export function ReciterSheet({
   onLoadMore?: () => void;
   loading?: boolean;
   hasMore?: boolean;
+  /** The chip the panel opens on — how `?view=favorites` lands on your list. */
+  initialScope?: ReciterScope;
 }) {
   const { t } = useLocale();
   const [query, setQuery] = useState('');
@@ -687,6 +690,12 @@ export function ReciterSheet({
     setFilter('all');
     setScope('default');
   }, [open]);
+
+  // On open only: a chip the listener pressed afterwards must survive until the
+  // panel closes, so this must not depend on `scope` itself.
+  useEffect(() => {
+    if (open) setScope(initialScope);
+  }, [open, initialScope]);
 
   useEffect(() => {
     if (!open || !onLoadMore || !hasMore || loading || query || filter !== 'all') return;

@@ -4,6 +4,8 @@ import { defineConfig } from 'vite';
 import { redact } from '@tanstack/redact/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { PWA_SCREENSHOTS, PWA_SHORTCUTS } from './src/constants/pwa';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -54,6 +56,9 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // The install dialog's preview and the launcher's long-press menu.
+        screenshots: PWA_SCREENSHOTS,
+        shortcuts: PWA_SHORTCUTS,
       },
       devOptions: {
         enabled: true,

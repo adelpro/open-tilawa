@@ -32,10 +32,20 @@ import { useHydrateRecent, useRecentSync, useRecordRecent } from './hooks/use-re
  * them — the reason playback keeps going when you leave the player for a page.
  */
 export default function App() {
-  const { route, navigate } = useHashRoute();
+  const { route, navigate, params } = useHashRoute();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { sheet, pinned, togglePin, openSurahs, openReciters, openStream, openKeys, close } =
-    useSheet();
+  const {
+    sheet,
+    pinned,
+    togglePin,
+    reciterScope,
+    openSurahs,
+    openReciters,
+    openRecitersAt,
+    openStream,
+    openKeys,
+    close,
+  } = useSheet();
   const setIsPlaying = useSetAtom(isPlayingAtom);
   const wide = useMediaQuery('(min-width: 1024px)');
   const pinnedBooted = useRef(false);
@@ -44,6 +54,16 @@ export default function App() {
     pinnedBooted.current = true;
     if (pinned) openReciters();
   }, [wide, pinned, openReciters]);
+
+  /**
+   * The installed shortcut: `?view=favorites` opens the roster on the
+   * listener's own list. Declared after the pinned boot so it wins on a wide
+   * screen; the param stays in the URL, so closing the panel and reopening it
+   * by hand is an ordinary visit.
+   */
+  useEffect(() => {
+    if (params.get('view') === 'favorites') openRecitersAt('mine');
+  }, [params, openRecitersAt]);
 
   const { locale, setLocale, adoptLocale } = useLocale();
   const { theme, setTheme, adoptTheme } = useTheme();
@@ -149,6 +169,7 @@ export default function App() {
             sheet={sheet}
             pinned={pinned}
             togglePin={togglePin}
+            reciterScope={reciterScope}
             openSurahs={openSurahs}
             openReciters={openReciters}
             openStream={openStream}

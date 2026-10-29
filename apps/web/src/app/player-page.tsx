@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PlayerFooter from '@/components/player-footer';
 import Icon from '@/components/icons';
 import Scrubber from '@/components/scrubber';
-import Sheet, { ReciterSheet, SurahSheet } from '@/components/sheet';
+import Sheet, { ReciterSheet, SurahSheet, type ReciterScope } from '@/components/sheet';
 import StreamSheet from '@/components/stream-sheet';
 import Transport from '@/components/transport';
 import Visualiser from '@/components/visualiser';
@@ -58,6 +58,7 @@ export default function PlayerPage({
   sheet,
   pinned,
   togglePin,
+  reciterScope,
   openSurahs,
   openReciters,
   openStream,
@@ -68,6 +69,7 @@ export default function PlayerPage({
   sheet: 'surahs' | 'reciters' | 'stream' | 'keys' | null;
   pinned: boolean;
   togglePin: () => void;
+  reciterScope: ReciterScope;
   openSurahs: () => void;
   openReciters: () => void;
   openStream: () => void;
@@ -350,6 +352,7 @@ export default function PlayerPage({
         reciters={reciters}
         current={reciter?.id}
         onPick={pickReciter}
+        initialScope={reciterScope}
         error={recitersError}
         onRetry={retryReciters}
         pinned={pinned}

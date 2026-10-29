@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import type { ReciterScope } from '@/components/sheet';
+
 export type SheetKind = 'surahs' | 'reciters' | 'stream' | 'keys';
 
 const PIN_KEY = 'tilawa.pinned.v1';
@@ -22,9 +24,22 @@ function readPin(): boolean {
 export function useSheet() {
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [pinned, setPinned] = useState(readPin);
+  // Which chip the reciter list starts on. `openReciters` resets it, so a panel
+  // opened by hand is never left on a deep link's scope.
+  const [reciterScope, setReciterScope] = useState<ReciterScope>('default');
 
   const openSurahs = useCallback(() => setSheet('surahs'), []);
-  const openReciters = useCallback(() => setSheet('reciters'), []);
+
+  /**
+   * Separate from `openReciters` on purpose: both are passed straight to
+   * `onClick`, and a scope parameter would receive the click event.
+   */
+  const openRecitersAt = useCallback((scope: ReciterScope) => {
+    setReciterScope(scope);
+    setSheet('reciters');
+  }, []);
+
+  const openReciters = useCallback(() => openRecitersAt('default'), [openRecitersAt]);
   const openStream = useCallback(() => setSheet('stream'), []);
   const openKeys = useCallback(() => setSheet('keys'), []);
 
@@ -42,5 +57,16 @@ export function useSheet() {
     });
   }, []);
 
-  return { sheet, pinned, togglePin, openSurahs, openReciters, openStream, openKeys, close };
+  return {
+    sheet,
+    pinned,
+    togglePin,
+    reciterScope,
+    openSurahs,
+    openReciters,
+    openRecitersAt,
+    openStream,
+    openKeys,
+    close,
+  };
 }
