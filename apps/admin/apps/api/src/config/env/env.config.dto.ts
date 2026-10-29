@@ -69,6 +69,15 @@ export class EnvConfigDTO {
   @IsOptional()
   EMAIL_APP_SPECIFIC_PASS?: string;
 
+  /**
+   * Encrypts a console-configured SMTP password. 32 bytes, base64 or hex.
+   * Optional at every layer: without it the console refuses to store a password
+   * and mail keeps working from EMAIL/EMAIL_APP_SPECIFIC_PASS.
+   */
+  @IsString()
+  @IsOptional()
+  MAIL_SECRET?: string;
+
   @IsString()
   @Matches(
     /^(https?:\/\/([a-zA-Z0-9.-]+|localhost|127\.0\.0\.1)(:[0-9]+)?(\/\w*)?)(,(https?:\/\/([a-zA-Z0-9.-]+|localhost|127\.0\.0\.1)(:[0-9]+)?(\/\w*)?))*$/,
