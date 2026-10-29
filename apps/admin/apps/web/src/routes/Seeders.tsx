@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
-import { linkProps, navigate } from '../lib/router';
+import { navigate } from '../lib/router';
 import { bytes } from '../lib/format';
 import { useI18n } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
+import { NodeCard } from '../components/NodeCard';
+import type { NodeMetric } from '../components/NodeCard';
+import { Icon } from '../components/icons';
 import { Panel } from '../components/Panel';
 import { FormModal } from '../components/FormModal';
 import { SkeletonRows } from '../components/Skeleton';
@@ -229,7 +232,12 @@ export function Seeders(): ReactElement {
           <p className="body muted">{t('seeders.lede')}</p>
         </div>
         <div className="cluster">
-          <Button variant="secondary" onClick={() => void pollAll()} busy={busy === 'poll-all'}>
+          <Button
+            variant="secondary"
+            icon={<Icon name="refresh" />}
+            onClick={() => void pollAll()}
+            busy={busy === 'poll-all'}
+          >
             {t('seeders.pollAll')}
           </Button>
           <Button
@@ -239,7 +247,9 @@ export function Seeders(): ReactElement {
           >
             {t('seeders.complete')}
           </Button>
-          <Button onClick={() => setShowAdd(true)}>{t('seeders.add')}</Button>
+          <Button icon={<Icon name="plus" />} onClick={() => setShowAdd(true)}>
+            {t('seeders.add')}
+          </Button>
         </div>
       </header>
 
@@ -377,141 +387,114 @@ export function Seeders(): ReactElement {
           <p className="body muted">{t('seeders.empty')}</p>
         </Panel>
       ) : (
-        <Panel>
-          <div className="table-scroll">
-            <table className="table table--seeders">
-              <thead>
-                <tr>
-                  <th scope="col">{t('seeders.server')}</th>
-                  <th scope="col">{t('seeders.traffic')}</th>
-                  <th scope="col">{t('seeders.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...seeders]
-                  .sort((a, b) => Number(b.pinned) - Number(a.pinned))
-                  .map((seeder) => (
-                  <tr
-                    key={seeder.id}
-                    className={
-                      seeder.pinned ? 'table__row--clickable row--pinned' : 'table__row--clickable'
-                    }
-                    onClick={() => navigate(`/torrents/${seeder.id}`)}
-                  >
-                    <td>
-                      <span className="row__cell">
-                        <span className="row__line">
-                          <a className="row__label" {...linkProps(`/torrents/${seeder.id}`)}>
-                            {seeder.name}
-                          </a>
-                          <Chip tone={statusTone(seeder.status)}>
-                            {t(statusKey(seeder.status))}
-                          </Chip>
-                          {seeder.pinned ? <Chip tone="info">{t('seeders.pinned')}</Chip> : null}
-                          {/* Credentials never reach this screen — the API does not
-                              return them. The row can only say whether any are set. */}
-                          <span className="row__meta">
-                            ·{' '}
-                            {t(
-                              seeder.hasCredentials
-                                ? 'seeders.credentialsSet'
-                                : 'seeders.credentialsMissing',
-                            )}
-                          </span>
-                        </span>
-                        <span className="row__line">
-                          <Chip tone={seeder.version ? 'ok' : 'notice'}>
-                            {seeder.version
-                              ? `v${seeder.version}`
-                              : t('seeders.versionUnknown')}
-                          </Chip>
-                          {seeder.desiredVersion ? (
-                            <Chip
-                              tone={
-                                seeder.version === seeder.desiredVersion ? 'ok' : 'notice'
-                              }
-                            >
-                              {seeder.version === seeder.desiredVersion
-                                ? t('seeders.upToDate')
-                                : t('seeders.behind', { version: seeder.desiredVersion })}
-                            </Chip>
-                          ) : null}
-                          <span className="row__id" title={seeder.url}>
-                            {seeder.url}
-                          </span>
-                        </span>
-                      </span>
-                    </td>
-                    <td>
-                      {t('seeders.torrentCount', { count: String(seeder.torrentCount) })} ·{' '}
-                      {t('seeders.peerCount', { count: String(seeder.peerCount) })}
-                      <br />
-                      <span className="row__meta">
-                        ↑ {bytes(seeder.uploadSpeed, locale, true)} · ↓{' '}
-                        {bytes(seeder.downloadSpeed, locale, true)}
-                      </span>
-                      <br />
-                      <span className="row__meta">
-                        {t('seeders.diskFree', {
-                          free: bytes(seeder.freeBytes, locale),
-                          total: bytes(seeder.totalBytes, locale),
-                        })}
-                      </span>
-                      <br />
-                      <span className="row__meta">
-                        {seeder.quotaBytes
-                          ? t('seeders.quota', {
-                              used: bytes(seeder.usedBytes, locale),
-                              quota: bytes(seeder.quotaBytes, locale),
-                            })
-                          : t('seeders.quotaUnlimited')}
-                        {' · '}
-                        {t('seeders.headroom', {
-                          headroom: bytes(seeder.headroomBytes, locale),
-                        })}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="row__actions">
-                        <Button
-                          small
-                          variant="secondary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void poll(seeder.id);
-                          }}
-                          busy={busy === `poll-${seeder.id}`}
-                        >
-                          {t('seeders.probe')}
-                        </Button>
-                        <Button
-                          small
-                          variant="secondary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            navigate(`/torrents/${seeder.id}`);
-                          }}
-                        >
-                          {t('seeders.manage')}
-                        </Button>
-                        <Button
-                          small
-                          variant="tertiary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            startEdit(seeder);
-                          }}
-                        >
-                          {t('seeders.edit')}
-                        </Button>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
+        <div className="node-grid">
+          {[...seeders]
+            .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+            .map((seeder) => {
+              // The card answers two questions: is it healthy, and how full is it.
+              // Disk size is not one of them — the quota the operator set is.
+              // A node that has never answered reports null, which is "unknown", not 0.
+              const used = seeder.usedBytes;
+              const quota = seeder.quotaBytes;
+              const ratio =
+                used !== null && quota !== null && quota > 0 ? used / quota : undefined;
+              const metrics: NodeMetric[] = [
+                {
+                  label: t('seeders.quotaLabel'),
+                  value: (
+                    <bdi>
+                      {used !== null && quota !== null && quota > 0
+                        ? t('seeders.quota', {
+                            used: bytes(used, locale),
+                            quota: bytes(quota, locale),
+                          })
+                        : bytes(used, locale)}
+                    </bdi>
+                  ),
+                  hint: quota === 0 ? t('seeders.quotaUnlimited') : undefined,
+                  ratio,
+                },
+                {
+                  label: t('seeders.traffic'),
+                  value: `${t('seeders.torrentCount', {
+                    count: seeder.torrentCount,
+                  })} · ${t('seeders.peerCount', { count: seeder.peerCount })}`,
+                },
+                {
+                  label: t('seeders.speed'),
+                  value: (
+                    <>
+                      <bdi className="node-card__line">
+                        ↑ {bytes(seeder.uploadSpeed, locale, true)}
+                      </bdi>
+                      <bdi className="node-card__line">
+                        ↓ {bytes(seeder.downloadSpeed, locale, true)}
+                      </bdi>
+                    </>
+                  ),
+                },
+                {
+                  label: t('seeders.versionLabel'),
+                  value: seeder.version ? `v${seeder.version}` : t('seeders.versionUnknown'),
+                  hint:
+                    seeder.version && seeder.desiredVersion ? (
+                      seeder.version === seeder.desiredVersion ? (
+                        <Chip tone="ok">{t('seeders.upToDate')}</Chip>
+                      ) : (
+                        <Chip tone="notice">
+                          {t('seeders.behind', { version: seeder.desiredVersion })}
+                        </Chip>
+                      )
+                    ) : undefined,
+                },
+              ];
+              return (
+                <NodeCard
+                  key={seeder.id}
+                  title={seeder.name}
+                  href={`/torrents/${seeder.id}`}
+                  url={seeder.url}
+                  pinned={seeder.pinned}
+                  statusTone={statusTone(seeder.status)}
+                  statusLabel={t(statusKey(seeder.status))}
+                  badges={
+                    seeder.pinned ? <Chip tone="info">{t('seeders.pinned')}</Chip> : undefined
+                  }
+                  note={t('seeders.credentialsNote', {
+                    state: t(
+                      seeder.hasCredentials
+                        ? 'seeders.credentialsSet'
+                        : 'seeders.credentialsMissing',
+                    ),
+                  })}
+                  metrics={metrics}
+                  actions={
+                    <>
+                      <Button
+                        small
+                        variant="secondary"
+                        onClick={() => navigate(`/torrents/${seeder.id}`)}
+                      >
+                        {t('seeders.manage')}
+                      </Button>
+                      <Button
+                        small
+                        variant="secondary"
+                        icon={<Icon name="refresh" />}
+                        onClick={() => void poll(seeder.id)}
+                        busy={busy === `poll-${seeder.id}`}
+                      >
+                        {t('seeders.probe')}
+                      </Button>
+                      <Button small variant="tertiary" onClick={() => startEdit(seeder)}>
+                        {t('seeders.edit')}
+                      </Button>
+                    </>
+                  }
+                />
+              );
+            })}
+        </div>
       )}
     </div>
   );

@@ -425,6 +425,140 @@
   white-space: nowrap;
 }
 
+/* ---------- node cards (seeders, TURN, relay) ---------- */
+.node-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--space-4);
+}
+.node-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--canvas);
+  box-shadow: var(--shadow-premium);
+}
+/* The node this dashboard runs. Pinned to the top and washed, because if it is
+   down the site is down — it should not look like one of the volunteers. */
+.node-card--pinned {
+  background: var(--canvas-parchment);
+}
+.node-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.node-card__title-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.node-card__name {
+  font: var(--body-strong);
+  letter-spacing: -0.374px;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+a.node-card__name:hover {
+  text-decoration: underline;
+}
+/* A URL is one token: it never widens the card, it only gets cut. The run inside is
+   a <bdi>, so the address reads left-to-right while the line stays aligned with the
+   card in both directions. */
+.node-card__url {
+  font: var(--code);
+  color: var(--ink-secondary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Numbers with units ("25.0 GB / 40.0 GB", "↑ 1.2 MB/s") are isolated runs: without
+   this, RTL reorders the pair and a wrapped "GB" lands on its own line. */
+.node-card__metric bdi,
+.node-card__url bdi {
+  white-space: nowrap;
+}
+/* A two-part reading (up, down) keeps one part per line: a middot at the wrap
+   point is worse than a second line. */
+.node-card__line {
+  display: block;
+}
+.node-card__note {
+  font: var(--fine-print);
+  color: var(--ink-secondary);
+}
+.node-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+}
+.node-card__metric {
+  min-width: 0;
+}
+.node-card__metric dt {
+  font: var(--fine-print);
+  color: var(--ink-secondary);
+}
+.node-card__metric dd {
+  margin: 2px 0 0;
+  font: var(--caption-strong);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.node-card__hint {
+  display: block;
+  font: var(--fine-print);
+  color: var(--ink-secondary);
+}
+.node-card__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  /* The footer sits on the card's floor, so two cards side by side keep their
+     actions on one line even when one has a wrapped metric. */
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--hairline);
+}
+
+/* The one meter in the product: used over quota. --support is a graphic here and
+   never a word, so its 3.6:1 is enough. */
+.meter {
+  display: block;
+  block-size: 4px;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+  overflow: hidden;
+}
+.meter__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+.meter[data-full='true'] .meter__fill {
+  background: var(--support);
+}
+
+@media (max-width: 560px) {
+  .node-grid {
+    grid-template-columns: 1fr;
+  }
+  .node-card {
+    padding: var(--space-4);
+  }
+}
+
 /* ---------- tables ---------- */
 
 .table {
@@ -453,8 +587,6 @@
 .table tr:hover td {
   background: var(--canvas-parchment);
 }
-/* The traffic block is what this table is for, and it is four short lines: it
-   keeps its floor, and the name column yields instead of shredding those lines. */
 /* A sortable column header keeps the table's type; only the arrow moves. */
 .th-sort {
   background: none;
@@ -470,9 +602,6 @@
 .th-sort:focus-visible {
   color: var(--ink);
 }
-.table--seeders td:nth-child(2) {
-  min-width: 240px;
-}
 
 /* A row that opens a screen says so with the pointer and a focus ring. */
 .table__row--clickable {
@@ -483,17 +612,6 @@
   outline-offset: -2px;
 }
 
-/* The node this dashboard runs. Pinned to the top and marked, because if it is
-   down the site is down — it should not look like one of the volunteers. */
-.row--pinned td {
-  background: var(--canvas-parchment);
-}
-.row--pinned td:first-child {
-  box-shadow: inset 3px 0 0 var(--ink);
-}
-.row--pinned .row__label {
-  font-weight: 700;
-}
 .table .num {
   text-align: end;
   font: var(--code);

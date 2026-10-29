@@ -101,7 +101,7 @@ export const en = {
 
   'seeders.title': 'Seeder nodes',
   'seeders.lede':
-    'Seeders distribute the torrents. The dashboard tracks each node’s status and runs torrent operations on it using that node’s stored credentials.',
+    'A node is a machine that keeps the recitation files and streams them to listeners over BitTorrent. The dashboard stores no audio: you register each node’s address and credentials here, and it watches status and manages what the node holds.',
   'seeders.add': 'Add seeder',
   'seeders.cancel': 'Cancel',
   'seeders.addSubmit': 'Add',
@@ -113,19 +113,19 @@ export const en = {
   'seeders.unlinkHint':
     'Removes the node from this dashboard. The node keeps running and keeps seeding.',
   'seeders.name': 'Name',
-  'seeders.server': 'Server',
   'seeders.url': 'URL',
   'seeders.urlHint': 'Base URL of the seeder, e.g. http://192.168.1.100:8085.',
   'seeders.adminUser': 'Admin user',
   'seeders.adminPass': 'Admin password',
-  'seeders.credentialsHint': 'Used server-side for torrent operations. Optional for a public node.',
+  'seeders.credentialsHint':
+    'Used for admin operations on the node; without them only status works. Set by the install script.',
   'seeders.credentialsSet': 'Stored',
-  'seeders.credentialsMissing': 'None',
+  'seeders.credentialsMissing': 'Not stored',
   'seeders.statusHeading': 'Status',
-  'seeders.complete': 'Make nodes complete',
-  'seeders.completeDone': 'Added {added} reciter(s).',
+  'seeders.complete': 'Add missing recitations to all nodes',
+  'seeders.completeDone': 'Added {added} recitation(s).',
   'seeders.completeSkipped':
-    '{count} reciter(s) left out: the node would pass 90% of its quota.',
+    '{count} recitation(s) left out: the node would pass 90% of its quota.',
   'seeders.completeFailed': 'Could not top up the nodes.',
   'seeders.dismiss': 'Dismiss',
   'seeders.upToDate': 'Current',
@@ -137,14 +137,14 @@ export const en = {
   'seeders.traffic': 'Torrents and peers',
   'seeders.torrentCount': '{count} torrents',
   'seeders.peerCount': '{count} peers',
-  'seeders.actions': 'Actions',
   'seeders.loading': 'Loading seeders',
-  'seeders.empty': 'No seeders yet. Add one to start distributing.',
+  'seeders.empty':
+    'No nodes yet. Add the first one; its install steps are in the add dialog.',
   'seeders.added': 'Seeder added.',
   'seeders.fillOnAdd': 'Add the catalogue to this node',
   'seeders.fillOnAddHint':
-    'Queues every reciter this node is missing, right after it is registered. Nothing is removed and anything over quota is skipped.',
-  'seeders.fillQueued': '{count} reciter(s) queued for download.',
+    'Queues every recitation this node is missing, right after it is registered. Nothing is removed, and the push stops at 90% of its quota.',
+  'seeders.fillQueued': '{count} queued for download.',
   'seeders.fillFailed': 'The catalogue was not pushed: {error}',
   'seeders.loadFailed': 'Could not load the seeders.',
   'seeders.addFailed': 'Could not add the seeder.',
@@ -334,7 +334,7 @@ export const en = {
   'seeders.manage': 'Torrents',
   'torrents.backToSeeders': 'All seeders',
   'torrents.credentialsHint':
-    'These are the seeder’s own ADMIN_USER / ADMIN_PASS (root .env), not your dashboard account.',
+    'These are the node’s own credentials, as the install script prints them or as set in the node’s docker-compose.yml. Not your dashboard account; without them the dashboard can only read status, not manage torrents.',
 
   'turns.host': 'Host',
   'turns.hostHint':
@@ -466,9 +466,12 @@ export const en = {
   'reciters.trackersSaved': 'Tracker list saved — {count} magnets rewritten.',
   'reciters.trackersFailed': 'Could not save the tracker list.',
 
-  'seeders.quota': '{used} of {quota} quota',
-  'seeders.quotaUnlimited': 'No quota',
-  'seeders.headroom': '{headroom} headroom',
+  'seeders.quota': '{used} / {quota}',
+  'seeders.quotaLabel': 'Quota',
+  'seeders.quotaUnlimited': 'No limit',
+  'seeders.speed': 'Speed',
+  'seeders.versionLabel': 'Version',
+  'seeders.credentialsNote': 'Credentials: {state}',
 
   'nav.status': 'Status',
   'status.title': 'Status',

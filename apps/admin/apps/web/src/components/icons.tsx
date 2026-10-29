@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import {
+  ArrowClockwiseIcon,
   ArrowDownIcon,
   ArrowSquareOutIcon,
   ArrowUpIcon,
@@ -44,6 +45,7 @@ import type { Icon as PhosphorGlyph } from '@phosphor-icons/react';
  */
 export type IconName =
   | 'plus'
+  | 'refresh'
   | 'copy'
   | 'edit'
   | 'trash'
@@ -70,6 +72,7 @@ export type IconName =
 
 const GLYPHS: Record<IconName, PhosphorGlyph> = {
   plus: PlusIcon,
+  refresh: ArrowClockwiseIcon,
   copy: CopyIcon,
   edit: PencilSimpleIcon,
   trash: TrashIcon,

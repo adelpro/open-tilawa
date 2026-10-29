@@ -106,7 +106,7 @@ export const ar: Catalogue = {
 
   'seeders.title': 'خوادم التوزيع',
   'seeders.lede':
-    'خوادم التوزيع هي التي تنشر ملفات التورنت. تتابع اللوحة حالة كل خادم وتنفّذ عليه عمليات التورنت ببيانات الاعتماد المخزّنة له.',
+    'خادم التوزيع حاسوب مستقلّ يحتفظ بملفات التلاوات ويبثّها إلى المستمعين عبر التورنت. اللوحة لا تخزّن الصوت بنفسها: تسجّل عنوان كل خادم وبيانات دخوله، وتفحص حالته، وتدير ما يحمله من تلاوات.',
   'seeders.add': 'إضافة خادم توزيع',
   'seeders.cancel': 'إلغاء',
   'seeders.addSubmit': 'إضافة',
@@ -117,16 +117,16 @@ export const ar: Catalogue = {
   'seeders.unlink': 'إلغاء الربط',
   'seeders.unlinkHint': 'يُزيل الخادم من هذه اللوحة، ويبقى الخادم يعمل ويوزّع.',
   'seeders.name': 'الاسم',
-  'seeders.server': 'الخادم',
   'seeders.url': 'الرابط',
   'seeders.urlHint': 'العنوان الأساسي للخادم، مثل http://192.168.1.100:8085.',
   'seeders.adminUser': 'مستخدم الإدارة',
   'seeders.adminPass': 'كلمة مرور الإدارة',
-  'seeders.credentialsHint': 'تُستخدم من جهة الخادم لعمليات التورنت، ويمكن تركها فارغة لخادم عام.',
+  'seeders.credentialsHint':
+    'تُستخدم لعمليات الإدارة على الخادم، ودونها تبقى الحالة وحدها. مصدرها سكربت التثبيت.',
   'seeders.credentialsSet': 'مخزّنة',
-  'seeders.credentialsMissing': 'لا شيء',
+  'seeders.credentialsMissing': 'غير مخزّنة',
   'seeders.statusHeading': 'الحالة',
-  'seeders.complete': 'أكمل الخوادم',
+  'seeders.complete': 'أضف التلاوات الناقصة إلى كل الخوادم',
   'seeders.completeDone': 'أُضيفت {added} تلاوة.',
   'seeders.completeSkipped': 'تُركت {count} تلاوة: الخادم سيتجاوز 90% من حصته.',
   'seeders.completeFailed': 'تعذّر إكمال الخوادم.',
@@ -140,14 +140,14 @@ export const ar: Catalogue = {
   'seeders.traffic': 'الملفات والأقران',
   'seeders.torrentCount': '{count} ملف',
   'seeders.peerCount': '{count} قرين',
-  'seeders.actions': 'إجراءات',
   'seeders.loading': 'جارٍ تحميل خوادم التوزيع',
-  'seeders.empty': 'لا خوادم توزيع بعد. أضف واحدًا لتبدأ التوزيع.',
+  'seeders.empty':
+    'ليست هناك خوادم توزيع بعد، أضف أول خادم (خطوات تثبيته في نافذة الإضافة).',
   'seeders.added': 'أُضيف خادم التوزيع.',
   'seeders.fillOnAdd': 'أضف الفهرس إلى هذا الخادم',
   'seeders.fillOnAddHint':
-    'يضع في قائمة الانتظار كل قارئ يفتقده الخادم فور تسجيله. لا يحذف شيئًا، ويتجاوز ما لا تتّسع له المساحة.',
-  'seeders.fillQueued': 'أُضيف {count} قارئًا إلى قائمة التنزيل.',
+    'يضع في قائمة الانتظار كل تلاوة يفتقدها الخادم فور تسجيله. لا يحذف شيئًا، ولا يتجاوز 90% من حصته.',
+  'seeders.fillQueued': 'أُضيف {count} إلى قائمة التنزيل.',
   'seeders.fillFailed': 'لم يُرسل الفهرس: {error}',
   'seeders.loadFailed': 'تعذّر تحميل خوادم التوزيع.',
   'seeders.addFailed': 'تعذّرت إضافة الخادم.',
@@ -334,7 +334,7 @@ export const ar: Catalogue = {
   'seeders.manage': 'التورنت',
   'torrents.backToSeeders': 'كل خوادم التوزيع',
   'torrents.credentialsHint':
-    'هذه بيانات ADMIN_USER / ADMIN_PASS الخاصة بخادم التوزيع (في .env الجذري)، وليست حسابك في اللوحة.',
+    'هذه بيانات دخول خادم التوزيع نفسه، كما يطبعها سكربت التثبيت أو كما هي في docker-compose.yml الخاص بالخادم. ليست حسابك في هذه اللوحة؛ ودونها تفحص اللوحة حالة الخادم فقط، ولا تدير تورنتاته.',
 
   'turns.host': 'المضيف',
   'turns.hostHint': 'اسم DNS أو عنوان IP لخادم TURN — سجل A عادي غير مُمرَّر عبر Cloudflare.',
@@ -359,7 +359,7 @@ export const ar: Catalogue = {
   'turns.updateFailed': 'تعذّر تحديث خادم TURN.',
 
   'seeders.versionUnknown': 'الإصدار غير معروف',
-  'seeders.diskFree': 'متاح {free} من {total}',
+  'seeders.diskFree': 'متاح {free} من أصل {total}',
   'seeders.updateSoftware': 'تحديث البرنامج',
   'seeders.updateTitle': 'أتحدّث خادم التوزيع هذا؟',
   'seeders.updateBody':
@@ -465,9 +465,12 @@ export const ar: Catalogue = {
   'reciters.trackersSaved': 'حُفظت القائمة — أُعيد بناء {count} رابطًا.',
   'reciters.trackersFailed': 'تعذّر حفظ قائمة المتتبّعات.',
 
-  'seeders.quota': '{used} من {quota} حصة',
-  'seeders.quotaUnlimited': 'بلا حصة',
-  'seeders.headroom': 'متاح {headroom}',
+  'seeders.quota': '{used} / {quota}',
+  'seeders.quotaLabel': 'الحصة',
+  'seeders.quotaUnlimited': 'بلا حدّ',
+  'seeders.speed': 'السرعة',
+  'seeders.versionLabel': 'الإصدار',
+  'seeders.credentialsNote': 'بيانات الدخول: {state}',
 
   'nav.status': 'الحالة',
   'status.title': 'الحالة',
