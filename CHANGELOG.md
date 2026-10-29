@@ -1,5 +1,59 @@
 # Changelog
 
+## 1.9.0 — 2026-10-30
+
+Minor. App versions: **web 1.10.0**, **admin 1.28.0**, **seeder 1.4.3**.
+
+### Added
+
+- **Mail is configured in the console, at runtime.** `/console/settings` holds the
+  SMTP host, port, TLS mode, username, From address and password. A save is
+  verified against the provider before it is written, so a typo cannot replace a
+  working transport with a broken one, and the change takes effect on the next
+  message — no recreate, no deploy. The password is stored AES-256-GCM under
+  `MAIL_SECRET` and is never returned by any route, only `hasPassword`.
+  `EMAIL`/`EMAIL_APP_SPECIFIC_PASS` remain the bootstrap: the first-run setup
+  token is mailed before any admin can sign in, so the environment is the only
+  configuration that exists at that point. Clearing the console falls back to it.
+- **Four operator alerts, mailed and deduplicated.** Service down (three
+  consecutive failed checks), pinned node offline (fifteen minutes without a
+  poll), disk headroom under the floor, and a failed node update. One message
+  when a condition opens, one when it clears, suppression under ten minutes and a
+  one-hour cooldown after a resolve, so a flapping dependency cannot train anyone
+  to ignore the inbox. Recipients are every active admin, each in their own
+  language, plus optional extra addresses. The rules read what the status, seeder
+  and TURN pollers already stored — nothing new is measured.
+- **An install prompt backed by real captures.** Five screenshots of the running
+  player (three phone, two desktop with `form_factor: 'wide'`), regularised by
+  `scripts/screenshots.mjs`, with a test that reads the PNG headers so a capture
+  at a new viewport fails the suite instead of the manifest.
+
+### Changed
+
+- **The riwaya is named the way the catalogue stores it.** `al-Duri` becomes
+  `al-Douri`, with the old spelling kept as an alias so no stored row has to be
+  migrated — both open the form on the same reading.
+- **Every published contact address is `tilawah.cc`.** The About page, the console
+  footer, the legal pages, the SEO copy and the seeder/tracker image labels
+  replace the two earlier domains.
+- **The alert panel reports the source the transport is actually using.** A stored
+  configuration whose password this process cannot decrypt says so, rather than
+  claiming a configuration that is not in use.
+
+### Fixed
+
+- An alert whose first mail never left the process is re-sent instead of being
+  lost behind its own dedupe row.
+- The resolve path is atomic, so two overlapping passes cannot both mail
+  "recovered".
+- A blank From address falls back to the username instead of shipping a message
+  with no From header.
+- Node update failures survive a restart, so a recreate no longer mails a false
+  "update recovered".
+
+The seeder stays at **1.4.3**: its only change in this release is the maintainer
+address in the image label.
+
 ## 1.8.2 — 2026-10-29
 
 Patch. App versions: **web 1.9.3**, **admin 1.27.2**, **seeder 1.4.3**.
