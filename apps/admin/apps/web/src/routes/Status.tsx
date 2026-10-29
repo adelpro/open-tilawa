@@ -7,6 +7,8 @@ import { bytes } from '../lib/format';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
+import { NodeCard } from '../components/NodeCard';
+import type { NodeMetric } from '../components/NodeCard';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -225,56 +227,51 @@ export function Status(): ReactElement {
           </div>
 
           <h2 className="group-title">{t('status.nodes')}</h2>
-          <Panel>
-            {overview.seeders.length === 0 ? (
+          {overview.seeders.length === 0 ? (
+            <Panel>
               <p className="body muted">{t('status.noNodes')}</p>
-            ) : (
-              <div className="table-scroll">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('status.name')}</th>
-                      <th scope="col">{t('status.state')}</th>
-                      <th scope="col">{t('status.version')}</th>
-                      <th scope="col">{t('status.headroom')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {overview.seeders.map((node) => (
-                      <tr key={node.id}>
-                        <td>
-                          <span className="row__label">{node.name}</span>
-                          <br />
-                          <span className="row__id">{node.url}</span>
-                        </td>
-                        <td>
-                          <Chip
-                            tone={
-                              node.status === 'online'
-                                ? 'ok'
-                                : node.status === 'offline'
-                                  ? 'bad'
-                                  : 'notice'
-                            }
-                          >
-                            {t(
-                              node.status === 'online'
-                                ? 'status.ok'
-                                : node.status === 'offline'
-                                  ? 'status.down'
-                                  : 'status.unknown',
-                            )}
-                          </Chip>
-                        </td>
-                        <td>{node.version ? `v${node.version}` : '—'}</td>
-                        <td className="num">{bytes(node.headroomBytes, locale)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Panel>
+            </Panel>
+          ) : (
+            <div className="node-grid">
+              {overview.seeders.map((node) => {
+                // Same card as the fleet screen, read-only: this page answers
+                // "is anything down", the seeders screen answers "what does it hold".
+                const metrics: NodeMetric[] = [
+                  {
+                    label: t('status.version'),
+                    value: node.version ? `v${node.version}` : '—',
+                  },
+                  {
+                    label: t('status.headroom'),
+                    value: <bdi>{bytes(node.headroomBytes, locale)}</bdi>,
+                  },
+                ];
+                return (
+                  <NodeCard
+                    key={node.id}
+                    title={node.name}
+                    href={`/torrents/${node.id}`}
+                    url={node.url}
+                    statusTone={
+                      node.status === 'online'
+                        ? 'ok'
+                        : node.status === 'offline'
+                          ? 'bad'
+                          : 'notice'
+                    }
+                    statusLabel={t(
+                      node.status === 'online'
+                        ? 'status.ok'
+                        : node.status === 'offline'
+                          ? 'status.down'
+                          : 'status.unknown',
+                    )}
+                    metrics={metrics}
+                  />
+                );
+              })}
+            </div>
+          )}
 
           <h2 className="group-title">{t('status.turns')}</h2>
           <Panel>

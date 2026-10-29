@@ -2,11 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
-import { navigate } from '../lib/router';
 import { useI18n } from '../lib/i18n';
+import { relative } from '../lib/format';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
-import { Chip, Notice } from '../components/Chip';
+import { Notice } from '../components/Chip';
+import { NodeCard } from '../components/NodeCard';
+import type { NodeMetric } from '../components/NodeCard';
+import { Icon } from '../components/icons';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { CopyLine } from '../components/CopyLine';
@@ -26,7 +29,7 @@ import type { Turn } from '../lib/types-seeders';
  */
 export function Turns(): ReactElement {
   const { user } = useSession();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [turns, setTurns] = useState<Turn[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -159,10 +162,17 @@ export function Turns(): ReactElement {
           <p className="body muted">{t('turns.lede')}</p>
         </div>
         <div className="cluster">
-          <Button variant="secondary" onClick={() => void pollAll()} busy={busy === 'poll-all'}>
+          <Button
+            variant="secondary"
+            icon={<Icon name="refresh" />}
+            onClick={() => void pollAll()}
+            busy={busy === 'poll-all'}
+          >
             {t('turns.pollAll')}
           </Button>
-          <Button onClick={() => setShowAdd(true)}>{t('turns.add')}</Button>
+          <Button icon={<Icon name="plus" />} onClick={() => setShowAdd(true)}>
+            {t('turns.add')}
+          </Button>
         </div>
       </header>
 
@@ -337,81 +347,62 @@ export function Turns(): ReactElement {
           <p className="body muted">{t('turns.empty')}</p>
         </Panel>
       ) : (
-        <Panel>
-          <div className="table-scroll">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th scope="col">{t('turns.name')}</th>
-                  <th scope="col">{t('turns.statusHeading')}</th>
-                  <th scope="col">{t('turns.latency')}</th>
-                  <th scope="col">{t('turns.lastSeen')}</th>
-                  <th scope="col">{t('turns.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {turns.map((turn) => (
-                  <tr
-                    key={turn.id}
-                    className="table__row--clickable"
-                    onClick={() => navigate(`/turns/${turn.id}`)}
-                  >
-                    <td>
-                      <a className="row__label" {...linkProps(`/turns/${turn.id}`)}>
-                        {turn.name}
-                      </a>
-                      <br />
-                      <span className="row__id">{turn.url}</span>
-                    </td>
-                    <td>
-                      <Chip tone={statusTone(turn.status)}>{t(statusKey(turn.status))}</Chip>
-                    </td>
-                    <td className="num">
-                      {turn.latencyMs === null ? t('turns.latencyUnknown') : `${turn.latencyMs} ms`}
-                    </td>
-                    <td>{formatTimestamp(turn.lastSeen)}</td>
-                    <td>
-                      <span className="row__actions">
-                        <Button
-                          small
-                          variant="secondary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void poll(turn.id);
-                          }}
-                          busy={busy === `poll-${turn.id}`}
-                        >
-                          {t('turns.poll')}
-                        </Button>
-                        <Button
-                          small
-                          variant="tertiary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            startEdit(turn);
-                          }}
-                        >
-                          {t('turns.edit')}
-                        </Button>
-                        <Button
-                          small
-                          variant="destructive"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setRemoving(turn);
-                          }}
-                          busy={busy === `remove-${turn.id}`}
-                        >
-                          {t('turns.remove')}
-                        </Button>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
+        <div className="node-grid">
+          {turns.map((turn) => {
+            const metrics: NodeMetric[] = [
+              {
+                label: t('turns.latency'),
+                value:
+                  turn.latencyMs === null ? (
+                    t('turns.latencyUnknown')
+                  ) : (
+                    <bdi>{`${turn.latencyMs} ms`}</bdi>
+                  ),
+              },
+              {
+                // Relative, because "when was it last checked" is a question about
+                // freshness; the absolute stamp lives on the server's own screen.
+                label: t('turns.lastSeen'),
+                value: relative(turn.lastSeen, locale),
+              },
+            ];
+            return (
+              <NodeCard
+                key={turn.id}
+                title={turn.name}
+                href={`/turns/${turn.id}`}
+                url={turn.url}
+                statusTone={statusTone(turn.status)}
+                statusLabel={t(statusKey(turn.status))}
+                metrics={metrics}
+                actions={
+                  <>
+                    <Button
+                      small
+                      variant="secondary"
+                      icon={<Icon name="refresh" />}
+                      onClick={() => void poll(turn.id)}
+                      busy={busy === `poll-${turn.id}`}
+                    >
+                      {t('turns.poll')}
+                    </Button>
+                    <Button small variant="tertiary" onClick={() => startEdit(turn)}>
+                      {t('turns.edit')}
+                    </Button>
+                    <Button
+                      small
+                      variant="destructive"
+                      onClick={() => setRemoving(turn)}
+                      busy={busy === `remove-${turn.id}`}
+                    >
+                      {t('turns.remove')}
+                    </Button>
+                  </>
+                }
+              />
+            );
+          })}
+        </div>
       )}
       {removing ? (
         <ConfirmModal
@@ -431,13 +422,6 @@ export function Turns(): ReactElement {
   );
 }
 
-function formatTimestamp(value: string | null): string | null {
-  if (!value) return null;
-  const iso = value.includes('T') ? value : `${value.replace(' ', 'T')}Z`;
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
-}
 
 /**
  * `turn:host:port` / `turns:host:port` → the three fields the form edits. The
