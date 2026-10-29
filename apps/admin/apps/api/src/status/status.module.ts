@@ -10,5 +10,6 @@ import { StatusScheduler } from './status.scheduler';
   imports: [UsersModule, SeedersModule, TurnsModule],
   controllers: [StatusController],
   providers: [StatusService, StatusScheduler],
+  exports: [StatusService],
 })
 export class StatusModule {}

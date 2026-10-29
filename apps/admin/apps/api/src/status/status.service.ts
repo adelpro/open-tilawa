@@ -17,6 +17,14 @@ export interface ServiceRow {
   enabled: boolean;
 }
 
+/** One service's recent outcomes, newest first, for the alert rules. */
+export interface ServiceHistory {
+  id: number;
+  name: string;
+  enabled: boolean;
+  passed: boolean[];
+}
+
 /** A service is checked with the protocol it names; sockets get a handshake. */
 export function serviceKind(protocol: string): ServiceKind {
   return protocol === 'ws:' || protocol === 'wss:' ? 'ws' : 'http';
@@ -318,6 +326,31 @@ export class StatusService {
         timeline,
       };
     });
+  }
+
+  /**
+   * The last `limit` checks per enabled service, newest first.
+   *
+   * Ordered by `id`, not `checked_at`: the table is append-only and `id` is the
+   * insertion order, so two checks in the same second cannot sort arbitrarily.
+   * Alert rules need consecutive results, which is why this exists next to
+   * `overview()` — that one only reports the latest.
+   */
+  recentChecks(limit: number): ServiceHistory[] {
+    const rows = this.db
+      .prepare('SELECT id, name FROM services WHERE enabled = 1 ORDER BY id')
+      .all() as { id: number; name: string }[];
+
+    const checks = this.db.prepare(
+      'SELECT ok FROM service_checks WHERE service_id = ? ORDER BY id DESC LIMIT ?',
+    );
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      enabled: true,
+      passed: (checks.all(row.id, limit) as { ok: number }[]).map((check) => check.ok === 1),
+    }));
   }
 
   /** TURN timeline from the probe history the TURN module already keeps. */
