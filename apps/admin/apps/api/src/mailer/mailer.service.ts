@@ -57,6 +57,8 @@ export class MailerService {
   private readonly activationEmailTemplateAr: string;
   private readonly resetPasswordEmailTemplateAr: string;
   private readonly otpEmailTemplateAr: string;
+  private readonly alertEmailTemplate: string;
+  private readonly alertEmailTemplateAr: string;
 
   constructor(
     @Inject(MAIL_TRANSPORT) private readonly transport: MailTransport,
@@ -75,6 +77,8 @@ export class MailerService {
     this.activationEmailTemplateAr = this.load('activation.email.template.ar.html');
     this.resetPasswordEmailTemplateAr = this.load('reset.password.email.template.ar.html');
     this.otpEmailTemplateAr = this.load('otp.email.template.ar.html');
+    this.alertEmailTemplate = this.load('alert.email.template.html');
+    this.alertEmailTemplateAr = this.load('alert.email.template.ar.html');
   }
 
   /** The template for the recipient's language. */
@@ -246,6 +250,35 @@ export class MailerService {
           name: recipient.name,
           code: otp,
           email: recipient.email,
+        },
+      ),
+    });
+  }
+
+  /**
+   * An operational alert. Every value here is already escaped by the caller and
+   * already localised by `notifications/messages.ts`: this method only picks the
+   * template and hands it to the transport.
+   */
+  async sendAlertEmail(
+    recipient: MailRecipient,
+    alert: { subject: string; heading: string; resource: string; detail: string; openedAt: string },
+  ): Promise<{ messageId: string }> {
+    const consoleUrl = `${this.website.replace(/\/$/, '')}/console/status`;
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(recipient.locale, alert.subject, alert.subject),
+      html: this.fill(
+        this.template(recipient.locale, this.alertEmailTemplate, this.alertEmailTemplateAr),
+        {
+          APP_NAME: this.appName,
+          name: recipient.name,
+          email: recipient.email,
+          heading: alert.heading,
+          resource: alert.resource,
+          detail: alert.detail,
+          openedAt: alert.openedAt,
+          consoleUrl,
         },
       ),
     });

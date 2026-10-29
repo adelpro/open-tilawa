@@ -41,8 +41,18 @@ export interface AlertEvent {
   action: 'open' | 'resolve';
   kind: AlertKind;
   subject: string;
+  /** The resource's own name, so a mail can be written in the recipient's language. */
+  name: string;
+  /** English text for the console and the log; the mailer localises its own. */
   title: string;
   detail: string | null;
+  /** Numbers the mail needs; `title`/`detail` are for humans reading English. */
+  params?: {
+    failures?: number;
+    headroomBytes?: number;
+    lastSeen?: string | null;
+    error?: string | null;
+  };
 }
 
 /** A node is not "offline" until it has missed the poll it would have answered. */
@@ -90,14 +100,17 @@ export function evaluate(observation: Observation): AlertEvent[] {
         action: 'open',
         kind: 'service.down',
         subject,
+        name: service.name,
         title: `Service down: ${service.name}`,
         detail: `${failures} consecutive checks failed`,
+        params: { failures },
       });
     } else if (isOpen && leading(service.passed, true) >= RECOVERY_CHECKS) {
       emit({
         action: 'resolve',
         kind: 'service.down',
         subject,
+        name: service.name,
         title: `Recovered: ${service.name}`,
         detail: null,
       });
@@ -117,14 +130,17 @@ export function evaluate(observation: Observation): AlertEvent[] {
           action: 'open',
           kind: 'seeder.offline',
           subject,
+          name: seeder.name,
           title: `Node offline: ${seeder.name}`,
           detail: seeder.lastSeen ? `Last seen ${seeder.lastSeen}` : 'Never seen',
+          params: { lastSeen: seeder.lastSeen },
         });
       } else if (isOpen && seeder.status === 'online') {
         emit({
           action: 'resolve',
           kind: 'seeder.offline',
           subject,
+          name: seeder.name,
           title: `Node back online: ${seeder.name}`,
           detail: null,
         });
@@ -140,16 +156,20 @@ export function evaluate(observation: Observation): AlertEvent[] {
           action: 'open',
           kind: 'seeder.disk',
           subject,
+          name: seeder.name,
           title: `Disk low: ${seeder.name}`,
           detail: `${gigabytes(seeder.headroomBytes)} of headroom (floor ${gigabytes(floor)})`,
+          params: { headroomBytes: seeder.headroomBytes },
         });
       } else if (isOpen && seeder.headroomBytes > floor * DISK_HYSTERESIS) {
         emit({
           action: 'resolve',
           kind: 'seeder.disk',
           subject,
+          name: seeder.name,
           title: `Disk recovered: ${seeder.name}`,
           detail: gigabytes(seeder.headroomBytes),
+          params: { headroomBytes: seeder.headroomBytes },
         });
       }
     }
@@ -162,14 +182,17 @@ export function evaluate(observation: Observation): AlertEvent[] {
           action: 'open',
           kind: 'seeder.update_failed',
           subject,
+          name: seeder.name,
           title: `Update failed: ${seeder.name}`,
           detail: seeder.updateError,
+          params: { error: seeder.updateError },
         });
       } else if (isOpen && !seeder.updateError) {
         emit({
           action: 'resolve',
           kind: 'seeder.update_failed',
           subject,
+          name: seeder.name,
           title: `Update recovered: ${seeder.name}`,
           detail: null,
         });

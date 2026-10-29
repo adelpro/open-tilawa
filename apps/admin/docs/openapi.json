@@ -1534,6 +1534,28 @@
         "summary": "Issue a CSRF token (echo it in x-csrf-token)",
         "tags": ["csrf"]
       }
+    },
+    "/api/alerts": {
+      "get": {
+        "operationId": "AlertsController_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Recent alerts, newest first",
+        "tags": ["Alerts"]
+      }
     }
   },
   "info": {

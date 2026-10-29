@@ -22,6 +22,7 @@ import { TurnsModule } from './turns/turns.module';
 import { RecitersModule } from './reciters/reciters.module';
 import { TwoFaModule } from './two-fa/two-fa.module';
 import { SettingsModule } from './settings/settings.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { envValidate } from './config/env/env.validate';
 
 @Module({
@@ -48,6 +49,7 @@ import { envValidate } from './config/env/env.validate';
     SetupModule,
     CsrfModule,
     SettingsModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: TilawaThrottlerGuard }, CsrfMiddleware],
