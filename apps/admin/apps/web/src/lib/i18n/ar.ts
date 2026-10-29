@@ -807,6 +807,8 @@ export const ar: Catalogue = {
   'settings.mail.password': 'كلمة المرور',
   'settings.mail.passwordKeep': 'اتركه فارغًا للاحتفاظ بكلمة المرور المحفوظة.',
   'settings.mail.passwordSet': 'ثمّة كلمة مرور محفوظة؛ اتركه فارغًا للاحتفاظ بها.',
+  'settings.mail.passwordNew': 'لا توجد كلمة مرور محفوظة بعد.',
+  'settings.mail.skipVerify': 'الحفظ دون تحقّق (للمرحّلات التي ترفض فحص الاتصال)',
   'settings.mail.source.db': 'إعدادات اللوحة',
   'settings.mail.source.env': 'متغيّرات البيئة (Gmail)',
   'settings.mail.source.none': 'غير مهيّأ',
@@ -823,8 +825,7 @@ export const ar: Catalogue = {
   'settings.mail.testFailed': 'فشل إرسال الرسالة التجريبية.',
   'settings.mail.cleared': 'مُسح الإعداد.',
   'settings.alerts.title': 'التنبيهات',
-  'settings.alerts.body':
-    'رسالة عند بدء الحالة وأخرى عند انتهائها، ولا تكرار ما دامت قائمة.',
+  'settings.alerts.body': 'رسالة عند بدء الحالة وأخرى عند انتهائها، ولا تكرار ما دامت قائمة.',
   'settings.alerts.serviceFailures': 'عدد المحاولات الفاشلة قبل التنبيه',
   'settings.alerts.diskFloor': 'الحد الأدنى للمساحة الحرة (غيغابايت)',
   'settings.alerts.recipients': 'مستلمون إضافيون',

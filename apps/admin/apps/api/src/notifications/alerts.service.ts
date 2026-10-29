@@ -15,6 +15,8 @@ export interface AlertRow {
   subject: string;
   title: string;
   detail: string | null;
+  name: string | null;
+  params: string | null;
   state: 'open' | 'resolved';
   openedAt: string;
   notifiedAt: string | null;
@@ -29,6 +31,8 @@ interface AlertRecord {
   subject: string;
   title: string;
   detail: string | null;
+  name: string | null;
+  params: string | null;
   state: 'open' | 'resolved';
   opened_at: string;
   notified_at: string | null;
@@ -91,6 +95,8 @@ export class AlertsService {
       subject: row.subject,
       title: row.title,
       detail: row.detail,
+      name: row.name,
+      params: row.params,
       state: row.state,
       openedAt: row.opened_at,
       notifiedAt: row.notified_at,
@@ -101,6 +107,7 @@ export class AlertsService {
   }
 
   async apply(events: AlertEvent[]): Promise<void> {
+    await this.deliverAbandoned();
     for (const event of events) {
       if (event.action === 'open') await this.open(event);
       else await this.resolve(event);
@@ -109,8 +116,17 @@ export class AlertsService {
 
   private async open(event: AlertEvent): Promise<void> {
     const info = this.db
-      .prepare('INSERT OR IGNORE INTO alerts (kind, subject, title, detail) VALUES (?, ?, ?, ?)')
-      .run(event.kind, event.subject, event.title, event.detail);
+      .prepare(
+        'INSERT OR IGNORE INTO alerts (kind, subject, title, detail, name, params) VALUES (?, ?, ?, ?, ?, ?)',
+      )
+      .run(
+        event.kind,
+        event.subject,
+        event.title,
+        event.detail,
+        event.name,
+        event.params ? JSON.stringify(event.params) : null,
+      );
 
     // `changes === 0` means another process (or an earlier pass) already opened it.
     if (info.changes === 0) return;
@@ -133,12 +149,50 @@ export class AlertsService {
     if (!row) return;
 
     const resolvedAt = new Date().toISOString();
-    this.db
-      .prepare("UPDATE alerts SET state = 'resolved', resolved_at = ? WHERE id = ?")
+    // `AND state = 'open'` is the lock: two processes (or two overlapping cron
+    // ticks) must not both mail "recovered" for the same alert.
+    const changed = this.db
+      .prepare(
+        "UPDATE alerts SET state = 'resolved', resolved_at = ? WHERE id = ? AND state = 'open'",
+      )
       .run(resolvedAt, row.id);
+    if (changed.changes !== 1) return;
 
     if (Date.now() - at(row.opened_at) < MIN_OPEN_MS) return;
     await this.deliver({ ...row, state: 'resolved', resolved_at: resolvedAt }, event, 'resolve');
+  }
+
+  /**
+   * Alerts whose mail never went out because the process died between the insert
+   * and the send. The row is the dedupe token, so a later pass sees "already
+   * open" and would otherwise never try again — the alert would be silently lost.
+   *
+   * Deliberately narrow: only rows that were *never attempted* and are older than
+   * the damping window. A row with `notify_error` set is a failure the spec chose
+   * not to retry.
+   */
+  private async deliverAbandoned(): Promise<void> {
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM alerts
+          WHERE state = 'open' AND notified_at IS NULL AND notify_error IS NULL
+            AND name IS NOT NULL AND opened_at <= ?
+          ORDER BY id`,
+      )
+      .all(new Date(Date.now() - MIN_OPEN_MS).toISOString()) as AlertRecord[];
+
+    for (const row of rows) {
+      const event: AlertEvent = {
+        action: 'open',
+        kind: row.kind,
+        subject: row.subject,
+        name: row.name ?? row.subject,
+        title: row.title,
+        detail: row.detail,
+        params: row.params ? (JSON.parse(row.params) as AlertEvent['params']) : undefined,
+      };
+      await this.deliver(row, event, 'open');
+    }
   }
 
   private recentlyResolved(kind: AlertKind, subject: string): boolean {

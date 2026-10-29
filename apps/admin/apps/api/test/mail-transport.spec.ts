@@ -1,4 +1,5 @@
 import { ConfiguredMailTransport } from '../src/mailer/configured.transport';
+import { resolveFrom } from '../src/mailer/mailer.transport';
 import { MailNotConfiguredError } from '../src/mailer/mailer.types';
 import type { MailConfig } from '../src/settings/settings.service';
 
@@ -102,6 +103,29 @@ describe('ConfiguredMailTransport', () => {
       'old.example.com',
       'new.example.com',
     ]);
+  });
+
+  it('falls back to the username when From is blank, and omits From when there is none', () => {
+    expect(resolveFrom(config({ from: '', user: 'ops@tilawah.cc' }))).toBe('ops@tilawah.cc');
+    expect(resolveFrom(config({ from: 'Tilawa <ops@tilawah.cc>', user: 'other' }))).toBe(
+      'Tilawa <ops@tilawah.cc>',
+    );
+    expect(resolveFrom(config({ from: '   ', user: null }))).toBeUndefined();
+  });
+
+  it('rebuilds when only the From address changes', async () => {
+    const { transport, smtp, state } = build(
+      config({ host: 'smtp.example.com', user: 'ops', password: 'p', from: 'a@tilawah.cc' }),
+    );
+    await transport.send(MESSAGE);
+    state.config = config({
+      host: 'smtp.example.com',
+      user: 'ops',
+      password: 'p',
+      from: 'b@tilawah.cc',
+    });
+    await transport.send(MESSAGE);
+    expect(smtp.mock.calls.map((call) => call[0].from)).toEqual(['a@tilawah.cc', 'b@tilawah.cc']);
   });
 
   it('falls through to env when the stored password cannot be decrypted', async () => {

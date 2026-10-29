@@ -20,7 +20,8 @@ export class AlertsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Recent alerts, newest first' })
   list(@Query('limit') limit?: string) {
-    const parsed = Number(limit ?? 20);
+    const parsed = Math.trunc(Number(limit ?? 20));
+    // `LIMIT 2.5` is a datatype mismatch in SQLite, i.e. a 500 from a query string.
     return this.alerts.recent(Number.isFinite(parsed) ? Math.min(100, Math.max(1, parsed)) : 20);
   }
 }

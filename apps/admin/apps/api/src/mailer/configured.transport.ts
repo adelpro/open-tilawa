@@ -8,6 +8,21 @@ type Builders = {
   gmail: (email: string, pass: string) => MailTransport;
 };
 
+/**
+ * Whether the stored configuration can actually send.
+ *
+ * Shared with the settings controller so the panel reports the source the
+ * transport is really using: a stored host with a password this process cannot
+ * read is *not* "console configuration in use".
+ */
+export function isMailConfigUsable(config: {
+  host: string | null;
+  user: string | null;
+  password: string | null;
+}): boolean {
+  return Boolean(config.host) && (!config.user || Boolean(config.password));
+}
+
 const NOT_CONFIGURED = 'Mail is not configured — set it in the console at /console/settings';
 
 /** Stands in for "nothing is configured", so `kind` and `send` agree. */
@@ -45,6 +60,7 @@ export class ConfiguredMailTransport implements MailTransport {
   }
 
   reload(): void {
+    this.memo?.transport.close?.();
     this.memo = null;
   }
 
@@ -57,13 +73,11 @@ export class ConfiguredMailTransport implements MailTransport {
   /** Which configuration wins, and the identity used to detect a change. */
   private describe(): { key: string; build: () => MailTransport } {
     const config = this.settings.getMailConfig();
-    // A username with no readable password is not a usable login: that is the
-    // rotated-secret case, and the environment is the better answer.
-    const usable = Boolean(config.host) && (!config.user || Boolean(config.password));
 
-    if (usable && config.host) {
+    if (isMailConfigUsable(config) && config.host) {
       return {
-        key: `smtp:${config.host}:${config.port}:${config.tls}:${config.user ?? ''}:${config.password ?? ''}`,
+        // `from` belongs in the key: it is baked into the built transport.
+        key: `smtp:${config.host}:${config.port}:${config.tls}:${config.user ?? ''}:${config.password ?? ''}:${config.from ?? ''}`,
         build: () => this.builders.smtp(config),
       };
     }
@@ -79,6 +93,8 @@ export class ConfiguredMailTransport implements MailTransport {
   private current(): MailTransport {
     const next = this.describe();
     if (!this.memo || this.memo.key !== next.key) {
+      // Release the previous pool instead of leaking a socket per settings change.
+      this.memo?.transport.close?.();
       this.memo = { key: next.key, transport: next.build() };
     }
     return this.memo.transport;

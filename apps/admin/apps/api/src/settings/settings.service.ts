@@ -124,9 +124,8 @@ export class SettingsService {
    * WEBSITE: the player fetches them from the web origin, next to /media.
    */
   getWebOrigin(): string {
-    const row = this.db
-      .prepare("SELECT value FROM app_settings WHERE key = 'webOrigin'")
-      .get() as { value: string } | undefined;
+    const row = this.db.prepare("SELECT value FROM app_settings WHERE key = 'webOrigin'").get() as
+      { value: string } | undefined;
     return (row?.value ?? DEFAULT_WEB_ORIGIN).replace(/\/+$/, '');
   }
 
@@ -166,7 +165,11 @@ export class SettingsService {
     let password: string | null = null;
     if (ciphertext) {
       const key = readMailKey(process.env);
-      if (key) {
+      if (!key) {
+        // A deleted or malformed MAIL_SECRET is the likeliest post-restore state,
+        // and it must not look like a working console configuration.
+        this.logger.error('a mail password is stored but MAIL_SECRET is missing or not 32 bytes');
+      } else {
         try {
           password = decryptSecret(ciphertext, key);
         } catch (error) {
@@ -195,7 +198,9 @@ export class SettingsService {
       throw new BadRequestException(`not a port: ${input.port}`);
     }
     if (!MAIL_TLS.includes(input.tls)) {
-      throw new BadRequestException(`not a TLS mode: ${input.tls} (expected ${MAIL_TLS.join(', ')})`);
+      throw new BadRequestException(
+        `not a TLS mode: ${input.tls} (expected ${MAIL_TLS.join(', ')})`,
+      );
     }
     const from = input.from?.trim() ?? '';
     if (from && !looksLikeAddress(from)) {
@@ -243,7 +248,9 @@ export class SettingsService {
     const enabledRow = this.read('notify.enabled');
     return {
       enabled:
-        enabledRow === null ? [...DEFAULT_NOTIFY.enabled] : this.readList('notify.enabled').filter(isAlertKind),
+        enabledRow === null
+          ? [...DEFAULT_NOTIFY.enabled]
+          : this.readList('notify.enabled').filter(isAlertKind),
       serviceFailures: this.readNumber('notify.serviceFailures', DEFAULT_NOTIFY.serviceFailures),
       diskFloorBytes: this.readNumber('notify.diskFloorBytes', DEFAULT_NOTIFY.diskFloorBytes),
       extraRecipients: this.readList('notify.extraRecipients'),
@@ -253,12 +260,17 @@ export class SettingsService {
   setNotifySettings(input: Partial<NotifySettings>): NotifySettings {
     if (input.enabled !== undefined) {
       const unknown = input.enabled.filter((kind) => !isAlertKind(kind));
-      if (unknown.length > 0) throw new BadRequestException(`not an alert kind: ${unknown.join(', ')}`);
+      if (unknown.length > 0)
+        throw new BadRequestException(`not an alert kind: ${unknown.join(', ')}`);
       this.write('notify.enabled', JSON.stringify([...new Set(input.enabled)]));
     }
     if (input.serviceFailures !== undefined) {
-      if (!Number.isFinite(input.serviceFailures)) throw new BadRequestException('serviceFailures must be a number');
-      this.write('notify.serviceFailures', String(Math.min(20, Math.max(1, Math.round(input.serviceFailures)))));
+      if (!Number.isFinite(input.serviceFailures))
+        throw new BadRequestException('serviceFailures must be a number');
+      this.write(
+        'notify.serviceFailures',
+        String(Math.min(20, Math.max(1, Math.round(input.serviceFailures)))),
+      );
     }
     if (input.diskFloorBytes !== undefined) {
       if (!Number.isFinite(input.diskFloorBytes) || input.diskFloorBytes < 0) {
@@ -267,9 +279,12 @@ export class SettingsService {
       this.write('notify.diskFloorBytes', String(Math.round(input.diskFloorBytes)));
     }
     if (input.extraRecipients !== undefined) {
-      const cleaned = [...new Set(input.extraRecipients.map((entry) => entry.trim()).filter(Boolean))];
+      const cleaned = [
+        ...new Set(input.extraRecipients.map((entry) => entry.trim()).filter(Boolean)),
+      ];
       const invalid = cleaned.filter((entry) => !looksLikeAddress(entry));
-      if (invalid.length > 0) throw new BadRequestException(`not an address: ${invalid.join(', ')}`);
+      if (invalid.length > 0)
+        throw new BadRequestException(`not an address: ${invalid.join(', ')}`);
       this.write('notify.extraRecipients', JSON.stringify(cleaned));
     }
     return this.getNotifySettings();
@@ -279,8 +294,7 @@ export class SettingsService {
 
   private read(key: string): string | null {
     const row = this.db.prepare('SELECT value FROM app_settings WHERE key = ?').get(key) as
-      | { value: string }
-      | undefined;
+      { value: string } | undefined;
     return row?.value ?? null;
   }
 

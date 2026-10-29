@@ -102,6 +102,38 @@ describe('mail settings API', () => {
     expect(body).toMatchObject({ host: null, hasPassword: false, source: 'none' });
   });
 
+  it('stops claiming the console configuration when the password cannot be read', async () => {
+    await agent
+      .put('/api/settings/mail')
+      .set('x-csrf-token', csrf)
+      .send({ ...UNREACHABLE, user: 'ops', password: SECRET, force: true })
+      .expect(200);
+
+    const before = await agent.get('/api/settings/mail').expect(200);
+    expect(before.body.source).toBe('db');
+
+    const key = process.env.MAIL_SECRET;
+    process.env.MAIL_SECRET = Buffer.alloc(32, 11).toString('base64');
+    const rotated = await agent.get('/api/settings/mail').expect(200);
+    process.env.MAIL_SECRET = key;
+
+    expect(rotated.body).toMatchObject({ hasPassword: true, source: 'none' });
+  });
+
+  it('audits a notification change', async () => {
+    await agent
+      .put('/api/settings/notifications')
+      .set('x-csrf-token', csrf)
+      .send({ extraRecipients: ['ops@tilawah.cc'] })
+      .expect(200);
+
+    const row = h.db
+      .prepare("SELECT after_json FROM audit_log WHERE action = 'settings.notifications.updated'")
+      .get() as { after_json: string } | undefined;
+    expect(row).toBeDefined();
+    expect(row?.after_json).toContain('ops@tilawah.cc');
+  });
+
   it('answers 403 for a user role', async () => {
     const id = await h.seedUser({
       name: 'Plain User',

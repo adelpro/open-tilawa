@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS alerts (
   subject              TEXT    NOT NULL,
   title                TEXT    NOT NULL,
   detail               TEXT,
+  -- The resource's own name and the numbers the mail needs. Kept so an alert
+  -- whose first send never happened can be re-sent in the recipient's language.
+  name                 TEXT,
+  params               TEXT,
   state                TEXT    NOT NULL DEFAULT 'open'
                        CHECK (state IN ('open', 'resolved')),
   opened_at            TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),

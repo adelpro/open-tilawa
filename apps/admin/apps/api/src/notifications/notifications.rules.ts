@@ -84,8 +84,8 @@ export function evaluate(observation: Observation): AlertEvent[] {
   const events: AlertEvent[] = [];
 
   const emit = (event: AlertEvent): void => {
-    // Defence in depth: the rules below already consult `open`, but a caller that
-    // passes a duplicate must not produce a second mail.
+    // Only the enabled check lives here. The rules already consult `open`; the
+    // database's partial unique index is what makes a duplicate impossible.
     if (enabled.has(event.kind)) events.push(event);
   };
 

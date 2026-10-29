@@ -24,6 +24,7 @@ import { MailerService } from '@/mailer/mailer.service';
 import { MAIL_TRANSPORT } from '@/mailer/mailer.types';
 import type { MailTransport } from '@/mailer/mailer.types';
 import { verifyMailConfig } from '@/mailer/mailer.transport';
+import { isMailConfigUsable } from '@/mailer/configured.transport';
 import { SettingsService } from './settings.service';
 import type { MailConfig, MailTls } from './settings.service';
 
@@ -170,7 +171,9 @@ export class MailSettingsController {
       from: config.from,
       hasPassword: config.hasPassword,
       verifiedAt: config.verifiedAt,
-      source: config.host ? 'db' : envConfigured ? 'env' : 'none',
+      // The same test the transport applies, so the panel cannot claim a
+      // configuration that is not the one in use.
+      source: isMailConfigUsable(config) ? 'db' : envConfigured ? 'env' : 'none',
     };
   }
 }

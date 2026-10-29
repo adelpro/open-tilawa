@@ -100,6 +100,46 @@ describe('operator alerts', () => {
     expect(row?.state).toBe('open');
   });
 
+  it('mails one resolve when two passes race', async () => {
+    h.db.prepare("UPDATE users SET status = 'active', locale = 'en'").run();
+    const target = (
+      h.db.prepare('SELECT id FROM services ORDER BY id').all() as { id: number }[]
+    )[3].id;
+    const insertFail = h.db.prepare('INSERT INTO service_checks (service_id, ok) VALUES (?, 0)');
+    const insertPass = h.db.prepare('INSERT INTO service_checks (service_id, ok) VALUES (?, 1)');
+    for (let index = 0; index < 3; index += 1) insertFail.run(target);
+    await scheduler.run();
+    h.db
+      .prepare(
+        "UPDATE alerts SET opened_at = strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 minutes') WHERE subject = ?",
+      )
+      .run(`service:${target}`);
+    insertPass.run(target);
+    insertPass.run(target);
+
+    h.mail.clear();
+    await Promise.all([scheduler.run(), scheduler.run()]);
+    const resolved = h.mail.sent.filter((mail) => mail.subject.includes('recovered'));
+    expect(resolved).toHaveLength(1);
+  });
+
+  it('delivers an alert whose first attempt never happened', async () => {
+    h.db.prepare("UPDATE users SET status = 'active', locale = 'en'").run();
+    h.mail.clear();
+    h.db
+      .prepare(
+        `INSERT INTO alerts (kind, subject, title, detail, name, params, opened_at)
+         VALUES ('seeder.disk','seeder:abandoned','Disk low: abandoned',NULL,'abandoned',?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 minutes'))`,
+      )
+      .run(JSON.stringify({ headroomBytes: 1024 ** 3 }));
+
+    await alerts.apply([]);
+
+    expect(h.mail.sent).toHaveLength(1);
+    const row = alerts.recent(50).find((entry) => entry.subject === 'seeder:abandoned');
+    expect(row?.notifiedAt).not.toBeNull();
+  });
+
   it('absorbs a duplicate open instead of throwing', async () => {
     const event = {
       action: 'open' as const,

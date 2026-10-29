@@ -32,7 +32,7 @@ const EN: Record<string, { open: string; resolved: string }> = {
 const AR: Record<string, { open: string; resolved: string }> = {
   'service.down': { open: 'توقف خدمة', resolved: 'عادت الخدمة' },
   'seeder.offline': { open: 'توقف عقدة', resolved: 'عادت العقدة' },
-  'seeder.disk': { open: 'مساحة القرص منخفضة', resolved: 'تحسّنت مساحة القرص' },
+  'seeder.disk': { open: 'انخفاض مساحة القرص', resolved: 'تحسّنت مساحة القرص' },
   'seeder.update_failed': { open: 'فشل تحديث عقدة', resolved: 'نجح تحديث العقدة' },
 };
 

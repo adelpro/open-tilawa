@@ -30,6 +30,8 @@ export interface MailTransport {
    * nothing to drop.
    */
   reload?(): void;
+  /** Release the underlying pool. Optional, for the same reason as `reload`. */
+  close?(): void;
 }
 
 export class MailNotConfiguredError extends Error {

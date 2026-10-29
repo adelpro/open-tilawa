@@ -1,5 +1,17 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { AuditRepository } from '@tilawa-admin/core';
+import { CurrentUser } from '@/auth/decorators/currentUser.decorator';
+import type { AuthenticatedUser } from '@/auth/types/authenticatedUser.type';
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { JWTAuthGuard } from '@/auth/guards/jwt.guard';
 import { RoleGuard } from '@/auth/guards/roles.guard';
@@ -17,7 +29,10 @@ import type { NotifySettings } from './settings.service';
 @Roles('admin')
 @Controller('settings/notifications')
 export class NotificationSettingsController {
-  constructor(private readonly settings: SettingsService) {}
+  constructor(
+    private readonly settings: SettingsService,
+    @Inject(AuditRepository) private readonly audit: AuditRepository,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -29,7 +44,15 @@ export class NotificationSettingsController {
   @Put()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Save alert rules and extra recipients' })
-  save(@Body() body: Partial<NotifySettings>) {
-    return this.settings.setNotifySettings(body ?? {});
+  save(@Body() body: Partial<NotifySettings>, @CurrentUser() user: AuthenticatedUser) {
+    const saved = this.settings.setNotifySettings(body ?? {});
+    // An admin who adds an address here silently copies every future alert —
+    // service hostnames, disk state, update errors — to that mailbox.
+    this.audit.record({
+      actorId: Number(user.id),
+      action: 'settings.notifications.updated',
+      after: saved,
+    });
+    return saved;
   }
 }

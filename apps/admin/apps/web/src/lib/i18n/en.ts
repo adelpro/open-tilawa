@@ -819,6 +819,8 @@ export const en = {
   'settings.mail.password': 'Password',
   'settings.mail.passwordKeep': 'Leave blank to keep the stored password.',
   'settings.mail.passwordSet': 'A password is stored; leave blank to keep it.',
+  'settings.mail.passwordNew': 'No password stored yet.',
+  'settings.mail.skipVerify': 'Save without verifying (for relays that reject the probe)',
   'settings.mail.source.db': 'Console configuration',
   'settings.mail.source.env': 'Environment (Gmail)',
   'settings.mail.source.none': 'Not configured',

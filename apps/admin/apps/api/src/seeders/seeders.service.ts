@@ -166,6 +166,14 @@ export class SeedersService {
     add('quota_bytes', 'INTEGER');
     add('used_bytes', 'INTEGER');
     add('headroom_bytes', 'INTEGER');
+    // Update state survives a restart. `updates` below is the live progress; these
+    // columns are the record — an error read from memory alone turned a container
+    // restart into a false "update recovered" alert.
+    add('last_update_running', 'INTEGER NOT NULL DEFAULT 0');
+    add('last_update_error', 'TEXT');
+    add('last_update_at', 'TEXT');
+    // Nothing can be running in a process that has just started.
+    this.db.exec('UPDATE seeders SET last_update_running = 0');
   }
 
   list(): Seeder[] {
@@ -193,8 +201,14 @@ export class SeedersService {
       pinned: isServiceHost(seeder.url, service),
       updateMode: mode,
       desiredVersion: mode === 'build' ? treeVersion() : tagVersion(imageTag()),
-      updating: this.updates.get(seeder.id)?.running ?? false,
-      updateError: this.updates.get(seeder.id)?.error ?? null,
+      // The row is authoritative: memory is a faster copy of the same fact.
+      updating:
+        this.updates.get(seeder.id)?.running ??
+        Boolean((seeder as { updateRunning?: boolean }).updateRunning),
+      updateError:
+        this.updates.get(seeder.id)?.error ??
+        (seeder as { updateError?: string | null }).updateError ??
+        null,
     };
   }
 
@@ -474,8 +488,18 @@ export class SeedersService {
     }
     const mode = this.config.get<string>('SEEDER_UPDATE_MODE') === 'build' ? 'build' : 'pull';
     this.updates.set(id, { running: true, error: null });
+    this.writeUpdateState(id, true, null);
     void this.runUpdate(id, mode, actorId);
     return { started: true, mode };
+  }
+
+  /** The durable half of the update state, written beside the in-memory copy. */
+  private writeUpdateState(id: number, running: boolean, error: string | null): void {
+    this.db
+      .prepare(
+        'UPDATE seeders SET last_update_running = ?, last_update_error = ?, last_update_at = ? WHERE id = ?',
+      )
+      .run(running ? 1 : 0, error, new Date().toISOString(), id);
   }
 
   /** Never rejects: the job reports itself through the row and the audit trail. */
@@ -505,6 +529,7 @@ export class SeedersService {
       this.logger.warn(`seeder ${id} update failed: ${error}`);
     } finally {
       this.updates.set(id, { running: false, error });
+      this.writeUpdateState(id, false, error);
     }
     this.audit.record({
       actorId: actorId ?? null,
@@ -724,5 +749,7 @@ function mapSeeder(r: Record<string, unknown>): BaseSeeder {
     quotaBytes: (r.quota_bytes as number | null) ?? null,
     usedBytes: (r.used_bytes as number | null) ?? null,
     headroomBytes: (r.headroom_bytes as number | null) ?? null,
-  };
+    updateRunning: Boolean(r.last_update_running),
+    updateError: (r.last_update_error as string | null) ?? null,
+  } as BaseSeeder & { updateRunning: boolean; updateError: string | null };
 }

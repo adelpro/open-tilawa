@@ -91,6 +91,7 @@ export function Settings(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [skipVerify, setSkipVerify] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -135,6 +136,9 @@ export function Settings(): ReactElement {
           from: form.from.trim(),
           // Omitted, not empty: the API treats a missing password as "keep".
           password: form.password === '' ? undefined : form.password,
+          // Relays that reject nodemailer's probe still send fine; the plan offers
+          // an explicit override, so the console has to expose it.
+          force: skipVerify || undefined,
         },
       });
       setMail(next);
@@ -320,6 +324,15 @@ export function Settings(): ReactElement {
               />
             )}
           </Field>
+
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={skipVerify}
+              onChange={(event) => setSkipVerify(event.target.checked)}
+            />{' '}
+            {t('settings.mail.skipVerify')}
+          </label>
 
           <div className="row">
             <Button onClick={() => void saveMail()} busy={busy === 'mail'}>

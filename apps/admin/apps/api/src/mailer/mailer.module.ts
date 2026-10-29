@@ -6,7 +6,7 @@ import { UsersModule } from '@/users/users.module';
 import { SettingsModule } from '@/settings/settings.module';
 import { SettingsService } from '@/settings/settings.service';
 import { MailSettingsController } from '@/settings/mail-settings.controller';
-import { ConfiguredMailTransport } from './configured.transport';
+import { ConfiguredMailTransport, isMailConfigUsable } from './configured.transport';
 import { MailerService } from './mailer.service';
 import { MAIL_TRANSPORT } from './mailer.types';
 
@@ -49,7 +49,8 @@ export class MailerModule {
 
   constructor(sections: SettingsService) {
     const config = sections.getMailConfig();
-    if (!config.host && !process.env.EMAIL) {
+    const envPair = Boolean(process.env.EMAIL && process.env.EMAIL_APP_SPECIFIC_PASS);
+    if (!isMailConfigUsable(config) && !envPair) {
       this.logger.warn(
         'mail transport disabled — configure it in the console at /console/settings, or set EMAIL and EMAIL_APP_SPECIFIC_PASS for the setup token',
       );

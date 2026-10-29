@@ -13,9 +13,20 @@ import { MailMessage, MailTransport } from './mailer.types';
 
 const TIMEOUT_MS = 8_000;
 
+/**
+ * The return path.
+ *
+ * A blank From must fall through to the username — the console's own hint says so.
+ * `??` is not enough: the saved value is an empty string, which is not nullish and
+ * would ship a message with no From header at all.
+ */
+export function resolveFrom(config: MailConfig): string | undefined {
+  return config.from?.trim() || config.user || undefined;
+}
+
 function sendOptions(config: MailConfig, message: MailMessage) {
   return {
-    from: message.from ?? config.from ?? config.user ?? undefined,
+    from: message.from ?? resolveFrom(config),
     to: message.to,
     subject: message.subject,
     html: message.html,
@@ -31,10 +42,7 @@ export function smtpTransport(config: MailConfig): MailTransport {
     requireTLS: config.tls === 'starttls',
     // An unauthenticated relay is legitimate on a private network; nodemailer
     // then gets no `auth` at all rather than empty credentials.
-    auth:
-      config.user && config.password
-        ? { user: config.user, pass: config.password }
-        : undefined,
+    auth: config.user && config.password ? { user: config.user, pass: config.password } : undefined,
     connectionTimeout: TIMEOUT_MS,
     greetingTimeout: TIMEOUT_MS,
     socketTimeout: 15_000,
@@ -45,6 +53,9 @@ export function smtpTransport(config: MailConfig): MailTransport {
     async send(message: MailMessage): Promise<{ messageId: string }> {
       const info = await transporter.sendMail(sendOptions(config, message));
       return { messageId: info.messageId };
+    },
+    close(): void {
+      transporter.close();
     },
   };
 }
@@ -63,6 +74,9 @@ export function gmailTransport(email: string, pass: string): MailTransport {
       });
       return { messageId: info.messageId };
     },
+    close(): void {
+      transporter.close();
+    },
   };
 }
 
@@ -78,10 +92,7 @@ export async function verifyMailConfig(config: MailConfig, timeoutMs = 10_000): 
     port: config.port,
     secure: config.tls === 'ssl',
     requireTLS: config.tls === 'starttls',
-    auth:
-      config.user && config.password
-        ? { user: config.user, pass: config.password }
-        : undefined,
+    auth: config.user && config.password ? { user: config.user, pass: config.password } : undefined,
     connectionTimeout: timeoutMs,
     greetingTimeout: timeoutMs,
   });
@@ -91,7 +102,10 @@ export async function verifyMailConfig(config: MailConfig, timeoutMs = 10_000): 
     await Promise.race([
       transporter.verify(),
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`SMTP verify timed out after ${timeoutMs} ms`)), timeoutMs);
+        timer = setTimeout(
+          () => reject(new Error(`SMTP verify timed out after ${timeoutMs} ms`)),
+          timeoutMs,
+        );
         timer.unref?.();
       }),
     ]);
