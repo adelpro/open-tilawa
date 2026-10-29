@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.8.0 — 2026-10-29
+
+Minor. App versions: **web 1.9.2**, **admin 1.27.1**, **seeder 1.4.3**.
+
+Seven new recitations, three readings beyond Hafs, and an About page that stops
+claiming more than the app does.
+
+### Added
+
+- **Seven recitations; ten in the roster.** Hafs: Basfar, Alhusari, Al-Minshawi.
+  Warsh: ElSaltani, Saber Abdulhakam. Qalon: ElSaltani. al-Douri: Saber
+  Abdulhakam. Imported from the Itqan catalogue, seeded from the node, and
+  published with Arabic names and the sizes the node actually holds.
+- **The About page credits the source.** The recordings come from the Itqan
+  community catalogue; rights stay with the reciters and the publishers.
+
+### Changed
+
+- **"No account" became "no account needed".** Listening never asks for one, and
+  the page now says what a ring is for: settings and favourites carried across
+  the devices you connect.
+- **Privacy says what a ring adds.** Three outbound calls while listening; a
+  connected ring adds the sync relay, and only while it is connected.
+
+### Fixed
+
+- **The privacy page ignored its own translations** and rendered a hardcoded
+  Arabic list, so an English reader was given Arabic. It now renders
+  `privacy.items`, and the two locales can no longer disagree.
+
 ## 1.7.0 — 2026-10-29
 
 Minor. App versions: **web 1.9.0**, **admin 1.27.0**, **seeder 1.4.3**.
