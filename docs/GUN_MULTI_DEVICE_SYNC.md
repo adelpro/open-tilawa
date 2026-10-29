@@ -4,6 +4,10 @@
 
 *One relay, two graphs. [The full page](how-it-works/07-where-accounts-live.md).*
 
+> **As built:** the keypair, the pairing ticket and the sync contract are drawn
+> and tabulated in [AUTH_AND_RINGS.md](AUTH_AND_RINGS.md). This document is the
+> design argument that led there.
+
 ## 1) Device Pairing Flow
 
 The core idea: treat the SEA keypair as the identity. Any device authenticated with the same pair is the same user.

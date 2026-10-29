@@ -33,6 +33,7 @@ Pages gives the same files a URL, a table of contents and readable HTML for free
      - superpowers        # plans and audits stay in the repo, unpublished
      - how-it-works/render.mjs
      - how-it-works/diagrams.html
+     - auth-and-rings/render.mjs
    ```
    Plans and reviews are working records, not documentation for a visitor; the
    `exclude` line is what keeps them off the site without moving a file.

@@ -37,3 +37,9 @@ no latencies, no IPs. Anything that changes often belongs in
 - [INFRASTRUCTURE.md](../INFRASTRUCTURE.md) opens with 01 and 06 instead of ASCII art.
 - [STREAMING.md](../STREAMING.md) opens with 02.
 - [GUN_MULTI_DEVICE_SYNC.md](../GUN_MULTI_DEVICE_SYNC.md) opens with 07 and 08.
+
+## Further reading
+
+[AUTH_AND_RINGS.md](../AUTH_AND_RINGS.md) is the engineering version of 07: the
+keypair, the pairing ticket, and the table of what syncs and what stays on the
+device, drawn as a two-sheet system drawing.

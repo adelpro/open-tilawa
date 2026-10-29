@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account ring · Dimensional Drawing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">
+<style>
+:root{--paper:#ececec;--sheet:#ffffff;--ink:#111;--ink2:#444;--ink3:#7a7a7a;--fill:#f3f3f3;--fill2:#e6e6e6;--f:'Arimo','Helvetica Neue',Helvetica,Arial,sans-serif;color-scheme:light}
+body{background:var(--paper);color:var(--ink);font-family:var(--f);margin:0}
+.wrap{max-width:1760px;margin:0 auto;padding:24px 16px 40px}
+.scroll{overflow-x:auto;background:var(--sheet);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+svg{display:block;width:100%;min-width:1100px;height:auto}
+.tb{background:var(--sheet);border:1.2px solid var(--ink);border-radius:16px;overflow:hidden;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;margin-bottom:24px}
+.tb>div{border-right:.8px solid var(--ink);border-bottom:.8px solid var(--ink);padding:10px 14px;min-width:0}
+.tb>div:nth-child(4),.tb>div:nth-child(7){border-right:0}
+.tb .big{grid-row:span 2;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+.tb h1{font-size:clamp(26px,4vw,40px);line-height:1;margin:4px 0 0;font-weight:400;letter-spacing:.1em;text-transform:uppercase}
+.lbl{text-transform:uppercase;letter-spacing:.06em;font-size:9.5px;color:var(--ink2)}
+.tb .v{font-size:13px;margin-top:2px;letter-spacing:.05em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.tb .big .v{font-size:11px;color:var(--ink2);line-height:1.6;text-transform:none;letter-spacing:.02em}
+.tb .notes{grid-column:1/-1;border-right:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px 24px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;line-height:1.75}
+.tb .notes ol{margin:2px 0 0;padding-left:18px}
+.tb .nh{font-weight:700;font-size:12px;letter-spacing:.06em}.tb .nh span{font-weight:400;font-size:10.5px;margin-left:6px}
+.tb .figs{grid-column:1/-1;border-right:0;border-bottom:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px 18px}
+.tb .figs>div{border-left:.8px solid var(--ink);padding-left:14px}
+.tb .figs>div:first-child{border-left:0;padding-left:0}
+.tb .figs .v{font-size:15px;letter-spacing:.04em;text-transform:none;margin-top:4px}
+@media (max-width:640px){.tb{grid-template-columns:1fr 1fr}.tb .big{grid-column:1/-1;grid-row:auto}}
+.sheetwrap{margin-bottom:26px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--ink2);padding:8px 2px 0;text-transform:uppercase;letter-spacing:.06em}
+.foot b{font-weight:700;color:var(--ink)}
+.obj{fill:var(--sheet);stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.well{fill:var(--fill);stroke:var(--ink);stroke-width:1}
+.slot{fill:none;stroke:var(--ink2);stroke-width:.8;stroke-dasharray:4 3}
+.hug{fill:var(--fill2);stroke:var(--ink);stroke-width:1}
+.thin{fill:none;stroke:var(--ink);stroke-width:.8}
+.ph{fill:none;stroke:var(--ink3);stroke-width:.8;stroke-dasharray:14 3 3 3}
+.dl{stroke:var(--ink);stroke-width:.7;fill:none}
+.ext{stroke:var(--ink);stroke-width:.55;fill:none}
+.arrow{fill:var(--ink)}
+.hl{stroke:var(--ink2);stroke-width:.7}
+.env{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:10 3 2 3}
+.dt{font:400 11px var(--f);fill:var(--ink);paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.dts{font:400 9.5px var(--f);fill:var(--ink2);letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:var(--sheet);stroke-width:3px}
+.sl{font:400 9px var(--f);fill:var(--ink2);letter-spacing:.08em;text-transform:uppercase}
+.nt{font:400 11.5px var(--f);fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+.nth{font:700 13px var(--f);fill:var(--ink);letter-spacing:.06em}
+.vt{font:400 12px var(--f);fill:var(--ink);letter-spacing:.1em;text-transform:uppercase}
+.nb{fill:var(--sheet);stroke:var(--ink);stroke-width:.9}
+.nbt{font:400 9.5px var(--f);fill:var(--ink)}
+.lead{stroke:var(--ink);stroke-width:.7;fill:none}
+.dot{fill:var(--ink)}
+.th{font:400 10px var(--f);fill:var(--ink);letter-spacing:.05em;text-transform:uppercase}
+.tc{font:400 10px var(--f);fill:var(--ink)}
+.tbt{font:700 15px var(--f);fill:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="tb">
+    <div class="big">
+      <div><div class="lbl">System drawing · account ring</div><h1>Ring</h1></div>
+      <div class="v">Authentication, device linking and the sync contract. Structural only: no copy, no colour, no value the source does not state.</div>
+    </div>
+    <div><div class="lbl">Dwg no.</div><div class="v">SYS-RING-001</div></div>
+    <div><div class="lbl">Rev</div><div class="v">A · 2026-10-29</div></div>
+    <div><div class="lbl">Sheets</div><div class="v">2</div></div>
+    <div><div class="lbl">Units</div><div class="v">schematic</div></div>
+    <div><div class="lbl">Scale</div><div class="v">not to scale</div></div>
+    <div><div class="lbl">Source</div><div class="v">apps/web · gun/*, hooks/*</div></div>
+    <div class="notes">
+      <div><span class="nh">NOTES:<span>(UNLESS OTHERWISE SPECIFIED)</span></span><ol>
+        <li>No account server. An identity is a keypair generated on the device; K2 leaves it only inside T1.</li>
+        <li>Solid arrow = relay traffic. Dash-dot = one-time pairing. Dashed = local only.</li>
+        <li>The user graph is <b>signed, not encrypted</b>: K1 is enough to read every G path.</li></ol></div>
+      <div><span class="nh" aria-hidden="true">&nbsp;</span><ol start="4">
+        <li>G codes are graph paths and travel; L codes are localStorage keys and never do.</li>
+        <li>X paths sit outside <b>gun.user()</b>: anonymous totals, writable by anyone.</li>
+        <li>T1 and T2 are the only timings the source publishes; everything else is [TBD].</li>
+        <li>Grayscale by design. Order of magnitude, not bytes.</li></ol></div>
+    </div>
+    <div class="figs">
+      <div><div class="lbl">T1 · pairing ttl</div><div class="v">120 s</div></div>
+      <div><div class="lbl">T2 · heartbeat</div><div class="v">120 s</div></div>
+      <div><div class="lbl">T3 · ticket version</div><div class="v">2</div></div>
+      <div><div class="lbl">K · key material</div><div class="v">4 fields + pair</div></div>
+      <div><div class="lbl">G · synced paths</div><div class="v">7</div></div>
+      <div><div class="lbl">L · local keys</div><div class="v">5</div></div>
+      <div><div class="lbl">X · public counters</div><div class="v">2</div></div>
+    </div>
+  </header>
+
+  <div class="sheetwrap"><div class="scroll"><svg id="sh1" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 1: the ring, the relay and the sync contract"></svg></div>
+  <div class="foot"><span>2026-10-29 &nbsp;|&nbsp; system reference</span><span><b>Ring, topology</b> &nbsp;|&nbsp; 1 of 2</span></div></div>
+
+  <div class="sheetwrap"><div class="scroll"><svg id="sh2" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 2: device linking and the authentication lifecycle"></svg></div>
+  <div class="foot"><span>2026-10-29 &nbsp;|&nbsp; system reference</span><span><b>Ring, linking and auth</b> &nbsp;|&nbsp; 2 of 2</span></div></div>
+</div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';let sv,A,uid=0;
+function mk(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);(p||sv).appendChild(e);return e}
+function tx(x,y,s,c,a,p){const t=mk('text',Object.assign({x:x,y:y,class:c||'dt'},a||{}),p);t.textContent=s;return t}
+function begin(id){sv=document.getElementById(id);sv.innerHTML='';const n=uid++;const d=mk('defs',{});
+ const m=mk('marker',{id:'ar'+n,viewBox:'0 0 10 10',refX:10,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},d);
+ mk('path',{d:'M0,1.7 L10,5 L0,8.3 z',class:'arrow'},m);A='url(#ar'+n+')';rr(20,20,1660,1020,16,'thin')}
+function rr(x,y,w,h,r,c){return mk('rect',{x:x,y:y,width:w,height:h,rx:r,class:c})}
+function dimH(x1,x2,y,e1,e2,l,o){o=o||{};[[x1,e1],[x2,e2]].forEach(([x,e])=>{if(e==null)return;const s=Math.sign(y-e)||1;mk('line',{x1:x,y1:e+s*3,x2:x,y2:y+s*5,class:'ext'})});
+ if(x2-x1>=28)mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl','marker-start':A,'marker-end':A});
+ else{mk('line',{x1:x1-13,y1:y,x2:x1,y2:y,class:'dl','marker-end':A});mk('line',{x1:x2+13,y1:y,x2:x2,y2:y,class:'dl','marker-end':A});mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl'})}
+ tx((x1+x2)/2+(o.dx||0),(o.below?y+13:y-4)+(o.dy||0),l,o.c||'dt',{'text-anchor':'middle'})}
+function nb(x,y,n){mk('rect',{x:x-6,y:y-6,width:12,height:12,class:'nb'});tx(x,y+3.5,String(n),'nbt',{'text-anchor':'middle'})}
+function callout(px,py,ex,ey,l,dir){const s=dir||(ex>=px?1:-1);mk('circle',{cx:px,cy:py,r:1.8,class:'dot'});mk('polyline',{points:px+','+py+' '+ex+','+ey+' '+(ex+s*10)+','+ey,class:'lead'});tx(ex+s*14,ey+4,l,'dts',{'text-anchor':s>0?'start':'end'})}
+function notes(list){const NX=50,NY=58;tx(NX,NY,'NOTES:','nth');tx(NX+62,NY,'(UNLESS OTHERWISE SPECIFIED)','nt');
+ list.forEach(([n,t],i)=>{const y=NY+28+i*23;if(n){nb(NX+6,y-4,n);tx(NX+22,y,t,'nt')}else tx(NX,y,t,'nt')})}
+function title(x,y,t,s){tx(x,y,t,'vt',{'text-anchor':'middle'});if(s)tx(x,y+14,s,'dts',{'text-anchor':'middle'})}
+function table(x,y,ttl,widths,rows,opt){opt=opt||{};const rh=opt.rh||17;tx(x,y-8,ttl,'vt');
+ const all=[opt.head||['CODE','NAME','VALUE']].concat(rows);
+ all.forEach((r,i)=>{let cx=x;r.forEach((c,j)=>{mk('rect',{x:cx,y:y+i*rh,width:widths[j],height:rh,class:'thin'});tx(cx+5,y+i*rh+12,c,i?'tc':'th');cx+=widths[j]})});
+ return y+all.length*rh+28}
+function legend(x,y){[['dl','synced · relay'],['env','one-time pairing'],['slot','local only']].forEach(([cls,l],i)=>{const yy=y+i*20;
+ if(cls==='dl')mk('line',{x1:x,y1:yy,x2:x+34,y2:yy,class:'dl','marker-start':A,'marker-end':A});else mk('line',{x1:x,y1:yy,x2:x+34,y2:yy,class:cls});
+ tx(x+44,yy+4,l,'dts')})}
+
+/* ================= SHEET 1 · RING AND SYNC ================= */
+begin('sh1');
+notes([[1,'ONE RING = ONE PUB K1. EVERY PAIRED DEVICE HOLDS THE SAME KEYPAIR.'],[2,'THE RELAY SEES ONE USER; DEVICE ROWS ARE LABELLED, NOT AUTHENTICATED.'],[3,'EVERY WRITE IS A GRAPH PUT. ONLY G2 AND G6 CARRY A STAMP.'],[4,'FAVOURITES MERGE; SETTINGS REPLACE WHEN updatedAt IS NEWER.'],[5,'DEVICES BEAT EVERY T2; PRIMARY IS CLAIMED ONCE, NEVER MOVES.'],[6,'THE PLAYHEAD IS NOT IN THE GRAPH: NO CROSS-DEVICE RESUME.'],[7,'X PATHS ARE PUBLIC: A COUNT IS A CLAIM, NOT A FACT.']]);
+legend(50,300);
+/* ring */
+rr(560,150,470,390,18,'env');
+tx(795,174,'RING · ONE PUB K1','vt',{'text-anchor':'middle'});
+function device(x,y,w,h,id,name,sub,note){
+ rr(x,y,w,h,8,'obj');tx(x+10,y+21,id,'tbt');tx(x+10,y+39,name,'sl');tx(x+10,y+57,sub,'dts');
+ mk('rect',{x:x+w-46,y:y+10,width:36,height:16,class:'hug'});tx(x+w-28,y+21,'K1','dts',{'text-anchor':'middle'});
+ if(note)nb(x+w-8,y+h-8,note)}
+device(590,200,190,88,'D1','laptop','primary · registered first',5);
+device(815,200,190,88,'D2','phone','linked by scanning');
+device(700,330,190,88,'D3','tablet','linked by scanning');
+/* relay */
+rr(1080,170,220,300,10,'obj');
+tx(1190,194,'RELAY','vt',{'text-anchor':'middle'});
+tx(1190,208,'gun · signed, not encrypted','dts',{'text-anchor':'middle'});
+[['G1','profile.name'],['G2','settings'],['G3','favorites/<id>'],['G4','devices/<id>'],['G5','devices/meta'],['G6','recentlyViewed'],['G7','schema']]
+ .forEach(([c,p],i)=>{const y=226+i*30;mk('rect',{x:1092,y:y,width:34,height:20,class:'hug'});tx(1109,y+14,c,'tc',{'text-anchor':'middle'});
+  mk('rect',{x:1128,y:y,width:160,height:20,class:'well'});tx(1134,y+14,p,'tc')});
+nb(1284,180,2);
+/* arrows */
+[[780,244,238],[1005,244,258],[890,374,320]].forEach(([x1,y1,yb])=>{
+ mk('polyline',{points:x1+','+y1+' 1055,'+y1+' 1055,'+yb,class:'dl'});
+ mk('line',{x1:1055,y1:yb,x2:1080,y2:yb,class:'dl','marker-end':A})});
+tx(1051,388,'T2','dts',{'text-anchor':'end'});
+nb(1042,300,3);
+/* phantom: a device that has not joined yet */
+mk('rect',{x:60,y:560,width:190,height:88,rx:8,class:'slot'});
+tx(70,581,'D4','tbt');tx(70,599,'new device','sl');tx(70,617,'no key · scans','dts');
+mk('polyline',{points:'250,604 470,604 470,548',class:'dl','marker-end':A});
+tx(360,596,'LINK · SHEET 2','dts',{'text-anchor':'middle'});
+/* local */
+rr(560,590,470,190,8,'slot');
+tx(574,612,'LOCAL · NEVER LEAVES THE DEVICE','vt');
+[['L1','open-tilawa:account','K0 pair, JSON'],['L2','open-tilawa:v3','playhead + settings'],['L3','open-tilawa:favorites','list mirror'],['L4','open-tilawa:recent','list mirror'],['L5','device-id · device-name','id + label']]
+ .forEach(([c,k,v],i)=>{const y=632+i*28;mk('rect',{x:574,y:y-15,width:34,height:19,class:'hug'});tx(591,y-1,c,'tc',{'text-anchor':'middle'});
+  tx(616,y-1,k,'tc');tx(616,y+11,v,'dts')});
+nb(1018,612,6);
+/* counters */
+rr(1080,560,220,120,10,'slot');
+tx(1092,580,'OUTSIDE THE RING','vt');
+[['X1','viewCounts'],['X2','favoriteCounts']].forEach(([c,p],i)=>{const y=598+i*26;mk('rect',{x:1092,y:y-14,width:34,height:19,class:'hug'});tx(1109,y,c,'tc',{'text-anchor':'middle'});tx(1134,y,p,'tc')});
+tx(1092,668,'read-modify-write per id','dts');tx(1092,682,'keys are env-scoped','dts');
+mk('line',{x1:1080,y1:620,x2:1032,y2:646,class:'dl','marker-end':A});
+nb(1284,578,7);
+/* relay contents panel */
+{const EX=560,EY=820,EW=740,EH=110;rr(EX,EY,EW,EH,10,'obj');
+ tx(EX+14,EY+22,'WHAT THE RELAY HOLDS','vt');
+ mk('line',{x1:EX+14,y1:EY+34,x2:EX+EW-14,y2:EY+34,class:'thin'});
+ tx(EX+14,EY+58,'G1–G7 · plaintext, signed by K1','tc');tx(EX+14,EY+74,'anyone holding K1 reads every path','dts');
+ mk('line',{x1:EX+390,y1:EY+40,x2:EX+390,y2:EY+EH-30,class:'ph'});
+ tx(EX+410,EY+58,'TICKET · sealed envelope','tc');tx(EX+410,EY+74,'open-tilawa-pairing/<id>','dts');
+ tx(EX+14,EY+100,'AUTHORISATION IS THE SIGNATURE ON THE WRITE, NOT A SESSION. THE RELAY KEEPS NO ACCOUNT RECORD.','dts');}
+/* tables */
+let y=table(1330,86,'KEY MATERIAL',[44,104,166],[['K0','pair','pub · priv · epub · epriv'],['K1','pub','identity · relay + device'],['K2','priv','device only · L1'],['K3','epub','ticket · QR only'],['K4','epriv','ticket · QR only']]);
+y=table(1330,y,'SYNC CONTRACT',[44,124,146],[['G1','profile.name','create, rename'],['G2','settings','LWW, updatedAt'],['G3','favorites/<id>','union'],['G4','devices/<id>','merge · T2'],['G5','devices/meta','claim once'],['G6','recentlyViewed','newest'],['G7','schema','version']]);
+y=table(1330,y,'LOCAL ONLY',[44,124,146],[['L1','open-tilawa:account','K0'],['L2','open-tilawa:v3','playhead'],['L3','open-tilawa:favorites','mirror'],['L4','open-tilawa:recent','mirror'],['L5','device-id / name','label']]);
+y=table(1330,y,'READ PATH',[44,124,146],[['S','snapshot','once() first'],['W','watch','on() after'],['M','mirror','local first'],['U','union','never replace']]);
+table(1330,y,'OUTSIDE THE RING',[44,124,146],[['X1','viewCounts','any writer'],['X2','favoriteCounts','any writer']]);
+tx(1330,1012,'T1 120 s · T2 120 s · T3 = 2 · see sheet 2','dts');
+
+/* ================= SHEET 2 · LINKING AND AUTH ================= */
+begin('sh2');
+notes([[1,'THE RING OWNER SHOWS THE CODE. A DEVICE WITH NO KEY SCANS; A DEVICE IN THE RING CANNOT.'],[2,'THE QR CARRIES A THROWAWAY PAIR K3/K4, NEVER K2. K2 TRAVELS SEALED TO K3.'],[3,'THE ENVELOPE IS BURNED ON REDEEM WHETHER OR NOT THE DECRYPT SUCCEEDED.'],[4,'A PHOTOGRAPH OF THE CODE INSIDE T1 IS THE ACCOUNT. THAT IS LINKING, NOT A BUG.'],[5,'SIGN-OUT ERASES L1. THE LAST DEVICE MUST TYPE A WORD FIRST, OR THE RING IS LOST.']]);
+legend(50,930);
+/* pairing chain */
+{const y=286,x0=50,w=160,gap=14;
+ const steps=[['1','TICKET','SEA.pair → K3, K4',''],['2','SEAL','encrypt K0 to K3',''],['3','PUBLISH','pairing/<id>',''],['4','SHOW','QR · T3 = 2',''],['5','SCAN','parse → redeem',''],['6','BURN','delete → auth','K0 → device B']];
+ steps.forEach(([n,t,sb,f],i)=>{const x=x0+i*(w+gap);rr(x,y,w,74,8,'obj');
+  tx(x+10,y+20,n+'.','tbt');tx(x+50,y+20,t,'vt');tx(x+10,y+42,sb,'tc');if(f)tx(x+10,y+62,f,'dts');
+  if(i<5)mk('line',{x1:x+w,y1:y+37,x2:x+w+gap-1,y2:y+37,class:'dl','marker-end':A})});
+ dimH(x0,x0+5*(w+gap)+w,y-26,y+2,y+2,'T1 · 120 s',{c:'dts'});
+ tx(x0+(5*(w+gap)+w)/2,y-46,'TICKET LIFETIME','dts',{'text-anchor':'middle'});
+ nb(x0+w-8,y+70,2);nb(x0+4*(w+gap)+w-8,y+70,1);nb(x0+5*(w+gap)+w-8,y+70,3)}
+/* who does what */
+rr(50,382,470,52,8,'slot');tx(62,402,'DEVICE A · HOLDS K2','vt');tx(62,420,'shows the code','dts');
+rr(560,382,520,52,8,'slot');tx(572,402,'DEVICE B · NO KEY','vt');tx(572,420,'scans it, or pastes it','dts');
+mk('line',{x1:520,y1:408,x2:558,y2:408,class:'env','marker-end':A});
+/* Detail A · ticket */
+{const X=50,Y=480;tx(X,Y,'DETAIL A · THE TICKET','vt');tx(X,Y+14,'T3 = 2 · v1 REFUSED','dts');
+ rr(X,Y+26,340,152,4,'obj');
+ [['v','2'],['id','envelope key'],['epub','K3'],['epriv','K4'],['exp','now + T1']].forEach(([k,v],i)=>{const y=Y+50+i*25;
+  tx(X+12,y,k,'tc');mk('rect',{x:X+72,y:y-13,width:254,height:20,class:'well'});tx(X+80,y,v,'tc')});
+ tx(X,Y+196,'exp IS CHECKED TWICE: ON PARSE AND AGAIN ON REDEEM.','dts')}
+/* Detail B · exposure */
+{const X=430,Y=480;tx(X,Y,'DETAIL B · WHAT A LINK EXPOSES','vt');tx(X,Y+14,'STATED, NOT SOLVED','dts');
+ [['relay','reads G1–G7'],['K1 holder','same as the relay'],['QR photo < T1','K2 · the whole account'],['QR photo > T1','nothing: exp fails'],['localStorage','K2 in the clear'],['after redeem','envelope deleted']]
+  .forEach(([k,v],i)=>{const y=Y+44+i*26;mk('rect',{x:X,y:y-14,width:180,height:21,class:i%2?'well':'hug'});tx(X+6,y,k,'tc');tx(X+190,y,v,'tc')});
+ nb(X-8,Y+26,4)}
+/* lifecycle */
+{const Y=700,X=50;tx(X,Y,'AUTH LIFECYCLE','vt');tx(X,Y+14,'ONE KEYPAIR, FOUR STATES','dts');
+ [['CREATE','SEA.pair · auth · storePair','writes G1'],['RELOAD','readStoredPair → authPair','no round trip'],['LINK','redeem → auth → storePair','T3 ticket'],['LEAVE','clearStoredPair · user.leave','guard: last device']]
+  .forEach(([t,sb,n],i)=>{const x=X+i*260;rr(x,Y+28,245,88,8,'obj');tx(x+12,Y+52,t,'vt');tx(x+12,Y+72,sb,'tc');tx(x+12,Y+90,n,'dts');
+   if(i<3)mk('line',{x1:x+245,y1:Y+72,x2:x+260-2,y2:Y+72,class:'dl','marker-end':A})});
+ nb(X+3*260+235,Y+112,5);
+ tx(X,Y+148,'USER.LEAVE() EMITS NO AUTH EVENT, SO THE STATE IS REPUBLISHED BY HAND. GUN RECALL() PERSISTS TO SESSIONSTORAGE ONLY, WHICH IS WHY L1 EXISTS.','dts');
+ tx(X,Y+166,'RENAMING WRITES G1; THE NAME IS READ BACK BY SUBSCRIPTION BECAUSE once() ON AN UNANSWERED PATH MAY NEVER CALL BACK.','dts')}
+/* tables */
+{let y=table(1110,86,'CONSTANTS',[44,104,190],[['T1','pairing ttl','120 s'],['T2','heartbeat','120 s'],['T3','ticket v','2'],['P','envelope','open-tilawa-pairing/<id>'],['Q','payload','JSON · QR or paste']],{rh:19});
+ y=table(1110,y,'GUARDS',[44,104,190],[['S','sign-out','erase L1'],['L','last device','typed word'],['R','rename','G1 put'],['V','v1 ticket','refused']],{rh:19});
+ tx(1110,y,'[TBD] MESSAGE SIZE BOUND ON THE QR','dts');tx(1110,y+16,'[TBD] RETRY WHEN THE RELAY IS UNREACHABLE','dts');tx(1110,y+32,'[TBD] MAX DEVICES PER RING','dts')}
+/* what this sheet leaves out */
+{const X=1110,Y=430;rr(X,Y,470,196,8,'slot');tx(X+14,Y+22,'NOT IN THIS DRAWING','vt');
+ tx(X+14,Y+48,'Account deletion · recovery codes · 2FA: console only.','dts');
+ tx(X+14,Y+66,'Cross-device resume: rejected; L2 holds the playhead.','dts');
+ tx(X+14,Y+84,'Reciter and surah: catalogue data, not account state.','dts');
+ mk('line',{x1:X+14,y1:Y+102,x2:X+456,y2:Y+102,class:'ph'});
+ tx(X+14,Y+126,'READER VERSION','dts');tx(X+14,Y+144,'how-it-works/07-where-accounts-live.md','tc');
+ tx(X+14,Y+168,'SYNC SPEC','dts');tx(X+14,Y+186,'GUN_MULTI_DEVICE_SYNC.md','tc')}
+
+})();
+</script>
+</body>
+</html>
