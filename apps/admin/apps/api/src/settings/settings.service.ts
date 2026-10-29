@@ -215,7 +215,7 @@ export class SettingsService {
       }
       this.write('mail.pass', encryptSecret(password, key));
     } else if (password === null) {
-      this.remove('mail.pass');
+      this.removeKey('mail.pass');
     }
 
     this.write('mail.host', host);
@@ -224,7 +224,7 @@ export class SettingsService {
     this.write('mail.user', input.user?.trim() ?? '');
     this.write('mail.from', from);
     if (input.verifiedAt !== undefined) {
-      if (input.verifiedAt === null) this.remove('mail.verifiedAt');
+      if (input.verifiedAt === null) this.removeKey('mail.verifiedAt');
       else this.write('mail.verifiedAt', input.verifiedAt);
     }
     return this.getMailConfig();
@@ -232,7 +232,7 @@ export class SettingsService {
 
   /** Back to the environment, which stays the bootstrap path. */
   clearMailConfig(): void {
-    this.remove('mail.');
+    this.removePrefix('mail.');
   }
 
   // --- operator notifications ---------------------------------------------
@@ -292,9 +292,14 @@ export class SettingsService {
       .run(key, value);
   }
 
-  /** `mail.` removes every mail key; `remove('mail.pass')` removes exactly one. */
-  private remove(key: string): void {
-    this.db.prepare("DELETE FROM app_settings WHERE key = ? OR key LIKE ? || '.%'").run(key, key);
+  /** Exactly one key. */
+  private removeKey(key: string): void {
+    this.db.prepare('DELETE FROM app_settings WHERE key = ?').run(key);
+  }
+
+  /** Every key under a prefix, e.g. `mail.`. */
+  private removePrefix(prefix: string): void {
+    this.db.prepare('DELETE FROM app_settings WHERE key LIKE ?').run(`${prefix}%`);
   }
 
   private readNumber(key: string, fallback: number): number {

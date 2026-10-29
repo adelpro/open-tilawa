@@ -356,6 +356,78 @@
         "tags": ["tokens"]
       }
     },
+    "/api/settings/mail": {
+      "get": {
+        "operationId": "MailSettingsController_read",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "The outbound mail configuration (never the password)",
+        "tags": ["MailSettings"]
+      },
+      "put": {
+        "operationId": "MailSettingsController_save",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Save the outbound mail configuration, after verifying it",
+        "tags": ["MailSettings"]
+      },
+      "delete": {
+        "operationId": "MailSettingsController_clear",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Drop the console configuration and fall back to the environment",
+        "tags": ["MailSettings"]
+      }
+    },
+    "/api/settings/mail/test": {
+      "post": {
+        "operationId": "MailSettingsController_test",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Send a test message to the signed-in admin",
+        "tags": ["MailSettings"]
+      }
+    },
+    "/api/settings/notifications": {
+      "get": {
+        "operationId": "NotificationSettingsController_read",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Alert rules and extra recipients",
+        "tags": ["NotificationSettings"]
+      },
+      "put": {
+        "operationId": "NotificationSettingsController_save",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Save alert rules and extra recipients",
+        "tags": ["NotificationSettings"]
+      }
+    },
     "/api/me": {
       "get": {
         "operationId": "MeController_getMe",
@@ -1467,7 +1539,7 @@
   "info": {
     "title": "Tilawa Admin API",
     "description": "",
-    "version": "1.26.5",
+    "version": "1.27.2",
     "contact": {}
   },
   "tags": [],

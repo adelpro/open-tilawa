@@ -251,6 +251,20 @@ export class MailerService {
     });
   }
 
+  /** Proves the configured transport end to end, without a template. */
+  async sendTestEmail(recipient: MailRecipient): Promise<{ messageId: string }> {
+    const consoleUrl = `${this.website.replace(/\/$/, '')}/console/settings`;
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(
+        recipient.locale,
+        `Test message from ${this.appName}`,
+        `رسالة تجريبية من ${this.appName}`,
+      ),
+      html: `<p>This is a test message from ${this.appName}.</p><p>If you are reading it, the SMTP configuration works. Manage it at <a href="${consoleUrl}">${consoleUrl}</a>.</p>`,
+    });
+  }
+
   async sendSetupToken(
     to: string,
     token: string,

@@ -21,6 +21,7 @@ import { StatusModule } from './status/status.module';
 import { TurnsModule } from './turns/turns.module';
 import { RecitersModule } from './reciters/reciters.module';
 import { TwoFaModule } from './two-fa/two-fa.module';
+import { SettingsModule } from './settings/settings.module';
 import { envValidate } from './config/env/env.validate';
 
 @Module({
@@ -46,6 +47,7 @@ import { envValidate } from './config/env/env.validate';
     AdminModule,
     SetupModule,
     CsrfModule,
+    SettingsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: TilawaThrottlerGuard }, CsrfMiddleware],

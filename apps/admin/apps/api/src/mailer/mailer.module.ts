@@ -2,8 +2,10 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TempLinksModule } from '@/temp-links/temp-links.module';
+import { UsersModule } from '@/users/users.module';
 import { SettingsModule } from '@/settings/settings.module';
 import { SettingsService } from '@/settings/settings.service';
+import { MailSettingsController } from '@/settings/mail-settings.controller';
 import { ConfiguredMailTransport } from './configured.transport';
 import { MailerService } from './mailer.service';
 import { MAIL_TRANSPORT } from './mailer.types';
@@ -26,7 +28,8 @@ import { MAIL_TRANSPORT } from './mailer.types';
  * module-wide default.
  */
 @Module({
-  imports: [JwtModule.register({}), TempLinksModule, SettingsModule],
+  imports: [JwtModule.register({}), TempLinksModule, SettingsModule, UsersModule],
+  controllers: [MailSettingsController],
   providers: [
     MailerService,
     {
