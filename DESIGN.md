@@ -54,11 +54,24 @@ logical properties.
 - **Latin body:** system font stack, 14–16px, weight 400–500
 - **Captions/meta:** `--ink-secondary`, 12–13px
 - **No negative tracking on Arabic.** Latin headings may use -0.01em.
+- **Units are rem, line-height unitless.** Never set a font size on `:root` or `html`;
+  the OS text-scale setting scales `1rem` and everything below it. `<meta
+  name="text-scale" content="scale">` is what lets that setting reach the page.
+- **The player uses six steps:** 0.75 / 0.875 / 1 / 1.25 / 1.625 / 2 rem
+  (12/14/16/20/26/32). The console keeps its reading size (`--body` 17px) and maps
+  its captions onto the same steps. Half-pixel sizes (13.5, 11.5) are not steps.
 
 ## Spacing & Radii
 
-- **Radii:** 8px (`--radius-sm`), 18px (`--radius-lg`), pill. Nothing between.
-- **Spacing scale:** 4, 8, 12, 16, 24, 32, 48, 64px.
+- **One scale, in rem:** `0.25 / 0.5 / 0.75 / 1 / 1.5 / 2 / 3 / 4` — 4/8/12/16/24/32/48/64
+  at the default root. Rem so the rhythm follows the user's text scale; at 200% the
+  gaps grow with the words instead of clipping them.
+- **No half-steps.** 2, 6, 10 and 20 are not steps. If a gap looks wrong at 8, the
+  layout is wrong, not the scale.
+- **Gutters:** page and bars 16; sheet and dialog body 16; card 16, 24 from 560px;
+  icon↔label 8; section gap 24; section padding 32.
+- **Radii:** 8px control (`--radius-sm`), 18px card in the console / 12px in the player,
+  pill. Nothing between.
 - **Prose cap:** 68ch max width. Tables keep full column width.
 
 ## Components
@@ -98,6 +111,17 @@ logical properties.
 - The name → glyph map is the only place a glyph is chosen, so a glyph is replaced once
   for the whole app. Never import Phosphor at a call site.
 
+### Cards
+
+- `<article>` root, a heading inside it, actions in a `<footer>`. A card with no heading
+  is a row, not a card.
+- The card is the size container (`container-type: inline-size`), not the grid: a card
+  adapts to its own width, not the viewport's.
+- One decorative glyph at most: 24px in a 40px tile, `aria-hidden`. Data cards carry no
+  icons — status is a chip that says the word.
+- Media keeps its intrinsic ratio (`height` sets the scale, `width: auto`) or fills a
+  fixed ratio with `object-fit: cover`. Never pin both sides of a wordmark.
+
 ### Node cards (seeders, TURN, relay)
 - The unit for a machine you own: `.node-card` on `--canvas`, 18px radius,
   `--shadow-premium`, 24px padding (16px ≤560px). No border — depth is the shadow.
@@ -134,11 +158,19 @@ logical properties.
 
 ## Motion
 
+- **Gate first.** If it happens 100+ times a day, or it is triggered by a key, it does
+  not animate. The play button does not morph: it is the space bar.
 - **Hover transitions:** 160ms or less. No `transition: all`.
-- **Press:** `scale(0.97)` over `--motion-press`.
+- **Press:** `scale(0.96)` over `--motion-press` (100ms). Every button carries it,
+  including the favourite heart.
+- **Theme switch:** 180ms cross-fade through the View Transitions API. One attribute
+  changes; the page changes clothes instead of flashing. Skipped under reduced motion,
+  and never used for a theme that arrives from the ring.
 - **Entrance:** ≤500ms. No layout property animation (width/height).
-- **No:** springs, parallax, scroll-triggered animation, loops beyond spinner/skeleton.
-- **Reduced motion:** `prefers-reduced-motion: reduce` disables all transforms.
+- **No:** springs beyond the sheet drag, parallax, scroll-triggered animation, loops
+  beyond spinner/skeleton, keyframes on a toggle that can be fired twice in a second.
+- **Reduced motion:** `prefers-reduced-motion: reduce` disables all transforms and
+  collapses the theme cross-fade.
 
 ## Premium depth (4-layer shadow)
 
@@ -170,11 +202,17 @@ logical properties.
 
 ## Accessibility
 
-- Every icon-only button has `aria-label`.
-- Focus ring: 2px `--primary` at 2px offset.
+- **Visible text is in the accessible name** (WCAG 2.5.3). An icon + label control takes
+  its name from the label; the action rides along as a visually-hidden suffix, never as
+  an `aria-label` that replaces the text. "الفاتحة — قائمة السور", not "قائمة السور".
+- Every icon-only button has `aria-label`; every decorative glyph is `aria-hidden`.
+- Target size: 24px minimum, 44px for anything a thumb hits, 48px on coarse pointers.
+- Focus ring: 2px at 2px offset.
 - Contrast: all text ≥4.5:1 (AA). `--support` (3.60:1) is graphics/large semibold only.
 - `prefers-reduced-motion`: disable transforms.
 - `prefers-reduced-transparency`: solid backgrounds (no blur).
+- Text scale: `<meta name="text-scale" content="scale">` plus rem type and rem spacing;
+  test the layout at 200% before calling it done.
 
 ## Do's
 
@@ -184,6 +222,8 @@ logical properties.
 - Separate surfaces with `--hairline` or `--shadow-premium`, in that order.
 - Use `--radius-sm` (8px), `--radius-lg` (18px) or pill — nothing between.
 - Write direction-agnostic CSS with logical properties.
+- Take every icon from `components/icons.tsx`, at 16, 20 or 24.
+- Take every gap, margin and padding from the 4px rem scale.
 - Pair Arabic heading sizes with `letter-spacing: 0` and taller Arabic leading.
 - Cap prose at 68ch; let tables keep full column width.
 
@@ -197,6 +237,10 @@ logical properties.
 - Don't centre-align long Arabic or Latin prose. Don't apply Latin negative tracking to Arabic.
 - Don't hard-code `#fff`/`#000` where `--canvas` and `--ink` exist.
 - Don't use glass/backdrop-filter. Solid surfaces only.
+- Don't import Phosphor at a call site, don't use a fourth icon size, don't use `bold`.
+- Don't hardcode an arrow (`←`, `→`, `↑`, `↓`) or a glyph (`✓`, `▾`, `✎`) as an icon.
+- Don't use a half-step spacing value or a px font size.
+- Don't disable a submit button to block validation.
 
 ## Known gaps
 
@@ -206,4 +250,5 @@ logical properties.
 
 ## Version
 
-DESIGN.md v2 — 2026-10-25. Base: Uslub. Borrowed: Open Tarteel (status slot, spectrum bars, RTL).
+DESIGN.md v3 — 2026-10-29. Base: Uslub. Borrowed: Open Tarteel (status slot, spectrum
+bars, RTL). v3: one icon system, rem rhythm and text scale, a shared form anatomy.
