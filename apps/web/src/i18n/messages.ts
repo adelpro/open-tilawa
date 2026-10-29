@@ -183,9 +183,13 @@ const ar = {
   about: {
     title: 'عن تلاوة',
     body1:
-      'تلاوة تطبيق لسماع القرآن الكريم، يبثّ التلاوات عبر الشبكة الندّية بدل خوادم مركزية، ويعمل من المتصفح دون حساب.',
+      'تلاوة مكان هادئ للاستماع إلى القرآن. تختار القارئ، وتختار السورة، فتمضي التلاوة إلى آخرها: لا حساب، ولا إعلان، ولا شيء بينك وبين الصوت.',
     body2:
-      'المصحف مرتّب على ترتيب المصحف، ولكل قارئ ملف واحد لكل سورة. عند تعطّل الشبكة الندّية يعود التطبيق إلى روابط MP3 المباشرة حين تتوفّر.',
+      'هذه التسجيلات لا تُحفظ على خادم واحد كبير، بل على أجهزة عدة؛ بعضها للمشروع وبعضها لمستمعين أرادوا أن يعينوا، وكل صفحة مفتوحة تحمل الصوت إلى غيرها. ولذلك لا اشتراك ولا انتظار في طابور، وكلما زاد المستمعون استقرّ الصوت.',
+    body3:
+      'تلاوة اسم الفعل لا اسم التطبيق: القراءة المتأنية للقرآن. المهم الصوت والوقفة والآية، لا الشاشة.',
+    body4:
+      'وبُنيت في العلن: شيفرتها منشورة، ولا شيء فيها يطلب منك تسجيلًا. وإن لم يعمل تسجيل أو غاب قارئ، فاكتب إلينا.',
     source: 'الكود المصدري',
     license: 'الخطوط: IBM Plex Sans Arabic، رخصة SIL OFL 1.1. الإصدار',
   },
@@ -377,9 +381,13 @@ const en: typeof ar = {
   about: {
     title: 'About Tilawa',
     body1:
-      'Tilawa is a Quran listening app. It streams recitations over a peer-to-peer network instead of central servers, and runs in the browser without an account.',
+      'Tilawa is a quiet place to listen to the Quran. You choose a reciter, you choose a surah, and the recitation plays to the end — no account, no advert, nothing in the middle.',
     body2:
-      'The surahs are in mushaf order, and each reciter is one file per surah. When the peer network is unavailable the app falls back to direct MP3 links where they exist.',
+      'The recordings do not sit on one large server. They rest on several machines, kept by the project and by listeners who wanted to help, and every page left open carries the sound to the next person. So there is no subscription and no queue, and it grows steadier as more people listen.',
+    body3:
+      'Tilawa is the Arabic word for recitation: the slow, measured reading of the Quran. The app is named after the act — what matters is the voice, the pause, the verse.',
+    body4:
+      'It is built in the open: the source is published, and nothing here asks you to sign up. If a recording will not play, or a reciter is missing, write to us.',
     source: 'Source code',
     license: 'Fonts: IBM Plex Sans Arabic, SIL OFL 1.1. Version',
   },
