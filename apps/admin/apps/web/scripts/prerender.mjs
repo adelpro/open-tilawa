@@ -12,6 +12,7 @@
  *   dist/<file>                 the page, with its own head and its static content
  *   dist/robots.txt             disallow the app, allow the roots
  *   dist/sitemap.xml            the public pages, with lastmod
+ *   dist/llms.txt               the same pages, as the llms.txt an assistant reads
  *   dist/manifest.webmanifest   install metadata
  *
  * The copy comes from `seo/pages.json`, which is the same text the catalogue renders.
@@ -219,6 +220,30 @@ Sitemap: ${site}/sitemap.xml
   'utf-8',
 );
 
+// llms.txt, generated from the same pages as the sitemap: one source, so an
+// assistant and a crawler can never be told different things about the product.
+// The console needing an account is the fact a visitor would learn from the page
+// and an assistant would not.
+const lines = data.pages.map((entry) => {
+  const url = entry.path === '/' ? `${site}/` : `${site}${entry.path}`;
+  return `- [${entry.en.title}](${url}): ${entry.en.description}`;
+});
+
+writeFileSync(
+  join(DIST, 'llms.txt'),
+  `# Tilawa Admin
+
+> ${data.pages[0].en.lede}
+
+The console itself requires an account. The pages below describe what it does and
+how it is run; \`/dashboard\`, the API and the MCP endpoint are not public.
+
+## Pages
+${lines.join('\n')}
+`,
+  'utf-8',
+);
+
 writeFileSync(
   join(DIST, 'manifest.webmanifest'),
   `${JSON.stringify(
@@ -265,5 +290,5 @@ writeFileSync(
 );
 
 console.log(
-  `prerender: ${data.pages.length} page(s), sitemap, robots and manifest written to dist/`,
+  `prerender: ${data.pages.length} page(s), sitemap, robots, llms.txt and manifest written to dist/`,
 );

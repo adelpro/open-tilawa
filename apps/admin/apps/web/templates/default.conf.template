@@ -42,6 +42,11 @@ server {
     default_type text/plain;
     expires 1h;
   }
+  # llms.txt: the public pages in the format an assistant reads, not a crawler.
+  location = /llms.txt {
+    default_type text/plain;
+    expires 1h;
+  }
   location = /sitemap.xml {
     default_type application/xml;
     expires 1h;

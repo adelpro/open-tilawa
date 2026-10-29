@@ -103,7 +103,6 @@ describe('console audit — one action column', () => {
     // `cluster--end` is right for a dialog footer and wrong for a table cell: in RTL
     // it pins the buttons to the edge opposite the column header.
     for (const [name, source] of [
-      ['Turns', turns],
       ['AdminConsole', consoleScreen],
       ['Torrents', torrents],
     ]) {
@@ -114,6 +113,14 @@ describe('console audit — one action column', () => {
       );
       assert.match(source, /row__actions/);
     }
+    // The fleet screens left the table behind: their actions live in the card.
+    for (const [name, source] of [
+      ['Turns', turns],
+      ['Seeders', read('routes/Seeders.tsx')],
+    ]) {
+      assert.match(source, /node-card|<NodeCard/, `${name} is neither a row nor a card`);
+    }
+    assert.match(read('components/NodeCard.tsx'), /node-card__actions/);
   });
 });
 
@@ -188,8 +195,14 @@ describe('console audit — a row is not a link full of buttons', () => {
   });
 
   it('gives the name a real anchor instead', () => {
-    assert.match(read('routes/Seeders.tsx'), /<a className="row__label" \{\.\.\.linkProps/);
-    assert.match(turns, /<a className="row__label" \{\.\.\.linkProps/);
+    // One card renders every fleet row, so the anchor exists once, in the card.
+    assert.match(read('components/NodeCard.tsx'), /<a className="node-card__name" \{\.\.\.linkProps/);
+    for (const [name, source] of [
+      ['Seeders', read('routes/Seeders.tsx')],
+      ['Turns', turns],
+    ]) {
+      assert.match(source, /href=\{`\/t(orrents|urns)\/\$\{/, `${name} does not link its name`);
+    }
   });
 });
 

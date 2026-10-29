@@ -26,6 +26,8 @@ const LATIN_ALLOWED = new Set([
   'about.contact.body',
   'privacy.contact.body',
   'terms.contact.body',
+  // A protocol name, not copy: the chip says which check the row gets.
+  'status.wsChip',
 ]);
 
 function catalogue(file) {
@@ -63,8 +65,14 @@ describe('message catalogues', () => {
 
   it('has no untranslated Arabic entry', () => {
     const arabic = /[\u0600-\u06FF]/;
+    // A template of placeholders and punctuation ("{used} / {quota}") is a format,
+    // not a sentence: it cannot be "still English".
+    const prose = (value) => value.replace(/\{[^}]*\}/g, '').trim();
     const untranslated = [...ar.entries()]
-      .filter(([key, value]) => !LATIN_ALLOWED.has(key) && !arabic.test(value))
+      .filter(
+        ([key, value]) =>
+          !LATIN_ALLOWED.has(key) && !arabic.test(value) && /[A-Za-z]{2,}/.test(prose(value)),
+      )
       .map(([key]) => key);
     assert.deepEqual(untranslated, [], `still English: ${untranslated.join(', ')}`);
   });

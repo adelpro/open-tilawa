@@ -15,6 +15,7 @@ import assert from 'node:assert/strict';
  */
 const WEB = new URL('..', import.meta.url).pathname;
 const data = JSON.parse(readFileSync(join(WEB, 'seo', 'pages.json'), 'utf-8'));
+const site = data.site.replace(/\/$/, '');
 
 /** A stand-in for what `vite build` leaves behind: a shell with one script and one link. */
 function stubDist() {
@@ -141,6 +142,10 @@ describe('the edge no longer answers everything with the app', () => {
     assert.match(conf, /location = \/robots\.txt \{\s*default_type text\/plain;/);
     assert.match(conf, /location = \/sitemap\.xml \{\s*default_type application\/xml;/);
   });
+
+  it('serves llms.txt as plain text', () => {
+    assert.match(conf, /location = \/llms\.txt \{\s*default_type text\/plain;/);
+  });
 });
 
 describe('the build actually produces these files', () => {
@@ -151,5 +156,16 @@ describe('the build actually produces these files', () => {
     assert.ok(existsSync(join(built, 'sitemap.xml')));
     assert.ok(existsSync(join(built, 'robots.txt')));
     assert.ok(existsSync(join(built, 'og.png')));
+  });
+
+  it('writes an llms.txt that names every public page', { skip: !existsSync(built) }, () => {
+    const file = join(built, 'llms.txt');
+    assert.ok(existsSync(file), 'llms.txt is missing from dist');
+    const text = readFileSync(file, 'utf-8');
+    assert.match(text, /^# Tilawa Admin\n\n> .+/);
+    for (const entry of data.pages) {
+      const url = entry.path === '/' ? `${site}/` : `${site}${entry.path}`;
+      assert.ok(text.includes(url), `${url} is missing from llms.txt`);
+    }
   });
 });
