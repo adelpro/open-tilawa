@@ -80,11 +80,11 @@ export default function AboutPage() {
             <p className="text-muted">
               {about.open.report}{' '}
               <a
-                href="mailto:adelpro@gmail.com"
+                href="mailto:contact@tilawah.cc"
                 dir="ltr"
                 className="inline-block text-ink underline underline-offset-4"
               >
-                adelpro@gmail.com
+                contact@tilawah.cc
               </a>
             </p>
           </div>

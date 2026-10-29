@@ -67,7 +67,7 @@ export function Footer(): ReactElement {
         </div>
         <div className="site-footer__col">
           <h3>{t('footer.contact')}</h3>
-          <a href="mailto:contact@adelpro.us.kg">contact@adelpro.us.kg</a>
+          <a href="mailto:contact@tilawah.cc">contact@tilawah.cc</a>
         </div>
       </div>
       <div className="site-footer__inner">

@@ -1,6 +1,6 @@
 FROM node:22-slim
 
-LABEL maintainer="Adelpro <adelpro@gmail.com>"
+LABEL maintainer="Adelpro <contact@tilawah.cc>"
 LABEL name="open-tilawa-seeder"
 LABEL version="1.4.3"
 

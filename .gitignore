@@ -41,3 +41,11 @@ docs/superpowers/
 
 # Screenshots captured while auditing; never part of a change
 .playwright-mcp/
+
+# Film project: 146 MB of renders, audio beds and frame strips. Not input to any
+# app build — re-render from film/src when it is needed again.
+film/
+
+# Python bytecode from the asset scripts
+__pycache__/
+*.pyc

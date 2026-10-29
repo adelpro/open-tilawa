@@ -520,7 +520,7 @@ export const ar: Catalogue = {
   'about.who.body':
     'يبني تلاوة عادل بن يحيى في العلن، ومع كل من ينبّه إلى تسجيل لا يعمل، أو يقترح قارئًا غائبًا، أو يُبقي جهازًا يعمل. الشيفرة منشورة، وقائمة القرّاء كذلك.',
   'about.contact.heading': 'اتصل بنا',
-  'about.contact.body': 'اكتب إلينا عن قارئ ينقصنا أو تسجيل لا يعمل: contact@adelpro.us.kg.',
+  'about.contact.body': 'اكتب إلينا عن قارئ ينقصنا أو تسجيل لا يعمل: contact@tilawah.cc.',
 
   'privacy.title': 'سياسة الخصوصية',
   'privacy.version': 'سياسة الخصوصية — إصدار 1.0',
@@ -540,7 +540,7 @@ export const ar: Catalogue = {
   'privacy.rights.body':
     'يمكنك الاطلاع على حسابك أو تعديله أو حذفه مع جميع البيانات المرتبطة به في أي وقت من شاشة الحساب. الحذف فوري ونهائي.',
   'privacy.contact.heading': 'اتصل بنا',
-  'privacy.contact.body': 'contact@adelpro.us.kg (الموضوع: الخصوصية).',
+  'privacy.contact.body': 'contact@tilawah.cc (الموضوع: الخصوصية).',
 
   'terms.title': 'شروط الخدمة',
   'terms.version': 'شروط الخدمة — إصدار 1.0',
@@ -565,7 +565,7 @@ export const ar: Catalogue = {
   'terms.changes.body':
     'قد نحدّث هذه الشروط. التغييرات الجوهرية تُعلن بالبريد. الاستمرار في الاستخدام بعد التغيير يعني قبولًا. كل إصدار مؤرّخ ومرقّم.',
   'terms.contact.heading': 'اتصل بنا',
-  'terms.contact.body': 'contact@adelpro.us.kg.',
+  'terms.contact.body': 'contact@tilawah.cc.',
   'prefs.theme': 'المظهر',
   'prefs.theme.light': 'فاتح',
   'prefs.theme.dark': 'داكن',

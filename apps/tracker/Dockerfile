@@ -1,7 +1,7 @@
 # Use a Node.js base image
 FROM node:18-alpine
 
-LABEL maintainer="Adelpro <adelpro@gmail.com>"
+LABEL maintainer="Adelpro <contact@tilawah.cc>"
 LABEL name="open-tilawa-tracker"
 LABEL version="1.1"
 

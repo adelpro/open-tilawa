@@ -524,7 +524,7 @@ export const en = {
     'Tilawa is built in the open by Adel Ben Yahia, with everyone who reports a recording that will not play, suggests a missing reciter, or keeps a machine running. The source is public; so is the list of reciters.',
   'about.contact.heading': 'Contact',
   'about.contact.body':
-    'Write to contact@adelpro.us.kg about a reciter we are missing or a recording that will not play.',
+    'Write to contact@tilawah.cc about a reciter we are missing or a recording that will not play.',
 
   'privacy.title': 'Privacy Policy',
   'privacy.version': 'Privacy Policy — v1.0',
@@ -544,7 +544,7 @@ export const en = {
   'privacy.rights.body':
     'You can view, edit, or delete your account and all associated data at any time from the Account screen. Deletion is permanent and immediate.',
   'privacy.contact.heading': 'Contact',
-  'privacy.contact.body': 'contact@adelpro.us.kg (subject: Privacy).',
+  'privacy.contact.body': 'contact@tilawah.cc (subject: Privacy).',
 
   'terms.title': 'Terms of Service',
   'terms.version': 'Terms of Service — v1.0',
@@ -570,7 +570,7 @@ export const en = {
   'terms.changes.body':
     'We may update these terms. Material changes will be announced by email. Continued use after a change constitutes acceptance. Each version is dated and numbered.',
   'terms.contact.heading': 'Contact',
-  'terms.contact.body': 'contact@adelpro.us.kg.',
+  'terms.contact.body': 'contact@tilawah.cc.',
   'prefs.theme': 'Theme',
   'prefs.theme.light': 'Light',
   'prefs.theme.dark': 'Dark',
