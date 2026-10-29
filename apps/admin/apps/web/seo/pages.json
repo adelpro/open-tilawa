@@ -74,33 +74,51 @@
       "en": {
         "lang": "en",
         "title": "About Tilawa Admin",
-        "description": "Tilawa Admin keeps your writing profile and serves it to the agents and editors you already use, over MCP.",
+        "description": "Tilawa Admin is the operations console for Quran audio distribution: seeder nodes, TURN servers, the torrent catalogue and the reciters library in one place.",
         "brand": "Tilawa Admin",
         "h1": "About Tilawa Admin",
-        "lede": "Tilawa Admin is a writing-profile service. It keeps how you sound — and what you refuse to sound like — and serves that profile to the agents and editors you already use, over MCP.",
-        "features": [],
+        "lede": "Tilawa Admin is the operations console for Quran audio distribution: seeder nodes, TURN servers, the torrent catalogue and the reciters library in one place.",
+        "features": [
+          {
+            "title": "Who builds it",
+            "body": "Tilawa Admin is built by Adel Ben Yahia. Questions, feedback, or partnership inquiries are welcome."
+          },
+          {
+            "title": "Contact",
+            "body": "contact@adelpro.us.kg"
+          }
+        ],
         "steps": {
           "title": "",
           "items": []
         },
-        "cta": "Create an account",
-        "secondary": "Sign in",
+        "cta": "",
+        "secondary": "",
         "note": ""
       },
       "ar": {
         "lang": "ar",
-        "title": "نبذة عن أسلوب",
-        "description": "يحفظ أسلوب ملفّك الكتابي ويقدّمه للوكلاء والمحرّرات التي تستخدمها عبر MCP.",
-        "brand": "أسلوب",
-        "h1": "نبذة عن أسلوب",
-        "lede": "أسلوب خدمة لملفات الكتابة. يحفظ كيف تكتب وما ترفض أن تشبهه، ويقدّمه للوكلاء والمحرّرات التي تستخدمها عبر MCP.",
-        "features": [],
+        "title": "نبذة عن تلاوة",
+        "description": "لوحة الإدارة لتوزيع تلاوات القرآن: تدير خوادم التوزيع وخوادم TURN وفهرس ملفات التورنت ومكتبة القرّاء من مكان واحد.",
+        "brand": "تلاوة",
+        "h1": "نبذة عن تلاوة",
+        "lede": "لوحة الإدارة لتوزيع تلاوات القرآن: تدير خوادم التوزيع وخوادم TURN وفهرس ملفات التورنت ومكتبة القرّاء من مكان واحد.",
+        "features": [
+          {
+            "title": "من يبنيها",
+            "body": "تلاوة من صنع عادل بن يحيى، ونرحّب بالأسئلة والاقتراحات وطلبات الشراكة."
+          },
+          {
+            "title": "اتصل بنا",
+            "body": "contact@adelpro.us.kg"
+          }
+        ],
         "steps": {
           "title": "",
           "items": []
         },
-        "cta": "أنشئ حسابًا",
-        "secondary": "تسجيل الدخول",
+        "cta": "",
+        "secondary": "",
         "note": ""
       }
     },
@@ -121,15 +139,15 @@
           "title": "",
           "items": []
         },
-        "cta": "Create an account",
-        "secondary": "Sign in",
+        "cta": "",
+        "secondary": "",
         "note": ""
       },
       "ar": {
         "lang": "ar",
-        "title": "سياسة الخصوصية — أسلوب",
-        "description": "كيف يجمع أسلوب بياناتك ويستخدمها ويحميها.",
-        "brand": "أسلوب",
+        "title": "سياسة الخصوصية — تلاوة",
+        "description": "كيف تجمع تلاوة بياناتك وتستخدمها وتحميها.",
+        "brand": "تلاوة",
         "h1": "سياسة الخصوصية",
         "lede": "كيف نجمع بياناتك ونستخدمها ونحميها.",
         "features": [],
@@ -137,8 +155,8 @@
           "title": "",
           "items": []
         },
-        "cta": "أنشئ حسابًا",
-        "secondary": "تسجيل الدخول",
+        "cta": "",
+        "secondary": "",
         "note": ""
       }
     },
@@ -159,24 +177,24 @@
           "title": "",
           "items": []
         },
-        "cta": "Create an account",
-        "secondary": "Sign in",
+        "cta": "",
+        "secondary": "",
         "note": ""
       },
       "ar": {
         "lang": "ar",
-        "title": "شروط الخدمة — أسلوب",
-        "description": "الشروط التي تحكم استخدامك لأسلوب.",
-        "brand": "أسلوب",
+        "title": "شروط الخدمة — تلاوة",
+        "description": "الشروط التي تحكم استخدامك لتلاوة.",
+        "brand": "تلاوة",
         "h1": "شروط الخدمة",
-        "lede": "الشروط التي تحكم استخدامك لأسلوب.",
+        "lede": "الشروط التي تحكم استخدامك لتلاوة.",
         "features": [],
         "steps": {
           "title": "",
           "items": []
         },
-        "cta": "أنشئ حسابًا",
-        "secondary": "تسجيل الدخول",
+        "cta": "",
+        "secondary": "",
         "note": ""
       }
     }

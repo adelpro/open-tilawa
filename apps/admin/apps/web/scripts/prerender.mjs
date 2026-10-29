@@ -118,16 +118,33 @@ function head(page, copy, canonicalUrl) {
  * page rather than a div. React clears it on mount.
  */
 function body(copy) {
-  const features = copy.features
-    .map(
-      (feature) => `
+  // Every block is conditional: a legal page has no steps and no call to action, and
+  // an empty <p> of empty buttons is worse than a shorter page. The landing page keeps
+  // all four, so its markup is unchanged.
+  const features = copy.features.length
+    ? `<section class="landing__features">${copy.features
+        .map(
+          (feature) => `
         <article class="landing__feature">
           <h2 class="display-sm">${escape(feature.title)}</h2>
           <p class="body muted">${escape(feature.body)}</p>
         </article>`,
-    )
-    .join('');
-  const steps = copy.steps.items.map((item) => `<li>${escape(item)}</li>`).join('\n          ');
+        )
+        .join('')}
+        </section>`
+    : '';
+  const steps = copy.steps.items.length
+    ? `<section class="landing__steps">
+          <h2 class="display-sm">${escape(copy.steps.title)}</h2>
+          <ol>
+          ${copy.steps.items.map((item) => `<li>${escape(item)}</li>`).join('\n          ')}
+          </ol>
+        </section>`
+    : '';
+  const cta = copy.cta
+    ? `<p class="cluster"><a class="btn btn--primary" href="/dashboard/signup">${escape(copy.cta)}</a><a class="btn btn--tertiary" href="/dashboard/signin">${escape(copy.secondary)}</a></p>`
+    : '';
+  const note = copy.note ? `<p class="fine-print">${escape(copy.note)}</p>` : '';
 
   return `<div id="root">
       <div class="landing">
@@ -136,11 +153,8 @@ function body(copy) {
             <p class="landing__brand">${escape(copy.brand)}</p>
             <h1 class="display-lg">${escape(copy.h1)}</h1>
             <p class="body muted">${escape(copy.lede)}</p>
-            <p class="cluster">
-              <a class="btn btn--primary" href="/dashboard/signup">${escape(copy.cta)}</a>
-              <a class="btn btn--tertiary" href="/dashboard/signin">${escape(copy.secondary)}</a>
-            </p>
-            <p class="fine-print">${escape(copy.note)}</p>
+            ${cta}
+            ${note}
           </div>
           <div class="landing__mark" aria-hidden="true">
             <span class="landing__ring landing__ring--outer"></span>
@@ -148,14 +162,8 @@ function body(copy) {
             <span class="landing__dot"></span>
           </div>
         </header>
-        <section class="landing__features">${features}
-        </section>
-        <section class="landing__steps">
-          <h2 class="display-sm">${escape(copy.steps.title)}</h2>
-          <ol>
-          ${steps}
-          </ol>
-        </section>
+        ${features}
+        ${steps}
       </div>
     </div>`;
 }

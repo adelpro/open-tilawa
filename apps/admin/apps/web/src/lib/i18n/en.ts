@@ -547,10 +547,10 @@ export const en = {
   'about.version': 'About — v1.0',
   'about.what.heading': 'What it is',
   'about.what.body':
-    'Tilawa Admin is the operations console for Quran audio distribution: it manages seeder nodes, TURN servers, the torrent catalogue and the reciters library from one dashboard.',
+    'Tilawa Admin is the operations console for Quran audio distribution: seeder nodes, TURN servers, the torrent catalogue and the reciters library in one place.',
   'about.who.heading': 'Who builds it',
   'about.who.body':
-    'Tilawa Admin is built by Adel Benyahia. Questions, feedback, or partnership inquiries are welcome.',
+    'Tilawa Admin is built by Adel Ben Yahia. Questions, feedback, or partnership inquiries are welcome.',
   'about.contact.heading': 'Contact',
   'about.contact.body': 'contact@adelpro.us.kg',
 

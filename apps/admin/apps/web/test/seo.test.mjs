@@ -124,6 +124,35 @@ describe('the page says the same thing the app does', () => {
   }
 });
 
+describe('every page belongs to this product', () => {
+  const catalogue = readFileSync(join(WEB, 'src/lib/i18n/en.ts'), 'utf-8');
+  // The secondary pages once carried another product's copy — an Arabic brand, a
+  // "writing profile over MCP" lede and a signup CTA — because pages.json was seeded
+  // from a different project and only the landing page was checked.
+  it('uses one Arabic brand everywhere', () => {
+    const brand = data.pages[0].ar.brand;
+    for (const page of data.pages) {
+      assert.equal(page.ar.brand, brand, `${page.path} carries a different brand`);
+    }
+  });
+
+  it('takes every page h1 from the English catalogue', () => {
+    for (const page of data.pages) {
+      assert.ok(
+        catalogue.includes(page.en.h1.replace(/'/g, "\\'")),
+        `${page.path} has an h1 the app never renders: ${page.en.h1}`,
+      );
+    }
+  });
+
+  it('never invents a call to action on a page that has none', () => {
+    for (const page of data.pages.slice(1)) {
+      assert.equal(page.en.cta, '', `${page.path} should not carry a signup CTA`);
+      assert.equal(page.ar.cta, '', `${page.path} should not carry a signup CTA`);
+    }
+  });
+});
+
 describe('the edge no longer answers everything with the app', () => {
   const conf = readFileSync(join(WEB, 'templates/default.conf.template'), 'utf-8');
 
