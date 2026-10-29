@@ -83,10 +83,49 @@ logical properties.
 - Spectrum bars: `#0191e2` (or `--primary` in dark mode).
 - Controls: play/pause, seek, volume — all icon buttons with `aria-label`.
 
-### Buttons
-- Primary: `--primary` fill, white text, `rounded-md`, hover `--primary-hover`.
+### Buttons & icons
+- Primary: `--primary` fill, white text, `rounded-md`, hover `--primary-hover`. One per
+  region: the page's main verb. Anything inside a card, row or table is secondary.
 - Secondary: `--surface-pearl` fill, `--ink` text, `--hairline` border.
-- Icon-only: `aria-label` required, `title` where tooltip is not used.
+- `tertiary` is a word, not a button: edits and other quiet verbs. `destructive` is for
+  irreversible verbs only — never for "close".
+- `small` inside cards and table rows; full size in `page-head`, modals and the first
+  screen of a flow.
+- Icons come from `components/icons.tsx` (Phosphor, 16px, `regular`) and reach a button
+  through `icon=`, which swaps to the spinner while busy so the label never moves.
+- Icon + label on page-level verbs; label alone inside a card. Icon-only requires
+  `aria-label`, and the glyph is never the accessible name.
+- The name → glyph map is the only place a glyph is chosen, so a glyph is replaced once
+  for the whole app. Never import Phosphor at a call site.
+
+### Node cards (seeders, TURN, relay)
+- The unit for a machine you own: `.node-card` on `--canvas`, 18px radius,
+  `--shadow-premium`, 24px padding (16px ≤560px). No border — depth is the shadow.
+- Grid: `.node-grid` = `repeat(auto-fill, minmax(340px, 1fr))`, 16px gap, one column
+  ≤560px. Never a table for a fleet: a row that re-flows into a card on mobile is two
+  designs to keep in step.
+- Header: name (16px `--body-strong`, wraps, never truncated) + status chip, then the URL
+  on `--code` 12px, `direction: ltr; unicode-bidi: isolate`, ellipsised with `title`.
+  A badge (pinned, WebSocket) sits beside the status chip.
+- Pinned ("this server") is `--canvas-parchment` plus a badge. Never a coloured bar: the
+  `inset 3px 0` marker drew itself on the left in an RTL page.
+- Metrics: a 2×2 `dl`, label `--fine-print` `--ink-secondary`, value 14px `tabular-nums`.
+  Four metrics maximum; anything else belongs on the node's own screen.
+- Capacity is the only meter: used over quota, 4px track `--hairline`, fill `--primary`,
+  `--support` from 90%. Unlimited quota shows the used value and the words for "no cap" —
+  never the size of the disk dressed up as a quota.
+- Actions: a footer above a `--hairline`, `small` buttons, quiet verbs last. The name is
+  the only link; the card is not one giant click target, because nested buttons then lie
+  to the keyboard and to assistive tech.
+
+### Time strips (24h)
+- Bars are equal height; colour is the verdict (`--success`, `--warning`, `--error`,
+  `--hairline` for no data). Height carries no value, so a taller "now" bar lies about
+  nothing.
+- The current hour is the tallest bar (26px inside an 18px strip, centred) and the strip
+  is captioned at both ends with logical properties: "24 hours ago" / "now". The labels,
+  not the direction, are what make the reading order unambiguous — RTL flips the newest
+  bucket to the left edge.
 
 ### Dividers
 - `--hairline` (#e0e0e0) wherever content is separated.
@@ -120,6 +159,8 @@ logical properties.
 ## RTL / Arabic
 
 - Use logical properties: `inset-inline-start`, `border-inline-end`, `padding-inline`.
+- A physical side is a bug in an RTL page: `left`, `right` and `inset 3px 0` draw the
+  marker on the wrong edge. Pinned bars, accents and dividers are `inline-start`/`end`.
 - Arabic heading: `letter-spacing: 0`, taller leading (1.6–1.8).
 - No negative tracking on Arabic.
 - `html[lang='ar']` overrides `--font-sans` with `--font-arabic`.
