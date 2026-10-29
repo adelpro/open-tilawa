@@ -9,7 +9,7 @@ answer "what was in that repo release?" without diffing branches.
 
 | Repo | web | admin | seeder |
 |---|---|---|---|
-| 1.6.5 | 1.8.2 | 1.26.2 | 1.4.3 |
+| 1.6.6 | 1.8.3 | 1.26.3 | 1.4.3 |
 
 Bump the root version when you tag a repo release, and name the three app
 versions in the tag notes.
