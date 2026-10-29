@@ -132,8 +132,8 @@ alternatives:
 the layout `<torrent folder>/<file>`, so nginx can serve it verbatim:
 
 ```
-https://tilawa.quran.us.kg/media/            ← web seed base
-https://tilawa.quran.us.kg/media/Quran-MP3-Ghamdi/002.mp3
+https://tilawah.cc/media/            ← web seed base
+https://tilawah.cc/media/Quran-MP3-Ghamdi/002.mp3
 ```
 
 `docker-compose.yml` mounts `seed_downloads` read-only into the web container at

@@ -72,7 +72,7 @@ services:
         required: false
     environment:
       MAX_CONCURRENT_DOWNLOADS: ${MAX_CONCURRENT_DOWNLOADS:-3}
-      MAGNETS_URL: ${MAGNETS_URL:-https://tilawa.quran.us.kg/api/magnet-uris}
+      MAGNETS_URL: ${MAGNETS_URL:-}
       DOWNLOAD_PATH: /data/downloads
       TORRENT_DIR: /data/torrents
       ADMIN_PORT: ${ADMIN_PORT:-8085}
@@ -125,11 +125,11 @@ services:
       BUILD_SHA: ${GIT_SHA:-dev}
       PORT: ${ADMIN_API_PORT:-9410}
       DB_PATH: /data/tilawa-admin.sqlite
-      CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://admin-tilawa.quran.us.kg}
+      CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://console.tilawah.cc,https://tilawah.cc}
       # Absolute origin used in activation and reset mail. Overridden here so a
       # developer's .env (`http://localhost:9400`) cannot leak into emails sent
       # from production.
-      WEBSITE: ${ADMIN_WEBSITE:-https://admin-tilawa.quran.us.kg}
+      WEBSITE: ${ADMIN_WEBSITE:-https://console.tilawah.cc}
       # Seeder updates run through the host daemon (see the socket mount below).
       SEEDER_UPDATE: "1"
       SEEDER_COMPOSE_FILE: /host/docker-compose.yml

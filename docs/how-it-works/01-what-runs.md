@@ -16,7 +16,7 @@ sits beside it.
 **Beside it:**
 
 - **gun relay** holds the accounts and the public counters on `:8765`, reached
-  through `wss://gundb-relay.quran.us.kg/gun`. It is its own container, so
+  through `wss://gun.tilawah.cc/gun`. It is its own container, so
   rebuilding the app never touches the accounts. See
   [Where your account lives](07-where-accounts-live.md).
 

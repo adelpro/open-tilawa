@@ -143,7 +143,7 @@ def share_card(mark: Image.Image) -> Image.Image:
     wordmark = fit(mark, round(width * 0.46))
     draw = ImageDraw.Draw(card)
 
-    url_text = 'tilawa.quran.us.kg'
+    url_text = 'tilawah.cc'
     url_size = 30
     url_font = latin_font(url_size)
     url_box = draw.textbbox((0, 0), url_text, font=url_font)

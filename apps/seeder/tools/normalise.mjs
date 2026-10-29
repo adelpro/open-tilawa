@@ -35,7 +35,7 @@ const value = (name, fallback) => {
 const dir = value('--dir');
 const dryRun = flag('--dry-run');
 const torrentDir = value('--torrents', process.env.TORRENT_DIR || '/data/torrents');
-const webSeed = value('--web-seed', process.env.WEB_SEED_URL || 'https://tilawa.quran.us.kg/media/');
+const webSeed = value('--web-seed', process.env.WEB_SEED_URL || 'https://tilawah.cc/media/');
 
 if (!dir) {
   console.error('usage: normalise.mjs --dir <folder> [--dry-run] [--web-seed <url>]');

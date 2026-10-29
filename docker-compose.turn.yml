@@ -14,7 +14,7 @@ services:
       - path: .env
         required: false
     environment:
-      TURN_REALM: ${TURN_REALM:-turn.quran.us.kg}
+      TURN_REALM: ${TURN_REALM:-turn.tilawah.cc}
       TURN_USERNAME: ${TURN_USERNAME:-}
       TURN_PASSWORD: ${TURN_PASSWORD:-}
       TURN_EXTERNAL_IP: ${TURN_EXTERNAL_IP:-}

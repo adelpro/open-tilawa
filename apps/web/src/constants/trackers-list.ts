@@ -6,7 +6,7 @@
  * no longer resolves) are gone: a dead tracker is a console error on every load.
  */
 export const TRACKERS = [
-  'wss://tracker.quran.us.kg',
+  'wss://tracker.tilawah.cc',
   'wss://tracker.openwebtorrent.com',
   'wss://tracker.webtorrent.dev',
 ];

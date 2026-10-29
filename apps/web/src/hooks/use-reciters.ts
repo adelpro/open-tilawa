@@ -15,7 +15,7 @@ import { toReciters, type CatalogueRow } from '@/utils/catalogue';
 
 const ADMIN_API =
   (import.meta as { env?: Record<string, string> }).env?.VITE_ADMIN_API_URL ||
-  'https://admin-tilawa.quran.us.kg';
+  'https://console.tilawah.cc';
 
 const CACHE_KEY = 'tilawa.reciters.v1';
 const DEFAULT_PAGE = 1;

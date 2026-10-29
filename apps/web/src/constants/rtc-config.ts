@@ -25,7 +25,7 @@ function turn(transport: 'udp' | 'tcp'): RTCIceServer[] {
   if (!username || !credential) return [];
   return [
     {
-      urls: `turn:turn.quran.us.kg:3478?transport=${transport}`,
+      urls: `turn:turn.tilawah.cc:3478?transport=${transport}`,
       username,
       credential,
     },

@@ -5,7 +5,7 @@
  * `VITE_GUN_PEERS` overrides this (comma separated) — use it to point a preview
  * at a second relay instead of writing into the live one.
  */
-const DEFAULT_PEERS = ['wss://gundb-relay.quran.us.kg/gun'];
+const DEFAULT_PEERS = ['wss://gun.tilawah.cc/gun'];
 
 export const getGunPeers = (): string[] => {
   const configured = (import.meta as { env?: Record<string, string> }).env?.VITE_GUN_PEERS;

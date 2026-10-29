@@ -99,11 +99,11 @@ export class StatusService {
   private seedDefaults(): void {
     const port = process.env.PORT ?? '9410';
     const defaults: { name: string; url: string; kind: ServiceKind }[] = [
-      { name: 'Public site', url: 'https://tilawa.quran.us.kg/', kind: 'http' },
-      { name: 'Tracker', url: 'https://tracker.quran.us.kg/stats', kind: 'http' },
+      { name: 'Public site', url: 'https://tilawah.cc/', kind: 'http' },
+      { name: 'Tracker', url: 'https://tracker.tilawah.cc/stats', kind: 'http' },
       { name: 'Admin API', url: `http://127.0.0.1:${port}/api/health`, kind: 'http' },
       { name: 'Admin console', url: 'http://admin-web:80/', kind: 'http' },
-      { name: 'GunDB relay', url: 'wss://gundb-relay.quran.us.kg/gun', kind: 'ws' },
+      { name: 'GunDB relay', url: 'wss://gun.tilawah.cc/gun', kind: 'ws' },
     ];
     const insert = this.db.prepare(
       'INSERT OR IGNORE INTO services (name, url, kind) VALUES (?, ?, ?)',

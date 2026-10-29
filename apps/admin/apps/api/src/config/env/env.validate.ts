@@ -64,7 +64,7 @@ export function envValidate(config: Record<string, unknown>): EnvConfigDTO {
       throw new Error(
         `Refusing to start in production with WEBSITE=${validatedConfig.WEBSITE}. ` +
           'Activation and reset mail link to this value, so it must be the public ' +
-          'origin (for example https://admin-tilawa.quran.us.kg).',
+          'origin (for example https://console.tilawah.cc).',
       );
     }
     if (MAIL_KEYS.some((key) => !config[key])) {

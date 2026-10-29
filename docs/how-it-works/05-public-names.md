@@ -6,10 +6,10 @@ Four names, two doors.
 
 | Name | Goes to |
 |---|---|
-| `tilawa.quran.us.kg` | `edge` → `web` |
-| `tracker.quran.us.kg` | `edge` → `tracker`, websockets |
-| `admin-tilawa.quran.us.kg` | the admin door |
-| `turn.quran.us.kg` | coturn, directly |
+| `tilawah.cc` | `edge` → `web` |
+| `tracker.tilawah.cc` | `edge` → `tracker`, websockets |
+| `console.tilawah.cc` | the admin door |
+| `turn.tilawah.cc` | coturn, directly |
 
 Only two doors are reachable from the internet, and both are published on the host
 loopback: `8084` for `edge`, `9400` for the admin door. Everything else binds to

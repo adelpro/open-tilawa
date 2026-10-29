@@ -981,7 +981,7 @@ export function Reciters(): ReactElement {
                   rows={6}
                   value={trackersText}
                   onChange={(event) => setTrackersText(event.target.value)}
-                  placeholder={'wss://tracker.quran.us.kg'}
+                  placeholder={'wss://tracker.tilawah.cc'}
                 />
               )}
             </Field>

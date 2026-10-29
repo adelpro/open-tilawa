@@ -12,8 +12,8 @@ listening-port=3478
 no-tls
 listening-ip=0.0.0.0
 relay-ip=0.0.0.0
-realm=${TURN_REALM:-turn.quran.us.kg}
-server-name=${TURN_REALM:-turn.quran.us.kg}
+realm=${TURN_REALM:-turn.tilawah.cc}
+server-name=${TURN_REALM:-turn.tilawah.cc}
 lt-cred-mech
 user=${TURN_USERNAME:-change}:${TURN_PASSWORD:-me}
 external-ip=${TURN_EXTERNAL_IP}
@@ -28,5 +28,5 @@ log-file=stdout
 simple-log
 CONF
 
-echo "Starting coturn for realm ${TURN_REALM:-turn.quran.us.kg}"
+echo "Starting coturn for realm ${TURN_REALM:-turn.tilawah.cc}"
 exec turnserver -c /tmp/turnserver.conf

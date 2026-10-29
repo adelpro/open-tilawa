@@ -1,6 +1,6 @@
 {
   "$comment": "The public pages, as data. Read by apps/web/scripts/prerender.mjs at build time to write real HTML, and by the tests to check what a crawler will see. Keep the copy here identical to the catalogue entries the Landing screen renders — a prerendered page that says something different from the mounted app is cloaking.",
-  "site": "https://admin-tilawa.quran.us.kg",
+  "site": "https://console.tilawah.cc",
   "pages": [
     {
       "path": "/",

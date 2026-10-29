@@ -33,7 +33,7 @@ and the routes that need mail (activation, password reset, email 2FA) answer
 **503** with the variable names in the body.
 
 - `WEBSITE` — the public origin stamped into activation and reset links. The
-  compose file sets it to `${ADMIN_WEBSITE:-https://admin-tilawa.quran.us.kg}`
+  compose file sets it to `${ADMIN_WEBSITE:-https://console.tilawah.cc}`
   so a dev `.env` value (`http://localhost:9400`) cannot leak into production
   mail, and the API refuses to start in production while it points at loopback.
 
@@ -147,7 +147,7 @@ A node enforces its own limits — a console-side cap would only be a wish:
 The tracker list lives in the console (Reciters → **Trackers**): one `ws://` or
 `wss://` URL per line. Every magnet the console builds — reciter save, catalogue
 import, the torrent tool — announces to it, and saving rewrites existing
-catalogue magnets so no row keeps an old list. `tracker.quran.us.kg` is the one
+catalogue magnets so no row keeps an old list. `tracker.tilawah.cc` is the one
 hostname; the old `trackerf` alias has been removed from DNS and the edge.
 
 ## Publishing a release

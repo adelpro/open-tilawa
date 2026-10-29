@@ -38,7 +38,7 @@ in [What is actually public](how-it-works/05-public-names.md).*
 
 - **Image:** `bittorrent-tracker --http --ws --port 8083 --stats`.
 - **Binding:** `127.0.0.1:8083` on the host, on the compose network as `tracker`.
-- **Public name:** `tracker.quran.us.kg`, one name, through a Cloudflare tunnel
+- **Public name:** `tracker.tilawah.cc`, one name, through a Cloudflare tunnel
   with `enableWebsockets: true`; the edge proxies to the tracker with
   `Upgrade`/`Connection` headers preserved. The old `trackerf` hostname is gone
   (DNS record deleted).
@@ -74,7 +74,7 @@ in [What is actually public](how-it-works/05-public-names.md).*
 - **Admin UI:** `ADMIN_UI=0` keeps `/api` for the console but stops serving the
   browsable page.
 - **Announce:** the node announces every torrent it seeds to the tracker list in
-  `constants/TRACKERS.js` (canonical: `wss://tracker.quran.us.kg`) in addition to
+  `constants/TRACKERS.js` (canonical: `wss://tracker.tilawah.cc`) in addition to
   the trackers inside each `.torrent`. A remote node without the internal
   `tracker` service simply has one unreachable entry; the rest still announce.
 - **Add/remove:** normally driven by the console (it proxies with the stored
@@ -84,7 +84,7 @@ in [What is actually public](how-it-works/05-public-names.md).*
 
 - **Image:** `coturn/coturn`, host networking, config at `apps/turn/entrypoint.sh`.
 - **Ports:** 3478 UDP/TCP, 5349 TCP (TLS), relay 49160–49200 UDP.
-- **Public name:** `turn.quran.us.kg` (TCP via tunnel; UDP reaches the host
+- **Public name:** `turn.tilawah.cc` (TCP via tunnel; UDP reaches the host
   directly).
 - **Purpose:** relays WebRTC traffic between browser peers when direct
   connectivity fails. It is **not** a tracker and never appears in a magnet.

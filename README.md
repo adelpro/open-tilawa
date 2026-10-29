@@ -45,7 +45,7 @@ Volumes: `seed_downloads` (seeder data), `seed_torrents` (shared with web for `.
 4. **Playback**: the app registers one service worker (`/sw.js`, PWA + WebTorrent merged), calls `client.createServer()`, and points `<audio>` at `file.streamURL` — a **same-origin** `/webtorrent/<infohash>/<path>` URL. The worker answers range requests from torrent pieces, so playback starts on the first pieces and seeking works. `<audio>` never points at a remote file.
 5. **No peers**: after 8 s with zero peers the client calls `torrent.addWebSeed("<origin>/media/")`. The HTTP channel then stays open for the life of the torrent — mobile P2P drops and recovers constantly, and detaching the fallback at the first peer would turn every handover into a stall. Pieces from it are verified, stored, seeded to other peers, and peers are used in parallel whenever they exist. The audio element's `src` does not change.
 6. **Selection**: only the current surah is selected (`deselect: true` + `file.select()`), so the rest of a 114-file torrent does not compete for bandwidth.
-7. **TURN**: coturn relays WebRTC when direct P2P fails (symmetric NAT). External IP is resolved from the DDNS hostname `turn.quran.us.kg`.
+7. **TURN**: coturn relays WebRTC when direct P2P fails (symmetric NAT). External IP is resolved from the DDNS hostname `turn.tilawah.cc`.
 
 ### Key constraints (browser WebTorrent)
 
@@ -72,13 +72,13 @@ See [apps/web/README.md](apps/web/README.md) for the merge contract, the nginx
 | `TRACKER_PORT` | Tracker port (default 8083) |
 | `MAGNETS_URL` | Magnet list for the legacy `seed.mjs` node type (`seed-all.mjs` reads `/data/torrents` instead) |
 | `ITQAN_API_KEY` | Itqan CMS API key for `import-itqan.mjs` (seeder only; never shipped to the web app) |
-| `TURN_REALM` | Coturn realm (turn.quran.us.kg) |
+| `TURN_REALM` | Coturn realm (turn.tilawah.cc) |
 | `TURN_USERNAME` / `TURN_PASSWORD` | Coturn credentials |
-| `TURN_EXTERNAL_IP` | DDNS hostname (turn.quran.us.kg) — resolved at coturn startup |
+| `TURN_EXTERNAL_IP` | DDNS hostname (turn.tilawah.cc) — resolved at coturn startup |
 
 ### DDNS
 
-`update-turn-dns.sh` runs every 5 min (cron), updates the Cloudflare A record for `turn.quran.us.kg`, and restarts coturn only when the IP changed.
+`update-turn-dns.sh` runs every 5 min (cron), updates the Cloudflare A record for `turn.tilawah.cc`, and restarts coturn only when the IP changed.
 
 ### Deployment
 
@@ -136,7 +136,7 @@ publishes the admin port and the peer port `6881` (TCP+UDP) and keeps
 a Watchtower update never discards downloaded audio.
 
 Then add to console:
-1. Go to https://admin-tilawa.quran.us.kg
+1. Go to https://console.tilawah.cc
 2. Navigate to **Seeders** → **Add Seeder**
 3. Name: server hostname
 4. URL: `http://<server-ip>:8085`
@@ -150,11 +150,11 @@ the node keeps seeding.
 ### TURN Server (Native)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type turn --turn-realm turn.quran.us.kg --turn-user opentilawa --turn-pass YOUR_PASSWORD
+curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type turn --turn-realm turn.tilawah.cc --turn-user opentilawa --turn-pass YOUR_PASSWORD
 ```
 
 Then add to console:
-1. Go to https://admin-tilawa.quran.us.kg
+1. Go to https://console.tilawah.cc
 2. Navigate to **TURN Servers** → **Add TURN Server**
 3. Name: `hostname-turn`
 4. URL: `turn:<server-ip>:3478`
@@ -172,6 +172,6 @@ Then add to console:
 | ADMIN_UI | 1 | `0` keeps the admin API and hides the browsable page |
 | PEER_PORT (`--peer-port`) | 6881 | Inbound peer port, published TCP+UDP |
 | WATCHTOWER (`--watchtower`) | 0 | `1` adds a label-scoped Watchtower to follow image releases |
-| TURN_REALM | turn.quran.us.kg | TURN realm |
+| TURN_REALM | turn.tilawah.cc | TURN realm |
 | TURN_USER | opentilawa | TURN username |
 | TURN_PASS | (auto-generated) | TURN password |

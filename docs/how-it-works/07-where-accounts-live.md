@@ -5,7 +5,7 @@
 There is no account server. Your account is a keypair, and the graph behind that
 keypair lives on one self-hosted Gun relay:
 
-- `wss://gundb-relay.quran.us.kg/gun` → cloudflared → the `gun` container on
+- `wss://gun.tilawah.cc/gun` → cloudflared → the `gun` container on
   `localhost:8765`.
 - The relay is its own container, **not** part of the compose project. Rebuilding
   the app never touches it.

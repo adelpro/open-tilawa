@@ -8,7 +8,7 @@
  * zer0day, empire-js, …) is gone: they only produced timeout noise.
  */
 const TRACKERS = [
-  'wss://tracker.quran.us.kg',
+  'wss://tracker.tilawah.cc',
   'wss://tracker.webtorrent.dev:443/announce',
   'wss://tracker.files.fm:7073/announce',
   'wss://tracker.openwebtorrent.com:443/announce',

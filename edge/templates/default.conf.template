@@ -6,7 +6,7 @@ resolver 127.0.0.11 valid=10s ipv6=off;
 # Web frontend (default) — serves the React/Vite SPA
 server {
   listen 80 default_server;
-  server_name _ tilawa.quran.us.kg staging-tilawa.quran.us.kg;
+  server_name _ tilawah.cc;
 
   location / {
     set $web_upstream http://web:80;
@@ -26,7 +26,7 @@ server {
 # WebTorrent tracker — WebSocket + HTTP
 server {
   listen 80;
-  server_name tracker.quran.us.kg;
+  server_name tracker.tilawah.cc;
 
   location / {
     set $tracker_upstream http://tracker:${TRACKER_PORT};
@@ -52,10 +52,13 @@ server {
   }
 }
 
-# Seeder admin UI
+# Seeder admin UI.
+# NOTE: not routed by the tilawah.cc tunnel. Add `seeder.tilawah.cc` to
+# ~/cloudflared-tilawah/config.yml and its DNS if this door should be public;
+# otherwise reach the seeder over loopback (127.0.0.1:8085).
 server {
   listen 80;
-  server_name admin.tilawa.quran.us.kg;
+  server_name seeder.tilawah.cc;
 
   location / {
     set $seeder_upstream http://seeder:8085;

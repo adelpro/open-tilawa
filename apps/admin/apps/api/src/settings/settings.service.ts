@@ -11,10 +11,10 @@ import type { Db } from '@tilawa-admin/core';
  * validator is strict so a `udp://` line cannot silently produce a magnet the
  * browser ignores.
  */
-export const DEFAULT_TRACKERS = ['wss://tracker.quran.us.kg'] as const;
+export const DEFAULT_TRACKERS = ['wss://tracker.tilawah.cc'] as const;
 
 /** Where `.torrent` files and /media are served; the magnet's `xs` points here. */
-export const DEFAULT_WEB_ORIGIN = 'https://tilawa.quran.us.kg';
+export const DEFAULT_WEB_ORIGIN = 'https://tilawah.cc';
 
 @Injectable()
 export class SettingsService {
