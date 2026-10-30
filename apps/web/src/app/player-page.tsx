@@ -30,6 +30,7 @@ import type { Reciter } from '@/types';
 import { seekBy } from '@/utils/clamp';
 import { cn } from '@/utils/cn';
 import type { StreamSource } from '@/utils/stream-source';
+import { streamSourceFor } from '@/utils/stream-source';
 import { surahIdOf } from '@/utils/surah-id';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
 import { riwayaLabel } from '@/utils/riwaya';
@@ -224,14 +225,10 @@ export default function PlayerPage({
    * so "webseed" alone stopped being the truth the moment a peer connected:
    * both sources run concurrently, and the label has to say so.
    */
-  const source: StreamSource =
-    torrent?.webSeed === 'active'
-      ? (torrent?.peers ?? 0) > 0
-        ? 'mixed'
-        : 'webseed'
-      : (torrent?.peers ?? 0) > 0
-        ? 'connected'
-        : 'waiting';
+  const source: StreamSource = streamSourceFor({
+    webSeed: torrent?.webSeed,
+    peers: torrent?.peers ?? 0,
+  });
 
   return (
     <>

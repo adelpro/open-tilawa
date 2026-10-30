@@ -15,3 +15,31 @@ export function iconForSource(source: StreamSource): IconName {
   if (source === 'connected') return 'wifi';
   return 'server';
 }
+
+/**
+ * What is feeding the stream *now*.
+ *
+ * The web seed is never removed once added, so "webseed" alone stopped being the
+ * truth the moment a peer connected: both sources run concurrently. Stated once
+ * here so the footer's glyph and the telemetry counter cannot tell different
+ * stories about the same stream.
+ */
+export function streamSourceFor(state: {
+  webSeed?: 'active' | 'off';
+  peers?: number;
+}): StreamSource {
+  const peers = state.peers ?? 0;
+  if (state.webSeed === 'active') return peers > 0 ? 'mixed' : 'webseed';
+  return peers > 0 ? 'connected' : 'waiting';
+}
+
+/**
+ * The same state, said in the two words telemetry accepts.
+ *
+ * `waiting` and `connected` are a torrent; `webseed` and `mixed` mean the HTTP
+ * copy our own node serves fed the sound, which is the fallback the counter asks
+ * about.
+ */
+export function telemetrySource(source: StreamSource): 'torrent' | 'webseed' {
+  return source === 'webseed' || source === 'mixed' ? 'webseed' : 'torrent';
+}

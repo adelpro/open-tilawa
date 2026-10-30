@@ -90,3 +90,64 @@ export function msToPlayBucket(ms: number): TelemetryEvent['msToPlay'] {
   if (ms < 10_000) return '3-10s';
   return '10s+';
 }
+
+/**
+ * The event the player builds when sound actually starts.
+ *
+ * `msToPlay` is the raw wait and leaves here as a band; omitted when no clock was
+ * taken, because "unknown" must not become "slowest".
+ */
+export function playEvent(input: {
+  reciter: string;
+  surah: number;
+  source: TelemetryEvent['source'];
+  version: string;
+  locale: TelemetryEvent['locale'];
+  msToPlay?: number;
+}): TelemetryEvent {
+  const event: TelemetryEvent = {
+    event: 'play',
+    reciter: input.reciter,
+    surah: input.surah,
+    source: input.source,
+    version: input.version,
+    locale: input.locale,
+  };
+  if (typeof input.msToPlay === 'number') event.msToPlay = msToPlayBucket(input.msToPlay);
+  return event;
+}
+
+/** A code, never a message: the browser's text can carry a URL or a device name. */
+export function mediaErrorCode(code?: number | null): string {
+  switch (code) {
+    case 1:
+      return 'MEDIA_ERR_ABORTED';
+    case 2:
+      return 'MEDIA_ERR_NETWORK';
+    case 3:
+      return 'MEDIA_ERR_DECODE';
+    case 4:
+      return 'MEDIA_ERR_SRC_NOT_SUPPORTED';
+    default:
+      return 'unknown';
+  }
+}
+
+export function errorEvent(input: {
+  reciter: string;
+  surah: number;
+  source: TelemetryEvent['source'];
+  version: string;
+  locale: TelemetryEvent['locale'];
+  code?: number | null;
+}): TelemetryEvent {
+  return {
+    event: 'error',
+    reciter: input.reciter,
+    surah: input.surah,
+    source: input.source,
+    errorCode: mediaErrorCode(input.code),
+    version: input.version,
+    locale: input.locale,
+  };
+}

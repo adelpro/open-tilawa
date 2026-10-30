@@ -27,7 +27,7 @@ import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
 import { currentSurahIdAtom } from './jotai/player';
 import { toPath } from './routes';
-import { createTelemetry } from './utils/telemetry';
+import { createTelemetry, type TelemetryEvent } from './utils/telemetry';
 import {
   consentEnabled,
   readConsent,
@@ -170,6 +170,25 @@ export default function App() {
     if (!consentEnabled(value)) telemetry.current.stop();
   };
 
+  /**
+   * A tab can go away between two 30-second ticks. Flush what is queued before it
+   * does; the sender's `keepalive` is what lets the request finish.
+   */
+  useEffect(() => {
+    const flush = () => {
+      void telemetry.current.flush();
+    };
+    const onHidden = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onHidden);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onHidden);
+    };
+  }, []);
+
   const reciter = useAtomValue(selectedReciterAtom);
 
   const chooseRate = (next: number) => {
@@ -287,7 +306,13 @@ export default function App() {
           Audio it cannot be released, and a cross-origin host would play silent. */}
       {/* `p2p` while the reciter is still unknown, so boot does not remount the
           engine and abort the session open. */}
-      <AudioEngine route={route} key={reciter && !reciter.magnet ? 'http' : 'p2p'} />
+      <AudioEngine
+        route={route}
+        record={(event: TelemetryEvent) => {
+          telemetry.current.record(event);
+        }}
+        key={reciter && !reciter.magnet ? 'http' : 'p2p'}
+      />
     </ErrorBoundary>
   );
 }

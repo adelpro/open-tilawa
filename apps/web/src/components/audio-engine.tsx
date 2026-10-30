@@ -22,6 +22,9 @@ import { useLocale } from '@/hooks/use-locale';
 import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
 import { ensureAnalyser } from '@/utils/audio-analyser';
+import { APP_VERSION } from '@/constants/version';
+import { errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
+import { streamSourceFor, telemetrySource } from '@/utils/stream-source';
 
 /**
  * The only <audio> element in the app, mounted once next to the page.
@@ -71,7 +74,14 @@ async function loadWebTorrent(): Promise<void> {
   });
 }
 
-export default function AudioEngine({ route }: { route: Parsed }) {
+export default function AudioEngine({
+  route,
+  record,
+}: {
+  route: Parsed;
+  /** The consent gate lives above: this only reports, the caller decides. */
+  record: (event: TelemetryEvent) => void;
+}) {
   const { torrentInfo, error } = useTorrent();
   const setTorrent = useSetAtom(torrentAtom);
   const setTorrentError = useSetAtom(torrentErrorAtom);
@@ -96,6 +106,15 @@ export default function AudioEngine({ route }: { route: Parsed }) {
 
   const fileCount = files.length;
   const magnetURI = torrentInfo?.magnetURI ?? '';
+
+  /** What is feeding the sound right now, in the two words telemetry accepts. */
+  const source = telemetrySource(
+    streamSourceFor({ webSeed: torrentInfo?.webSeed, peers: torrentInfo?.peers }),
+  );
+  /** When play was asked for, so the first sound can be reported as a band. */
+  const startedAtRef = useRef(0);
+  /** The surah already counted, so a resume or a re-buffer is not a second play. */
+  const recordedForRef = useRef<string | null>(null);
 
   /** Mirror the torrent hook into atoms so the page can read it. */
   useEffect(() => {
@@ -180,6 +199,7 @@ export default function AudioEngine({ route }: { route: Parsed }) {
     if (isPlaying) {
       // The graph needs a gesture; this is one. If it fails, audio still plays.
       ensureAnalyser(audio);
+      startedAtRef.current = Date.now();
       audio.play().catch(() => setIsPlaying(false));
     } else {
       audio.pause();
@@ -316,13 +336,44 @@ export default function AudioEngine({ route }: { route: Parsed }) {
       // captureStream() has no audio track until the element is actually
       // rendering, so the analyser is attached once playback starts as well as
       // before it.
-      onPlaying={(event) => ensureAnalyser(event.currentTarget)}
+      onPlaying={(event) => {
+        ensureAnalyser(event.currentTarget);
+        if (!reciter || typeof surahId !== 'number') return;
+        // One play per surah: a resume, a seek or a re-buffer is the same play.
+        const key = `${reciter.id}:${surahId}`;
+        if (recordedForRef.current === key) return;
+        recordedForRef.current = key;
+        const play = playEvent({
+          reciter: reciter.slug || reciter.name,
+          surah: surahId,
+          source,
+          version: APP_VERSION,
+          locale,
+          msToPlay: startedAtRef.current ? Date.now() - startedAtRef.current : undefined,
+        });
+        record(play);
+        // The web seed fed this one: the swarm gave us nothing in time.
+        if (source === 'webseed') record({ ...play, event: 'fallback' });
+      }}
       onSeeked={() => {
         persist();
         flushPosition();
       }}
       onEnded={() => next()}
-      onError={() => console.error('Audio playback error')}
+      onError={(event) => {
+        console.error('Audio playback error');
+        if (!reciter || typeof surahId !== 'number') return;
+        record(
+          errorEvent({
+            reciter: reciter.slug || reciter.name,
+            surah: surahId,
+            source,
+            version: APP_VERSION,
+            locale,
+            code: event.currentTarget.error?.code,
+          }),
+        );
+      }}
       className="hidden"
       preload="metadata"
     />

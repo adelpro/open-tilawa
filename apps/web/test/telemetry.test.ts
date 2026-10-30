@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { createTelemetry, msToPlayBucket, type TelemetryEvent } from '../src/utils/telemetry.ts';
+import { createTelemetry, errorEvent, msToPlayBucket, playEvent, type TelemetryEvent } from '../src/utils/telemetry.ts';
 
 const event = (over: Partial<TelemetryEvent> = {}): TelemetryEvent => ({
   event: 'play',
@@ -74,4 +74,52 @@ test('start time is reported as a band, never a number', () => {
   assert.equal(msToPlayBucket(8000), '3-10s');
   assert.equal(msToPlayBucket(42_000), '10s+');
   assert.equal(msToPlayBucket(Number.NaN), '10s+');
+});
+
+test('a play event names the surah, the source and the band it started in', () => {
+  const built = playEvent({
+    reciter: 'maher-al-muaiqly',
+    surah: 18,
+    source: 'webseed',
+    version: '1.10.7',
+    locale: 'ar',
+    msToPlay: 2500,
+  });
+
+  assert.deepEqual(built, {
+    event: 'play',
+    reciter: 'maher-al-muaiqly',
+    surah: 18,
+    source: 'webseed',
+    version: '1.10.7',
+    locale: 'ar',
+    msToPlay: '1-3s',
+  });
+});
+
+test('a play event with no clock leaves the band out instead of inventing one', () => {
+  const built = playEvent({
+    reciter: 'maher-al-muaiqly',
+    surah: 18,
+    source: 'torrent',
+    version: '1.10.7',
+    locale: 'en',
+  });
+
+  assert.equal('msToPlay' in built, false);
+});
+
+test('an error event carries the media error by name, never the code number', () => {
+  const base = {
+    reciter: 'maher-al-muaiqly',
+    surah: 2,
+    source: 'torrent' as const,
+    version: '1.10.7',
+    locale: 'ar' as const,
+  };
+
+  assert.equal(errorEvent({ ...base, code: 4 }).errorCode, 'MEDIA_ERR_SRC_NOT_SUPPORTED');
+  assert.equal(errorEvent({ ...base, code: 2 }).errorCode, 'MEDIA_ERR_NETWORK');
+  assert.equal(errorEvent({ ...base }).errorCode, 'unknown');
+  assert.equal(errorEvent({ ...base, code: 2 }).event, 'error');
 });
