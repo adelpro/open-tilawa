@@ -41,6 +41,45 @@ export function follow(current: number, target: number, attack: number, release:
   return current + (target - current) * (target > current ? attack : release);
 }
 
+/** The band a recitation lives in. Below 70 Hz is rumble; above 16 kHz is air. */
+const LOG_MIN_HZ = 90;
+const LOG_MAX_HZ = 16000;
+
+/**
+ * Peak level of each log-spaced band, bass first.
+ *
+ * The bars' buckets are nearly linear in frequency, and over 28 columns that is
+ * fine. The ribbon is one continuous silhouette, and on a linear axis the top
+ * octave takes as much of the width as the four below it — where a recitation
+ * has nothing, so the strip ended in a long flat tail that read as a wave which
+ * stopped short of the edge. A log axis spends the width the way the ear does:
+ * two thirds of the silhouette on the band that carries the voice, and only the
+ * last few columns fading out.
+ */
+export function logBands(
+  bins: Uint8Array,
+  columns: number,
+  sampleRate: number,
+  minHz = LOG_MIN_HZ,
+  maxHz = LOG_MAX_HZ,
+): number[] {
+  const binHz = sampleRate / 2 / bins.length;
+  const octaves = maxHz / minHz;
+  const out: number[] = [];
+  for (let i = 0; i < columns; i += 1) {
+    const low = (minHz * Math.pow(octaves, i / columns)) / binHz;
+    const high = (minHz * Math.pow(octaves, (i + 1) / columns)) / binHz;
+    // Bin 0 is DC. It carries no audio, and reading it leaves a notch in the
+    // first column — a gap at the very edge of the strip.
+    const start = Math.max(1, Math.floor(low));
+    const end = Math.min(bins.length, Math.max(start + 1, Math.ceil(high)));
+    let peak = 0;
+    for (let j = start; j < end; j += 1) if (bins[j] > peak) peak = bins[j];
+    out.push(peak / 255);
+  }
+  return out;
+}
+
 /** `#abc` and `#aabbcc` both, because the tokens are hand-edited. */
 function parseHex(value: string): [number, number, number] {
   const raw = value.trim().replace(/^#/, '');

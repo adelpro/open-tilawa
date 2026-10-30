@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   downsample,
   follow,
+  logBands,
   mixHex,
   normaliseVisualiser,
   VISUALISERS,
@@ -27,6 +28,42 @@ test('downsample keeps the peak of each bucket and normalises it', () => {
   assert.equal(out.length, 4);
   assert.equal(out[0], 1);
   assert.ok(out.every((v) => v >= 0 && v <= 1));
+});
+
+// The bars' buckets are nearly linear in frequency, which is fine for 28 columns
+// of a display. The ribbon needs a log axis: a recitation has nothing above
+// ~8 kHz, so a linear map spends half the strip on silence.
+test('logBands spreads the axis by octave and puts 1 kHz in the middle', () => {
+  const bins = new Uint8Array(512);
+  const columns = 56;
+  const rate = 48000;
+  const band = logBands(bins, columns, rate);
+  assert.equal(band.length, columns);
+  assert.ok(band.every((v) => v === 0));
+
+  // Just over five octaves from 90 Hz to 16 kHz, so the middle column has to
+  // sit near 1 kHz — not near 8 kHz, where a linear axis put it.
+  const binHz = rate / 2 / bins.length;
+  const middle = Math.round(Math.sqrt(90 * 16000) / binHz);
+  bins[middle] = 255;
+  const lit = logBands(bins, columns, rate);
+  const hottest = lit.indexOf(Math.max(...lit));
+  assert.ok(hottest >= 24 && hottest <= 31, `1 kHz landed in column ${hottest}`);
+});
+
+// Bin 0 is DC. Drawing it leaves a notch at the bass edge of the ribbon — the
+// very edge the eye reads as "the wave stops short".
+test('logBands never spends a column on the DC bin', () => {
+  const bins = new Uint8Array(512);
+  bins[0] = 255;
+  assert.ok(logBands(bins, 56, 48000).every((v) => v === 0));
+});
+
+test('logBands clamps its top band to the bins it was given', () => {
+  const bins = new Uint8Array(64);
+  const band = logBands(bins, 8, 48000);
+  assert.equal(band.length, 8);
+  assert.ok(band.every((v) => v >= 0 && v <= 1));
 });
 
 test('mixHex walks one colour toward another and clamps its position', () => {

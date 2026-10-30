@@ -4,6 +4,7 @@ import { getAnalyser } from '@/utils/audio-analyser';
 import {
   downsample,
   follow,
+  logBands,
   waveTints,
   type Visualiser as Model,
 } from '@/utils/visualiser-models';
@@ -228,9 +229,10 @@ export default function Visualiser({
       if (analyser && fresh) {
         analyser.getByteFrequencyData(bins);
         if (model === 'ribbon') {
-          // The same spectrum the bars read, twice as finely and with one
-          // follower per layer: a band lifts and sinks where it stands.
-          const target = downsample(bins, RIBBON_POINTS);
+          // Log-spaced bands, not the bars' nearly-linear buckets: the top
+          // octave of a recitation is empty, and on a linear axis it would take
+          // half the strip and leave the wave looking cut off.
+          const target = logBands(bins, RIBBON_POINTS, analyser.context.sampleRate);
           WAVES.forEach((style, layer) => {
             const samples = waves.current[layer];
             for (let i = 0; i < samples.length; i += 1) {
