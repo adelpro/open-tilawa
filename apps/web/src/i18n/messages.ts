@@ -6,6 +6,24 @@
 export const LOCALES = ['ar', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 
+import type { RelativeUnit } from '@/utils/relative-time';
+
+/**
+ * Arabic counts agree with the noun by number: 3–10 take the plural (أشهر),
+ * 11–99 the singular accusative (شهرًا), and 100+ the plain singular (شهر).
+ * One and two are their own words, so the preposition travels with them.
+ */
+function arabicAgo(
+  n: number,
+  forms: { one: string; two: string; few: string; many: string; plain: string },
+): string {
+  if (n === 1) return forms.one;
+  if (n === 2) return forms.two;
+  if (n <= 10) return `قبل ${n} ${forms.few}`;
+  if (n < 100) return `قبل ${n} ${forms.many}`;
+  return `قبل ${n} ${forms.plain}`;
+}
+
 const ar = {
   brand: 'تلاوة',
   menu: { open: 'القائمة', close: 'إغلاق القائمة', more: 'المزيد' },
@@ -98,9 +116,25 @@ const ar = {
     thisDevice: 'هذا الجهاز',
     primary: 'الأساسي',
     lastSeen: (when: string) => `آخر ظهور ${when}`,
-    justNow: 'الآن',
-    minutesAgo: (n: number) => `قبل ${n} دقيقة`,
-    hoursAgo: (n: number) => `قبل ${n} ساعة`,
+    added: (when: string) => `أُضيف ${when}`,
+    ago: (unit: RelativeUnit, n: number): string => {
+      switch (unit) {
+        case 'now':
+          return 'الآن';
+        case 'minute':
+          return arabicAgo(n, { one: 'قبل دقيقة', two: 'قبل دقيقتين', few: 'دقائق', many: 'دقيقة', plain: 'دقيقة' });
+        case 'hour':
+          return arabicAgo(n, { one: 'قبل ساعة', two: 'قبل ساعتين', few: 'ساعات', many: 'ساعة', plain: 'ساعة' });
+        case 'day':
+          return arabicAgo(n, { one: 'قبل يوم', two: 'قبل يومين', few: 'أيام', many: 'يومًا', plain: 'يوم' });
+        case 'week':
+          return arabicAgo(n, { one: 'قبل أسبوع', two: 'قبل أسبوعين', few: 'أسابيع', many: 'أسبوعًا', plain: 'أسبوع' });
+        case 'month':
+          return arabicAgo(n, { one: 'قبل شهر', two: 'قبل شهرين', few: 'أشهر', many: 'شهرًا', plain: 'شهر' });
+        case 'year':
+          return arabicAgo(n, { one: 'قبل سنة', two: 'قبل سنتين', few: 'سنوات', many: 'سنة', plain: 'سنة' });
+      }
+    },
     signOutTitle: 'تسجيل الخروج',
     signOutSafe: 'أجهزتك الأخرى تبقى مسجّلة. هذا المتصفح ينسى المفتاح ويحتاج رمز ربط جديداً.',
     signOutLast:
@@ -354,9 +388,25 @@ const en: typeof ar = {
     thisDevice: 'this device',
     primary: 'primary',
     lastSeen: (when: string) => `last seen ${when}`,
-    justNow: 'just now',
-    minutesAgo: (n: number) => `${n} min ago`,
-    hoursAgo: (n: number) => `${n} h ago`,
+    added: (when: string) => `added ${when}`,
+    ago: (unit: RelativeUnit, n: number): string => {
+      switch (unit) {
+        case 'now':
+          return 'just now';
+        case 'minute':
+          return n === 1 ? '1 min ago' : `${n} min ago`;
+        case 'hour':
+          return n === 1 ? '1 hour ago' : `${n} hours ago`;
+        case 'day':
+          return n === 1 ? '1 day ago' : `${n} days ago`;
+        case 'week':
+          return n === 1 ? '1 week ago' : `${n} weeks ago`;
+        case 'month':
+          return n === 1 ? '1 month ago' : `${n} months ago`;
+        case 'year':
+          return n === 1 ? '1 year ago' : `${n} years ago`;
+      }
+    },
     signOutTitle: 'Sign out',
     signOutSafe:
       'Your other devices stay signed in. This browser forgets the key and will need a new pairing code.',

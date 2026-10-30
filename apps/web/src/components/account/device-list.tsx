@@ -8,6 +8,7 @@ import { useUserSync } from '@/hooks/use-user-sync';
 import { useLocale } from '@/hooks/use-locale';
 import { getOrCreateDeviceId } from '@/utils/device/device-id';
 import { setDeviceName } from '@/utils/device/device-name';
+import { relativeTime } from '@/utils/relative-time';
 
 type Device = {
   id: string;
@@ -29,14 +30,15 @@ export default function DeviceList() {
 
   const currentId = getOrCreateDeviceId();
 
-  const when = (ts?: number): string => {
+  /** "3 months ago" — the words come from the locale, the unit from here. */
+  const ago = (ts?: number): string => {
     if (!ts) return '—';
-    const diff = Date.now() - ts;
-    if (diff < 60_000) return copy.justNow;
-    if (diff < 3_600_000) return copy.minutesAgo(Math.floor(diff / 60_000));
-    if (diff < 86_400_000) return copy.hoursAgo(Math.floor(diff / 3_600_000));
-    return new Date(ts).toLocaleDateString();
+    const relative = relativeTime(ts);
+    return copy.ago(relative.unit, relative.value);
   };
+
+  const exact = (ts?: number): string | undefined =>
+    ts ? new Date(ts).toLocaleString() : undefined;
 
   const rows = Object.values(devices || {})
     .filter((d): d is Device => Boolean(d?.id))
@@ -96,19 +98,31 @@ export default function DeviceList() {
                     {device.name || 'Device'}
                   </button>
                 )}
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-[0.75rem] text-muted">
-                  <span>{copy.lastSeen(when(device.lastSeen))}</span>
-                  {isThis ? (
-                    <span className="rounded-full bg-line px-2 py-1 text-[0.75rem] text-ink">
-                      {copy.thisDevice}
-                    </span>
-                  ) : null}
-                  {isPrimary ? (
-                    <span className="rounded-full bg-line px-2 py-1 text-[0.75rem] text-ink">
-                      {copy.primary}
-                    </span>
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem] text-muted">
+                  <span title={exact(device.lastSeen)}>
+                    {copy.lastSeen(ago(device.lastSeen))}
+                  </span>
+                  {device.linkedAt ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span title={exact(device.linkedAt)}>{copy.added(ago(device.linkedAt))}</span>
+                    </>
                   ) : null}
                 </div>
+                {isThis || isPrimary ? (
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[0.75rem] text-muted">
+                    {isThis ? (
+                      <span className="rounded-full bg-line px-2 py-1 text-[0.75rem] text-ink">
+                        {copy.thisDevice}
+                      </span>
+                    ) : null}
+                    {isPrimary ? (
+                      <span className="rounded-full bg-line px-2 py-1 text-[0.75rem] text-ink">
+                        {copy.primary}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
               </li>
             );
           })

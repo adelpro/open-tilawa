@@ -11,6 +11,7 @@ import {
   userSettingsAtom,
 } from '@/jotai/gun';
 import { getOrCreateDeviceId } from '@/utils/device/device-id';
+import { getOrCreateDeviceLinkedAt } from '@/utils/device/device-linked-at';
 import { getOrCreateDeviceName } from '@/utils/device/device-name';
 import { readLocalFavorites, writeLocalFavorites } from '@/utils/favorites-local';
 import type { StoredSettings } from '@/hooks/use-persistence';
@@ -30,6 +31,9 @@ export function touchDevice(name?: string): void {
     name: name || getOrCreateDeviceName(),
     pub: user.is.pub,
     lastSeen: Date.now(),
+    // Written on every touch but never recomputed: the row is rewritten on the
+    // heartbeat, and the join date has to stay the join date.
+    linkedAt: getOrCreateDeviceLinkedAt(),
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
   };
   getDefaultStore().set(userDevicesAtom, (prev) => ({ ...prev, [deviceId]: row }));
@@ -180,7 +184,13 @@ export function useUserSync() {
     });
 
     touchDevice();
-    const heartbeat = setInterval(() => touchDevice(), 120_000);
+    // Five minutes, and only while the tab is visible: `lastSeen` is a hint, and
+    // a background tab writing forever is relay storage nobody reads.
+    const heartbeat = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        touchDevice();
+      }
+    }, 5 * 60_000);
 
     return () => {
       cancelled = true;
