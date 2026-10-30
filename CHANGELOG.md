@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.10.3 — 2026-10-30
+
+Patch. App versions: **web 1.10.3**, **admin 1.29.1**, **seeder 1.4.3**.
+
+### Changed
+
+- **The player's title is a colophon.** The desktop stage opened with a 56px
+  surah name floating at 22vh and a 16px reciter line 72px under it — two bare
+  strings in an empty screen, with the "open" chevrons at 30% opacity and only on
+  hover. It is one anchored block now: the surah number in a hairline seal, the
+  name at `clamp(32px, 3.4vw, 52px)` with no negative tracking (the old value
+  broke the rule against negative tracking on Arabic), the reciter as a real pill
+  that carries the riwaya when the catalogue knows it, and the verse count and
+  juz as the quiet last line. The block uses the `.theatre-title` class the
+  stylesheet already carried, so a pinned panel finally centres it on the stage
+  instead of the whole viewport.
+
 ## 1.10.2 — 2026-10-30
 
 Patch. App versions: **web 1.10.2**, **admin 1.29.1**, **seeder 1.4.3**.
