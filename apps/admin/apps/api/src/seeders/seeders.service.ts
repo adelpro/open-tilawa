@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { readFileSync } from 'node:fs';
 import { SQLITE_DB } from '../store/store.module';
 import { AuditRepository, isExpired, nextPlacementState, type Db } from '@tilawa-admin/core';
+import { TelemetryService } from '../telemetry/telemetry.service';
 import { updateSeederService } from './seeder-update';
 
 /** Seeder admin calls are bounded: a hung seeder must not hang the console. */
@@ -120,6 +121,7 @@ export class SeedersService {
     @Inject(SQLITE_DB) private readonly db: Db,
     private readonly config: ConfigService,
     private readonly audit: AuditRepository,
+    private readonly telemetry: TelemetryService,
   ) {
     this.ensureSchema();
   }
@@ -368,6 +370,17 @@ export class SeedersService {
     } catch (error) {
       this.logger.debug(`node ${id} inventory unavailable: ${(error as Error).message}`);
       return;
+    }
+
+    // The upload counters arrived with the same response, so the volume sample is
+    // free. A failure here is telemetry's problem, never the node's: placement
+    // reconciliation must not stop because a byte count could not be written.
+    try {
+      const bytes = this.telemetry.recordUploads(id, torrents);
+      if (bytes > 0)
+        this.logger.debug(`node ${id} uploaded ${bytes} byte(s) since the last sample`);
+    } catch (error) {
+      this.logger.warn(`upload sample of node ${id} failed: ${(error as Error).message}`);
     }
 
     const now = new Date().toISOString();

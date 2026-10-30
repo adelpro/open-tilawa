@@ -33,6 +33,10 @@ COPY --from=build /app/libs/core/package.json ./libs/core/package.json
 COPY --from=build /app/libs/core/dist ./libs/core/dist
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build /app/apps/api/dist ./apps/api/dist
+# The media log volume is mounted here read-only, but a named volume is initialised
+# by whichever container mounts it first: if that is this one, the directory must
+# already exist and be writable by nginx in the web container.
+RUN mkdir -p /var/log/tilawa && chmod 1777 /var/log/tilawa
 USER node
 EXPOSE 9310
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

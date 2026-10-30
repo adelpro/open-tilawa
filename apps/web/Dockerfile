@@ -23,5 +23,11 @@ RUN npm run build
 FROM nginx:alpine AS runner
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+# The volume log lives here. A named volume inherits this directory's ownership on
+# first use, and the worker (not the master) opens a path that contains variables,
+# so the directory must be writable by whatever user the container runs. 1777
+# because whichever container mounts the volume first must not lock the other out,
+# and the lines carry no address.
+RUN mkdir -p /var/log/tilawa && chmod 1777 /var/log/tilawa
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

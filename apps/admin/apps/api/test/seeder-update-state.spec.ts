@@ -2,6 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 import { ConfigService } from '@nestjs/config';
 import { AuditRepository, openDatabase } from '@tilawa-admin/core';
 import { SeedersService } from '../src/seeders/seeders.service';
+import { TelemetryService } from '../src/telemetry/telemetry.service';
 
 /**
  * Update state has to outlive the process that observed it.
@@ -13,7 +14,12 @@ import { SeedersService } from '../src/seeders/seeders.service';
 describe('seeder update state', () => {
   function build() {
     const db = openDatabase(':memory:');
-    const service = new SeedersService(db, new ConfigService({}), new AuditRepository(db));
+    const service = new SeedersService(
+      db,
+      new ConfigService({}),
+      new AuditRepository(db),
+      new TelemetryService(db),
+    );
     return { db, service };
   }
 
@@ -38,7 +44,12 @@ describe('seeder update state', () => {
     ).run();
     expect(service.list()).toHaveLength(1);
 
-    const restarted = new SeedersService(db, new ConfigService({}), new AuditRepository(db));
+    const restarted = new SeedersService(
+      db,
+      new ConfigService({}),
+      new AuditRepository(db),
+      new TelemetryService(db),
+    );
     expect(restarted.list()[0].updateError).toBe('compose upstream');
   });
 
@@ -48,7 +59,12 @@ describe('seeder update state', () => {
       "INSERT INTO seeders (name, url, last_update_running) VALUES ('n', 'http://n:1', 1)",
     ).run();
 
-    const restarted = new SeedersService(db, new ConfigService({}), new AuditRepository(db));
+    const restarted = new SeedersService(
+      db,
+      new ConfigService({}),
+      new AuditRepository(db),
+      new TelemetryService(db),
+    );
     expect(restarted.list()[0].updating).toBe(false);
   });
 });

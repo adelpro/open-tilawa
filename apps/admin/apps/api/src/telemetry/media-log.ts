@@ -10,6 +10,18 @@
  */
 export type MediaLine = { reciter: string; surah: number; bytes: number };
 
+/**
+ * The day a log file covers, from its name (`media-<host>-<YYYY-MM-DD>.log`).
+ *
+ * nginx writes the path with variables in it, so the file itself is the only
+ * clock: one line carries no date at all, by design — the format is deliberately
+ * narrower than `combined` so the log is small and holds no address.
+ */
+export function dayFromFile(name: string): string | null {
+  const match = /^media-.+-(\d{4}-\d{2}-\d{2})\.log$/.exec(name);
+  return match ? match[1] : null;
+}
+
 const MEDIA = /"GET \/media\/([^/]+)\/(\d{3})\.mp3[^"]*" (\d{3}) (\d+)/;
 
 export function parseMediaLines(lines: string[]): MediaLine[] {

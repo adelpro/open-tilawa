@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { createTelemetry, errorEvent, msToPlayBucket, playEvent, type TelemetryEvent } from '../src/utils/telemetry.ts';
+import {
+  createTelemetry,
+  deviceEvent,
+  errorEvent,
+  msToPlayBucket,
+  playEvent,
+  type TelemetryEvent,
+} from '../src/utils/telemetry.ts';
 
 const event = (over: Partial<TelemetryEvent> = {}): TelemetryEvent => ({
   event: 'play',
@@ -122,4 +129,21 @@ test('an error event carries the media error by name, never the code number', ()
   assert.equal(errorEvent({ ...base, code: 2 }).errorCode, 'MEDIA_ERR_NETWORK');
   assert.equal(errorEvent({ ...base }).errorCode, 'unknown');
   assert.equal(errorEvent({ ...base, code: 2 }).event, 'error');
+});
+
+test('a device event carries the day\'s verb and nothing that could identify it', () => {
+  const event = deviceEvent({ version: '1.12.2', locale: 'ar' });
+  assert.deepEqual(event, { event: 'device', version: '1.12.2', locale: 'ar' });
+  assert.deepEqual(Object.keys(event).sort(), ['event', 'locale', 'version']);
+});
+
+test('a device event is batched like any other, and dropped when the switch is off', async () => {
+  const sent: TelemetryEvent[][] = [];
+  const telemetry = createTelemetry({ enabled: () => true, send: async (batch) => void sent.push(batch) });
+
+  telemetry.record(deviceEvent({ version: '1.12.2', locale: 'en' }));
+  await telemetry.flush();
+
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0][0].event, 'device');
 });

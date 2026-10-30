@@ -563,6 +563,44 @@ a.node-card__name:hover {
   }
 }
 
+/* ---------- segmented control ---------- */
+
+/* A range is a filter, not three actions. One track, one filled segment: the old
+   loose buttons read as three verbs and their bare numbers never said "days". */
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--canvas-parchment);
+}
+.segmented__item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  min-height: 34px;
+  font: var(--caption-strong);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.segmented__item:hover {
+  color: var(--ink);
+}
+.segmented__item[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--canvas);
+}
+@media (pointer: coarse) {
+  .segmented__item {
+    min-height: 44px;
+    padding: 9px 16px;
+  }
+}
+
 /* ---------- tables ---------- */
 
 .table {
@@ -622,6 +660,24 @@ a.node-card__name:hover {
 .table .num {
   text-align: end;
   font: var(--code);
+}
+
+/* A share bar inside a cell. It repeats a number that is already in the row, so
+   it is hidden from assistive tech and drawn with the one graphic token. */
+.share {
+  display: block;
+  inline-size: 7rem;
+  max-inline-size: 100%;
+  block-size: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+  overflow: hidden;
+}
+.share__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--primary);
 }
 
 /* ---------- the toolchain chain ---------- */

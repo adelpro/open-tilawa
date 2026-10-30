@@ -1,4 +1,4 @@
-export type TelemetryEvent = {
+export type PlayTelemetryEvent = {
   event: 'play' | 'complete' | 'error' | 'fallback';
   reciter: string;
   surah: number;
@@ -8,6 +8,21 @@ export type TelemetryEvent = {
   version: string;
   locale: 'ar' | 'en';
 };
+
+/**
+ * One per consenting device per day, and nothing else.
+ *
+ * It exists because "how many devices listen" cannot be answered by a play count:
+ * one listener plays thirty surahs. The answer costs no identifier — the day is
+ * the whole payload, so the server counts rows and cannot join two days.
+ */
+export type DeviceTelemetryEvent = {
+  event: 'device';
+  version: string;
+  locale: 'ar' | 'en';
+};
+
+export type TelemetryEvent = PlayTelemetryEvent | DeviceTelemetryEvent;
 
 export type TelemetryDeps = {
   enabled: () => boolean;
@@ -83,7 +98,7 @@ export function createTelemetry({ enabled, send, now = Date.now }: TelemetryDeps
 }
 
 /** `ms_to_play` is bucketed: the client reports a band, never a precise moment. */
-export function msToPlayBucket(ms: number): TelemetryEvent['msToPlay'] {
+export function msToPlayBucket(ms: number): PlayTelemetryEvent['msToPlay'] {
   if (!Number.isFinite(ms) || ms < 0) return '10s+';
   if (ms < 1000) return '0-1s';
   if (ms < 3000) return '1-3s';
@@ -100,12 +115,12 @@ export function msToPlayBucket(ms: number): TelemetryEvent['msToPlay'] {
 export function playEvent(input: {
   reciter: string;
   surah: number;
-  source: TelemetryEvent['source'];
+  source: PlayTelemetryEvent['source'];
   version: string;
-  locale: TelemetryEvent['locale'];
+  locale: PlayTelemetryEvent['locale'];
   msToPlay?: number;
-}): TelemetryEvent {
-  const event: TelemetryEvent = {
+}): PlayTelemetryEvent {
+  const event: PlayTelemetryEvent = {
     event: 'play',
     reciter: input.reciter,
     surah: input.surah,
@@ -136,11 +151,11 @@ export function mediaErrorCode(code?: number | null): string {
 export function errorEvent(input: {
   reciter: string;
   surah: number;
-  source: TelemetryEvent['source'];
+  source: PlayTelemetryEvent['source'];
   version: string;
-  locale: TelemetryEvent['locale'];
+  locale: PlayTelemetryEvent['locale'];
   code?: number | null;
-}): TelemetryEvent {
+}): PlayTelemetryEvent {
   return {
     event: 'error',
     reciter: input.reciter,
@@ -150,4 +165,12 @@ export function errorEvent(input: {
     version: input.version,
     locale: input.locale,
   };
+}
+
+/** The daily "a device was here" event; its whole payload is the day it is sent. */
+export function deviceEvent(input: {
+  version: string;
+  locale: DeviceTelemetryEvent['locale'];
+}): DeviceTelemetryEvent {
+  return { event: 'device', version: input.version, locale: input.locale };
 }

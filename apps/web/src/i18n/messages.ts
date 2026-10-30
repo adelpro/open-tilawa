@@ -243,7 +243,7 @@ const ar = {
       'الاستماع لا يتطلب منك حساباً: لا بريد ولا اسم ولا كلمة مرور.',
       'الحلقة اختيارية: إن ربطت أجهزتك بها، زامنت الإعدادات والمفضّلة، وحفظها خادم المزامنة ما دامت موصولة.',
       'لا إعلانات، ولا أدوات تتبّع.',
-      'إحصاءات الاستخدام معطّلة حتى تشغّلها. وإن شغّلتها، عرفنا القارئ والسورة، ومن أين جاء الصوت، وهل تعطّل التشغيل؛ ولا نعرف من أنت، ولا نحتفظ بعنوان IP.',
+      'إحصاءات الاستخدام معطّلة حتى تشغّلها. وإن شغّلتها، عرفنا القارئ والسورة، ومن أين جاء الصوت، وهل تعطّل التشغيل؛ ولا نعرف من أنت، ولا نحتفظ بعنوان IP. ومرّة واحدة في اليوم على الأكثر، يصلنا أنّ جهازاً فتح التطبيق، بلا معرّف يربط الأيام بعضها ببعض.',
       'موضع توقّفك في كل سورة محفوظ في هذا المتصفح وحده: لا يصل إلى الحلقة، ولا ينتقل إلى أجهزتك الأخرى، ولكل جهاز موضعه. يبقى حتى تمسح بيانات الموقع، فإذا مسحتها ذهب معها.',
       'أثناء الاستماع لا يتصل جهازك إلا بثلاثة: كتالوج القرّاء، وشبكة التورنت، وروابط MP3 إن لم يكن للقارئ ملف تورنت. والحلقة تضيف اتصالاً رابعاً بخادم المزامنة.',
       'لا نبيع شيئاً، ولا نرسل شيئاً عنك إلى طرف ثالث.',
@@ -253,7 +253,7 @@ const ar = {
     title: 'إحصاءات الاستخدام',
     hint: 'لا تحمل اسمك، وتبقى معطّلة حتى تشغّلها.',
     details:
-      'إن شغّلتها، وصلنا اسم القارئ والسورة ومصدر الصوت، وإن تعطّل التشغيل وصلنا الخبر. لا يصلنا اسمك، ولا نحتفظ بعنوان IP. ليس المقصود تتبّعك، بل معرفة ما ينكسر.',
+      'إن شغّلتها، وصلنا اسم القارئ والسورة ومصدر الصوت، وإن تعطّل التشغيل وصلنا الخبر. ومرّة واحدة في اليوم على الأكثر، وصلنا أنّ جهازاً فتح التطبيق، بلا معرّف. لا يصلنا اسمك، ولا نحتفظ بعنوان IP. ليس المقصود تتبّعك، بل معرفة ما ينكسر.',
     enabled: 'مفعّلة',
     disabled: 'معطّلة',
     nudge: 'هل تساعدنا بإحصاءات الاستخدام؟ لا تحمل اسمك، ولن نرسل شيئاً قبل موافقتك.',
@@ -498,7 +498,7 @@ const en: typeof ar = {
     items: [
       'Listening needs no account. A ring is optional: connect your devices to one and your settings and favourites sync between them.',
       'No ads, no trackers.',
-      'Usage statistics are off until you turn them on. If you do, we learn the reciter, the surah and where the audio came from, and when playback fails; we do not learn who you are, and we do not keep your IP address.',
+      'Usage statistics are off until you turn them on. If you do, we learn the reciter, the surah and where the audio came from, and when playback fails. At most once a day we also learn that a device opened the app, with no identifier that could link one day to the next. We do not learn who you are, and we do not keep your IP address.',
       'Where you stopped listening stays in this browser and goes when you clear site data; whatever a ring syncs is held by the sync relay.',
       'Three outbound calls while listening: the reciter catalogue, the torrent network (peers and web seeds), and MP3 links when a reciter has no torrent. Connecting a ring adds a fourth, to the sync relay, and only while it is connected.',
       'Nothing is sold, and nothing about you is sent to a third party.',
@@ -508,7 +508,7 @@ const en: typeof ar = {
     title: 'Usage statistics',
     hint: 'Anonymous, and off until you turn it on.',
     details:
-      'If you turn it on, we learn the reciter, the surah and where the audio came from — and when playback fails. We do not learn who you are, and we do not keep your IP address. It exists to fix what breaks, not to follow you.',
+      'If you turn it on, we learn the reciter, the surah and where the audio came from — and when playback fails. At most once a day, we also learn that a device opened the app, with no identifier attached. We do not learn who you are, and we do not keep your IP address. It exists to fix what breaks, not to follow you.',
     enabled: 'On',
     disabled: 'Off',
     nudge: 'Help us with usage statistics? It carries no name, and nothing is sent before you agree.',

@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { api } from '../lib/api';
-import { useI18n } from '../lib/i18n';
+import { useI18n, type MessageKey } from '../lib/i18n';
 import { Panel } from '../components/Panel';
 import { Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
-import { shortDate, relative } from '../lib/format';
+import { shortDate, relative, bytes } from '../lib/format';
 import { nextSort, sortRows, summaryQuery, type Sort } from '../lib/usage-filters';
 
 type Summary = {
-  surahs: { surah: number; plays: number }[];
+  surahs: { surah: number; plays: number; bytes: number }[];
   reciters: { reciter: string; plays: number }[];
   sources: { torrent: number; webseed: number };
-  errorsByVersion: { version: string; rate: number }[];
+  errorsByVersion: { version: string; errors: number; plays: number; rate: number }[];
   recentErrors: {
     at: string;
     reciter: string;
@@ -22,6 +22,12 @@ type Summary = {
     errorCode: string | null;
     version: string;
   }[];
+  volume: {
+    serverBytes: number;
+    torrentBytes: number;
+    byReciter: { reciter: string; serverBytes: number; torrentBytes: number }[];
+  };
+  devices: { day: string; devices: number }[];
   lastPrunedAt: string | null;
 };
 
@@ -29,6 +35,17 @@ type Source = '' | 'torrent' | 'webseed';
 type Filters = { source: Source; version: string; reciter: string };
 
 const RANGES = [7, 30, 90] as const;
+const RANGE_LABEL: Record<(typeof RANGES)[number], MessageKey> = {
+  7: 'usage.range7',
+  30: 'usage.range30',
+  90: 'usage.range90',
+};
+
+/** Enough days to see a trend without turning one panel into the whole screen. */
+const DEVICE_ROWS = 14;
+
+/** Below this many attempts a rate is an accident of a small sample, not a signal. */
+const LOW_SAMPLE = 20;
 
 const EMPTY_FILTERS: Filters = { source: '', version: '', reciter: '' };
 
@@ -113,6 +130,7 @@ export function Usage(): ReactElement {
         {
           surah: (a, b) => a.surah - b.surah,
           plays: (a, b) => a.plays - b.plays,
+          bytes: (a, b) => a.bytes - b.bytes,
         },
         surahSort,
       ),
@@ -138,6 +156,8 @@ export function Usage(): ReactElement {
         summary?.errorsByVersion ?? [],
         {
           version: (a, b) => a.version.localeCompare(b.version),
+          errors: (a, b) => a.errors - b.errors,
+          plays: (a, b) => a.plays - b.plays,
           rate: (a, b) => a.rate - b.rate,
         },
         versionSort,
@@ -161,28 +181,44 @@ export function Usage(): ReactElement {
     [summary, errorSort, locale],
   );
 
-  const empty = summary !== null && versions.length === 0 && recentErrors.length === 0 && total === 0;
+  const devices = useMemo(() => (summary?.devices ?? []).slice(-DEVICE_ROWS), [summary]);
+  // The newest row can be yesterday's if nobody has reported today; the header
+  // claims "today", so it must read today or say nothing.
+  const today = new Date().toISOString().slice(0, 10);
+  const reportedToday = summary?.devices.find((row) => row.day === today)?.devices ?? 0;
+  const peakDevices = devices.reduce((max, row) => Math.max(max, row.devices), 0);
+  const maxSurahPlays = surahs.reduce((max, row) => Math.max(max, row.plays), 0);
+
+  const empty =
+    summary !== null &&
+    versions.length === 0 &&
+    recentErrors.length === 0 &&
+    total === 0 &&
+    summary.volume.serverBytes === 0 &&
+    summary.volume.torrentBytes === 0 &&
+    summary.devices.length === 0;
 
   return (
     <div className="stack">
-      <header className="row row--between">
-        <h1 className="title">{t('usage.title')}</h1>
-        <div className="cluster" role="group" aria-label={t('usage.range')}>
+      <header className="spread">
+        <div>
+          <h1 className="title">{t('usage.title')}</h1>
+          <p className="muted">{t('usage.window', { days: String(days), date: from })}</p>
+        </div>
+        <div className="segmented" role="group" aria-label={t('usage.range')}>
           {RANGES.map((value) => (
             <button
               key={value}
               type="button"
-              className={value === days ? 'btn btn--primary' : 'btn'}
+              className="segmented__item"
               aria-pressed={value === days}
               onClick={() => setDays(value)}
             >
-              {`${value}`}
+              {t(RANGE_LABEL[value])}
             </button>
           ))}
         </div>
       </header>
-
-      <p className="muted">{t('usage.window', { days: String(days), date: from })}</p>
 
       <div className="cluster" role="group" aria-label={t('usage.filters')}>
         <select
@@ -265,18 +301,34 @@ export function Usage(): ReactElement {
                   <tr>
                     {sortHeader(t('usage.surah'), surahSort, setSurahSort, 'surah')}
                     {sortHeader(t('usage.plays'), surahSort, setSurahSort, 'plays')}
+                    <th scope="col">{t('usage.share')}</th>
+                    {sortHeader(t('usage.serverBytes'), surahSort, setSurahSort, 'bytes')}
                   </tr>
                 </thead>
                 <tbody>
                   {surahs.map((row) => (
                     <tr key={row.surah}>
                       <td>{row.surah}</td>
-                      <td>{row.plays}</td>
+                      <td className="num">{row.plays}</td>
+                      <td>
+                        {/* The count beside it is the fact; the bar is decoration, so it
+                            is hidden from a screen reader rather than read as content. */}
+                        <span className="share" aria-hidden="true">
+                          <span
+                            className="share__fill"
+                            style={{
+                              inlineSize: `${maxSurahPlays === 0 ? 0 : (row.plays / maxSurahPlays) * 100}%`,
+                            }}
+                          />
+                        </span>
+                      </td>
+                      <td className="num">{bytes(row.bytes, locale)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            {filtered ? <p className="muted">{t('usage.bytesNote')}</p> : null}
           </Panel>
 
           <Panel>
@@ -293,7 +345,7 @@ export function Usage(): ReactElement {
                   {reciters.map((row) => (
                     <tr key={row.reciter}>
                       <td>{row.reciter}</td>
-                      <td>{row.plays}</td>
+                      <td className="num">{row.plays}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -312,25 +364,111 @@ export function Usage(): ReactElement {
           </Panel>
 
           <Panel>
+            <h2 className="panel__title">{t('usage.volume')}</h2>
+            <p className="spread">
+              <span>
+                {t('usage.webseed')} ({t('usage.exact')}):{' '}
+                {bytes(summary.volume.serverBytes, locale)}
+              </span>
+              <span>
+                {t('usage.torrent')} ({t('usage.approx')}):{' '}
+                {bytes(summary.volume.torrentBytes, locale)}
+              </span>
+            </p>
+            <div className="table-scroll">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('usage.reciter')}</th>
+                    <th scope="col">{t('usage.serverBytes')}</th>
+                    <th scope="col">{t('usage.torrent')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.volume.byReciter.map((row) => (
+                    <tr key={row.reciter}>
+                      <td>{row.reciter}</td>
+                      <td className="num">
+                        {row.serverBytes === 0 ? '—' : bytes(row.serverBytes, locale)}
+                      </td>
+                      <td className="num">
+                        {row.torrentBytes === 0 ? '—' : bytes(row.torrentBytes, locale)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="muted">{t('usage.volumeNote')}</p>
+          </Panel>
+
+          <Panel>
+            <h2 className="panel__title">{t('usage.devices')}</h2>
+            <p>{t('usage.devicesToday', { count: String(reportedToday) })}</p>
+            <div className="table-scroll">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('usage.when')}</th>
+                    <th scope="col">{t('usage.devicesCount')}</th>
+                    <th scope="col">{t('usage.share')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {devices.map((row) => (
+                    <tr key={row.day}>
+                      <td title={shortDate(row.day, locale)}>{row.day.slice(5)}</td>
+                      <td className="num">{row.devices}</td>
+                      <td>
+                        <span className="share" aria-hidden="true">
+                          <span
+                            className="share__fill"
+                            style={{
+                              inlineSize: `${peakDevices === 0 ? 0 : (row.devices / peakDevices) * 100}%`,
+                            }}
+                          />
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="muted">{t('usage.devicesNote')}</p>
+            {filtered ? <p className="muted">{t('usage.devicesNoFilters')}</p> : null}
+          </Panel>
+
+          <Panel>
             <h2 className="panel__title">{t('usage.errors')}</h2>
             <div className="table-scroll">
               <table className="table">
                 <thead>
                   <tr>
                     {sortHeader(t('usage.version'), versionSort, setVersionSort, 'version')}
+                    {sortHeader(t('usage.errorsCount'), versionSort, setVersionSort, 'errors')}
+                    {sortHeader(t('usage.plays'), versionSort, setVersionSort, 'plays')}
                     {sortHeader(t('usage.rate'), versionSort, setVersionSort, 'rate')}
                   </tr>
                 </thead>
                 <tbody>
-                  {versions.map((row) => (
-                    <tr key={row.version}>
-                      <td>{row.version}</td>
-                      <td>{Math.round(row.rate * 1000) / 10}%</td>
-                    </tr>
-                  ))}
+                  {versions.map((row) => {
+                    const attempts = row.errors + row.plays;
+                    const small = attempts < LOW_SAMPLE;
+                    return (
+                      <tr key={row.version}>
+                        <td>{row.version}</td>
+                        <td className="num">{row.errors}</td>
+                        <td className="num">{row.plays}</td>
+                        <td className="num" title={small ? t('usage.lowSample') : undefined}>
+                          {small ? '—' : `${Math.round(row.rate * 1000) / 10}%`}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
+            <p className="muted">{t('usage.rateNote')}</p>
           </Panel>
 
           <Panel>

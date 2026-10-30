@@ -39,6 +39,9 @@ services:
       - seed_torrents:/usr/share/nginx/html/torrents:ro
       # The web seed's payload: the same folders the node seeds, served as-is.
       - seed_downloads:/usr/share/nginx/html/media:ro
+      # One line per /media response, no address in it. admin-api reads this
+      # read-only and turns it into the exact half of the volume figure.
+      - media_logs:/var/log/tilawa
     networks: [open-tilawa]
 
   # The preview channel: the same bundle, built from a `staging` worktree, on
@@ -159,6 +162,7 @@ services:
       SEEDER_SERVICE: seeder
       # This host builds from the mounted tree; registry-based nodes use `pull`.
       SEEDER_UPDATE_MODE: build
+      MEDIA_LOG_DIR: /var/log/tilawa
     # The socket is owned by root:988; the container's `node` user only needs
     # to be in that group, not to run as root.
     group_add: ["${DOCKER_GID:-988}"]
@@ -170,6 +174,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       # Read-only source tree: the compose file and the seeder build context.
       - ./:/host:ro
+      # The web seed's own record of what it served; read, never written.
+      - media_logs:/var/log/tilawa:ro
     ports:
       - "127.0.0.1:${ADMIN_API_PORT:-9410}:${ADMIN_API_PORT:-9410}"
     healthcheck:
@@ -211,6 +217,7 @@ volumes:
   seed_downloads:
   seed_torrents:
   admin_data:
+  media_logs:
 
 networks:
   open-tilawa:

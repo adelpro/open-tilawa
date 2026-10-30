@@ -27,7 +27,9 @@ import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
 import { currentSurahIdAtom } from './jotai/player';
 import { toPath } from './routes';
-import { createTelemetry, type TelemetryEvent } from './utils/telemetry';
+import { createTelemetry, deviceEvent, type TelemetryEvent } from './utils/telemetry';
+import { markDeviceDay, readDeviceDay, shouldReportDevice, utcDay } from './utils/device-day';
+import { APP_VERSION } from './constants/version';
 import {
   consentEnabled,
   readConsent,
@@ -163,6 +165,21 @@ export default function App() {
       },
     }),
   );
+
+  /**
+   * One "a device was here today" row per consenting device per day.
+   *
+   * Deliberately not tied to playback: the question the row answers is how many devices
+   * open the app, and a device that only reads the catalogue still counts. The flag is
+   * local and the event is empty of identity, so the server counts rows it cannot join.
+   */
+  useEffect(() => {
+    if (!consentEnabled(consent)) return;
+    const day = utcDay();
+    if (!shouldReportDevice(readDeviceDay(), day)) return;
+    markDeviceDay(day);
+    telemetry.current.record(deviceEvent({ version: APP_VERSION, locale }));
+  }, [consent, locale]);
 
   const answerConsent = (value: Consent) => {
     writeConsent(value);
