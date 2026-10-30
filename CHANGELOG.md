@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.10.5 — 2026-10-30
+
+Patch. App versions: **web 1.10.5**, **admin 1.29.1**, **seeder 1.4.3**.
+
+### Fixed
+
+- **موجات reaches both edges.** The ribbon read the spectrum on a nearly linear
+  axis, so the top octave — where a recitation has nothing — took as much of the
+  width as the four octaves below it. On a 520px block that left the last fifth of
+  the strip on the floor, and the wave looked cut off before the edge. The axis is
+  now log-spaced from 90 Hz to 16 kHz: the band that carries the voice gets most
+  of the width, the treble fades out over the last few columns instead of flatly,
+  and the DC bin is skipped so the bass edge has no notch.
+
 ## 1.10.4 — 2026-10-30
 
 Patch. App versions: **web 1.10.4**, **admin 1.29.1**, **seeder 1.4.3**.
