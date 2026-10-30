@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 import { PWA_SCREENSHOTS, PWA_SHORTCUTS } from '../src/constants/pwa.ts';
-import { ROUTES } from '../src/hooks/use-hash-route.ts';
+import { ROUTE_TABLE } from '../src/routes.ts';
 
 const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
 
@@ -49,7 +49,7 @@ test('shortcuts stay in scope and point at real routes', () => {
 
     const route = shortcut.url.split('#')[1]?.split('?')[0] ?? '';
     assert.ok(
-      (ROUTES as readonly string[]).includes(route === '' ? '/' : `/${route.replace(/^\//, '')}`),
+      ROUTE_TABLE.some((row) => row.pattern === (route === '' ? '/' : `/${route.replace(/^\//, '')}`)),
       `${shortcut.url} does not land on a route`,
     );
 

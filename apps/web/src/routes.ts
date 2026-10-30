@@ -146,3 +146,19 @@ export function toPath(route: Parsed): string {
 export function isKnown(pathname: string): boolean {
   return parse(pathname).name !== 'notFound';
 }
+
+/**
+ * The one-time migration from the hash router.
+ *
+ * Bookmarks and installed shortcuts still say `#/about` or `#/?view=favorites`.
+ * Rewriting them through `replaceState` means the old URL never reaches the history
+ * stack, so Back does not bounce between the two forms. Anything that does not start
+ * with `#/` is not ours and returns null.
+ */
+export function legacyHashToPath(hash: string): string | null {
+  if (!hash.startsWith('#/')) return null;
+  const [path, query] = hash.slice(1).split('?');
+  const favourites = path === '/' && new URLSearchParams(query).get('view') === 'favorites';
+  const target = favourites ? '/favorites' : path;
+  return query ? `${target}?${query}` : target;
+}

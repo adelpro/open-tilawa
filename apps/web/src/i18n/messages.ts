@@ -28,6 +28,11 @@ const ar = {
     dismiss: 'إخفاء',
   },
   routes: { listen: 'الاستماع', settings: 'الإعدادات', about: 'عن تلاوة', privacy: 'الخصوصية' },
+  notFound: {
+    title: 'هذه الصفحة غير موجودة',
+    body: 'الرابط الذي فتحته لا يؤدي إلى صفحة في تلاوة.',
+    home: 'العودة إلى الاستماع',
+  },
   account: {
     title: 'الحساب',
     ringOf: 'حلقتك:',
@@ -256,6 +261,11 @@ const en: typeof ar = {
     dismiss: 'Dismiss',
   },
   routes: { listen: 'Listen', settings: 'Settings', about: 'About Tilawah', privacy: 'Privacy' },
+  notFound: {
+    title: 'This page does not exist',
+    body: 'The link you opened does not lead to a page in Tilawah.',
+    home: 'Back to listening',
+  },
   account: {
     title: 'Account',
     ringOf: 'Your ring:',

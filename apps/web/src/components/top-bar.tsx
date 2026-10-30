@@ -17,6 +17,7 @@ export default function TopBar({
   onOpenReciters,
   onOpenKeys,
   onOpenAccount,
+  isHome,
 }: {
   menuOpen: boolean;
   onToggleMenu: () => void;
@@ -24,9 +25,11 @@ export default function TopBar({
   onOpenReciters: () => void;
   onOpenKeys: () => void;
   onOpenAccount?: () => void;
+  /** The player route — the only one where the home mark is filled. */
+  isHome: boolean;
 }) {
   const { t } = useLocale();
-  const isListen = typeof location !== 'undefined' && location.hash === '#/';
+
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
 
@@ -66,10 +69,10 @@ export default function TopBar({
           href="#/"
           className={cn(
             'flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink',
-            isListen && 'text-ink',
+            isHome && 'text-ink',
           )}
         >
-          <Icon name="house" weight={isListen ? 'fill' : 'regular'} />
+          <Icon name="house" weight={isHome ? 'fill' : 'regular'} />
           {t.routes.listen}
         </a>
         <button

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import AboutPage from './app/about-page';
 import PlayerPage from './app/player-page';
+import NotFoundPage from './app/not-found-page';
 import PrivacyPage from './app/privacy-page';
 import SettingsPage from './app/settings-page';
 import AudioEngine from './components/audio-engine';
@@ -9,7 +10,7 @@ import ErrorBoundary from './components/error-boundary';
 import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
 import AccountSheet from './components/account/account-sheet';
-import { useHashRoute } from './hooks/use-hash-route';
+import { useRoute } from './hooks/use-route';
 import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
 import { useSleepTimer } from './hooks/use-sleep-timer';
@@ -32,7 +33,7 @@ import { useHydrateRecent, useRecentSync, useRecordRecent } from './hooks/use-re
  * them — the reason playback keeps going when you leave the player for a page.
  */
 export default function App() {
-  const { route, navigate, params } = useHashRoute();
+  const { route, navigate, params } = useRoute();
   const [menuOpen, setMenuOpen] = useState(false);
   const {
     sheet,
@@ -138,6 +139,7 @@ export default function App() {
     <ErrorBoundary>
       <div className="app-shell" data-panel={sheet ? 'open' : 'closed'}>
         <TopBar
+          isHome={route.name === 'home'}
           menuOpen={menuOpen}
           onToggleMenu={() => setMenuOpen((open) => !open)}
           onOpenSurahs={openSurahs}
@@ -146,11 +148,13 @@ export default function App() {
           onOpenAccount={() => setAccountOpen(true)}
         />
 
-        {route === '/about' ? (
+        {route.name === 'about' ? (
           <AboutPage />
-        ) : route === '/privacy' ? (
+        ) : route.name === 'privacy' ? (
           <PrivacyPage />
-        ) : route === '/settings' ? (
+        ) : route.name === 'notFound' ? (
+          <NotFoundPage onHome={() => go({ name: 'home' })} />
+        ) : route.name === 'settings' ? (
           <SettingsPage
             theme={theme}
             onTheme={setTheme}

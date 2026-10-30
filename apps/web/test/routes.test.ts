@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ROUTE_TABLE, parse, toPath } from '../src/routes.ts';
+import { ROUTE_TABLE, legacyHashToPath, parse, toPath } from '../src/routes.ts';
 
 test('a listen path carries the release and the surah', () => {
   assert.deepEqual(parse('/listen/minshawi/18-al-kahf'), {
@@ -64,4 +64,12 @@ test('every indexable route is in the sitemap', () => {
   for (const row of ROUTE_TABLE) {
     if (row.index) assert.equal(row.sitemap, true, row.name);
   }
+});
+
+test('an old hash URL is rewritten to its path', () => {
+  assert.equal(legacyHashToPath('#/about'), '/about');
+  assert.equal(legacyHashToPath('#/'), '/');
+  assert.equal(legacyHashToPath('#/?view=favorites'), '/favorites?view=favorites');
+  assert.equal(legacyHashToPath(''), null);
+  assert.equal(legacyHashToPath('#not-a-route'), null);
 });
