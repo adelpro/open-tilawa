@@ -87,6 +87,16 @@ function write(path, html) {
 /** Every page this build writes, in the order the sitemap lists them. */
 const pages = [];
 
+/**
+ * Whether a crawler may rank this family, read from the route table.
+ *
+ * Not a literal in this file: the table is what the router, this build and the sitemap
+ * are supposed to agree on, and when this script carried its own flag the table said one
+ * thing while the sitemap said another. `test/prerender.test.ts` keeps the decision out
+ * of here.
+ */
+const indexable = (name) => ROUTE_TABLE.find((row) => row.name === name)?.index ?? false;
+
 function add(path, meta) {
   write(path, page({ path, ...meta }));
   pages.push({ path, ...meta });
@@ -95,14 +105,14 @@ function add(path, meta) {
 add('/', {
   title: 'Tilawah — القرآن الكريم ندّاً بندّ',
   description: copy.about.lede,
-  index: true,
+  index: indexable('home'),
   body: `<h1>${escape(copy.about.title)}</h1><p>${escape(copy.about.lede)}</p>`,
 });
 
 add('/about', {
   title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة — Tilawah',
   description: copy.about.lede,
-  index: true,
+  index: indexable('about'),
   body: `<h1>${escape(copy.about.title)}</h1>` +
     [copy.about.how, copy.about.noPeers, copy.about.ring, copy.about.sources, copy.about.open]
       .map((section) => `<h2>${escape(section.title)}</h2><p>${escape(section.p1)}</p>`)
@@ -112,14 +122,14 @@ add('/about', {
 add('/privacy', {
   title: pageTitle({ name: 'privacy' }, copy) ?? 'الخصوصية — Tilawah',
   description: copy.about.lede,
-  index: true,
+  index: indexable('privacy'),
   body: `<h1>${escape(copy.privacy.title)}</h1><ul>${copy.privacy.items
     .map((item) => `<li>${escape(item)}</li>`)
     .join('')}</ul>`,
 });
 
-add('/reciters', { title: 'القرّاء — Tilawah', description: copy.about.lede, index: true });
-add('/surahs', { title: 'السور — Tilawah', description: copy.about.lede, index: true });
+add('/reciters', { title: 'القرّاء — Tilawah', description: copy.about.lede, index: indexable('reciters') });
+add('/surahs', { title: 'السور — Tilawah', description: copy.about.lede, index: indexable('surahs') });
 
 const surahPage = (id) => {
   const name = SURAHS.find((surah) => surah.id === id)?.name ?? '';
@@ -131,7 +141,7 @@ for (const surah of SURAHS) {
   add(`/surahs/${slug}`, {
     title: `سورة ${name} — Tilawah`,
     description: `استمع إلى سورة ${name} بأصوات القرّاء في تلاوة.`,
-    index: true,
+    index: indexable('surah'),
     body: `<h1>سورة ${escape(name)}</h1>`,
   });
 }
@@ -160,7 +170,7 @@ for (const release of catalogue) {
     add(`/reciters/${release.slug}`, {
       title: `${release.nameAr ?? release.name} — Tilawah`,
       description: `تلاوات ${release.nameAr ?? release.name} كاملة في تلاوة.`,
-      index: true,
+      index: indexable('reciter'),
       body: `<h1>${escape(release.nameAr ?? release.name)}</h1>`,
     });
   }
@@ -168,18 +178,18 @@ for (const release of catalogue) {
     add(`/listen/${release.slug}/${surah.id}-${surahSlug(surah.id)}`, {
       title: `سورة ${surah.name} — ${release.nameAr ?? release.name}`,
       description: `استمع إلى سورة ${surah.name} بصوت ${release.nameAr ?? release.name}.`,
-      index: false,
+      index: indexable('listen'),
       body: `<h1>سورة ${escape(surah.name)} — ${escape(release.nameAr ?? release.name)}</h1>`,
     });
   }
 }
 
-const indexable = pages.filter((entry) => entry.index);
+const listed = pages.filter((entry) => entry.index);
 writeFileSync(
   join(DIST, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${indexable
+${listed
   .map((entry) => `  <url><loc>${SITE}${entry.path === '/' ? '/' : entry.path}</loc><lastmod>${TODAY}</lastmod></url>`)
   .join('\n')}
 </urlset>
@@ -202,6 +212,7 @@ writeFileSync(
     path: '/404',
     title: pageTitle({ name: 'notFound' }, copy) ?? 'هذه الصفحة غير موجودة — Tilawah',
     description: copy.about.lede,
+    // Not a route: this is the page nginx serves with a 404, so it can never be indexed.
     index: false,
     canonical: false,
   }),
@@ -210,5 +221,5 @@ writeFileSync(
 const prerendered = ROUTE_TABLE.filter((row) => row.prerender).map((row) => row.name);
 console.log(
   `prerender: ${pages.length} page(s) from ${catalogue.length} release(s); ` +
-    `sitemap lists ${indexable.length}; route families: ${prerendered.join(', ')}`,
+    `sitemap lists ${listed.length}; route families: ${prerendered.join(', ')}`,
 );
