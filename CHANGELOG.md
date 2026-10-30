@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.12.3 — 2026-10-30
+
+Patch. App versions: **web 1.12.1**, **admin 1.30.2**, **seeder 1.4.3**.
+
+### Fixed
+
+- **The usage screen loads its numbers.** `api()` already prefixes `/api`, and the screen
+  asked for `/api/admin/telemetry/summary`, so the browser requested `/api/api/…` and got
+  a 404 — which the screen reports as "could not load the numbers", looking like the
+  server. The same commit that forgot the nav row also never opened the screen, so the
+  doubled prefix survived to production. `test/api-paths.test.mjs` now fails on any call
+  site that prefixes `/api` itself.
+
 ## 1.12.2 — 2026-10-30
 
 Patch. App versions: **web 1.12.1**, **admin 1.30.1**, **seeder 1.4.3**.

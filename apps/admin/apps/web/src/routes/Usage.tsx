@@ -36,7 +36,8 @@ export function Usage(): ReactElement {
   const load = useCallback(async () => {
     setError(false);
     try {
-      setSummary(await api<Summary>(`/api/admin/telemetry/summary?days=${days}`));
+      // `api()` prefixes `/api`; the path here is what follows it.
+      setSummary(await api<Summary>(`/admin/telemetry/summary?days=${days}`));
     } catch {
       setError(true);
     }

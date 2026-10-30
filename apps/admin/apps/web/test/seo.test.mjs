@@ -92,11 +92,60 @@ describe('crawler files', () => {
   it('writes an install manifest with icons and a theme colour', () => {
     const manifest = JSON.parse(readFileSync(join(dist, 'manifest.webmanifest'), 'utf-8'));
     assert.equal(manifest.start_url, '/');
-    assert.equal(manifest.theme_color, '#086288');
-    assert.equal(manifest.background_color, '#ffefc4');
     assert.equal(manifest.screenshots.filter((shot) => shot.form_factor === 'wide').length, 1);
     assert.ok(manifest.screenshots[0].label.length > 5);
     assert.ok(manifest.icons.length >= 2);
+  });
+});
+
+/**
+ * The window chrome is the strip the OS paints around the page: the browser bar,
+ * and the splash an install shows. It has to be the page's own background, or the
+ * app opens inside a frame that belongs to a different design — which is what a
+ * cream bar over a parchment page was.
+ */
+const tokensCss = readFileSync(join(WEB, 'src', 'styles', 'tokens.css'), 'utf-8');
+const parchment = [...tokensCss.matchAll(/--canvas-parchment:\s*(#[0-9a-fA-F]{3,8})/g)].map((m) =>
+  m[1].toLowerCase(),
+);
+const manifest = JSON.parse(readFileSync(join(dist, 'manifest.webmanifest'), 'utf-8'));
+
+describe('window chrome', () => {
+  it('is the page background, in the manifest and in the head', () => {
+    assert.ok(parchment.length >= 2, 'tokens.css declares --canvas-parchment for both themes');
+    const [light, dark] = parchment;
+
+    assert.equal(manifest.theme_color, light, 'manifest theme is the light page');
+    assert.equal(manifest.background_color, light, 'the splash is the page it opens into');
+
+    assert.match(
+      html,
+      new RegExp(`<meta name="theme-color" content="${light}" media="\\(prefers-color-scheme: light\\)"`),
+      'the bar follows the light page',
+    );
+    assert.match(
+      html,
+      new RegExp(`<meta name="theme-color" content="${dark}" media="\\(prefers-color-scheme: dark\\)"`),
+      'and the dark one, instead of a near-black no token holds',
+    );
+  });
+
+  it('lets the browser paint dark controls in the dark palette', () => {
+    // The palette has a dark half; `content="light"` told every form control the
+    // console was white, so selects and scrollbars stayed lit in dark mode.
+    assert.match(html, /<meta name="color-scheme" content="light dark"/);
+  });
+
+  it('has exactly one home', () => {
+    const shell = readFileSync(join(WEB, 'index.html'), 'utf-8');
+    assert.ok(
+      !/name="theme-color"/.test(shell),
+      'index.html must not pin a colour the build overwrites: dev and build inject it',
+    );
+    assert.ok(
+      !existsSync(join(WEB, 'public', 'manifest.webmanifest')),
+      'the manifest is built from app.json, not copied from public/ and then overwritten',
+    );
   });
 });
 
