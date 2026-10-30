@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.1 — 2026-10-30
+
+Patch. App versions: **web 1.10.0**, **admin 1.28.0**, **seeder 1.4.3** — no app
+code changed in this release.
+
+### Added
+
+- **The launch film is in the repository.** `film/` carries the composition
+  sources, the audio beds, the capture set and the finished renders, with the two
+  notes and the storyboard beside them. It is 49 MB across 104 files; a clone now
+  pays for that, and the alternative — an LFS remote or an external asset host —
+  was not in place.
+
 ## 1.9.0 — 2026-10-30
 
 Minor. App versions: **web 1.10.0**, **admin 1.28.0**, **seeder 1.4.3**.
