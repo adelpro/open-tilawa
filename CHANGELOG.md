@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.12.2 — 2026-10-30
+
+Patch. App versions: **web 1.12.1**, **admin 1.30.1**, **seeder 1.4.3**.
+
+### Fixed
+
+- **The usage screen is reachable.** `Usage.tsx` shipped with its copy and its endpoint
+  but nothing linked to it: no nav row, no branch in the router's switch, so the screen
+  could only be opened by guessing a URL that did not exist. It is now under Management
+  for admins and super admins (the summary is `@Roles('admin')`), and `test/nav.test.mjs`
+  fails if a nav row ever points at a screen the router does not answer.
+
 ## 1.12.1 — 2026-10-30
 
 Patch. App versions: **web 1.12.1**, **admin 1.30.0**, **seeder 1.4.3**.

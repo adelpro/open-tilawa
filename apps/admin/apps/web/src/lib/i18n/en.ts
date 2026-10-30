@@ -40,6 +40,7 @@ export const en = {
   'nav.admin': 'Admin',
   'nav.superadmin': 'Super admin',
   'nav.settings': 'Mail & alerts',
+  'nav.usage': 'Usage',
   'nav.workspace': 'Workspace',
   'usage.action': 'Action',
   'usage.target': 'Target',

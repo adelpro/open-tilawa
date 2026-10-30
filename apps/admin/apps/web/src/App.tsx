@@ -28,6 +28,7 @@ import { Seeders } from './routes/Seeders';
 import { Turns } from './routes/Turns';
 import { TurnDetail } from './routes/TurnDetail';
 import { Torrents } from './routes/Torrents';
+import { Usage } from './routes/Usage';
 import { Reciters } from './routes/Reciters';
 import { Avatar } from './components/Avatar';
 import { SkeletonHeading, SkeletonRows } from './components/Skeleton';
@@ -333,6 +334,7 @@ function Screen({
   if (first === 'account') return <Account />;
   if (first === 'tools') return <Tools />;
   if (first === 'status') return <Status />;
+  if (first === 'usage' && (role === 'admin' || role === 'super_admin')) return <Usage />;
   if (first === 'settings' && (role === 'admin' || role === 'super_admin')) return <Settings />;
   if (first === 'help') return <Help />;
   const consolePath = consolePathFor(role);

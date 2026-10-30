@@ -46,6 +46,7 @@ export const ar: Catalogue = {
   'nav.admin': 'لوحة الإدارة',
   'nav.superadmin': 'الإدارة العليا',
   'nav.settings': 'البريد والتنبيهات',
+  'nav.usage': 'الاستخدام',
   'nav.workspace': 'مساحة العمل',
   'usage.action': 'الإجراء',
   'usage.target': 'الهدف',

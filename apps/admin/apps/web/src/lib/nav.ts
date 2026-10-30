@@ -41,6 +41,17 @@ export function navItemsFor(role: AppRole | null): NavEntry[] {
     });
   }
 
+  // Usage sits with Settings, not the workspace: the numbers are the operator's
+  // picture of the fleet, and the ingest endpoint they come from is public.
+  if (role === 'admin' || role === 'super_admin') {
+    items.push({
+      to: '/console/usage',
+      labelKey: 'nav.usage',
+      icon: 'eye',
+      group: 'admin',
+    });
+  }
+
   if (role === 'admin') {
     items.push({
       to: '/console/admin',
