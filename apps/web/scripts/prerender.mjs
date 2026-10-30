@@ -47,7 +47,9 @@ const escape = (value) =>
 const copy = MESSAGES.ar;
 
 function page({ path, title, description, index, body, canonical = true }) {
-  const url = `${SITE}${path === '/' ? '/' : `${path}/`.replace(/\/+$/, '/')}`;
+  // One form per page, and it is the path the table declares — `/about`, not `/about/`.
+  // The sitemap writes the same string, and nginx redirects the trailing-slash form to it.
+  const url = `${SITE}${path}`;
   const robots = index ? 'index, follow' : 'noindex, follow';
   return `<!doctype html>
 <html lang="ar" dir="rtl">
@@ -56,7 +58,7 @@ function page({ path, title, description, index, body, canonical = true }) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>${escape(title)}</title>
     <meta name="description" content="${escape(description)}" />
-    ${canonical ? `<link rel="canonical" href="${url}" />` : '<meta name="robots" content="noindex" />'}
+    ${canonical ? `<link rel="canonical" href="${url}" />` : ''}
     <meta name="robots" content="${robots}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Tilawah" />

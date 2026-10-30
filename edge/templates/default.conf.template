@@ -30,6 +30,14 @@ server {
   listen 80;
   server_name staging.tilawah.cc;
 
+  # The preview channel runs the same bundle as the site, so nothing in the build can
+  # tell them apart: the prerendered pages carry a canonical pointing at tilawah.cc,
+  # which is a hint a crawler is free to ignore, and a link shared to this host would
+  # be indexed as a second copy. The header is the authoritative signal and covers
+  # every response, HTML or asset. It lives on the vhost because the edge is the only
+  # layer that knows which host is answering.
+  add_header X-Robots-Tag "noindex, nofollow" always;
+
   location / {
     set $web_staging_upstream http://web-staging:80;
     proxy_pass $web_staging_upstream;

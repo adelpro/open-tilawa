@@ -9,6 +9,9 @@ const CONF = readFileSync(new URL('../nginx.conf', import.meta.url), 'utf-8');
 /** The `location / { … }` block, which is the one that catches everything. */
 const rootLocation = /location \/ \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
 
+/** The one location that hands a page path to the app. */
+const pageLocation = /location ~ \^\/\([^)]*\)\(\/\|\$\) \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
+
 /**
  * The edge is the only place that can say "not here" with a status code.
  *
@@ -19,8 +22,8 @@ const rootLocation = /location \/ \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
  */
 test('the catch-all location answers 404 instead of the shell', () => {
   assert.ok(rootLocation, 'no `location /` block found');
-  assert.match(rootLocation, /try_files \$uri \$uri\/ =404/);
-  assert.doesNotMatch(rootLocation, /\/index\.html/, 'the catch-all still falls back to the shell');
+  assert.match(rootLocation, /try_files \$uri \$uri\/index\.html =404;/);
+  assert.doesNotMatch(rootLocation, /^\s*\/index\.html\s*$/m, 'the catch-all still falls back to the shell');
 });
 
 test('every route the app resolves today still reaches the app', () => {
@@ -40,11 +43,29 @@ test('every route the app resolves today still reaches the app', () => {
   }
 });
 
-test('a prerendered page is a directory, so the catch-all can find it', () => {
-  // `/about` has no extension: it resolves through `$uri/`, which means the prerender step
-  // must write `about/index.html`, not `about.html`. This asserts the contract the two
-  // files share, so a change on one side cannot silently break the other.
-  assert.match(rootLocation, /\$uri\//, 'the catch-all no longer tries a directory index');
+test('a prerendered page is served at its path, never redirected to a directory', () => {
+  // `/about` has no extension, and the prerender step writes `about/index.html`. Naming
+  // the directory in `try_files` (`$uri/`) makes nginx treat it as the resource and answer
+  // /about with a 301 to /about/ — so the URL a visitor and a crawler land on is not the
+  // one the sitemap lists, and the prerendered page is served under a different path than
+  // the app's canonical route. The index file is named directly instead.
+  assert.ok(pageLocation, 'no page location found');
+
+  for (const [name, block] of [
+    ['the catch-all', rootLocation],
+    ['the page location', pageLocation],
+  ] as const) {
+    assert.doesNotMatch(block, /\$uri\/\s/, `${name} still matches a bare directory and 301s`);
+    assert.match(block, /try_files \$uri \$uri\/index\.html/, `${name} does not resolve a page index`);
+  }
+});
+
+test('the trailing-slash form redirects once to the sitemap URL', () => {
+  // One form per page. `/about/` exists on disk either way, so the redirect has to happen
+  // before a location can serve it; otherwise the same page is reachable under two URLs.
+  // Relative, because the origin is behind a TLS-terminating proxy and nginx only sees http.
+  assert.match(CONF, /absolute_redirect off;/);
+  assert.match(CONF, /rewrite \^\/\(\.\+\)\/\$ \/\$1 permanent;/);
 });
 
 test('the media preflight allows the headers a torrent fetch actually sends', () => {
