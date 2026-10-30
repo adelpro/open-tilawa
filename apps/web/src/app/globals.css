@@ -368,8 +368,7 @@ input[type='search']::-webkit-search-decoration {
     padding-inline-start: 384px;
   }
 
-  .app-shell[data-panel='open'] .theatre-title,
-  .app-shell[data-panel='open'] .theatre-reciter {
+  .app-shell[data-panel='open'] .theatre-title {
     inset-inline-start: 360px;
   }
 }
