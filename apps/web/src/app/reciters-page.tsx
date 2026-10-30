@@ -1,10 +1,12 @@
 import { useSetAtom } from 'jotai';
 
 import Icon from '@/components/icons';
+import { loadState, saveState } from '@/hooks/use-persistence';
 import { useLocale } from '@/hooks/use-locale';
 import { useReciters } from '@/hooks/use-reciters';
 import { navigate } from '@/hooks/use-route';
-import { selectedReciterAtom } from '@/jotai/atom';
+import { isPlayingAtom } from '@/jotai/player';
+import type { Reciter } from '@/types';
 import { riwayaLabel } from '@/utils/riwaya';
 
 /**
@@ -21,11 +23,18 @@ import { riwayaLabel } from '@/utils/riwaya';
 export default function RecitersPage() {
   const { t } = useLocale();
   const { reciters, error } = useReciters();
-  const setSelectedReciter = useSetAtom(selectedReciterAtom);
+  const setIsPlaying = useSetAtom(isPlayingAtom);
   const copy = t.recitersPage;
 
-  const pick = (reciter: (typeof reciters)[number]): void => {
-    setSelectedReciter(reciter);
+  /**
+   * The player boots from storage, not from an atom: it is unmounted while this page is
+   * up, and its mount effect reads `reciterId` to decide what to restore. Setting the
+   * atom here would be overwritten a frame later — writing the id is what makes the
+   * choice survive the navigation.
+   */
+  const pick = (reciter: Reciter): void => {
+    saveState({ ...loadState(), reciterId: reciter.id });
+    setIsPlaying(false);
     navigate({ name: 'home' });
   };
 

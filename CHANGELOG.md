@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.12.1 — 2026-10-30
+
+Patch. App versions: **web 1.12.1**, **admin 1.30.0**, **seeder 1.4.3**.
+
+### Fixed
+
+- **Picking a reciter on `/reciters` actually picks them.** The page wrote the choice to
+  the reciter atom, but `PlayerPage` is unmounted while the roster is up and its mount
+  effect restores from storage (`reciterId`) — so the atom was overwritten a frame later
+  and the player kept the previous reciter. The page writes the stored id now, pauses,
+  and returns to the player, which restores that release and its last position.
+
 ## 1.12.0 — 2026-10-30
 
 Minor. App versions: **web 1.12.0**, **admin 1.30.0**, **seeder 1.4.3**.
