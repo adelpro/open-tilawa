@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.10.7 — 2026-10-30
+
+Patch. App versions: **web 1.10.7**, **admin 1.29.1**, **seeder 1.4.3**.
+
+### Fixed
+
+- **موجات has no empty left edge.** 1.10.5 put the ribbon on a log axis but
+  still reached 16 kHz. Most of the catalogue is a low-bitrate mono recording
+  low-passed around 4-5 kHz — measured on a live track, everything above 4 kHz
+  read exactly zero — so a fifth of the strip was spent drawing silence and the
+  wave looked like it started late. The ceiling is now 4.5 kHz, the top of the
+  intelligible voice: the silhouette begins at the left edge, and on a track that
+  still carries 4-4.5 kHz the last column or two taper out instead of stopping.
+
 ## 1.10.6 — 2026-10-30
 
 Patch. App versions: **web 1.10.6**, **admin 1.29.1**, **seeder 1.4.3**.
