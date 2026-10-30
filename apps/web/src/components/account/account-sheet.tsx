@@ -183,7 +183,7 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
                   <div
                     role="status"
                     aria-live="polite"
-                    className="flex items-start gap-2 rounded-xl border border-ink/15 bg-line/50 p-3"
+                    className="flex items-start gap-2 rounded-xl border border-line bg-line p-3"
                   >
                     <Icon name="check" size={20} className="shrink-0 self-start text-ink" />
                     <div className="min-w-0 flex-1">

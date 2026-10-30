@@ -398,7 +398,7 @@ real browser.
 ### Identity as built
 
 No username, no password. An account is a keypair generated in the browser
-(`SEA.pair()`) and kept in `localStorage` under `open-tilawa:account`; the key is
+(`SEA.pair()`) and kept in `localStorage` under `tilawah:account`; the key is
 the identity and the only thing that opens the account. Gun's `recall()` writes
 to **sessionStorage only**, so without that stored copy the account died with the
 tab and every browser restart needed a fresh pairing scan.
@@ -423,12 +423,15 @@ expired, so a photographed QR dies after two minutes.
 
 ### Counters as built
 
-- Favourites are local-first: `open-tilawa:favorites` in `localStorage` is the
+- Favourites are local-first: `tilawah:favorites` in `localStorage` is the
   mirror, `gun.user().favorites` is the sync layer. Logging in **unions** the two
   instead of replacing, so anonymous favourites survive.
-- Dedup key is `open-tilawa:counted:<identity>:favorite`, where identity is
+- Dedup key is `tilawah:counted:<identity>:favorite`, where identity is
   `user:<pub>` or `anon:<uuid>`. Only a real transition moves the public counter.
-- Views are counted once per tab session (`open-tilawa:viewed:<id>`).
+- Views are counted once per tab session (`tilawah:viewed:<id>`).
+- Local keys were renamed from `open-tilawa:*` to `tilawah:*` in rev B; `migrateStorageNamespace()`
+  copies them forward at boot. The relay roots keep the old prefix on purpose — they are wire
+  identifiers, and renaming a counter root would reset the public totals.
 - Bumps are **serialised per reciter**. Two toggles in the same millisecond used
   to tie on Gun's state clock: the relay kept the newer value while the tab's own
   view stayed stale until reload.

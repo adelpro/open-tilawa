@@ -8,7 +8,11 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const full = process.argv.includes('--full');
 
-const browser = await chromium.launch();
+// A machine with Chrome but without Playwright's own download can point at the
+// system binary: CHROME_PATH=/usr/bin/google-chrome node render.mjs
+const browser = await chromium.launch(
+  process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {},
+);
 const page = await browser.newPage({ viewport: { width: 1800, height: 1200 }, deviceScaleFactor: 2 });
 page.on('pageerror', (e) => console.error('[page]', e.message));
 
@@ -18,7 +22,9 @@ await page.evaluate(() => document.fonts.ready);
 
 const sheets = await page.$$('.sheetwrap');
 for (const [i, sheet] of sheets.entries()) {
-  const file = resolve(here, `0${i + 1}-${i === 0 ? 'ring-and-sync' : 'linking-and-auth'}.png`);
+  // The sheet names its own file: adding a drawing must not need a code change.
+  const name = (await sheet.getAttribute('data-file')) || String(i + 1);
+  const file = resolve(here, `${name}.png`);
   await sheet.screenshot({ path: file });
   console.log('→', file.replace(here + '/', ''));
 }

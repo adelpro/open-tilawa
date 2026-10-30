@@ -65,8 +65,8 @@ svg{display:block;width:100%;min-width:1100px;height:auto}
       <div class="v">Authentication, device linking and the sync contract. Structural only: no copy, no colour, no value the source does not state.</div>
     </div>
     <div><div class="lbl">Dwg no.</div><div class="v">SYS-RING-001</div></div>
-    <div><div class="lbl">Rev</div><div class="v">A · 2026-10-29</div></div>
-    <div><div class="lbl">Sheets</div><div class="v">2</div></div>
+    <div><div class="lbl">Rev</div><div class="v">B · 2026-10-30</div></div>
+    <div><div class="lbl">Sheets</div><div class="v">4</div></div>
     <div><div class="lbl">Units</div><div class="v">schematic</div></div>
     <div><div class="lbl">Scale</div><div class="v">not to scale</div></div>
     <div><div class="lbl">Source</div><div class="v">apps/web · gun/*, hooks/*</div></div>
@@ -83,20 +83,27 @@ svg{display:block;width:100%;min-width:1100px;height:auto}
     </div>
     <div class="figs">
       <div><div class="lbl">T1 · pairing ttl</div><div class="v">120 s</div></div>
-      <div><div class="lbl">T2 · heartbeat</div><div class="v">120 s</div></div>
+      <div><div class="lbl">T2 · heartbeat</div><div class="v">300 s</div></div>
+      <div><div class="lbl">T4 · redeem</div><div class="v">10 s</div></div>
       <div><div class="lbl">T3 · ticket version</div><div class="v">2</div></div>
       <div><div class="lbl">K · key material</div><div class="v">4 fields + pair</div></div>
       <div><div class="lbl">G · synced paths</div><div class="v">7</div></div>
-      <div><div class="lbl">L · local keys</div><div class="v">5</div></div>
+      <div><div class="lbl">L · local keys</div><div class="v">10</div></div>
       <div><div class="lbl">X · public counters</div><div class="v">2</div></div>
     </div>
   </header>
 
-  <div class="sheetwrap"><div class="scroll"><svg id="sh1" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 1: the ring, the relay and the sync contract"></svg></div>
-  <div class="foot"><span>2026-10-29 &nbsp;|&nbsp; system reference</span><span><b>Ring, topology</b> &nbsp;|&nbsp; 1 of 2</span></div></div>
+  <div class="sheetwrap" data-file="01-ring-and-sync"><div class="scroll"><svg id="sh1" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 1: the ring, the relay and the sync contract"></svg></div>
+  <div class="foot"><span>2026-10-30 &nbsp;|&nbsp; system reference</span><span><b>Ring, topology</b> &nbsp;|&nbsp; 1 of 4</span></div></div>
 
-  <div class="sheetwrap"><div class="scroll"><svg id="sh2" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 2: device linking and the authentication lifecycle"></svg></div>
-  <div class="foot"><span>2026-10-29 &nbsp;|&nbsp; system reference</span><span><b>Ring, linking and auth</b> &nbsp;|&nbsp; 2 of 2</span></div></div>
+  <div class="sheetwrap" data-file="02-linking-and-auth"><div class="scroll"><svg id="sh2" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 2: device linking and the authentication lifecycle"></svg></div>
+  <div class="foot"><span>2026-10-30 &nbsp;|&nbsp; system reference</span><span><b>Ring, linking and auth</b> &nbsp;|&nbsp; 2 of 4</span></div></div>
+
+  <div class="sheetwrap" data-file="03-linking-lifecycle"><div class="scroll"><svg id="sh3" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 3: the linking lifecycle, state by state, on both devices"></svg></div>
+  <div class="foot"><span>2026-10-30 &nbsp;|&nbsp; system reference</span><span><b>Ring, linking lifecycle</b> &nbsp;|&nbsp; 3 of 4</span></div></div>
+
+  <div class="sheetwrap" data-file="04-data-ownership"><div class="scroll"><svg id="sh4" viewBox="0 0 1700 1060" role="img" aria-label="Sheet 4: what the ring syncs, what stays on the device, and what is public"></svg></div>
+  <div class="foot"><span>2026-10-30 &nbsp;|&nbsp; system reference</span><span><b>Ring, data ownership</b> &nbsp;|&nbsp; 4 of 4</span></div></div>
 </div>
 
 <script>
@@ -161,7 +168,7 @@ tx(360,596,'LINK · SHEET 2','dts',{'text-anchor':'middle'});
 /* local */
 rr(560,590,470,190,8,'slot');
 tx(574,612,'LOCAL · NEVER LEAVES THE DEVICE','vt');
-[['L1','open-tilawa:account','K0 pair, JSON'],['L2','open-tilawa:v3','playhead + settings'],['L3','open-tilawa:favorites','list mirror'],['L4','open-tilawa:recent','list mirror'],['L5','device-id · device-name','id + label']]
+[['L1','tilawah:account','K0 pair, JSON'],['L2','tilawah:v3','playhead + settings'],['L3','tilawah:favorites','list mirror'],['L4','tilawah:recent','list mirror'],['L5','device-id · name · linked-at','id, label, join date']]
  .forEach(([c,k,v],i)=>{const y=632+i*28;mk('rect',{x:574,y:y-15,width:34,height:19,class:'hug'});tx(591,y-1,c,'tc',{'text-anchor':'middle'});
   tx(616,y-1,k,'tc');tx(616,y+11,v,'dts')});
 nb(1018,612,6);
@@ -183,10 +190,10 @@ nb(1284,578,7);
 /* tables */
 let y=table(1330,86,'KEY MATERIAL',[44,104,166],[['K0','pair','pub · priv · epub · epriv'],['K1','pub','identity · relay + device'],['K2','priv','device only · L1'],['K3','epub','ticket · QR only'],['K4','epriv','ticket · QR only']]);
 y=table(1330,y,'SYNC CONTRACT',[44,124,146],[['G1','profile.name','create, rename'],['G2','settings','LWW, updatedAt'],['G3','favorites/<id>','union'],['G4','devices/<id>','merge · T2'],['G5','devices/meta','claim once'],['G6','recentlyViewed','newest'],['G7','schema','version']]);
-y=table(1330,y,'LOCAL ONLY',[44,124,146],[['L1','open-tilawa:account','K0'],['L2','open-tilawa:v3','playhead'],['L3','open-tilawa:favorites','mirror'],['L4','open-tilawa:recent','mirror'],['L5','device-id / name','label']]);
+y=table(1330,y,'LOCAL ONLY',[44,124,146],[['L1','tilawah:account','K0'],['L2','tilawah:v3','playhead'],['L3','tilawah:favorites','mirror'],['L4','tilawah:recent','mirror'],['L5','device id / name','label']]);
 y=table(1330,y,'READ PATH',[44,124,146],[['S','snapshot','once() first'],['W','watch','on() after'],['M','mirror','local first'],['U','union','never replace']]);
 table(1330,y,'OUTSIDE THE RING',[44,124,146],[['X1','viewCounts','any writer'],['X2','favoriteCounts','any writer']]);
-tx(1330,1012,'T1 120 s · T2 120 s · T3 = 2 · see sheet 2','dts');
+tx(1330,1012,'T1 120 s · T2 300 s · T3 = 2 · T4 10 s · see sheets 2 and 3','dts');
 
 /* ================= SHEET 2 · LINKING AND AUTH ================= */
 begin('sh2');
@@ -225,9 +232,9 @@ mk('line',{x1:520,y1:408,x2:558,y2:408,class:'env','marker-end':A});
  tx(X,Y+148,'USER.LEAVE() EMITS NO AUTH EVENT, SO THE STATE IS REPUBLISHED BY HAND. GUN RECALL() PERSISTS TO SESSIONSTORAGE ONLY, WHICH IS WHY L1 EXISTS.','dts');
  tx(X,Y+166,'RENAMING WRITES G1; THE NAME IS READ BACK BY SUBSCRIPTION BECAUSE once() ON AN UNANSWERED PATH MAY NEVER CALL BACK.','dts')}
 /* tables */
-{let y=table(1110,86,'CONSTANTS',[44,104,190],[['T1','pairing ttl','120 s'],['T2','heartbeat','120 s'],['T3','ticket v','2'],['P','envelope','open-tilawa-pairing/<id>'],['Q','payload','JSON · QR or paste']],{rh:19});
+{let y=table(1110,86,'CONSTANTS',[44,104,190],[['T1','pairing ttl','120 s'],['T2','heartbeat','300 s'],['T3','ticket v','2'],['T4','redeem deadline','10 s'],['P','envelope','open-tilawa-pairing/<id>'],['Q','payload','JSON · QR or paste']],{rh:19});
  y=table(1110,y,'GUARDS',[44,104,190],[['S','sign-out','erase L1'],['L','last device','typed word'],['R','rename','G1 put'],['V','v1 ticket','refused']],{rh:19});
- tx(1110,y,'[TBD] MESSAGE SIZE BOUND ON THE QR','dts');tx(1110,y+16,'[TBD] RETRY WHEN THE RELAY IS UNREACHABLE','dts');tx(1110,y+32,'[TBD] MAX DEVICES PER RING','dts')}
+ tx(1110,y,'[TBD] MESSAGE SIZE BOUND ON THE QR','dts');tx(1110,y+16,'[TBD] MAX DEVICES PER RING','dts');tx(1110,y+32,'[TBD] BEST-EFFORT REVOCATION (NOT BUILT)','dts')}
 /* what this sheet leaves out */
 {const X=1110,Y=430;rr(X,Y,470,196,8,'slot');tx(X+14,Y+22,'NOT IN THIS DRAWING','vt');
  tx(X+14,Y+48,'Account deletion · recovery codes · 2FA: console only.','dts');
@@ -236,6 +243,105 @@ mk('line',{x1:520,y1:408,x2:558,y2:408,class:'env','marker-end':A});
  mk('line',{x1:X+14,y1:Y+102,x2:X+456,y2:Y+102,class:'ph'});
  tx(X+14,Y+126,'READER VERSION','dts');tx(X+14,Y+144,'how-it-works/07-where-accounts-live.md','tc');
  tx(X+14,Y+168,'SYNC SPEC','dts');tx(X+14,Y+186,'GUN_MULTI_DEVICE_SYNC.md','tc')}
+
+/* ================= SHEET 3 · LINKING LIFECYCLE ================= */
+begin('sh3');
+notes([[1,'SUCCESS IS A ROW, NOT A HANDSHAKE: A CLOSES THE CODE WHEN A NEW DEVICE ID APPEARS.'],[2,'A SNAPSHOTS THE IDS WHEN THE CODE IS DRAWN. A HEARTBEAT FROM AN EXISTING DEVICE CANNOT CLOSE IT.'],[3,'B STOPS THE STREAM AS SOON AS THE TICKET PARSES. THE PANEL STAYS; THE READER NODE IS HIDDEN, NOT REMOVED.'],[4,'T4 = 10 s. A RELAY THAT NEVER ANSWERS IS A FAILURE WITH A RETRY, NOT A SPINNER.'],[5,'ONE TICKET, ONE REDEMPTION: A SECOND DECODE CALLBACK IS IGNORED.'],[6,'THE CONFIRMATION LIVES IN THE SHEET, BECAUSE THE TAB SWITCH UNMOUNTS THE JOIN PANEL.'],[7,'NOTHING IS SENT FROM B TO A. THE ACCOUNT GRAPH IS THE CHANNEL.']]);
+
+function state(x,y,w,h,code,title,sub){
+ rr(x,y,w,h,8,'obj');tx(x+10,y+21,code,'tbt');tx(x+48,y+21,title,'vt');tx(x+10,y+42,sub,'tc')}
+function flow(y,items,start){
+ items.forEach(([c,t,sb],i)=>{const x=(start||60)+i*206;state(x,y,180,80,c,t,sb);
+  if(i<items.length-1)mk('line',{x1:x+180,y1:y+40,x2:x+206-2,y2:y+40,class:'dl','marker-end':A})})}
+
+tx(50,306,'DEVICE A · HOLDS K2','vt');tx(50,320,'THE DEVICE THAT SHOWS THE CODE','dts');
+flow(330,[['A1','CARD','add a device'],['A2','TICKET','ephemeral K3/K4'],['A3','SHOW','QR · ids recorded'],['A4','WAIT','code up to T1'],['A5','ROW','a new id arrives'],['A6','CLOSE','code closes itself']]);
+
+tx(50,556,'DEVICE B · NO KEY','vt');tx(50,570,'THE DEVICE THAT SCANS OR PASTES','dts');
+flow(580,[['B1','CARD','join a ring'],['B2','CAMERA','fps 15 · QR only'],['B3','PARSE','v = 2 · exp'],['B4','STOP','stream off'],['B5','LINKING','redeem ≤ T4'],['B6','SUCCESS','banner · devices']]);
+
+/* the receipt edge: B6 writes the row, A5 sees it */
+mk('polyline',{points:'1180,580 1180,486 974,486 974,410',class:'dl','marker-end':A});
+tx(1080,478,'THE ROW IS THE RECEIPT','dts',{'text-anchor':'middle'});
+mk('circle',{cx:1180,cy:486,r:2.4,class:'dot'});
+
+/* failure branch */
+state(884,690,180,80,'B7','FAIL','expired · timeout');
+mk('line',{x1:974,y1:660,x2:974,y2:690,class:'dl','marker-end':A});
+mk('polyline',{points:'884,730 356,730 356,664',class:'dl','marker-end':A});
+tx(620,722,'ONE TAP · SCAN AGAIN','dts',{'text-anchor':'middle'});
+nb(1056,652,5);nb(1262,652,6);
+
+/* what each side owns */
+{const X=50,Y=810,W=620,H=150;rr(X,Y,W,H,8,'slot');tx(X+14,Y+24,'WHO OWNS THE FEEDBACK','vt');
+ tx(X+14,Y+50,'A','dts');tx(X+34,Y+50,'code popup + banner «added» + highlighted row','tc');
+ tx(X+14,Y+70,'B','dts');tx(X+34,Y+70,'linking spinner, success banner, retry on failure','tc');
+ mk('line',{x1:X+14,y1:Y+86,x2:X+W-14,y2:Y+86,class:'ph'});
+ tx(X+14,Y+110,'A NEVER CONFIRMS A HANDSHAKE IT DID NOT SEE. IF THE ROW DOES NOT ARRIVE,','dts');
+ tx(X+14,Y+126,'THE CODE SIMPLY EXPIRES — WHICH IS THE TRUTH: THE DEVICE DID NOT JOIN.','dts')}
+
+/* capture settings */
+{let y=table(1330,300,'CAPTURE · SCANNER',[120,190],[['fps','15 frames/s'],['qrbox','75% of min side'],['formats','QR only'],['detector','native if present'],['stream','1280×720 ideal'],['flip','off']],{rh:19,head:['PARAM','VALUE']});
+ y=table(1330,y,'CAPTURE · QR',[120,190],[['margin','3 modules'],['source','320 px'],['drawn','280 px'],['ecc','M']],{rh:19,head:['PARAM','VALUE']});
+ y=table(1330,y,'GUARDS',[120,190],[['T4','10 s deadline'],['once','decoder re-entry'],['retry','same panel']],{rh:19,head:['CODE','RULE']});
+ tx(1330,y,'[TBD] FIELD TEST ON LOW-END ANDROID','dts')}
+
+
+/* ================= SHEET 4 · DATA OWNERSHIP ================= */
+begin('sh4');
+notes([[1,'THREE HOMES, ONE RULE: A VALUE LIVES WHERE IT CAN BE TRUE.'],[2,'THE GRAPH IS SIGNED, NOT ENCRYPTED. ANYONE HOLDING K1 READS EVERY G PATH.'],[3,'LOCAL KEYS ARE NAMESPACED tilawah: AND MIGRATED BY COPY FROM open-tilawa: AT BOOT.'],[4,'TELEMETRY CONSENT IS PER DEVICE ON PURPOSE: SYNCING IT WOULD CONSENT A DEVICE THAT NEVER ANSWERED.'],[5,'THE PLAYHEAD IS NOT IN THE GRAPH. TWO DEVICES ARE IN TWO DIFFERENT PLACES.'],[6,'THE COUNTER ROOTS KEEP THE OLD open-tilawa- PREFIX: THEY ARE WIRE IDS, NOT LOCAL STATE.']]);
+
+function column(x,y,w,h,title,sub,rows){
+ rr(x,y,w,h,10,'obj');tx(x+14,y+24,title,'vt');tx(x+14,y+40,sub,'dts');
+ rows.forEach(([c,p,note],i)=>{const yy=y+68+i*30;
+  mk('rect',{x:x+14,y:yy-15,width:36,height:20,class:'hug'});tx(x+32,yy-1,c,'tc',{'text-anchor':'middle'});
+  tx(x+60,yy-1,p,'tc');if(note)tx(x+60,yy+11,note,'dts')})}
+
+column(50,300,510,300,'SYNCED · gun.user()','SIGNED · MERGED PER FIELD',[
+ ['G1','profile.name','last write'],
+ ['G2','settings','LWW on updatedAt'],
+ ['G3','favorites/<id>','union'],
+ ['G4','devices/<id>','merge · T2 300 s'],
+ ['G5','devices/meta','claim once'],
+ ['G6','recentlyViewed/<id>','newest at'],
+ ['G7','schema','version stamp']]);
+
+column(600,300,510,450,'DEVICE ONLY · tilawah:*','NEVER LEAVES THIS BROWSER',[
+ ['L1','account','K0 pair · signing out erases'],
+ ['L2','v3','playhead + settings mirror'],
+ ['L3','favorites','mirror for logged-out use'],
+ ['L4','recent','reciter history mirror'],
+ ['L5','viewed:*','which ids were counted'],
+ ['L6','counted:*','which favourites counted'],
+ ['L7','device-id','this device'],
+ ['L8','device-name','label'],
+ ['L9','device-linked-at','join date, stamped once'],
+ ['L10','telemetry','consent: unset · on · off'],
+ ['L11','telemetry-device-day','one device event per UTC day'],
+ ['L12','anon-id','identity when logged out']]);
+
+column(1150,300,500,300,'PUBLIC · no ring needed','READABLE BY ANYONE',[
+ ['X1','open-tilawa-<env>-view-counts','count per reciter'],
+ ['X2','open-tilawa-<env>-favorite-counts','count per reciter'],
+ ['P','open-tilawa-pairing/<id>','sealed K0 · ≤ T1']]);
+
+{const X=1150,Y=630,W=500,H=190;rr(X,Y,W,H,8,'slot');tx(X+14,Y+24,'WHY NOT SYNC EVERYTHING','vt');
+ [['playhead','a phone and a laptop are in different places'],
+  ['consent','consent is the device that answered'],
+  ['device id','an identity with no home elsewhere'],
+  ['sleep timer','a session, not a preference']]
+  .forEach(([k,v],i)=>{const yy=Y+54+i*32;tx(X+14,yy,k,'tc');tx(X+120,yy,v,'tc')})}
+
+{const X=50,Y=800,W=1060,H=210;rr(X,Y,W,H,8,'obj');tx(X+14,Y+24,'THE MIGRATION · ONE WAY, COPY NOT MOVE','vt');
+ tx(X+14,Y+50,'open-tilawa:<suffix>','tc');mk('line',{x1:X+170,y1:Y+46,x2:X+250,y2:Y+46,class:'dl','marker-end':A});tx(X+260,Y+50,'tilawah:<suffix>','tc');
+ tx(X+14,Y+76,'RUNS IN main.tsx BEFORE THE FIRST LOCALE OR THEME READ. THE SOURCE IS LEFT IN PLACE FOR ONE RELEASE,','dts');
+ tx(X+14,Y+92,'SO A TAB STILL RUNNING THE PREVIOUS BUNDLE KEEPS ITS STATE. THE TARGET WINS IF IT ALREADY EXISTS.','dts');
+ mk('line',{x1:X+14,y1:Y+112,x2:X+W-14,y2:Y+112,class:'ph'});
+ tx(X+14,Y+136,'account · v3 · favorites · counted:* · viewed:* · recent · anon-id','tc');
+ tx(X+14,Y+160,'device-id · device-name · device-linked-at · telemetry · telemetry-device-day','tc');
+ tx(X+14,Y+186,'THE WINDOW EVENT IS RENAMED TOO: tilawah:settings. THE GUN ROOTS ARE NOT: A COUNTER RENAME','dts');
+ tx(X+14,Y+202,'WOULD RESET THE PUBLIC TOTALS TO ZERO, AND A PAIRING RENAME WOULD BREAK LINKS DURING ROLLOUT.','dts')}
+
 
 })();
 </script>

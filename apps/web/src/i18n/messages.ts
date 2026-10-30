@@ -96,7 +96,6 @@ const ar = {
     scanHint: 'وجّه الكاميرا إلى رمز الربط',
     scanStart: 'المسح بالكاميرا',
     scanStop: 'إيقاف الكاميرا',
-    linked: 'تمت إضافة الجهاز إلى الحلقة',
     linkedHere: 'تم ربط هذا الجهاز بالحلقة',
     linkedOther: (name?: string) =>
       name ? `أُضيف «${name}» إلى الحلقة` : 'أُضيف جهاز جديد إلى الحلقة',
@@ -375,7 +374,6 @@ const en: typeof ar = {
     scanHint: 'Point the camera at the pairing code',
     scanStart: 'Scan with camera',
     scanStop: 'Stop camera',
-    linked: 'Device added to the ring',
     linkedHere: 'This device is now in the ring',
     linkedOther: (name?: string) =>
       name ? `“${name}” was added to the ring` : 'A new device was added to the ring',

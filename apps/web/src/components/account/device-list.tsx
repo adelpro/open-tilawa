@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { Input } from '@/components/field';
 
@@ -28,14 +28,8 @@ export default function DeviceList({ highlightId }: { highlightId?: string | nul
   const { updateDeviceName } = useUserSync();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const highlightRef = useRef<HTMLLIElement>(null);
 
   const currentId = getOrCreateDeviceId();
-
-  // The row that just joined may be outside the scroll view.
-  useEffect(() => {
-    if (highlightId) highlightRef.current?.scrollIntoView({ block: 'nearest' });
-  }, [highlightId]);
 
   /** "3 months ago" — the words come from the locale, the unit from here. */
   const ago = (ts?: number): string => {
@@ -78,9 +72,8 @@ export default function DeviceList({ highlightId }: { highlightId?: string | nul
             return (
               <li
                 key={device.id}
-                ref={highlighted ? highlightRef : undefined}
                 data-highlight={highlighted ? 'true' : undefined}
-                className={cn('px-3 py-3 transition-colors', highlighted && 'bg-line/60')}
+                className={cn('px-3 py-3 transition-colors', highlighted && 'ring-1 ring-inset ring-ink')}
               >
                 {editing === device.id ? (
                   <Input
