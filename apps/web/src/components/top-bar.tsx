@@ -1,6 +1,7 @@
 import { APP_VERSION } from '@/constants/version';
 import { useLocale } from '@/hooks/use-locale';
 import Icon from '@/components/icons';
+import Link from '@/components/link';
 import { cn } from '@/utils/cn';
 import { useEffect, useRef, useState } from 'react';
 
@@ -55,18 +56,18 @@ export default function TopBar({
     <header className="top-bar flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
       {/* The wordmark is the link's name, so the version sits outside it: an
           aria-label that left the visible "1.8.3" out failed WCAG 2.5.3. */}
-      <a href="#/" className="flex items-center gap-2">
+      <Link to={{ name: 'home' }} className="flex items-center gap-2">
         <img src="/images/icon.png" alt={t.brand} className="brand-mark h-6 w-auto" />
         <span aria-hidden="true" className="tnum text-[0.75rem] leading-none text-muted">
           {APP_VERSION}
         </span>
-      </a>
+      </Link>
 
       {/* Desktop navigation: three words, no sandwich. The two lists are the
           same panels the phone opens, just reachable from here as well. */}
       <nav className="hidden items-center gap-1 text-[0.875rem] text-muted lg:flex" aria-label={t.brand}>
-        <a
-          href="#/"
+        <Link
+          to={{ name: 'home' }}
           className={cn(
             'flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink',
             isHome && 'text-ink',
@@ -74,7 +75,7 @@ export default function TopBar({
         >
           <Icon name="house" weight={isHome ? 'fill' : 'regular'} />
           {t.routes.listen}
-        </a>
+        </Link>
         <button
           type="button"
           onClick={onOpenReciters}
@@ -101,13 +102,13 @@ export default function TopBar({
             {t.account.title}
           </button>
         )}
-        <a
-          href="#/settings"
+        <Link
+          to={{ name: 'settings' }}
           className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
         >
           <Icon name="gear" />
           {t.routes.settings}
-        </a>
+        </Link>
         <div className="relative" ref={moreRef}>
           <button
             type="button"
@@ -128,24 +129,24 @@ export default function TopBar({
               role="menu"
               className="absolute end-0 top-full mt-1 w-40 overflow-hidden rounded-lg border border-line bg-canvas shadow-lg"
             >
-              <a
-                href="#/about"
+              <Link
+                to={{ name: 'about' }}
                 role="menuitem"
                 onClick={() => setMoreOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
               >
                 <Icon name="info" />
                 {t.routes.about}
-              </a>
-              <a
-                href="#/privacy"
+              </Link>
+              <Link
+                to={{ name: 'privacy' }}
                 role="menuitem"
                 onClick={() => setMoreOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
               >
                 <Icon name="shield" />
                 {t.routes.privacy}
-              </a>
+              </Link>
             </div>
           )}
         </div>
