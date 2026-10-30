@@ -5,9 +5,12 @@
  * playback that actually produced sound. Whatever the answer, the question is not asked
  * again; the switch stays in Settings for anyone who changes their mind.
  */
+
+import { STORAGE_KEYS } from '@/utils/storage-keys';
+
 export type Consent = 'unset' | 'on' | 'off';
 
-const KEY = 'open-tilawa:telemetry';
+const KEY = STORAGE_KEYS.telemetry;
 
 export function shouldPrompt(consent: Consent, heardSound: boolean): boolean {
   return consent === 'unset' && heardSound;

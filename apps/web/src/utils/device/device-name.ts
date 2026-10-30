@@ -1,4 +1,6 @@
-const KEY = 'open-tilawa:device-name';
+import { STORAGE_KEYS } from '@/utils/storage-keys';
+
+const KEY = STORAGE_KEYS.deviceName;
 
 function getBrowserVersion(): string {
   if (typeof navigator === 'undefined') return '';

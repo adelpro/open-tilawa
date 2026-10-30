@@ -1,4 +1,6 @@
-const RECENT_KEY = 'open-tilawa:recent';
+import { STORAGE_KEYS } from '@/utils/storage-keys';
+
+const RECENT_KEY = STORAGE_KEYS.recent;
 const LIMIT = 10;
 
 export type RecentEntry = { id: string; at: number };

@@ -13,9 +13,10 @@
 
 import { LOCALES, type Locale } from '@/i18n/messages';
 import { VISUALISERS, type Visualiser } from '@/utils/visualiser-models';
+import { STORAGE_KEYS } from '@/utils/storage-keys';
 
-export const STORAGE_KEY = 'open-tilawa:v3';
-const PREVIOUS_KEY = 'open-tilawa:v2';
+export const STORAGE_KEY = STORAGE_KEYS.state;
+const PREVIOUS_KEY = STORAGE_KEYS.statePrevious;
 const LEGACY_KEY = 'tilawa:state';
 const LEGACY_PROGRESS_PREFIX = 'tilawa:progress:';
 const MAX_POSITIONS = 10;
@@ -367,7 +368,7 @@ export function shouldPushLocalSettings(
 /**
  * Adopt settings that came from the account.
  *
- * Deliberately does **not** dispatch `open-tilawa:settings`: that event is the
+ * Deliberately does **not** dispatch `STORAGE_EVENT`: that event is the
  * write-back path to the relay, and an inbound value must never bounce out
  * again. Without the guard, two devices echo the same object at each other.
  */
@@ -394,7 +395,7 @@ export function patchSettings(patch: StoredSettings): StoredState {
     if (typeof window !== 'undefined') {
       // The whole merged object, stamped: the ring writer needs neither a read
       // nor its own clock, so two fields changed at once cannot clobber.
-      const event = new CustomEvent('open-tilawa:settings', { detail: settings });
+      const event = new CustomEvent(STORAGE_EVENT, { detail: settings });
       window.dispatchEvent(event);
     }
   } catch {

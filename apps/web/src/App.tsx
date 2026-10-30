@@ -29,6 +29,7 @@ import { currentSurahIdAtom } from './jotai/player';
 import { toPath } from './routes';
 import { createTelemetry, deviceEvent, type TelemetryEvent } from './utils/telemetry';
 import { markDeviceDay, readDeviceDay, shouldReportDevice, utcDay } from './utils/device-day';
+import { STORAGE_EVENT } from './utils/storage-keys';
 import { APP_VERSION } from './constants/version';
 import {
   consentEnabled,
@@ -245,8 +246,8 @@ export default function App() {
         updateSettings(detail as any);
       }
     };
-    window.addEventListener('open-tilawa:settings', handler);
-    return () => window.removeEventListener('open-tilawa:settings', handler);
+    window.addEventListener(STORAGE_EVENT, handler);
+    return () => window.removeEventListener(STORAGE_EVENT, handler);
   }, [updateSettings]);
 
   const go = (next: Parameters<typeof navigate>[0]) => {

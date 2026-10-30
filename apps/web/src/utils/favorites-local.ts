@@ -1,5 +1,7 @@
-const FAVORITES_KEY = 'open-tilawa:favorites';
-const COUNTED_PREFIX = 'open-tilawa:counted:';
+import { STORAGE_KEYS } from '@/utils/storage-keys';
+
+const FAVORITES_KEY = STORAGE_KEYS.favorites;
+const COUNTED_PREFIX = STORAGE_KEYS.countedPrefix;
 
 function readList(key: string): string[] {
   if (typeof window === 'undefined') return [];

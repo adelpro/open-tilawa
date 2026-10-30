@@ -96,7 +96,7 @@ try {
     await context.addInitScript(
       ({ blob, pin }) => {
         try {
-          localStorage.setItem('open-tilawa:v3', blob);
+          localStorage.setItem('tilawah:v3', blob);
           localStorage.setItem('tilawa.pinned.v1', pin ? '1' : '0');
           // The keyboard hint is a one-time toast; a store shot should not be
           // its first screenshot.

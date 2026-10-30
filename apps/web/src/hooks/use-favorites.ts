@@ -6,6 +6,7 @@ import { syncFavorite, syncView } from '@/gun/counts';
 import { myFavoritesAtom, gunUserPubAtom } from '@/jotai/gun';
 import { selectedReciterAtom } from '@/jotai/atom';
 import { getCountingIdentity } from '@/utils/identity';
+import { STORAGE_KEYS } from '@/utils/storage-keys';
 import {
   readCounted,
   readLocalFavorites,
@@ -13,7 +14,7 @@ import {
   writeLocalFavorites,
 } from '@/utils/favorites-local';
 
-const VIEWED_PREFIX = 'open-tilawa:viewed:';
+const VIEWED_PREFIX = STORAGE_KEYS.viewedPrefix;
 
 /**
  * The user's own favourites plus the two public counters.

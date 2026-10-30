@@ -1,4 +1,6 @@
-const ANON_KEY = 'open-tilawa:anon-id';
+import { STORAGE_KEYS } from '@/utils/storage-keys';
+
+const ANON_KEY = STORAGE_KEYS.anonId;
 
 /**
  * Who is counting. Logged-in devices share the SEA `pub`, so a favourite toggled

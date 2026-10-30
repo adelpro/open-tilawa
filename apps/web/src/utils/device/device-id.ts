@@ -1,4 +1,6 @@
-const KEY = 'open-tilawa:device-id';
+import { STORAGE_KEYS } from '@/utils/storage-keys';
+
+const KEY = STORAGE_KEYS.deviceId;
 
 export function getOrCreateDeviceId(): string {
   if (typeof window === 'undefined') return 'server';

@@ -1,4 +1,6 @@
-const KEY = 'open-tilawa:account';
+import { STORAGE_KEYS, LEGACY_STORAGE_PREFIX } from '@/utils/storage-keys';
+
+const KEY = STORAGE_KEYS.account;
 
 /**
  * The account keypair, kept in this browser.
@@ -48,6 +50,10 @@ export function clearStoredPair(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(KEY);
+    // The pre-rename key can still exist on a browser that has not booted the
+    // new bundle since the migration ran. Signing out must forget the key
+    // everywhere, not leave a copy under the old name.
+    window.localStorage.removeItem(`${LEGACY_STORAGE_PREFIX}account`);
   } catch {
     // nothing to do
   }

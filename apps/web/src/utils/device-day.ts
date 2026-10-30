@@ -9,7 +9,10 @@
  * The day is UTC, because the server buckets the event by the UTC day it arrives on.
  * A local day would send twice near midnight in one direction and never in the other.
  */
-const KEY = 'open-tilawa:telemetry-device-day';
+
+import { STORAGE_KEYS } from '@/utils/storage-keys';
+
+const KEY = STORAGE_KEYS.telemetryDeviceDay;
 
 export function utcDay(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10);

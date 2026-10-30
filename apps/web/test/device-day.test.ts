@@ -7,6 +7,7 @@ import {
   shouldReportDevice,
   utcDay,
 } from '../src/utils/device-day.ts';
+import { STORAGE_KEYS } from '../src/utils/storage-keys.ts';
 
 /** A store that behaves: it remembers what was written. */
 function memory(initial: string | null = null): Pick<Storage, 'getItem' | 'setItem'> & {
@@ -15,10 +16,10 @@ function memory(initial: string | null = null): Pick<Storage, 'getItem' | 'setIt
   return {
     value: initial,
     getItem(key: string) {
-      return key === 'open-tilawa:telemetry-device-day' ? this.value : null;
+      return key === STORAGE_KEYS.telemetryDeviceDay ? this.value : null;
     },
     setItem(key: string, value: string) {
-      if (key === 'open-tilawa:telemetry-device-day') this.value = value;
+      if (key === STORAGE_KEYS.telemetryDeviceDay) this.value = value;
     },
   };
 }
