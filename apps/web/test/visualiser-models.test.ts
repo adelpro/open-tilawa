@@ -33,7 +33,7 @@ test('downsample keeps the peak of each bucket and normalises it', () => {
 // The bars' buckets are nearly linear in frequency, which is fine for 28 columns
 // of a display. The ribbon needs a log axis: a recitation has nothing above
 // ~8 kHz, so a linear map spends half the strip on silence.
-test('logBands spreads the axis by octave and puts 1 kHz in the middle', () => {
+test('logBands spreads the axis by octave and puts the middle of the voice at the middle', () => {
   const bins = new Uint8Array(512);
   const columns = 56;
   const rate = 48000;
@@ -41,14 +41,14 @@ test('logBands spreads the axis by octave and puts 1 kHz in the middle', () => {
   assert.equal(band.length, columns);
   assert.ok(band.every((v) => v === 0));
 
-  // Just over five octaves from 90 Hz to 16 kHz, so the middle column has to
-  // sit near 1 kHz — not near 8 kHz, where a linear axis put it.
+  // Five and a half octaves from 90 Hz to the top of the voice, so the middle
+  // column sits near 640 Hz — not near 7 kHz, where a linear axis put it.
   const binHz = rate / 2 / bins.length;
-  const middle = Math.round(Math.sqrt(90 * 16000) / binHz);
+  const middle = Math.round(Math.sqrt(90 * 4500) / binHz);
   bins[middle] = 255;
   const lit = logBands(bins, columns, rate);
   const hottest = lit.indexOf(Math.max(...lit));
-  assert.ok(hottest >= 24 && hottest <= 31, `1 kHz landed in column ${hottest}`);
+  assert.ok(hottest >= 24 && hottest <= 31, `640 Hz landed in column ${hottest}`);
 });
 
 // Bin 0 is DC. Drawing it leaves a notch at the bass edge of the ribbon — the

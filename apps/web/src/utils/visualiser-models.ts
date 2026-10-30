@@ -41,9 +41,17 @@ export function follow(current: number, target: number, attack: number, release:
   return current + (target - current) * (target > current ? attack : release);
 }
 
-/** The band a recitation lives in. Below 70 Hz is rumble; above 16 kHz is air. */
+/**
+ * The band a recitation lives in: the fundamental above the rumble, and the
+ * top of the voice below the air. The ceiling is deliberately low. Most of the
+ * catalogue is a low-bitrate mono recording that is low-passed around 4-5 kHz —
+ * measured on a live track, everything above 4 kHz was exactly zero — so an
+ * axis that reaches 16 kHz spends a quarter of the strip on silence and the
+ * wave looks like it stops short of the edge. Nothing musical is lost: the
+ * intelligible voice band ends at 4 kHz.
+ */
 const LOG_MIN_HZ = 90;
-const LOG_MAX_HZ = 16000;
+const LOG_MAX_HZ = 4500;
 
 /**
  * Peak level of each log-spaced band, bass first.
@@ -53,8 +61,8 @@ const LOG_MAX_HZ = 16000;
  * octave takes as much of the width as the four below it — where a recitation
  * has nothing, so the strip ended in a long flat tail that read as a wave which
  * stopped short of the edge. A log axis spends the width the way the ear does:
- * two thirds of the silhouette on the band that carries the voice, and only the
- * last few columns fading out.
+ * most of the silhouette on the band that carries the voice, and the treble
+ * fading over the last column or two.
  */
 export function logBands(
   bins: Uint8Array,
