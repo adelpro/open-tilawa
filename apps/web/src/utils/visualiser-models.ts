@@ -33,36 +33,12 @@ export function downsample(bins: Uint8Array, columns: number): number[] {
 }
 
 /**
- * Peak magnitude (0..1) of a byte time-domain buffer, either polarity. Over a
- * 1024-sample read (21 ms at 48 kHz) it covers at least two periods of any
- * voice above ~100 Hz, so it follows loudness and not the phase the snapshot
- * happened to land on. Smoothing the signed samples instead aliased against the
- * read rate and made the height follow the reciter's pitch.
+ * One step of a rise-fast, fall-slow follower. Both shapes use it — the bars on
+ * each column, the ribbon on each band of each layer — so a syllable lifts a
+ * band at once and the silence after it sinks slowly instead of snapping back.
  */
-export function peakMagnitude(time: Uint8Array): number {
-  let peak = 0;
-  for (let i = 0; i < time.length; i += 1) {
-    const magnitude = Math.abs(time[i] - 128);
-    if (magnitude > peak) peak = magnitude;
-  }
-  return peak / 128;
-}
-
-/**
- * Automatic gain for the wave. A time-domain peak of a voice sits around
- * 0.05–0.2 of full scale, so a fixed gain either draws a ripple on the floor or
- * clips the loud reciters. The gain lifts a quiet recording toward the block,
- * never attenuates a loud one, and stays at 1 for true silence so a pause is not
- * amplified into noise.
- */
-const AUTO_TARGET = 0.9;
-const AUTO_FLOOR = 0.08;
-const AUTO_MAX = 3;
-const AUTO_SILENCE = 0.02;
-
-export function autoGain(envelope: number): number {
-  if (!Number.isFinite(envelope) || envelope < AUTO_SILENCE) return 1;
-  return Math.max(1, Math.min(AUTO_MAX, AUTO_TARGET / Math.max(envelope, AUTO_FLOOR)));
+export function follow(current: number, target: number, attack: number, release: number): number {
+  return current + (target - current) * (target > current ? attack : release);
 }
 
 /** `#abc` and `#aabbcc` both, because the tokens are hand-edited. */

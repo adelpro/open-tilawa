@@ -2,9 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
-  autoGain,
   downsample,
-  peakMagnitude,
+  follow,
   mixHex,
   normaliseVisualiser,
   VISUALISERS,
@@ -40,24 +39,32 @@ test('mixHex walks one colour toward another and clamps its position', () => {
   assert.equal(mixHex('#fff', '#000', 0), '#ffffff');
 });
 
-// Recitation time-domain peaks land around 0.05-0.2 of full scale, so the wave
-// drew a ripple on the floor. The gain lifts a quiet recording toward the block
-// height, never attenuates a loud one, and leaves true silence alone.
-test('autoGain lifts a quiet signal, caps the boost, and leaves silence flat', () => {
-  assert.equal(autoGain(0), 1);
-  assert.equal(autoGain(0.01), 1);
-  assert.equal(autoGain(0.05), 3);
-  assert.equal(autoGain(0.1), 3);
-  assert.equal(autoGain(0.3), 3);
-  assert.equal(autoGain(0.45), 2);
-  assert.equal(autoGain(0.9), 1);
-  assert.equal(autoGain(1), 1);
-  assert.equal(autoGain(Number.NaN), 1);
-  // Whatever the input, the gain stays within the block's budget.
-  for (const peak of [0, 0.02, 0.08, 0.2, 0.5, 1, 4]) {
-    const gain = autoGain(peak);
-    assert.ok(gain >= 1 && gain <= 3, `gain ${gain} for peak ${peak}`);
+// The shape must lift on a syllable and sink after it, not mirror every read.
+// Both the bars and the ribbon feed their columns through this one follower.
+test('follow closes the attack fraction of the gap rising, and the release falling', () => {
+  assert.equal(follow(0, 1, 0.5, 0.1), 0.5);
+  assert.ok(Math.abs(follow(1, 0, 0.5, 0.1) - 0.9) < 1e-12);
+  // Already there: neither rate moves it.
+  assert.equal(follow(0.4, 0.4, 0.9, 0.9), 0.4);
+  // A target of zero still lands on the floor, just slowly.
+  let level = 1;
+  for (let i = 0; i < 200; i += 1) level = follow(level, 0, 0.5, 0.14);
+  assert.ok(level < 1e-6, `level ${level} after two hundred releases`);
+});
+
+// Rise fast, fall slow: over the same number of reads the rise is much further
+// along than the fall, which is what keeps a column from flickering.
+test('follow reaches a new level faster than it lets go of the old one', () => {
+  let up = 0;
+  let down = 1;
+  for (let i = 0; i < 3; i += 1) {
+    up = follow(up, 1, 0.5, 0.14);
+    down = follow(down, 0, 0.5, 0.14);
   }
+  assert.ok(up > 0.8, `up ${up}`);
+  assert.ok(down > 0.4, `down ${down}`);
+  // Progress made, either way: the rise has closed more than the fall has opened.
+  assert.ok(up > 1 - down, `up ${up}, down ${down}`);
 });
 
 test('waveTints lays four even steps from the front tint to the back one', () => {
@@ -69,28 +76,3 @@ test('waveTints lays four even steps from the front tint to the back one', () =>
   assert.equal(tints.at(-1), '#5d97c9');
 });
 
-test('peakMagnitude is the largest deviation from centre, either polarity', () => {
-  const time = new Uint8Array(16).fill(128);
-  assert.equal(peakMagnitude(time), 0);
-  time[3] = 128 + 64;
-  assert.equal(peakMagnitude(time), 0.5);
-  time[9] = 0;
-  assert.equal(peakMagnitude(time), 1);
-});
-
-// The ribbon used to smooth signed samples from unsynchronised snapshots, which
-// aliased against the read rate and made the height follow pitch. A peak over a
-// whole read is the same for any pitch and phase of a voice.
-test('peakMagnitude gives the same loudness for any pitch and phase', () => {
-  const peaks = [100, 143, 150, 157, 210, 320].flatMap((hz) =>
-    [0, 0.7, 2.1, 4.4].map((phase) => {
-      const time = new Uint8Array(1024);
-      for (let i = 0; i < time.length; i += 1) {
-        time[i] = Math.round(128 + 128 * 0.15 * Math.sin((2 * Math.PI * hz * i) / 48000 + phase));
-      }
-      return peakMagnitude(time);
-    }),
-  );
-  assert.ok(Math.max(...peaks) - Math.min(...peaks) < 0.02, `spread ${Math.max(...peaks) - Math.min(...peaks)}`);
-  assert.ok(Math.min(...peaks) > 0.14, 'a 0.15 tone still reads about 0.15');
-});

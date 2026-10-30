@@ -2,36 +2,30 @@ import { useEffect, useRef } from 'react';
 
 import { getAnalyser } from '@/utils/audio-analyser';
 import {
-  autoGain,
   downsample,
-  peakMagnitude,
+  follow,
   waveTints,
   type Visualiser as Model,
 } from '@/utils/visualiser-models';
 
 const BARS = 28;
 const GAP = 3;
-/** History points across the width: each one is a pushed envelope value. */
-const WAVE_POINTS = 240;
 /**
- * How fast the ribbon scrolls. 1 pushes one new point every 60 ms, so a syllable
- * crosses the whole strip in about 14 s. 0.5 is twice as slow, 2 twice as fast.
- * It changes the speed only: the shape of each layer does not depend on it.
+ * Columns across the ribbon: twice the bars, because the silhouette is read as
+ * one curve and 28 points would show their corners.
  */
-const TEMPO = 1;
-const PUSH_MS = 60 / TEMPO;
+const RIBBON_POINTS = 56;
 /**
- * Four waves, front to back. The strip is a history, newest at the right edge,
- * scrolling left. Each layer is the same loudness envelope with its own
- * smoothing, so the front one traces the syllables and the back one is a haze.
- * `rise` and `fall` are the fraction of the gap closed per pushed point: a layer
- * lifts quickly on a syllable and sinks slowly in the silence after it.
+ * Four waves, front to back. Each layer is the same spectrum, band by band,
+ * held by its own rise/fall follower: the front one snaps to each syllable, the
+ * back ones trail it. Nothing scrolls — x is frequency, so a band lives where it
+ * is and only the heights move.
  */
 const WAVES = [
-  { gain: 1, rise: 0.7, fall: 0.35 },
-  { gain: 0.8, rise: 0.45, fall: 0.2 },
-  { gain: 0.62, rise: 0.28, fall: 0.12 },
-  { gain: 0.46, rise: 0.18, fall: 0.07 },
+  { gain: 1, attack: 0.5, release: 0.14 },
+  { gain: 0.8, attack: 0.37, release: 0.12 },
+  { gain: 0.62, attack: 0.27, release: 0.1 },
+  { gain: 0.46, attack: 0.19, release: 0.08 },
 ];
 /**
  * How opaque each filled layer is, front to back. Alpha is not the only depth
@@ -42,25 +36,18 @@ const WAVES = [
 const WAVE_ALPHA = [0.72, 0.55, 0.42, 0.3];
 /**
  * The analyser is read every other frame, not every frame: 30 Hz is plenty for
- * a loudness envelope, and no one can hear the difference.
+ * a spectrum, and no one can hear the difference.
  */
 const DATA_EVERY = 2;
-/**
- * The envelope and the gain it produces are both low-passed. Snapping the gain
- * to each frame's peak made the whole strip flicker on every transient: the
- * attack alone is a quarter of the way per read, and the second stage takes
- * about a third of a second. Long enough to breathe, not to lag the recitation.
- */
-const ENVELOPE_ATTACK = 0.25;
-const ENVELOPE_RELEASE = 0.06;
-const AUTO_SMOOTH = 0.1;
 
 /**
  * The spectrum, in three shapes: bars, peaks and waves.
  *
- * Waves is the one that reads as a waveform: four filled silhouettes of the same
- * signal, different smoothing, amplitude and blue, stacked front to back. Paused,
- * the block is empty: the canvas keeps its height so the controls never jump.
+ * Waves is four filled silhouettes of the same spectrum — one per layer, each
+ * held at its own speed and tinted its own blue, stacked front to back. x is
+ * frequency, so the shape stands where it is and only the heights move with the
+ * recitation. Paused, the block is empty: the canvas keeps its height so the
+ * controls never jump.
  */
 export default function Visualiser({
   playing,
@@ -78,8 +65,8 @@ export default function Visualiser({
   const levels = useRef<number[]>(new Array(BARS).fill(0));
   const peaks = useRef<number[]>(new Array(BARS).fill(0));
   const waves = useRef<Float32Array[]>(
-    // Magnitudes in 0..1, so silence is zero, not the 128 centre line.
-    WAVES.map(() => new Float32Array(WAVE_POINTS)),
+    // Magnitudes in 0..1, so silence is the floor, not the 128 centre line.
+    WAVES.map(() => new Float32Array(RIBBON_POINTS)),
   );
 
   useEffect(() => {
@@ -109,15 +96,8 @@ export default function Visualiser({
 
     let width = 0;
     let barWidth = 2;
-    // The wave's automatic gain and the envelope it follows, both updated in
-    // `tick` and read by `drawWaves`.
-    let auto = 1;
-    let envelope = 0;
-    // The ribbon's clock: when the last point was pushed, and the loudest read
-    // since, so a syllable shorter than one push is not lost.
-    let lastPush = performance.now();
-    let runningPeak = 0;
-    const acc = new Float32Array(WAVES.length);
+    // One scratch column of y values, reused by every layer on every paint.
+    const ys = new Float32Array(RIBBON_POINTS);
 
     const measure = () => {
       width = canvas.clientWidth || 260;
@@ -165,30 +145,31 @@ export default function Visualiser({
       // The strip uses the whole block: only the top pixels are left empty so
       // the loudest silhouette does not sit flush against the edge.
       const amplitude = height - 6;
-      const step = width / (WAVE_POINTS - 1);
+      const step = width / (RIBBON_POINTS - 1);
       const floor = height;
-      // The points slide left between pushes, so the strip moves continuously
-      // instead of stepping once per push.
-      const phase = Math.min(1, (performance.now() - lastPush) / PUSH_MS);
-      // Silence is the floor itself: no 1.5px stub, so a paused strip or a gap
-      // between ayat does not leave a bar hovering above the bottom.
-      const yFor = (sample: number, gain: number) =>
-        height - Math.pow(Math.min(1, sample * auto * gain), 0.7) * amplitude;
+      // Silence is the floor itself: no stub, so a gap between ayat does not
+      // leave a sliver hovering above the bottom. The gamma lifts an ordinary
+      // recitation off the floor, the same way it does for the bars.
+      const yFor = (level: number) => height - Math.pow(Math.min(1, level), 0.7) * amplitude;
 
       // Back to front, so the deepest tint is the nearest silhouette.
       for (let layer = WAVES.length - 1; layer >= 0; layer -= 1) {
-        const style = WAVES[layer];
         const samples = waves.current[layer];
+        for (let i = 0; i < samples.length; i += 1) ys[i] = yFor(samples[i]);
         ctx.fillStyle = tokens.tints[layer];
         ctx.globalAlpha = WAVE_ALPHA[layer];
         ctx.beginPath();
-        ctx.moveTo(width, floor);
-        // The newest point is still travelling in: hold its level to the edge.
-        ctx.lineTo(width, yFor(samples[0], style.gain));
-        for (let i = 0; i < samples.length; i += 1) {
-          ctx.lineTo(width - (i + phase) * step, yFor(samples[i], style.gain));
+        // Index 0 is the low end, at the right edge like the bars. Every point
+        // after it is one step further left.
+        ctx.moveTo(width, ys[0]);
+        // A quadratic through each midpoint: one curve, not a staircase.
+        for (let i = 1; i < samples.length - 1; i += 1) {
+          const x = width - i * step;
+          ctx.quadraticCurveTo(x, ys[i], x - step / 2, (ys[i] + ys[i + 1]) / 2);
         }
-        ctx.lineTo(width - (samples.length - 1 + phase) * step, floor);
+        ctx.lineTo(0, ys[RIBBON_POINTS - 1]);
+        ctx.lineTo(0, floor);
+        ctx.lineTo(width, floor);
         ctx.closePath();
         ctx.fill();
       }
@@ -239,57 +220,35 @@ export default function Visualiser({
     }
 
     const bins = new Uint8Array(512);
-    const time = new Uint8Array(1024);
     let frame = 0;
 
     const tick = () => {
       const analyser = getAnalyser();
       const fresh = Boolean(analyser) && !reduced && frame % DATA_EVERY === 0;
       if (analyser && fresh) {
-        if (model !== 'ribbon') {
-          analyser.getByteFrequencyData(bins);
-          downsample(bins, BARS).forEach((target, index) => {
-            const level = target;
-            const current = levels.current[index];
-            // Rise quickly, fall slowly: the same shape with less flicker.
-            levels.current[index] += (level - current) * (level > current ? 0.5 : 0.14);
-            peaks.current[index] = Math.max(levels.current[index], peaks.current[index] - 0.008);
+        analyser.getByteFrequencyData(bins);
+        if (model === 'ribbon') {
+          // The same spectrum the bars read, twice as finely and with one
+          // follower per layer: a band lifts and sinks where it stands.
+          const target = downsample(bins, RIBBON_POINTS);
+          WAVES.forEach((style, layer) => {
+            const samples = waves.current[layer];
+            for (let i = 0; i < samples.length; i += 1) {
+              samples[i] = follow(samples[i], target[i] * style.gain, style.attack, style.release);
+            }
           });
         } else {
-          analyser.getByteTimeDomainData(time);
-          const peak = peakMagnitude(time);
-          runningPeak = Math.max(runningPeak, peak);
-          // One envelope for the whole strip: the four layers share a signal,
-          // so a per-layer gain would flatten the ladder, not extend it.
-          envelope += (peak - envelope) * (peak > envelope ? ENVELOPE_ATTACK : ENVELOPE_RELEASE);
-          auto += (autoGain(envelope) - auto) * AUTO_SMOOTH;
+          downsample(bins, BARS).forEach((target, index) => {
+            levels.current[index] = follow(levels.current[index], target, 0.5, 0.14);
+            // A peak is a ceiling, so it can only fall as the bar sinks.
+            peaks.current[index] = Math.max(levels.current[index], peaks.current[index] - 0.008);
+          });
         }
       }
 
-      if (model === 'ribbon' && analyser && !reduced) {
-        const now = performance.now();
-        const due = Math.floor((now - lastPush) / PUSH_MS);
-        if (due > 0) {
-          // A hidden tab stops the frame loop; do not replay seconds of history
-          // when it comes back.
-          lastPush = due > 4 ? now : lastPush + due * PUSH_MS;
-          for (let n = 0; n < Math.min(due, 4); n += 1) {
-            WAVES.forEach((style, layer) => {
-              const level = n === 0 ? runningPeak : 0;
-              const rate = level > acc[layer] ? style.rise : style.fall;
-              acc[layer] += (level - acc[layer]) * rate;
-              const history = waves.current[layer];
-              history.copyWithin(1, 0, history.length - 1);
-              history[0] = acc[layer];
-            });
-          }
-          runningPeak = 0;
-        }
-      }
-
-      // The bars only change when data arrives; the ribbon also scrolls, so it
-      // paints every frame.
-      if (model === 'ribbon' || fresh || frame === 0) draw();
+      // The shape only changes when data arrives, so neither model needs a
+      // repaint on every frame.
+      if (fresh || frame === 0) draw();
       frame += 1;
       frameRef.current = requestAnimationFrame(tick);
     };
