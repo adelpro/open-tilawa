@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.12.4 — 2026-10-30
+
+Patch. App versions: **web 1.12.1**, **admin 1.30.3**, **seeder 1.4.3**.
+
+### Fixed
+
+- **The console's window chrome is the page it opens into.** The install manifest asked
+  for a cream splash and a teal bar (`#ffefc4` / `#086288`) and the prerendered head
+  asked for cream and near-black (`#101010`), while the page under both is
+  `--canvas-parchment`. Four colours across three files, two of which the build
+  overwrote. The chrome is now the page background in both themes — `#f5f5f7` light,
+  `#1c1c1e` dark — so the bar, the splash and the first frame are one surface.
+- **The chrome colour has one home.** `app.json` holds it, and the two writers read that
+  file: `vite.config.ts` injects the dev metas and serves the manifest, `prerender.mjs`
+  writes the built ones. `public/manifest.webmanifest` and the static
+  `<meta name="theme-color">` in `index.html` are gone, so nothing is silently replaced.
+  `test/seo.test.mjs` reads the pair out of `tokens.css` and fails if the manifest or the
+  head drifts from it.
+- **Dark mode gets dark controls.** The prerendered pages declared
+  `color-scheme: light`, so selects, scrollbars and pickers stayed lit on a dark page.
+  They declare `light dark` now, which is what the palette already supported.
+- The dev shell still described another product: `description` read "Your writing voice,
+  wherever you write".
+
 ## 1.12.3 — 2026-10-30
 
 Patch. App versions: **web 1.12.1**, **admin 1.30.2**, **seeder 1.4.3**.

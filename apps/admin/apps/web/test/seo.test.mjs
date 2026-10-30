@@ -118,14 +118,15 @@ describe('window chrome', () => {
     assert.equal(manifest.theme_color, light, 'manifest theme is the light page');
     assert.equal(manifest.background_color, light, 'the splash is the page it opens into');
 
+    const themeMeta = (value, scheme) =>
+      new RegExp(
+        `<meta name="theme-color" content="${value}" media="\\(prefers-color-scheme: ${scheme}\\)"`,
+      );
+
+    assert.match(html, themeMeta(light, 'light'), 'the bar follows the light page');
     assert.match(
       html,
-      new RegExp(`<meta name="theme-color" content="${light}" media="\\(prefers-color-scheme: light\\)"`),
-      'the bar follows the light page',
-    );
-    assert.match(
-      html,
-      new RegExp(`<meta name="theme-color" content="${dark}" media="\\(prefers-color-scheme: dark\\)"`),
+      themeMeta(dark, 'dark'),
       'and the dark one, instead of a near-black no token holds',
     );
   });

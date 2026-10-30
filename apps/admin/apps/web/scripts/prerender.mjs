@@ -29,6 +29,7 @@ const WEB = join(HERE, '..');
 // depending on `vite build` having just happened.
 const DIST = process.argv[2] ? resolve(process.argv[2]) : join(WEB, 'dist');
 const data = JSON.parse(readFileSync(join(WEB, 'seo', 'pages.json'), 'utf-8'));
+const app = JSON.parse(readFileSync(join(WEB, 'app.json'), 'utf-8'));
 const site = data.site.replace(/\/$/, '');
 const builtAt = new Date().toISOString();
 
@@ -81,9 +82,9 @@ function head(page, copy, canonicalUrl) {
     <meta name="description" content="${escape(copy.description)}" />
     <link rel="canonical" href="${canonicalUrl}" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#ffefc4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#101010" media="(prefers-color-scheme: dark)" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="${app.chrome.light}" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="${app.chrome.dark}" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Tilawa Admin" />
@@ -256,24 +257,14 @@ writeFileSync(
   join(DIST, 'manifest.webmanifest'),
   `${JSON.stringify(
     {
-      name: 'Tilawa Admin',
-      short_name: 'Tilawa Admin',
+      ...app.manifest,
       description: data.pages[0].en.description,
-      start_url: '/',
-      scope: '/',
-      display: 'standalone',
-      background_color: '#ffefc4',
-      theme_color: '#086288',
-      lang: 'en',
-      dir: 'ltr',
-      icons: [
-        { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-        { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        { src: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-      ],
+      // The splash is painted before the app exists, so it is the page
+      // background, not the accent: the accent is what you click.
+      background_color: app.chrome.light,
+      theme_color: app.chrome.light,
       // Install UI screenshots: desktop stats panel (wide) + mobile home (narrow).
-      // PNG on cream/teal palette; captured from the product, not mocks.
+      // PNG on the console palette; captured from the product, not mocks.
       screenshots: [
         {
           src: '/screenshots/console-wide.png',
