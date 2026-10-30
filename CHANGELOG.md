@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.12.9 — 2026-10-30
+
+Patch. App versions: **web 1.12.2**, **admin 1.30.7**, **seeder 1.4.3**.
+
+### Fixed
+
+- **The console's install line could not work as printed.** It piped the script
+  into `bash` without `sudo`, so the run wrote nothing, printed "Docker already
+  installed", and died on `mkdir /opt/tilawa-seeder`. The line now carries
+  `sudo`, and the installer refuses to start unprivileged with the exact command
+  to re-run.
+- **The console told operators to open the admin port.** `ufw allow 8085/tcp`
+  published the API that answers the admin credentials and can add and delete
+  torrents. The copy opens only the peer port and says why 8085 stays closed.
+- **A port conflict arrived as a Docker bind error, after the image pull.**
+  `deploy-node.sh` now checks both ports first and names the container holding
+  them; one node per host, and re-runs of the node's own container still work.
+- **"Deployed" was printed whether or not the node ran.** The installer polls
+  `/health` for 30 s and exits non-zero with the container's log tail.
+- **A seeder host was told to install coturn and a tunnel** at a hard-coded
+  `/home/adelpro/...` path. The epilogue is type-scoped now.
+- **The TURN relay range did not match the firewall rule it prints.** The config
+  now pins `min-port`/`max-port` to 49160-49200, and the run verifies the unit is
+  running rather than only restarted.
+
+### Added
+
+- The installer prints the four values the add-node form asks for, preferring the
+  node's **Tailscale MagicDNS name** over an IP — it survives a new DHCP lease and
+  a new ISP address. The form names the three address shapes (Docker network, LAN,
+  tailnet) and validates the URL before submitting, so a wrong address fails there
+  instead of showing up as an Offline row.
+
 ## 1.12.8 — 2026-10-30
 
 Minor. App versions: **web 1.12.2**, **admin 1.30.6**, **seeder 1.4.3**.
