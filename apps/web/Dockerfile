@@ -1,5 +1,7 @@
 # The built-in frontend is enough; the syntax directive only costs a registry trip.
-FROM node:20-alpine AS build
+# Node 22: the build runs the prerender step through `--experimental-strip-types`,
+# which 20 does not have, and the test suite already requires 22.
+FROM node:22-alpine AS build
 WORKDIR /app
 COPY apps/web/package*.json ./
 # WebTorrent's browser bundle is vendored in public/, so node_modules only has to
