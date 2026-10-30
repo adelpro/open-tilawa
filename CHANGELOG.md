@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.9.2 — 2026-10-30
+
+Patch. App versions: **web 1.10.1**, **admin 1.28.0**, **seeder 1.4.3**.
+
+### Fixed
+
+- **The spectrum ribbon is a loudness history, not a pitch contour.** It was
+  low-passing signed time-domain samples from unsynchronised snapshots, which
+  aliased against the read rate: the height followed the reciter's pitch (14% to
+  82% of the strip in simulation) and the twitch was an artefact. The strip now
+  scrolls a peak envelope left at a fixed speed — one point per 60 ms, about 14 s
+  across — with each layer keeping its own rise and fall, and frequency-bin work
+  is skipped in ribbon mode.
+
+This release also carries the 1.9.1 change below: the launch film is in the
+repository.
+
 ## 1.9.1 — 2026-10-30
 
 Patch. App versions: **web 1.10.0**, **admin 1.28.0**, **seeder 1.4.3** — no app
