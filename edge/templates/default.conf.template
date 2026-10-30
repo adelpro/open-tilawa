@@ -23,6 +23,23 @@ server {
   }
 }
 
+# Preview channel — the same bundle built from the `staging` worktree. Same
+# vhost shape as the site, so what is tested is what ships; the container has no
+# published port, only this name.
+server {
+  listen 80;
+  server_name staging.tilawah.cc;
+
+  location / {
+    set $web_staging_upstream http://web-staging:80;
+    proxy_pass $web_staging_upstream;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+
 # WebTorrent tracker — WebSocket + HTTP
 server {
   listen 80;

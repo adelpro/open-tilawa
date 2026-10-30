@@ -120,13 +120,40 @@ except `/health`.
 
 ## The stack
 
-One Compose project. During the alpha there is no staging deployment; production
-is the only environment.
+One Compose project. Production is the only environment; the web app also has a
+**preview channel** on that same project (see below).
 
 ```bash
 # ports 8084 (edge), 8083 (tracker), 8085 (seeder), 9400/9410 (admin)
 docker compose up -d --build <service>
 ```
+
+### The preview channel (`staging.tilawah.cc`)
+
+The player is a static bundle, so it is the one thing that can be looked at
+before it is promoted without touching a volume. `web-staging` is a service in
+*this* project, not a second stack: no volumes of its own, the same two read-only
+corpus mounts, the prod catalogue and gun relay, and behind the same `edge` on a
+second vhost. It is profile-gated, so a plain `up -d` never starts it.
+
+```bash
+# once
+git worktree add ../open-tilawa-staging staging
+
+# every preview
+git -C ../open-tilawa-staging merge --ff-only develop
+docker compose --profile preview up -d --build web-staging
+```
+
+DNS is one proxied CNAME to the `tilawah` tunnel (`~/cloudflared-tilawah/dns.sh
+apply`), and the tunnel config has a `staging.tilawah.cc` ingress on the same
+edge port. Because the origin differs from prod, the admin API's
+`ADMIN_CORS_ORIGIN` must list it or the catalogue call fails (an unlisted origin
+is refused as a 500, not a blocked read).
+
+It is a UI canary, not a data sandbox: favourites, settings and view counts
+written from staging are real. Do not call it staging in a way that implies
+isolated data.
 
 TURN is an overlay of the same project, not a stack of its own:
 
@@ -149,10 +176,12 @@ outage or a scare:
 2. **Never rename a project casually.** Compose derives volume names from the
    project, so renaming `open-tilawa` creates fresh empty volumes and orphans
    `open-tilawa_seed_downloads` (the corpus) and `open-tilawa_admin_data`.
-3. **One environment, one env file.** If staging ever returns, it gets its own
-   project *and* its own file — never a `STAGING_*` prefix inside `.env`. It also
-   gets a fixture dataset, not a second copy of the 32 GB corpus: content is not
-   environment-specific. The removed setup is recoverable from git history
+3. **One environment, one env file.** A full second stack — anything that owns a
+   volume — gets its own project *and* its own file, never a `STAGING_*` prefix
+   inside `.env`, and a fixture dataset rather than a second copy of the 32 GB
+   corpus: content is not environment-specific. The web-only preview is the
+   exception that proves the rule: it owns nothing, so it is a service in this
+   project. The removed full stack is recoverable from git history
    (`git log --all -- docker-compose.staging.yml`).
 
 ## Branches

@@ -41,6 +41,28 @@ services:
       - seed_downloads:/usr/share/nginx/html/media:ro
     networks: [open-tilawa]
 
+  # The preview channel: the same bundle, built from a `staging` worktree, on
+  # staging.tilawah.cc. It is a service in *this* project on purpose — a second
+  # Compose project would share the volumes' names and could replace prod (that
+  # is what took the site down on 2026-10-28). No volumes of its own, no second
+  # tracker or relay: the two read-only mounts are the prod corpus, so the web
+  # seed works here too. Not started by a plain `up -d`: give it the `preview`
+  # profile, or `docker compose up -d --build web-staging`.
+  web-staging:
+    profiles: ["preview"]
+    build:
+      context: ${STAGING_CONTEXT:-../open-tilawa-staging}
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_TURN_USERNAME: ${TURN_USERNAME:-}
+        VITE_TURN_PASSWORD: ${TURN_PASSWORD:-}
+    container_name: open-tilawa-web-staging
+    restart: unless-stopped
+    volumes:
+      - seed_torrents:/usr/share/nginx/html/torrents:ro
+      - seed_downloads:/usr/share/nginx/html/media:ro
+    networks: [open-tilawa]
+
   tracker:
     build:
       context: .

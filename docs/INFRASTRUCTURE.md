@@ -1,6 +1,6 @@
 # Infrastructure — how every part fits
 
-One host, one set of containers, four public names. This is the map: what
+One host, one set of containers, five public names. This is the map: what
 each piece does, which port it listens on, and how data moves between them.
 
 ![What runs on the box](how-it-works/01-what-runs.png)
@@ -15,7 +15,7 @@ each piece does, which port it listens on, and how data moves between them.
 
 ![What is actually public](how-it-works/05-public-names.png)
 
-*Four names, two doors, one exception. Ports stay in the table in §7; the story is
+*Five names, two doors, one exception. Ports stay in the table in §7; the story is
 in [What is actually public](how-it-works/05-public-names.md).*
 
 ## 1. Public site — `web`
@@ -33,6 +33,12 @@ in [What is actually public](how-it-works/05-public-names.md).*
   `localStorage` so a catalogue outage costs freshness, not playback.
 - **Volumes:** `seed_torrents` → `/usr/share/nginx/html/torrents`,
   `seed_downloads` → `/usr/share/nginx/html/media` (read-only, `limit_rate 1m`).
+- **Preview channel:** `web-staging` is the same image built from the `staging`
+  worktree and served at `staging.tilawah.cc` through the same edge. Profile
+  `preview` (a plain `up -d` skips it), no published port, the same two read-only
+  volumes. It reads the prod catalogue and relay, so it is a UI canary, not a
+  data sandbox. `/media` answers any origin — a magnet's web seed is an absolute
+  prod URL, so the staging origin fetches it cross-origin.
 
 ## 2. Tracker — `tracker`
 
@@ -162,7 +168,9 @@ from another source still plays.
 Root `.env` (seeder + tracker + turn): `ADMIN_USER`, `ADMIN_PASS`,
 `DISK_QUOTA_GB`, `UPLOAD_LIMIT_KBPS`, `DOWNLOAD_LIMIT_KBPS`, `ADMIN_UI`,
 `TORRENT_PORT` (inbound peer port, published on the node),
-`SEEDER_IMAGE`, `TURN_*`, `TRACKER_PORT`.
+`SEEDER_IMAGE`, `TURN_*`, `TRACKER_PORT`,
+`ADMIN_CORS_ORIGIN` (the staging origin must be listed), `STAGING_CONTEXT`
+(the `staging` worktree the preview builds from).
 
 `apps/admin/.env` (API): `COOKIE_JWT_SECRET`, `TEMP_JWT_SECRET`,
 `TILAWA_PEPPER`, `DB_PATH`, `CORS_ORIGIN`, `EMAIL`, `EMAIL_APP_SPECIFIC_PASS`,
