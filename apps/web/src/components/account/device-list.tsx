@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Input } from '@/components/field';
 
@@ -9,6 +9,7 @@ import { useLocale } from '@/hooks/use-locale';
 import { getOrCreateDeviceId } from '@/utils/device/device-id';
 import { setDeviceName } from '@/utils/device/device-name';
 import { relativeTime } from '@/utils/relative-time';
+import { cn } from '@/utils/cn';
 
 type Device = {
   id: string;
@@ -19,7 +20,7 @@ type Device = {
   userAgent?: string;
 };
 
-export default function DeviceList() {
+export default function DeviceList({ highlightId }: { highlightId?: string | null }) {
   const { t } = useLocale();
   const copy = t.account;
   const devices = useAtomValue(userDevicesAtom) as Record<string, Device>;
@@ -27,8 +28,14 @@ export default function DeviceList() {
   const { updateDeviceName } = useUserSync();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const highlightRef = useRef<HTMLLIElement>(null);
 
   const currentId = getOrCreateDeviceId();
+
+  // The row that just joined may be outside the scroll view.
+  useEffect(() => {
+    if (highlightId) highlightRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [highlightId]);
 
   /** "3 months ago" — the words come from the locale, the unit from here. */
   const ago = (ts?: number): string => {
@@ -67,8 +74,14 @@ export default function DeviceList() {
           rows.map((device) => {
             const isThis = device.id === currentId;
             const isPrimary = Boolean(meta?.primaryDeviceId && device.id === meta.primaryDeviceId);
+            const highlighted = highlightId === device.id;
             return (
-              <li key={device.id} className="px-3 py-3">
+              <li
+                key={device.id}
+                ref={highlighted ? highlightRef : undefined}
+                data-highlight={highlighted ? 'true' : undefined}
+                className={cn('px-3 py-3 transition-colors', highlighted && 'bg-line/60')}
+              >
                 {editing === device.id ? (
                   <Input
                     value={draft}

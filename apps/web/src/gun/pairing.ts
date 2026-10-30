@@ -1,5 +1,10 @@
 import { gun, SEA } from './index';
-import { PAIRING_TTL_MS, type PairingTicket } from './pairing-ticket';
+import {
+  PAIRING_TIMEOUT_MESSAGE,
+  PAIRING_TIMEOUT_MS,
+  PAIRING_TTL_MS,
+  type PairingTicket,
+} from './pairing-ticket';
 
 export { encodeTicket, parseTicket, PAIRING_TTL_MS } from './pairing-ticket';
 export type { PairingTicket } from './pairing-ticket';
@@ -48,8 +53,19 @@ export async function redeemTicket(ticket: PairingTicket): Promise<unknown> {
   if (ticket.exp < Date.now()) throw new Error('Pairing code expired');
 
   const node = gun.get(PAIRING_ROOT).get(ticket.id);
-  const record = await new Promise<{ sealed?: string; exp?: number } | null>((resolve) => {
-    node.once((data: any) => resolve(data ?? null));
+  const record = await new Promise<{ sealed?: string; exp?: number } | null>((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error(PAIRING_TIMEOUT_MESSAGE));
+    }, PAIRING_TIMEOUT_MS);
+    node.once((data: any) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(data ?? null);
+    });
   });
 
   if (!record?.sealed) throw new Error('Pairing code expired or already used');

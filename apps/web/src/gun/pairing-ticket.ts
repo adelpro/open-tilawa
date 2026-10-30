@@ -7,6 +7,17 @@
  */
 export const PAIRING_TTL_MS = 2 * 60 * 1000;
 
+/**
+ * The receiving side gives the relay this long to answer before it gives up.
+ * Without a deadline the "linking…" state waited on a `.once()` that a relay
+ * which never saw the envelope would never call back, and the camera was
+ * already off — a spinner with no way out.
+ */
+export const PAIRING_TIMEOUT_MS = 10_000;
+
+/** Matched by `pairingErrorCopy`; thrown as an Error message. */
+export const PAIRING_TIMEOUT_MESSAGE = 'pairing timeout';
+
 export type PairingTicket = {
   v: 2;
   id: string;

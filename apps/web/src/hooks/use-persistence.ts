@@ -13,7 +13,7 @@
 
 import { LOCALES, type Locale } from '@/i18n/messages';
 import { VISUALISERS, type Visualiser } from '@/utils/visualiser-models';
-import { STORAGE_KEYS } from '@/utils/storage-keys';
+import { STORAGE_EVENT, STORAGE_KEYS } from '@/utils/storage-keys';
 
 export const STORAGE_KEY = STORAGE_KEYS.state;
 const PREVIOUS_KEY = STORAGE_KEYS.statePrevious;

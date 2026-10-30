@@ -4,6 +4,7 @@ import {
   CaretDown,
   CaretLeft,
   CaretRight,
+  Check,
   DownloadSimple,
   DotsThreeVertical,
   File,
@@ -102,7 +103,8 @@ export type IconName =
   | 'waveform'
   | 'heart'
   | 'headphones'
-  | 'pin';
+  | 'pin'
+  | 'check';
 
 /** 16 with text, 20 for a control, 24 for a card. Nothing else. */
 export type IconSize = 16 | 20 | 24;
@@ -135,6 +137,7 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
   user: User,
   more: DotsThreeVertical,
   edit: PencilSimple,
+  check: Check,
   sun: Sun,
   moon: Moon,
   globe: GlobeHemisphereWest,

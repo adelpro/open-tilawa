@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAtomValue } from 'jotai';
 
 import Sheet from '@/components/sheet';
@@ -9,10 +9,14 @@ import LinkDevice from '@/components/account/link-device';
 import { useGun } from '@/hooks/use-gun';
 import { useLocale } from '@/hooks/use-locale';
 import { userDevicesAtom } from '@/jotai/gun';
+import { getOrCreateDeviceId } from '@/utils/device/device-id';
 import { getOrCreateDeviceName } from '@/utils/device/device-name';
 import { cn } from '@/utils/cn';
 
 type Tab = 'devices' | 'add';
+
+/** How long the row that just joined stays tinted. */
+const HIGHLIGHT_MS = 8_000;
 
 const chip = 'rounded-full px-3 py-2 text-[0.875rem] transition-colors';
 const chipOn = 'border-ink bg-ink font-semibold text-invert';
@@ -45,15 +49,33 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
   const [ringName, setRingName] = useState(() => getOrCreateDeviceName());
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState('');
+  /** The confirmation for a pairing, owned by the sheet so a tab switch cannot erase it. */
+  const [notice, setNotice] = useState<{ name?: string; self: boolean } | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   const deviceCount = Object.values(devices || {}).filter((d) => d?.id).length;
   const isLastDevice = deviceCount <= 1;
   const canSignOut = !isLastDevice || confirmText.trim().toLowerCase() === copy.signOutConfirmWord;
 
+  const announceJoined = useCallback((device: { id: string; name?: string }, self: boolean) => {
+    setNotice({ name: device.name, self });
+    setHighlightId(device.id);
+    setTab('devices');
+  }, []);
+
+  // The tint is a "look here", not a permanent badge.
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), HIGHLIGHT_MS);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
+
   const close = () => {
     setConfirmText('');
     setCamera(false);
     setEditingName(false);
+    setNotice(null);
+    setHighlightId(null);
     onClose();
   };
 
@@ -157,7 +179,32 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
 
             {tab === 'devices' ? (
               <>
-                <DeviceList />
+                {notice ? (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="flex items-start gap-2 rounded-xl border border-ink/15 bg-line/50 p-3"
+                  >
+                    <Icon name="check" size={20} className="shrink-0 self-start text-ink" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[0.875rem] font-medium text-ink">
+                        {notice.self ? copy.linkedHere : copy.linkedOther(notice.name)}
+                      </p>
+                      <p className="mt-1 text-[0.75rem] leading-relaxed text-muted">
+                        {copy.linkedHint}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNotice(null)}
+                      aria-label={t.common.close}
+                      className="shrink-0 rounded-full p-1 text-muted transition-colors hover:text-ink"
+                    >
+                      <Icon name="close" size={16} />
+                    </button>
+                  </div>
+                ) : null}
+                <DeviceList highlightId={highlightId} />
                 <div className="rounded-xl border border-line p-3">
                   <p className="text-[0.875rem] font-medium text-ink">{copy.signOutTitle}</p>
                   {isLastDevice ? (
@@ -210,6 +257,7 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
                 open={open}
                 onLinked={() => setTab('devices')}
                 onCameraChange={setCamera}
+                onDeviceJoined={(device) => announceJoined(device, false)}
               />
             )}
           </>
@@ -260,7 +308,7 @@ export default function AccountSheet({ open, onClose }: { open: boolean; onClose
               onCameraChange={setCamera}
               onLinked={() => {
                 setCamera(false);
-                setTab('devices');
+                announceJoined({ id: getOrCreateDeviceId(), name: getOrCreateDeviceName() }, true);
               }}
             />
           </>

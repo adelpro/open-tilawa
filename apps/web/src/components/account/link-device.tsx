@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
 
 import { createPairingTicket, encodeTicket, parseTicket, redeemTicket } from '@/gun/pairing';
 import { Field, TextArea } from '@/components/field';
 import { Spinner } from '@/components/icons';
 import { useGun } from '@/hooks/use-gun';
 import { useLocale } from '@/hooks/use-locale';
+import { userDevicesAtom } from '@/jotai/gun';
 import type { Messages } from '@/i18n/messages';
 import { classifyCameraError, hasCameraApi, type CameraFault } from '@/utils/camera';
+import { pairingErrorCopy } from '@/utils/pairing-error';
 import { cn } from '@/utils/cn';
 
 const READER_ID = 'tilawa-qr-reader';
@@ -119,6 +122,7 @@ export default function LinkDevice({
   open,
   onLinked,
   onCameraChange,
+  onDeviceJoined,
 }: {
   mode: Mode;
   /** Closing the sheet must release the camera, not just hide it. */
@@ -126,10 +130,18 @@ export default function LinkDevice({
   onLinked: () => void;
   /** Lets the sheet give the viewfinder the whole panel. */
   onCameraChange?: (active: boolean) => void;
+  /**
+   * Share mode only: a device that was not in the ring when the code was drawn
+   * has now registered. The row is the proof, so the sheet closes the code on
+   * evidence rather than on a timer or a hope.
+   */
+  onDeviceJoined?: (device: { id: string; name?: string }) => void;
 }) {
   const { t } = useLocale();
   const copy = t.account;
   const { getPair, authWithPair } = useGun();
+  // Already live for the sheet: the same map the device list renders.
+  const devices = useAtomValue(userDevicesAtom) as Record<string, { id?: string; name?: string }>;
 
   const [qr, setQr] = useState<string | null>(null);
   const [ticketText, setTicketText] = useState<string | null>(null);
@@ -144,9 +156,17 @@ export default function LinkDevice({
   const [message, setMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** A ticket was read and the relay is being asked for the envelope. */
+  const [joining, setJoining] = useState(false);
 
   const scannerRef = useRef<{ stop: () => Promise<void>; clear: () => void } | null>(null);
   const messageRef = useRef<HTMLParagraphElement>(null);
+  const qrCloseRef = useRef<HTMLButtonElement>(null);
+  /** Two decode callbacks in flight would redeem the same ticket twice. */
+  const joiningRef = useRef(false);
+  /** Device ids that already existed when this code was drawn. */
+  const knownIds = useRef<string[]>([]);
+  const announced = useRef(false);
 
   const stopScanner = useCallback(async () => {
     const scanner = scannerRef.current;
@@ -213,17 +233,21 @@ export default function LinkDevice({
       const ticket = parseTicket(text);
       if (!ticket) {
         setMessage(copy.manualInvalid);
-        return;
+        return false;
       }
       setBusy(true);
       try {
         const pair = await redeemTicket(ticket);
         const ack = await authWithPair(pair);
         if (ack.err) throw new Error(ack.err);
-        setMessage(copy.linked);
+        // The sheet owns the confirmation: the tab switch below unmounts this
+        // panel, so a message printed here would be rendered into nothing.
+        setMessage(null);
         onLinked();
+        return true;
       } catch (e) {
-        setMessage(e instanceof Error ? e.message : copy.codeFailed);
+        setMessage(pairingErrorCopy(e, copy));
+        return false;
       } finally {
         setBusy(false);
       }
@@ -263,18 +287,48 @@ export default function LinkDevice({
       setOpening(true);
       try {
         // The decoder is ~120 kB and only ever runs on this screen.
-        const { Html5Qrcode } = await import('html5-qrcode');
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
         if (cancelled) return;
-        const scanner = new Html5Qrcode(READER_ID);
+        // Only QR is offered, so the decoder does not try every barcode format
+        // on every frame. The native BarcodeDetector path is on by default in
+        // 2.3.8 where the browser has it.
+        const scanner = new Html5Qrcode(READER_ID, {
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          verbose: false,
+        });
         scannerRef.current = scanner;
         await scanner.start(
           { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
+          {
+            // 10 fps at a fixed 220 px box was the old setting: on a phone the
+            // box covered half the viewfinder and the code sat outside it.
+            fps: 15,
+            qrbox: (width: number, height: number) => {
+              const side = Math.floor(Math.min(width, height) * 0.75);
+              return { width: side, height: side };
+            },
+            // The stream is not mirrored for an environment camera, so decoding
+            // it twice as a flipped image only costs frames.
+            disableFlip: true,
+            videoConstraints: {
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          },
           async (text) => {
             const ticket = parseTicket(text);
-            if (!ticket) return;
-            await leaveCamera();
-            await finishJoinRef.current(text);
+            if (!ticket || joiningRef.current) return;
+            joiningRef.current = true;
+            setMessage(null);
+            // Camera off first: the light should not stay on while a relay is
+            // asked for the envelope. The reader node stays mounted, hidden.
+            await stopScanner();
+            setJoining(true);
+            const ok = await finishJoinRef.current(text);
+            setJoining(false);
+            joiningRef.current = false;
+            if (ok) await leaveCamera();
           },
           () => {
             // per-frame decode misses are normal, stay quiet
@@ -298,6 +352,12 @@ export default function LinkDevice({
   const showTicket = async () => {
     setMessage(null);
     setCopied(false);
+    // Who is already in the ring: any id that appears after this point was not,
+    // and that row is the evidence the pairing worked. No handshake needed.
+    knownIds.current = Object.keys(devices).filter(
+      (id) => id !== 'meta' && id !== '_' && Boolean(devices[id]?.id),
+    );
+    announced.current = false;
     try {
       const pair = getPair();
       if (!pair) throw new Error(copy.createAction);
@@ -305,12 +365,63 @@ export default function LinkDevice({
       const text = encodeTicket(ticket);
       // ~50 kB of QR encoder, only for the one screen that draws a code.
       const { default: QRCode } = await import('qrcode');
-      setQr(await QRCode.toDataURL(text, { margin: 1, width: 260 }));
+      // The spec quiet zone is four modules; `margin: 1` left a code that a
+      // camera had to be very close to read. 320 px of source drawn at 280
+      // keeps the modules crisp on a phone screen.
+      setQr(
+        await QRCode.toDataURL(text, {
+          errorCorrectionLevel: 'M',
+          margin: 3,
+          width: 320,
+        }),
+      );
       setTicketText(text);
       setExpiresAt(ticket.exp);
     } catch {
       setMessage(copy.codeFailed);
     }
+  };
+
+  /**
+   * The code is closed by the ring, not by a timer: when a device that was not
+   * in the map when the code was drawn registers itself, the other person is
+   * done, and the popup has no reason to stay.
+   */
+  useEffect(() => {
+    if (!qr || announced.current) return;
+    const joined = Object.entries(devices).find(
+      ([id, row]) =>
+        id !== 'meta' && id !== '_' && Boolean(row?.id) && !knownIds.current.includes(id),
+    );
+    if (!joined) return;
+    announced.current = true;
+    setQr(null);
+    setTicketText(null);
+    setExpiresAt(null);
+    onDeviceJoined?.({ id: joined[0], name: joined[1]?.name });
+  }, [devices, qr, onDeviceJoined]);
+
+  // The popup is the only thing on screen while it is up: its close button takes
+  // focus, and Escape dismisses the code rather than the whole sheet.
+  useEffect(() => {
+    if (!qr) return;
+    qrCloseRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setQr(null);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [qr]);
+
+  const retryScan = () => {
+    setMessage(null);
+    setFault(null);
+    setJoining(false);
+    setScanView('camera');
+    setAttempt((n) => n + 1);
   };
 
   const copyTicket = async () => {
@@ -339,7 +450,7 @@ export default function LinkDevice({
             onClick={() => void leaveCamera()}
             className="rounded-full border border-line px-3 py-1 text-[0.75rem] text-ink transition-colors hover:bg-line"
           >
-            {scanView === 'camera' && !fault ? copy.scanStop : copy.scanBack}
+            {scanView === 'camera' && !fault && !joining ? copy.scanStop : copy.scanBack}
           </button>
         </div>
 
@@ -352,7 +463,7 @@ export default function LinkDevice({
           className={cn(
             'relative min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-black',
             '[&_video]:h-full [&_video]:w-full [&_video]:object-cover',
-            scanView !== 'camera' || fault ? 'hidden' : undefined,
+            scanView !== 'camera' || fault || joining || Boolean(message) ? 'hidden' : undefined,
           )}
         />
 
@@ -397,6 +508,15 @@ export default function LinkDevice({
               autoFocus
             />
           </div>
+        ) : joining ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3"
+          >
+            <Spinner size={24} />
+            <p className="text-[0.875rem] text-ink">{copy.scanJoining}</p>
+          </div>
         ) : (
           <>
             <p className="text-center text-[0.75rem] text-muted">
@@ -416,9 +536,16 @@ export default function LinkDevice({
         )}
 
         {message ? (
-          <p role="status" aria-live="polite" className="text-center text-[0.75rem] text-muted">
-            {message}
-          </p>
+          <div className="space-y-2 text-center">
+            <p role="alert" className="text-[0.75rem] text-danger">
+              {message}
+            </p>
+            {scanView === 'camera' && !joining ? (
+              <button type="button" onClick={retryScan} className={cn(action, 'bg-ink text-invert')}>
+                {copy.scanAgain}
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
     );
@@ -493,23 +620,28 @@ export default function LinkDevice({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={copy.shareTitle}
+          aria-labelledby="pairing-code-title"
+          aria-describedby="pairing-code-expiry"
           onClick={() => setQr(null)}
           className="fixed inset-0 z-[60] grid place-items-center bg-black/60 p-6"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-[300px] rounded-2xl border border-line bg-canvas p-4 text-center"
+            className="w-full max-w-[340px] rounded-2xl border border-line bg-canvas p-4 text-center"
           >
-            <p className="text-[0.875rem] font-medium text-ink">{copy.shareTitle}</p>
+            <p id="pairing-code-title" className="text-[0.875rem] font-medium text-ink">
+              {copy.shareTitle}
+            </p>
             <img
               src={qr}
               alt={copy.shareTitle}
-              width={240}
-              height={240}
+              width={280}
+              height={280}
               className="mx-auto mt-3 rounded-lg bg-white p-2"
             />
-            <p className="mt-2 text-[0.75rem] text-muted">{copy.expiresIn(secondsLeft)}</p>
+            <p id="pairing-code-expiry" className="mt-2 text-[0.75rem] text-muted">
+              {copy.expiresIn(secondsLeft)}
+            </p>
             <button
               type="button"
               onClick={() => void copyTicket()}
@@ -526,6 +658,7 @@ export default function LinkDevice({
             </button>
             <button
               type="button"
+              ref={qrCloseRef}
               onClick={() => setQr(null)}
               className="mt-1 w-full rounded-xl px-3 py-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
             >
