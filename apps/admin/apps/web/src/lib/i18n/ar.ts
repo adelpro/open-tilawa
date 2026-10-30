@@ -828,6 +828,10 @@ export const ar: Catalogue = {
   'settings.alerts.body': 'رسالة عند بدء الحالة وأخرى عند انتهائها، ولا تكرار ما دامت قائمة.',
   'settings.alerts.serviceFailures': 'عدد المحاولات الفاشلة قبل التنبيه',
   'settings.alerts.diskFloor': 'الحد الأدنى للمساحة الحرة (غيغابايت)',
+  'settings.alerts.digest': 'البريد اليومي للحالة',
+  'settings.alerts.digestHint':
+    'رسالة واحدة كل يوم في الساعة أدناه، سواء كانت الأنظمة سليمة أم لا؛ فبهذا يدلّ صمت البريد على انقطاعه لا على سلامة كل شيء.',
+  'settings.alerts.digestHour': 'الساعة (UTC)',
   'settings.alerts.recipients': 'مستلمون إضافيون',
   'settings.alerts.recipientsHint':
     'يصل التنبيه إلى كل مدير نشط. أضف عناوين أخرى، عنوانًا في كل سطر.',

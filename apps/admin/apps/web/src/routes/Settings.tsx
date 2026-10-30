@@ -28,6 +28,7 @@ interface NotifyState {
   serviceFailures: number;
   diskFloorBytes: number;
   extraRecipients: string[];
+  digest: { enabled: boolean; hourUtc: number };
 }
 
 interface AlertRow {
@@ -191,6 +192,7 @@ export function Settings(): ReactElement {
           enabled: rules?.enabled ?? KINDS,
           serviceFailures: rules?.serviceFailures ?? 3,
           diskFloorBytes: rules?.diskFloorBytes ?? 20 * GiB,
+          digest: rules?.digest,
           extraRecipients: recipients
             .split('\n')
             .map((line) => line.trim())

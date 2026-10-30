@@ -253,7 +253,7 @@ export class AlertsService {
   }
 
   /** Every active admin, plus the operator's extra addresses. */
-  private recipients(): MailRecipient[] {
+  recipients(): MailRecipient[] {
     const admins = this.db
       .prepare(
         "SELECT id, name, email, locale FROM users WHERE role IN ('admin','super_admin') AND status = 'active'",

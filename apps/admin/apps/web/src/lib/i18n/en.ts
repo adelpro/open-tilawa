@@ -841,6 +841,10 @@ export const en = {
     'One message when a condition starts, one when it clears. Nothing repeats while it holds.',
   'settings.alerts.serviceFailures': 'Failures before an alert',
   'settings.alerts.diskFloor': 'Disk floor (GB)',
+  'settings.alerts.digest': 'Daily status mail',
+  'settings.alerts.digestHint':
+    'One message a day at the hour below, whether the stack is healthy or not — silence then means the mailer is broken, not that everything is fine.',
+  'settings.alerts.digestHour': 'Hour (UTC)',
   'settings.alerts.recipients': 'Extra recipients',
   'settings.alerts.recipientsHint':
     'Every active admin receives alerts. Add more addresses, one per line.',

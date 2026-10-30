@@ -16,7 +16,7 @@ import { Roles } from '@/auth/decorators/roles.decorator';
 import { JWTAuthGuard } from '@/auth/guards/jwt.guard';
 import { RoleGuard } from '@/auth/guards/roles.guard';
 import { SettingsService } from './settings.service';
-import type { NotifySettings } from './settings.service';
+import type { NotifyDigest, NotifySettings } from './settings.service';
 
 /**
  * Which alerts are sent, and to whom.
@@ -38,21 +38,27 @@ export class NotificationSettingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Alert rules and extra recipients' })
   read() {
-    return this.settings.getNotifySettings();
+    return { ...this.settings.getNotifySettings(), digest: this.settings.getNotifyDigest() };
   }
 
   @Put()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Save alert rules and extra recipients' })
-  save(@Body() body: Partial<NotifySettings>, @CurrentUser() user: AuthenticatedUser) {
+  save(
+    @Body() body: Partial<NotifySettings> & { digest?: Partial<NotifyDigest> },
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const saved = this.settings.setNotifySettings(body ?? {});
+    const digest = body?.digest
+      ? this.settings.setNotifyDigest(body.digest)
+      : this.settings.getNotifyDigest();
     // An admin who adds an address here silently copies every future alert —
     // service hostnames, disk state, update errors — to that mailbox.
     this.audit.record({
       actorId: Number(user.id),
       action: 'settings.notifications.updated',
-      after: saved,
+      after: { ...saved, digest },
     });
-    return saved;
+    return { ...saved, digest };
   }
 }

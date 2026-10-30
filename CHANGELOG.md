@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.10.0 — 2026-10-30
+
+Minor. App versions: **web 1.10.1**, **admin 1.29.0**, **seeder 1.4.3**.
+
+### Added
+
+- **A daily status mail.** One message a day at an hour you set, listing every
+  service, node and TURN server with its state, its 24-hour uptime and its
+  latency, the free space on each node, and how many alerts are open. It is sent
+  whether everything is up or not, on purpose: an inbox that only ever carries
+  problems cannot be told apart from a mailer that stopped, so the daily green
+  message is what makes silence mean something. The day is recorded, so a
+  restart in the same hour cannot send twice, and the mail is written in each
+  recipient's language.
+
+### Changed
+
+- **The console screen is called "Mail & alerts"** — `البريد والتنبيهات` — in the
+  nav and as its title. It was "Settings", which read like a personal page next
+  to Account while holding one shared credential and one fleet-wide rule set.
+
 ## 1.9.2 — 2026-10-30
 
 Patch. App versions: **web 1.10.1**, **admin 1.28.0**, **seeder 1.4.3**.

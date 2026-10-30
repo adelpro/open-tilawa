@@ -31,6 +31,12 @@ export interface MailConfigInput {
   verifiedAt?: string | null;
 }
 
+export interface NotifyDigest {
+  enabled: boolean;
+  /** UTC hour, 0-23. The mail is one per day, not one per restart. */
+  hourUtc: number;
+}
+
 export interface NotifySettings {
   enabled: AlertKind[];
   serviceFailures: number;
@@ -288,6 +294,48 @@ export class SettingsService {
       this.write('notify.extraRecipients', JSON.stringify(cleaned));
     }
     return this.getNotifySettings();
+  }
+
+  // --- daily status mail ---------------------------------------------------
+
+  /**
+   * One mail a day, green or not. It is the heartbeat: an inbox that only ever
+   * carries problems cannot be distinguished from a mailer that stopped.
+   */
+  getNotifyDigest(): NotifyDigest {
+    const raw = this.read('notify.digest');
+    if (!raw) return { enabled: true, hourUtc: 8 };
+    try {
+      const parsed = JSON.parse(raw) as Partial<NotifyDigest>;
+      const hour = Number(parsed.hourUtc ?? 8);
+      return {
+        enabled: parsed.enabled !== false,
+        hourUtc: Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : 8,
+      };
+    } catch {
+      return { enabled: true, hourUtc: 8 };
+    }
+  }
+
+  setNotifyDigest(input: Partial<NotifyDigest>): NotifyDigest {
+    const current = this.getNotifyDigest();
+    const enabled = input.enabled ?? current.enabled;
+    const hour = input.hourUtc ?? current.hourUtc;
+    if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+      throw new BadRequestException(`not an hour: ${hour} (expected 0-23, UTC)`);
+    }
+    const next = { enabled, hourUtc: hour };
+    this.write('notify.digest', JSON.stringify(next));
+    return next;
+  }
+
+  /** `YYYY-MM-DD` in UTC, so the guard survives a restart at any hour. */
+  digestLastSent(): string | null {
+    return this.read('notify.digestLastSent');
+  }
+
+  markDigestSent(day: string): void {
+    this.write('notify.digestLastSent', day);
   }
 
   // --- settings primitives -------------------------------------------------

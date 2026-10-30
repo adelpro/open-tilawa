@@ -59,6 +59,8 @@ export class MailerService {
   private readonly otpEmailTemplateAr: string;
   private readonly alertEmailTemplate: string;
   private readonly alertEmailTemplateAr: string;
+  private readonly digestEmailTemplate: string;
+  private readonly digestEmailTemplateAr: string;
 
   constructor(
     @Inject(MAIL_TRANSPORT) private readonly transport: MailTransport,
@@ -79,6 +81,8 @@ export class MailerService {
     this.otpEmailTemplateAr = this.load('otp.email.template.ar.html');
     this.alertEmailTemplate = this.load('alert.email.template.html');
     this.alertEmailTemplateAr = this.load('alert.email.template.ar.html');
+    this.digestEmailTemplate = this.load('digest.email.template.html');
+    this.digestEmailTemplateAr = this.load('digest.email.template.ar.html');
   }
 
   /** The template for the recipient's language. */
@@ -278,6 +282,49 @@ export class MailerService {
           resource: alert.resource,
           detail: alert.detail,
           openedAt: alert.openedAt,
+          consoleUrl,
+        },
+      ),
+    });
+  }
+
+  /**
+   * The daily status mail. `rows` is pre-built, pre-escaped table markup: this
+   * method owns the frame, not the content.
+   */
+  async sendDigestEmail(
+    recipient: MailRecipient,
+    digest: { degraded: boolean; broken: number; open: number; rows: string },
+  ): Promise<{ messageId: string }> {
+    const consoleUrl = `${this.website.replace(/\/$/, '')}/console/status`;
+    const arabic = recipient.locale === 'ar';
+    const heading = arabic
+      ? digest.degraded
+        ? 'الحالة اليومية: أعطال قائمة'
+        : 'الحالة اليومية: كل الأنظمة تعمل'
+      : digest.degraded
+        ? `Daily status: ${digest.broken} down`
+        : 'Daily status: all systems up';
+    const summary = arabic
+      ? digest.degraded
+        ? `${digest.broken} عنصرًا خارج الخدمة، و${digest.open} تنبيهًا قائمًا.`
+        : `لا شيء خارج الخدمة، و${digest.open} تنبيهًا قائمًا.`
+      : digest.degraded
+        ? `${digest.broken} element${digest.broken === 1 ? '' : 's'} down, ${digest.open} alert${digest.open === 1 ? '' : 's'} open.`
+        : `Nothing is down; ${digest.open} alert${digest.open === 1 ? '' : 's'} open.`;
+
+    return this.deliver({
+      to: recipient.email,
+      subject: this.subject(recipient.locale, heading, heading),
+      html: this.fill(
+        this.template(recipient.locale, this.digestEmailTemplate, this.digestEmailTemplateAr),
+        {
+          APP_NAME: this.appName,
+          name: recipient.name,
+          email: recipient.email,
+          heading,
+          summary,
+          rows: digest.rows,
           consoleUrl,
         },
       ),

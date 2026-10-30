@@ -175,4 +175,22 @@ describe('mail settings API', () => {
     const read = await agent.get('/api/settings/notifications').expect(200);
     expect(read.body.serviceFailures).toBe(4);
   });
+
+  it('saves and reads the daily status hour', async () => {
+    const { body } = await agent
+      .put('/api/settings/notifications')
+      .set('x-csrf-token', csrf)
+      .send({ digest: { enabled: false, hourUtc: 6 } })
+      .expect(200);
+    expect(body.digest).toEqual({ enabled: false, hourUtc: 6 });
+
+    const read = await agent.get('/api/settings/notifications').expect(200);
+    expect(read.body.digest).toEqual({ enabled: false, hourUtc: 6 });
+
+    await agent
+      .put('/api/settings/notifications')
+      .set('x-csrf-token', csrf)
+      .send({ digest: { hourUtc: 25 } })
+      .expect(400);
+  });
 });
