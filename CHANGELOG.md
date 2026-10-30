@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.10.1 — 2026-10-30
+
+Patch. App versions: **web 1.10.1**, **admin 1.29.1**, **seeder 1.4.3**.
+
+### Changed
+
+- **Mail & alerts is two tabs.** Outbound email and Alerts sat stacked as two
+  panels, so the screen opened as one long scroll and read as a different kind of
+  page from Seeders, Status and Tools. It now uses the same `Tabs` component and
+  the same page header as those screens: one tab in the tab order, arrows and
+  Home/End between them, and a panel that names the tab it belongs to.
+
 ## 1.10.0 — 2026-10-30
 
 Minor. App versions: **web 1.10.1**, **admin 1.29.0**, **seeder 1.4.3**.

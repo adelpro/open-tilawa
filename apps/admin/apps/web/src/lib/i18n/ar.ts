@@ -789,6 +789,9 @@ export const ar: Catalogue = {
   'footer.links': 'الصفحات',
   'landing.langNote': 'الواجهة متاحة بالإنجليزية والعربية.',
 
+  'settings.tabs': 'أقسام البريد والتنبيهات',
+  'settings.tab.mail': 'البريد الصادر',
+  'settings.tab.alerts': 'التنبيهات',
   'settings.title': 'البريد والتنبيهات',
   'settings.subtitle': 'البريد الصادر والتنبيهات المبنيّة عليه.',
   'settings.loadFailed': 'تعذّر تحميل الإعدادات.',

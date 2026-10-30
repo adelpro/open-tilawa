@@ -8,6 +8,7 @@ import { Field, Input, TextArea } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { Tabs } from '../components/Tabs';
 
 type Tls = 'ssl' | 'starttls' | 'none';
 type AlertKind = 'service.down' | 'seeder.offline' | 'seeder.disk' | 'seeder.update_failed';
@@ -93,6 +94,7 @@ export function Settings(): ReactElement {
   const [message, setMessage] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [skipVerify, setSkipVerify] = useState(false);
+  const [tab, setTab] = useState<'mail' | 'alerts'>('mail');
 
   const load = useCallback(async () => {
     try {
@@ -221,238 +223,258 @@ export function Settings(): ReactElement {
 
   return (
     <div className="stack">
-      <header className="stack stack--tight">
-        <h1 className="h1">{t('settings.title')}</h1>
-        <p className="muted">{t('settings.subtitle')}</p>
+      <header className="page-head">
+        <div>
+          <h1 className="display-lg">{t('settings.title')}</h1>
+          <p className="body muted">{t('settings.subtitle')}</p>
+        </div>
       </header>
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
 
-      <Panel>
-        <div className="stack">
-          <div className="stack stack--tight">
-            <h2 className="h2">{t('settings.mail.title')}</h2>
-            <p className="muted">{t('settings.mail.body')}</p>
-          </div>
+      <Tabs
+        items={[
+          { id: 'mail', label: t('settings.tab.mail') },
+          { id: 'alerts', label: t('settings.tab.alerts') },
+        ]}
+        active={tab}
+        onChange={setTab}
+        label={t('settings.tabs')}
+      />
 
-          {mail ? (
-            <p className="row__meta">
-              <Chip tone={mail.source === 'db' ? 'ok' : mail.source === 'env' ? 'info' : 'bad'}>
-                {t(SOURCE_KEY[mail.source])}
-              </Chip>{' '}
-              {mail.source === 'db' && mail.verifiedAt
-                ? t('settings.mail.verified', {
-                    when: new Date(mail.verifiedAt).toLocaleString(locale),
-                  })
-                : null}
-            </p>
-          ) : null}
-
-          <Field label={t('settings.mail.host')}>
-            {(id) => (
-              <Input
-                id={id}
-                value={form.host}
-                onChange={(event) => setForm({ ...form, host: event.target.value })}
-                placeholder="smtp.example.com"
-                autoComplete="off"
-              />
-            )}
-          </Field>
-
-          <div className="row">
-            <Field label={t('settings.mail.port')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={form.port}
-                  inputMode="numeric"
-                  onChange={(event) => setForm({ ...form, port: event.target.value })}
-                />
-              )}
-            </Field>
-            <Field label={t('settings.mail.tls')}>
-              {(id) => (
-                <select
-                  id={id}
-                  className="field__select"
-                  value={form.tls}
-                  onChange={(event) => setForm({ ...form, tls: event.target.value as Tls })}
-                >
-                  <option value="ssl">{t('settings.mail.tls.ssl')}</option>
-                  <option value="starttls">{t('settings.mail.tls.starttls')}</option>
-                  <option value="none">{t('settings.mail.tls.none')}</option>
-                </select>
-              )}
-            </Field>
-          </div>
-
-          <Field label={t('settings.mail.user')}>
-            {(id) => (
-              <Input
-                id={id}
-                value={form.user}
-                onChange={(event) => setForm({ ...form, user: event.target.value })}
-                autoComplete="off"
-              />
-            )}
-          </Field>
-
-          <Field label={t('settings.mail.from')} hint={t('settings.mail.fromHint')}>
-            {(id) => (
-              <Input
-                id={id}
-                value={form.from}
-                onChange={(event) => setForm({ ...form, from: event.target.value })}
-                autoComplete="off"
-              />
-            )}
-          </Field>
-
-          <Field
-            label={t('settings.mail.password')}
-            hint={
-              mail?.hasPassword ? t('settings.mail.passwordSet') : t('settings.mail.passwordKeep')
-            }
-          >
-            {(id) => (
-              <Input
-                id={id}
-                type="password"
-                value={form.password}
-                onChange={(event) => setForm({ ...form, password: event.target.value })}
-                autoComplete="new-password"
-              />
-            )}
-          </Field>
-
-          <label className="row">
-            <input
-              type="checkbox"
-              checked={skipVerify}
-              onChange={(event) => setSkipVerify(event.target.checked)}
-            />{' '}
-            {t('settings.mail.skipVerify')}
-          </label>
-
-          <div className="row">
-            <Button onClick={() => void saveMail()} busy={busy === 'mail'}>
-              {t('settings.mail.save')}
-            </Button>
-            <Button variant="secondary" onClick={() => void sendTest()} busy={busy === 'test'}>
-              {t('settings.mail.test')}
-            </Button>
-            {mail?.source === 'db' ? (
-              <Button variant="tertiary" onClick={() => setConfirming(true)}>
-                {t('settings.mail.clear')}
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      </Panel>
-
-      <Panel>
-        <div className="stack">
-          <div className="stack stack--tight">
-            <h2 className="h2">{t('settings.alerts.title')}</h2>
-            <p className="muted">{t('settings.alerts.body')}</p>
-          </div>
-
-          {rules ? (
-            <>
-              {KINDS.map((kind) => (
-                <label className="row" key={kind}>
-                  <input
-                    type="checkbox"
-                    checked={rules.enabled.includes(kind)}
-                    onChange={() => toggle(kind)}
-                  />{' '}
-                  {t(KIND_KEY[kind])}
-                </label>
-              ))}
-
-              <div className="row">
-                <Field label={t('settings.alerts.serviceFailures')}>
-                  {(id) => (
-                    <Input
-                      id={id}
-                      value={String(rules.serviceFailures)}
-                      inputMode="numeric"
-                      onChange={(event) =>
-                        setRules({ ...rules, serviceFailures: Number(event.target.value) || 1 })
-                      }
-                    />
-                  )}
-                </Field>
-                <Field label={t('settings.alerts.diskFloor')}>
-                  {(id) => (
-                    <Input
-                      id={id}
-                      value={String(Math.round((rules.diskFloorBytes / GiB) * 10) / 10)}
-                      inputMode="decimal"
-                      onChange={(event) =>
-                        setRules({
-                          ...rules,
-                          diskFloorBytes: Math.max(0, Number(event.target.value) || 0) * GiB,
-                        })
-                      }
-                    />
-                  )}
-                </Field>
+      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="stack">
+        {tab === 'mail' ? (
+          <Panel>
+            <div className="stack">
+              <div className="stack stack--tight">
+                <h2 className="h2">{t('settings.mail.title')}</h2>
+                <p className="muted">{t('settings.mail.body')}</p>
               </div>
 
-              <Field
-                label={t('settings.alerts.recipients')}
-                hint={t('settings.alerts.recipientsHint')}
-              >
+              {mail ? (
+                <p className="row__meta">
+                  <Chip tone={mail.source === 'db' ? 'ok' : mail.source === 'env' ? 'info' : 'bad'}>
+                    {t(SOURCE_KEY[mail.source])}
+                  </Chip>{' '}
+                  {mail.source === 'db' && mail.verifiedAt
+                    ? t('settings.mail.verified', {
+                        when: new Date(mail.verifiedAt).toLocaleString(locale),
+                      })
+                    : null}
+                </p>
+              ) : null}
+
+              <Field label={t('settings.mail.host')}>
                 {(id) => (
-                  <TextArea
+                  <Input
                     id={id}
-                    rows={3}
-                    value={recipients}
-                    onChange={(event) => setRecipients(event.target.value)}
+                    value={form.host}
+                    onChange={(event) => setForm({ ...form, host: event.target.value })}
+                    placeholder="smtp.example.com"
+                    autoComplete="off"
                   />
                 )}
               </Field>
 
               <div className="row">
-                <Button onClick={() => void saveRules()} busy={busy === 'rules'}>
-                  {t('settings.alerts.save')}
-                </Button>
+                <Field label={t('settings.mail.port')}>
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={form.port}
+                      inputMode="numeric"
+                      onChange={(event) => setForm({ ...form, port: event.target.value })}
+                    />
+                  )}
+                </Field>
+                <Field label={t('settings.mail.tls')}>
+                  {(id) => (
+                    <select
+                      id={id}
+                      className="field__select"
+                      value={form.tls}
+                      onChange={(event) => setForm({ ...form, tls: event.target.value as Tls })}
+                    >
+                      <option value="ssl">{t('settings.mail.tls.ssl')}</option>
+                      <option value="starttls">{t('settings.mail.tls.starttls')}</option>
+                      <option value="none">{t('settings.mail.tls.none')}</option>
+                    </select>
+                  )}
+                </Field>
               </div>
-            </>
-          ) : null}
 
-          <div className="stack stack--tight">
-            <h3 className="h3">{t('settings.alerts.history')}</h3>
-            {history.length === 0 ? (
-              <p className="muted">{t('settings.alerts.empty')}</p>
-            ) : (
-              <ul className="stack stack--tight">
-                {history.map((row) => (
-                  <li key={row.id} className="row">
-                    <span className="grow stack stack--tight" style={{ gap: 2 }}>
-                      <span className="row__label">{row.title}</span>
-                      <span className="row__meta">
-                        {new Date(row.openedAt).toLocaleString(locale)}
-                        {row.notifyError
-                          ? ` · ${t('settings.alerts.notifyFailed')}: ${row.notifyError}`
-                          : ''}
-                      </span>
-                    </span>
-                    <Chip tone={row.state === 'open' ? 'bad' : 'ok'}>
-                      {row.state === 'open'
-                        ? t('settings.alerts.state.open')
-                        : t('settings.alerts.state.resolved')}
-                    </Chip>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </Panel>
+              <Field label={t('settings.mail.user')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    value={form.user}
+                    onChange={(event) => setForm({ ...form, user: event.target.value })}
+                    autoComplete="off"
+                  />
+                )}
+              </Field>
+
+              <Field label={t('settings.mail.from')} hint={t('settings.mail.fromHint')}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    value={form.from}
+                    onChange={(event) => setForm({ ...form, from: event.target.value })}
+                    autoComplete="off"
+                  />
+                )}
+              </Field>
+
+              <Field
+                label={t('settings.mail.password')}
+                hint={
+                  mail?.hasPassword
+                    ? t('settings.mail.passwordSet')
+                    : t('settings.mail.passwordKeep')
+                }
+              >
+                {(id) => (
+                  <Input
+                    id={id}
+                    type="password"
+                    value={form.password}
+                    onChange={(event) => setForm({ ...form, password: event.target.value })}
+                    autoComplete="new-password"
+                  />
+                )}
+              </Field>
+
+              <label className="row">
+                <input
+                  type="checkbox"
+                  checked={skipVerify}
+                  onChange={(event) => setSkipVerify(event.target.checked)}
+                />{' '}
+                {t('settings.mail.skipVerify')}
+              </label>
+
+              <div className="row">
+                <Button onClick={() => void saveMail()} busy={busy === 'mail'}>
+                  {t('settings.mail.save')}
+                </Button>
+                <Button variant="secondary" onClick={() => void sendTest()} busy={busy === 'test'}>
+                  {t('settings.mail.test')}
+                </Button>
+                {mail?.source === 'db' ? (
+                  <Button variant="tertiary" onClick={() => setConfirming(true)}>
+                    {t('settings.mail.clear')}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </Panel>
+        ) : null}
+
+        {tab === 'alerts' ? (
+          <Panel>
+            <div className="stack">
+              <div className="stack stack--tight">
+                <h2 className="h2">{t('settings.alerts.title')}</h2>
+                <p className="muted">{t('settings.alerts.body')}</p>
+              </div>
+
+              {rules ? (
+                <>
+                  {KINDS.map((kind) => (
+                    <label className="row" key={kind}>
+                      <input
+                        type="checkbox"
+                        checked={rules.enabled.includes(kind)}
+                        onChange={() => toggle(kind)}
+                      />{' '}
+                      {t(KIND_KEY[kind])}
+                    </label>
+                  ))}
+
+                  <div className="row">
+                    <Field label={t('settings.alerts.serviceFailures')}>
+                      {(id) => (
+                        <Input
+                          id={id}
+                          value={String(rules.serviceFailures)}
+                          inputMode="numeric"
+                          onChange={(event) =>
+                            setRules({ ...rules, serviceFailures: Number(event.target.value) || 1 })
+                          }
+                        />
+                      )}
+                    </Field>
+                    <Field label={t('settings.alerts.diskFloor')}>
+                      {(id) => (
+                        <Input
+                          id={id}
+                          value={String(Math.round((rules.diskFloorBytes / GiB) * 10) / 10)}
+                          inputMode="decimal"
+                          onChange={(event) =>
+                            setRules({
+                              ...rules,
+                              diskFloorBytes: Math.max(0, Number(event.target.value) || 0) * GiB,
+                            })
+                          }
+                        />
+                      )}
+                    </Field>
+                  </div>
+
+                  <Field
+                    label={t('settings.alerts.recipients')}
+                    hint={t('settings.alerts.recipientsHint')}
+                  >
+                    {(id) => (
+                      <TextArea
+                        id={id}
+                        rows={3}
+                        value={recipients}
+                        onChange={(event) => setRecipients(event.target.value)}
+                      />
+                    )}
+                  </Field>
+
+                  <div className="row">
+                    <Button onClick={() => void saveRules()} busy={busy === 'rules'}>
+                      {t('settings.alerts.save')}
+                    </Button>
+                  </div>
+                </>
+              ) : null}
+
+              <div className="stack stack--tight">
+                <h3 className="h3">{t('settings.alerts.history')}</h3>
+                {history.length === 0 ? (
+                  <p className="muted">{t('settings.alerts.empty')}</p>
+                ) : (
+                  <ul className="stack stack--tight">
+                    {history.map((row) => (
+                      <li key={row.id} className="row">
+                        <span className="grow stack stack--tight" style={{ gap: 2 }}>
+                          <span className="row__label">{row.title}</span>
+                          <span className="row__meta">
+                            {new Date(row.openedAt).toLocaleString(locale)}
+                            {row.notifyError
+                              ? ` · ${t('settings.alerts.notifyFailed')}: ${row.notifyError}`
+                              : ''}
+                          </span>
+                        </span>
+                        <Chip tone={row.state === 'open' ? 'bad' : 'ok'}>
+                          {row.state === 'open'
+                            ? t('settings.alerts.state.open')
+                            : t('settings.alerts.state.resolved')}
+                        </Chip>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </Panel>
+        ) : null}
+      </div>
 
       {confirming ? (
         <ConfirmModal

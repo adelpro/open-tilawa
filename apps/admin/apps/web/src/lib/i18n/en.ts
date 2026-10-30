@@ -801,6 +801,9 @@ export const en = {
   'footer.links': 'Pages',
   'landing.langNote': 'The interface is available in English and Arabic.',
 
+  'settings.tabs': 'Mail and alert sections',
+  'settings.tab.mail': 'Outbound email',
+  'settings.tab.alerts': 'Alerts',
   'settings.title': 'Mail & alerts',
   'settings.subtitle': 'Outbound mail and the alerts built on it.',
   'settings.loadFailed': 'Could not load the settings.',
