@@ -12,9 +12,10 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
  * sitemap` keeps it that way — but they are separate columns because `/listen` pages are
  * prerendered for their share cards while staying out of the index.
  *
- * A URL exists only when a screen does. `/surahs` and `/reciters` are panels inside the
- * player, opened by a button and closed again — not destinations — so they are not routes;
- * a surah or reciter hub is a page worth its own URL when someone designs it.
+ * A URL exists only when a screen does. `/surahs` is a panel inside the player, opened by
+ * a button and closed again — not a destination — so it is not a route. `/reciters` is the
+ * opposite: a page of its own, because the roster is the one thing worth finding before
+ * anything is playing, and the build can write it down for a crawler.
  *
  * Numeric identity, name as decoration: `/listen/minshawi/18-al-kahf` is the surah 18 page
  * whatever the second segment says, and `toPath` writes the current name so a stale one can
@@ -24,6 +25,7 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 export type RouteName =
   | 'home'
   | 'listen'
+  | 'reciters'
   | 'about'
   | 'privacy'
   | 'account'
@@ -48,6 +50,7 @@ export type RouteRow = {
 export const ROUTE_TABLE: readonly RouteRow[] = [
   { name: 'home', pattern: '/', index: true, sitemap: true, prerender: true },
   { name: 'listen', pattern: '/listen/{release}/{n}-{surah}', index: false, sitemap: false, prerender: true },
+  { name: 'reciters', pattern: '/reciters', index: true, sitemap: true, prerender: true },
   { name: 'about', pattern: '/about', index: true, sitemap: true, prerender: true },
   { name: 'privacy', pattern: '/privacy', index: true, sitemap: true, prerender: true },
   { name: 'account', pattern: '/account', index: false, sitemap: false, prerender: false },

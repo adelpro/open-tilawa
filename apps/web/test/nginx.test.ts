@@ -26,14 +26,14 @@ test('the catch-all location answers 404 instead of the shell', () => {
   assert.doesNotMatch(rootLocation, /^\s*\/index\.html\s*$/m, 'the catch-all still falls back to the shell');
 });
 
-test('every route the app resolves today still reaches the app', () => {
-  // Until the prerender step writes real files (Phase 3), every family needs the shell —
-  // otherwise /about, /privacy and the rest answer 404 the moment this ships. Phase 3
-  // narrows this list to the parameterised families; this assertion is the reminder.
+test('every route nginx cannot resolve from disk still reaches the app', () => {
+  // A prerendered page is a file on disk, and a missing one is a 404 on purpose. What
+  // needs the shell is the other half: the app-only screens, and the parameterised
+  // families nginx cannot verify without the catalogue.
   const families = new Set(
-    ROUTE_TABLE.map((row) => row.pattern.split('/').filter(Boolean)[0]).filter(
-      (segment): segment is string => Boolean(segment),
-    ),
+    ROUTE_TABLE.filter((row) => !row.prerender || row.pattern.includes('{'))
+      .map((row) => row.pattern.split('/').filter(Boolean)[0])
+      .filter((segment): segment is string => Boolean(segment)),
   );
 
   assert.ok(families.size > 0, 'no route families to check');

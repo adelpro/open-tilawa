@@ -27,11 +27,21 @@ const ar = {
     hint: 'Space للتشغيل · ←/→ 15 ثانية · ؟ للمزيد',
     dismiss: 'إخفاء',
   },
-  routes: { listen: 'الاستماع', settings: 'الإعدادات', about: 'عن تلاوة', privacy: 'الخصوصية' },
+  routes: {
+    listen: 'الاستماع',
+    settings: 'الإعدادات',
+    about: 'عن تلاوة',
+    privacy: 'الخصوصية',
+    reciters: 'القرّاء',
+  },
   notFound: {
     title: 'هذه الصفحة غير موجودة',
     body: 'الرابط الذي فتحته لا يؤدي إلى صفحة في تلاوة.',
     home: 'العودة إلى الاستماع',
+  },
+  recitersPage: {
+    title: 'القرّاء',
+    lede: 'هؤلاء هم القرّاء المنشورون في تلاوة، ولكل واحد منهم تلاوة كاملة. اختر قارئًا، ثم اختر السورة التي تريد سماعها.',
   },
   account: {
     title: 'الحساب',
@@ -274,11 +284,21 @@ const en: typeof ar = {
     hint: 'Space to play · ←/→ 15 seconds · ? for more',
     dismiss: 'Dismiss',
   },
-  routes: { listen: 'Listen', settings: 'Settings', about: 'About Tilawah', privacy: 'Privacy' },
+  routes: {
+    listen: 'Listen',
+    settings: 'Settings',
+    about: 'About Tilawah',
+    privacy: 'Privacy',
+    reciters: 'Reciters',
+  },
   notFound: {
     title: 'This page does not exist',
     body: 'The link you opened does not lead to a page in Tilawah.',
     home: 'Back to listening',
+  },
+  recitersPage: {
+    title: 'Reciters',
+    lede: 'These are the reciters published in Tilawah, each with a complete recitation. Pick a reciter, then the surah you want to hear.',
   },
   account: {
     title: 'Account',

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import AboutPage from './app/about-page';
+import RecitersPage from './app/reciters-page';
 import PlayerPage from './app/player-page';
 import NotFoundPage from './app/not-found-page';
 import TelemetryPrompt from './components/telemetry-prompt';
@@ -230,7 +231,9 @@ export default function App() {
           onOpenAccount={() => setAccountOpen(true)}
         />
 
-        {route.name === 'about' ? (
+        {route.name === 'reciters' ? (
+          <RecitersPage />
+        ) : route.name === 'about' ? (
           <AboutPage />
         ) : route.name === 'privacy' ? (
           <PrivacyPage />

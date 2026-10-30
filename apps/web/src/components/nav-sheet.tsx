@@ -28,6 +28,7 @@ export default function NavSheet({
 
   const items: { name?: RouteName; label: string; icon: ReactNode; action?: () => void }[] = [
     { name: 'home', label: t.routes.listen, icon: <Icon name="house" /> },
+    { name: 'reciters', label: t.routes.reciters, icon: <Icon name="headphones" /> },
     { name: 'settings', label: t.routes.settings, icon: <Icon name="gear" /> },
     { label: t.account.title, icon: <Icon name="user" />, action: onOpenAccount },
     { name: 'about', label: t.routes.about, icon: <Icon name="info" /> },

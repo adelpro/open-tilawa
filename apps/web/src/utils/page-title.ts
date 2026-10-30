@@ -15,6 +15,8 @@ import type { Parsed } from '@/routes';
  */
 export function pageTitle(route: Parsed, t: Messages): string | null {
   switch (route.name) {
+    case 'reciters':
+      return `${t.routes.reciters} — Tilawah`;
     case 'about':
       return `${t.routes.about} — Tilawah`;
     case 'privacy':

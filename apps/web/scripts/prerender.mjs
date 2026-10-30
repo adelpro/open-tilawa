@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 import { ROUTE_TABLE, surahSlug } from '../src/routes.ts';
 import { pageTitle } from '../src/utils/page-title.ts';
+import { riwayaLabel } from '../src/utils/riwaya.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
 
@@ -145,6 +146,24 @@ try {
   console.error('prerender: refusing to write a site with no catalogue');
   process.exit(1);
 }
+
+// The roster, written down: the one hub with a screen behind it. The app renders the
+// same rows from the same catalogue, so the names a crawler reads are the names it can
+// act on — and the page is worth the sitemap row it gets.
+add('/reciters', {
+  title: pageTitle({ name: 'reciters' }, copy) ?? 'القرّاء — Tilawah',
+  description: copy.recitersPage.lede,
+  index: indexable('reciters'),
+  body:
+    `<h1>${escape(copy.recitersPage.title)}</h1><p>${escape(copy.recitersPage.lede)}</p><ul>` +
+    catalogue
+      .map(
+        (release) =>
+          `<li>${escape(release.nameAr ?? release.name)} — ${escape(riwayaLabel(release.riwaya))}</li>`,
+      )
+      .join('') +
+    '</ul>',
+});
 
 for (const release of catalogue) {
   if (!release.slug) continue;

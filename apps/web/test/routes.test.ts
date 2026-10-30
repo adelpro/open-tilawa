@@ -42,6 +42,7 @@ test('toPath round-trips every canonical path', () => {
     '/account',
     '/favorites',
     '/recent',
+    '/reciters',
     '/listen/minshawi/18-al-kahf',
   ];
   for (const path of paths) assert.equal(toPath(parse(path)), path, path);
@@ -60,13 +61,14 @@ test('every indexable route is in the sitemap', () => {
   }
 });
 
-test('a panel has no URL: there is no screen at /surahs or /reciters', () => {
-  // Both lists open inside the player from a button. A URL that renders the player is a
-  // soft 404 with a pretty face, so the table refuses to own it — and nginx answers 404
-  // because the family is not in its shell list either.
-  for (const path of ['/surahs', '/surahs/18-al-kahf', '/reciters', '/reciters/minshawi']) {
+test('a panel has no URL, a page does', () => {
+  // The surah list opens inside the player from a button and has no screen of its own, so
+  // the table refuses to own it and nginx answers 404. The roster is the other way round:
+  // `/reciters` is a page, and it is the one hub a crawler is invited to.
+  for (const path of ['/surahs', '/surahs/18-al-kahf', '/reciters/minshawi']) {
     assert.deepEqual(parse(path), { name: 'notFound' }, path);
   }
+  assert.deepEqual(parse('/reciters'), { name: 'reciters' });
 });
 
 test('an old hash URL is rewritten to its path', () => {

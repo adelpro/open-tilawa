@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.12.0 — 2026-10-30
+
+Minor. App versions: **web 1.12.0**, **admin 1.30.0**, **seeder 1.4.3**.
+
+### Added
+
+- **`/reciters` is a page now, not a panel with a URL.** The roster was only reachable
+  from the chevrons over the player, so a crawler had nothing to read and a listener who
+  had not started anything had no way to browse. The page lists every published release
+  in catalogue order with its riwaya, and picking one returns to the player with that
+  reciter loaded. It is prerendered from the same catalogue the app reads, so the names
+  are in the HTML before any JavaScript runs, it is in the menu, and it has a sitemap row.
+- The panel stays where it was: the chevrons switch reciter mid-recitation, the page is
+  for arriving.
+
 ## 1.11.1 — 2026-10-30
 
 Patch. App versions: **web 1.11.1**, **admin 1.30.0**, **seeder 1.4.3**.
