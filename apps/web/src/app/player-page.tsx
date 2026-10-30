@@ -147,11 +147,14 @@ export default function PlayerPage({
 
   /**
    * `unknown` is the catalogue saying it does not know. Printing that as a
-   * reading would assert a riwaya on a recording nobody classified.
+   * reading would assert a riwaya on a recording nobody classified, and a name
+   * that already ends in "(ورش)" does not need the reading twice.
    */
   const riwayaCode = reciter?.riwaya?.trim();
-  const riwaya =
+  const riwayaLabelText =
     riwayaCode && riwayaCode.toLowerCase() !== 'unknown' ? riwayaLabel(riwayaCode) : null;
+  const riwaya =
+    riwayaLabelText && !reciter?.name.includes(riwayaLabelText) ? riwayaLabelText : null;
 
   /**
    * Keyboard is a desktop affordance: wide layout *and* a real pointer. A phone
@@ -249,13 +252,17 @@ export default function PlayerPage({
                   aria-haspopup="dialog"
                   className="group inline-flex items-center gap-3 rounded-md"
                 >
+                  {/* A spacer the size of the icon keeps the name itself on the
+                      centre line; the chevron grows into it on hover without
+                      moving what the eye is reading. */}
+                  <span aria-hidden="true" className="w-5 shrink-0" />
                   <span className="underline-offset-[6px] group-hover:underline group-focus-visible:underline">
                     {surah?.name ?? `سورة ${surahId}`}
                   </span>
                   <Icon
                     name="expand"
                     size={20}
-                    className="shrink-0 text-muted opacity-45 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                    className="w-5 shrink-0 text-muted opacity-45 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                   />
                 </button>
               ) : (
