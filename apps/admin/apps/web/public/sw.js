@@ -1,7 +1,10 @@
 /* eslint-disable */
 /* Tilawa Admin service worker — app-shell cache, network-first for API. */
-const CACHE = 'tilawa-admin-shell-v1';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.ico'];
+const CACHE = 'tilawa-admin-shell-v2';
+// The manifest is deliberately not precached: it is small, it is read on every
+// install prompt, and a cached copy outlives its own deploy (the old one kept
+// serving a cream splash into a parchment app until the cache name was bumped).
+const SHELL = ['/', '/index.html', '/favicon.ico'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

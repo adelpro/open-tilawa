@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.12.5 — 2026-10-30
+
+Patch. App versions: **web 1.12.1**, **admin 1.30.4**, **seeder 1.4.3**.
+
+### Fixed
+
+- **A cached manifest outlived its own release.** The console's service worker
+  precached `/manifest.webmanifest` and answered every later request from that copy, so
+  the chrome in 1.12.4 would only have reached browsers that had never opened the
+  console. The cache name moves to `v2`, and the manifest is no longer precached: it is
+  a few hundred bytes read at install time, and it changes when the palette does.
+  `test/sw.test.mjs` fails if it goes back into the shell list.
+
 ## 1.12.4 — 2026-10-30
 
 Patch. App versions: **web 1.12.1**, **admin 1.30.3**, **seeder 1.4.3**.
