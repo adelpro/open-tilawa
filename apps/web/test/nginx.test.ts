@@ -46,3 +46,18 @@ test('a prerendered page is a directory, so the catch-all can find it', () => {
   // files share, so a change on one side cannot silently break the other.
   assert.match(rootLocation, /\$uri\//, 'the catch-all no longer tries a directory index');
 });
+
+test('the media preflight allows the headers a torrent fetch actually sends', () => {
+  // A fetch with `cache: 'no-store'` sends `Cache-Control: no-cache` on the preflight.
+  // Allowing only `Range` fails that preflight, and the media request dies before a byte
+  // arrives — the bug this test exists to prevent coming back.
+  const media = /location \/media\/ \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
+  assert.ok(media, 'no /media/ location found');
+
+  const allow = /Access-Control-Allow-Headers "([^"]+)"/.exec(media)?.[1] ?? '';
+  for (const header of ['Range', 'Cache-Control', 'If-Range']) {
+    assert.match(allow, new RegExp(`\\b${header}\\b`), `${header} is missing from the media preflight`);
+  }
+  assert.match(media, /Access-Control-Allow-Methods "GET, HEAD, OPTIONS"/);
+  assert.match(media, /Access-Control-Max-Age \d+/);
+});
