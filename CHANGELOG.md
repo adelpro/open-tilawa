@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.10.2 — 2026-10-30
+
+Patch. App versions: **web 1.10.2**, **admin 1.29.1**, **seeder 1.4.3**.
+
+### Fixed
+
+- **موجات is a spectrum again.** 1.10.1 turned the ribbon into a scrolling
+  history of loudness: one number every 60 ms, newest at the right edge, so a
+  syllable crossed the block as a travelling needle and the strip fell back to the
+  floor between ayat. The ribbon now reads the same frequency bands as the bars —
+  x is frequency again — and each of its four layers holds every band with its own
+  rise and fall. Nothing moves sideways; the shape stands still and only its
+  height follows the recitation.
+
 ## 1.10.1 — 2026-10-30
 
 Patch. App versions: **web 1.10.1**, **admin 1.29.1**, **seeder 1.4.3**.
