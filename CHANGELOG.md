@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.12.7 — 2026-10-30
+
+Patch. App versions: **web 1.12.2**, **admin 1.30.5**, **seeder 1.4.3**.
+
+### Fixed
+
+- **Usage statistics were collected nowhere, so every install was invisible.** The
+  consent gate worked, the sender existed and the console's ingest answered, but no
+  call ever reached `record()`: the queue stayed empty and `flush()` returned before
+  the fetch. Every install that accepted the prompt — three devices is how it was
+  noticed — sent nothing, and the usage tab read "Nobody yet" on all of them.
+  `audio-engine.tsx` now records one `play` per surah when sound starts (keyed
+  `reciter:surah`, so a resume or a re-buffer is not a second play), an `error` with
+  the media code by name, and a `fallback` when the web seed fed it.
+- **A queue died with the tab.** The batch timer is 30 seconds, and a tab that closed
+  in between lost what it held. `pagehide` and a hidden document now flush first; the
+  sender's `keepalive` is what lets the request land.
+- The stream source is one rule again (`streamSourceFor`), read by the footer's glyph
+  and by the counter, so the two cannot disagree about what fed the sound.
+
 ## 1.12.6 — 2026-10-30
 
 Patch. App versions: **web 1.12.1**, **admin 1.30.5**, **seeder 1.4.3**.
