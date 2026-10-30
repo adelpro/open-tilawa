@@ -22,7 +22,7 @@ export const en = {
   'nav.help': 'Help',
   'nav.admin': 'Admin',
   'nav.superadmin': 'Super admin',
-  'nav.settings': 'Settings',
+  'nav.settings': 'Mail & alerts',
   'nav.workspace': 'Workspace',
   'usage.action': 'Action',
   'usage.target': 'Target',
@@ -801,7 +801,7 @@ export const en = {
   'footer.links': 'Pages',
   'landing.langNote': 'The interface is available in English and Arabic.',
 
-  'settings.title': 'Settings',
+  'settings.title': 'Mail & alerts',
   'settings.subtitle': 'Outbound mail and the alerts built on it.',
   'settings.loadFailed': 'Could not load the settings.',
   'settings.mail.title': 'Outbound email',

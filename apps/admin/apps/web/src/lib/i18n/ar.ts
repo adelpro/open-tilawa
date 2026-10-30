@@ -28,7 +28,7 @@ export const ar: Catalogue = {
   'nav.help': 'مساعدة',
   'nav.admin': 'لوحة الإدارة',
   'nav.superadmin': 'الإدارة العليا',
-  'nav.settings': 'الإعدادات',
+  'nav.settings': 'البريد والتنبيهات',
   'nav.workspace': 'مساحة العمل',
   'usage.action': 'الإجراء',
   'usage.target': 'الهدف',
@@ -789,7 +789,7 @@ export const ar: Catalogue = {
   'footer.links': 'الصفحات',
   'landing.langNote': 'الواجهة متاحة بالإنجليزية والعربية.',
 
-  'settings.title': 'الإعدادات',
+  'settings.title': 'البريد والتنبيهات',
   'settings.subtitle': 'البريد الصادر والتنبيهات المبنيّة عليه.',
   'settings.loadFailed': 'تعذّر تحميل الإعدادات.',
   'settings.mail.title': 'البريد الصادر',
