@@ -13,6 +13,7 @@ export type CatalogueRow = {
   infohash: string;
   magnet: string;
   fileCount: number | null;
+  slug?: string | null;
 };
 
 /** 114 surahs is the whole book; fewer means a partial release. */
@@ -46,6 +47,7 @@ export function toReciters(rows: CatalogueRow[]): Reciter[] {
       magnet,
       riwaya: row.riwaya?.trim() || 'unknown',
       complet: (row.fileCount ?? 0) >= FULL_QURAN,
+      slug: (row.slug ?? '').trim(),
     });
   }
 

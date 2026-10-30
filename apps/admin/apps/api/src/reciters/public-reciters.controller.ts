@@ -31,6 +31,7 @@ export class PublicRecitersController {
         name: reciter.name,
         nameAr: reciter.nameAr,
         riwaya: reciter.riwaya,
+        slug: reciter.slug,
         infohash: reciter.infohash,
         magnet: reciter.magnet,
         sizeBytes: reciter.sizeBytes,

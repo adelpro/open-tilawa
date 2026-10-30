@@ -12,4 +12,10 @@ export type Reciter = {
   magnet: string;
   riwaya: string;
   complet: boolean;
+  /**
+   * The public face of the release, assigned by the catalogue and frozen there.
+   * Empty when the catalogue has not assigned one yet — the row stays playable, it
+   * simply has no `/listen/...` URL, because this app never derives a slug itself.
+   */
+  slug: string;
 };
