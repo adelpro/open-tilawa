@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>wifi-waiting — the real animation</title>
+<style>
+  html,body{margin:0;background:#fff}
+  #main{width:480px;height:480px;display:flex;align-items:center;justify-content:center;background:#fff}
+  svg{color:#6b6b6b}
+  /* the app's own rule, globals.css */
+  .wifi-arc{animation:wifi-arc 1.5s ease-in-out infinite}
+  .wifi-arc-2{animation-delay:.5s}
+  .wifi-dot{animation:wifi-dot 1.5s ease-in-out infinite}
+  @keyframes wifi-arc{0%,100%{opacity:.35}50%{opacity:1}}
+  @keyframes wifi-dot{0%,100%{opacity:.6}40%{opacity:1}}
+</style>
+</head>
+<body>
+<div id="main" data-composition-id="main" data-width="480" data-height="480" data-duration="1.5">
+  <svg viewBox="0 0 24 24" width="300" height="300" fill="none" stroke="currentColor" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path class="wifi-arc" d="M4.5 9.5a11 11 0 0 1 15 0"/>
+    <path class="wifi-arc wifi-arc-2" d="M7.8 13a6.5 6.5 0 0 1 8.4 0"/>
+    <path class="wifi-dot" d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0"/>
+  </svg>
+</div>
+<script>
+  window.__duration = 1.5;
+  window.__seek = (t) => { /* CSS animations are driven by render.mjs */ };
+</script>
+</body>
+</html>
