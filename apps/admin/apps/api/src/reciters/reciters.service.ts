@@ -103,6 +103,26 @@ export class RecitersService {
     for (const [hash, name] of Object.entries(RECITER_NAMES_AR)) update.run(name, hash);
   }
 
+  /**
+   * The successor of a slug, or null when nobody ever had it.
+   *
+   * `reciter_slugs` is append-only, so a slug retired by a rename still points at its
+   * infohash; the current row is the one that infohash holds now. A slug that resolves to
+   * itself is the ordinary case and returns itself, which is what keeps a redirect from
+   * looping.
+   */
+  resolveSlug(slug: string): string | null {
+    const known = this.db
+      .prepare('SELECT lower(infohash) AS infohash FROM reciter_slugs WHERE slug = ?')
+      .get(slug) as { infohash: string } | undefined;
+    if (!known) return null;
+
+    const current = this.db
+      .prepare('SELECT slug FROM reciters WHERE lower(infohash) = ?')
+      .get(known.infohash) as { slug: string | null } | undefined;
+    return current?.slug ?? null;
+  }
+
   list(): Reciter[] {
     return this.db
       .prepare('SELECT * FROM reciters ORDER BY id')

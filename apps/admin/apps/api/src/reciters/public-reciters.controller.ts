@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { RecitersService } from './reciters.service';
 
 /**
@@ -12,6 +12,17 @@ import { RecitersService } from './reciters.service';
 @Controller('public')
 export class PublicRecitersController {
   constructor(private readonly reciters: RecitersService) {}
+
+  /**
+   * Where an old link should go now. A slug that was renamed away still resolves, so a
+   * share from last year keeps working; one nobody ever had is a 404, not a guess.
+   */
+  @Get('slug/:slug')
+  resolveSlug(@Param('slug') slug: string): { current: string } {
+    const current = this.reciters.resolveSlug(slug);
+    if (!current) throw new NotFoundException('no such slug');
+    return { current };
+  }
 
   @Get('reciters')
   list(
