@@ -16,7 +16,7 @@ const SOURCE = readFileSync(new URL('../scripts/prerender.mjs', import.meta.url)
 
 test('indexability is read from the route table, never written into the build', () => {
   assert.doesNotMatch(SOURCE, /index:\s*true/, 'prerender decides a page is indexable on its own');
-  for (const name of ['home', 'about', 'privacy', 'reciters', 'surahs', 'surah', 'reciter', 'listen']) {
+  for (const name of ['home', 'about', 'privacy', 'listen']) {
     assert.match(
       SOURCE,
       new RegExp(`index: indexable\\('${name}'\\)`),

@@ -19,8 +19,6 @@ test('the player answers for the routes it renders', () => {
   for (const route of [
     { name: 'home' },
     { name: 'listen', release: 'minshawi', surah: 18, surahName: 'al-kahf' },
-    { name: 'surahs' },
-    { name: 'reciters' },
   ] as const) {
     assert.equal(pageTitle(route, ar), null, route.name);
   }

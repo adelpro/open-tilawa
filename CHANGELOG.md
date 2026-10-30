@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.11.1 — 2026-10-30
+
+Patch. App versions: **web 1.11.1**, **admin 1.30.0**, **seeder 1.4.3**.
+
+### Changed
+
+- **`/surahs` and `/reciters` are not URLs.** Both are panels inside the player — opened
+  from a button, closed again — and nothing in the interface links to them, so the four
+  route rows behind them (the two lists and their detail paths) only ever produced pages
+  that showed the player. Removing them takes the build from 1,269 generated pages to 3
+  and leaves one rule: a URL exists when a screen does. A surah hub (which reciters have
+  it) and a reciter hub (their surahs) are still worth building; they become pages with
+  their own URL when someone designs them.
+
+### Fixed
+
+- **A page nginx cannot verify is not indexable.** The shell answers `/account`,
+  `/settings`, `/favorites`, `/recent`, and any `/listen/<slug>/<n>` pair nobody owns —
+  a soft 404 that returned 200 with the player's metadata. Those responses now carry
+  `X-Robots-Tag: noindex, nofollow` from a named `@shell` location, which also keeps the
+  no-store headers: the fallback used to redirect through `/index.html`, so the shell was
+  being cached and a missing prerendered page would have been indexed with the home title.
+
 ## 1.11.0 — 2026-10-30
 
 Minor. App versions: **web 1.11.0**, **admin 1.30.0**, **seeder 1.4.3**.

@@ -92,3 +92,17 @@ test('the sitemap and robots carry the types a crawler expects', () => {
   assert.match(CONF, /location = \/sitemap\.xml \{[\s\S]*?default_type application\/xml;/);
   assert.match(CONF, /location = \/robots\.txt \{[\s\S]*?default_type text\/plain;/);
 });
+
+test('the shell is served noindex and never cached', () => {
+  // The shell answers the app-only screens and any `/listen` pair nginx cannot verify.
+  // Nothing served this way may be indexed, and nothing may be cached — a cached shell is
+  // a deploy that never lands. It is a named location because falling back to
+  // `/index.html` would be an internal redirect into `location = /index.html`, and these
+  // headers would be dropped on the way.
+  const shell = /location @shell \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
+  assert.ok(shell, 'no @shell block found');
+  assert.match(shell, /add_header X-Robots-Tag "noindex[^"]*" always;/);
+  assert.match(shell, /add_header Cache-Control "no-cache, no-store, must-revalidate" always;/);
+  assert.match(pageLocation, /try_files \$uri \$uri\/index\.html @shell;/);
+  assert.doesNotMatch(pageLocation, /\s\/index\.html\s*;/, 'the fallback still redirects through a path');
+});

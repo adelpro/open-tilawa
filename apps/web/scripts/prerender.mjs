@@ -128,24 +128,6 @@ add('/privacy', {
     .join('')}</ul>`,
 });
 
-add('/reciters', { title: 'القرّاء — Tilawah', description: copy.about.lede, index: indexable('reciters') });
-add('/surahs', { title: 'السور — Tilawah', description: copy.about.lede, index: indexable('surahs') });
-
-const surahPage = (id) => {
-  const name = SURAHS.find((surah) => surah.id === id)?.name ?? '';
-  return { slug: `${id}-${surahSlug(id)}`, name };
-};
-
-for (const surah of SURAHS) {
-  const { slug, name } = surahPage(surah.id);
-  add(`/surahs/${slug}`, {
-    title: `سورة ${name} — Tilawah`,
-    description: `استمع إلى سورة ${name} بأصوات القرّاء في تلاوة.`,
-    index: indexable('surah'),
-    body: `<h1>سورة ${escape(name)}</h1>`,
-  });
-}
-
 // The catalogue is the only source of releases. A build without it would publish hub
 // pages that link nowhere, so it stops here instead.
 let catalogue = [];
@@ -166,14 +148,6 @@ try {
 
 for (const release of catalogue) {
   if (!release.slug) continue;
-  if (release.nameAr || release.name) {
-    add(`/reciters/${release.slug}`, {
-      title: `${release.nameAr ?? release.name} — Tilawah`,
-      description: `تلاوات ${release.nameAr ?? release.name} كاملة في تلاوة.`,
-      index: indexable('reciter'),
-      body: `<h1>${escape(release.nameAr ?? release.name)}</h1>`,
-    });
-  }
   for (const surah of SURAHS) {
     add(`/listen/${release.slug}/${surah.id}-${surahSlug(surah.id)}`, {
       title: `سورة ${surah.name} — ${release.nameAr ?? release.name}`,

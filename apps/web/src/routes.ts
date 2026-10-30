@@ -12,11 +12,9 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
  * sitemap` keeps it that way — but they are separate columns because `/listen` pages are
  * prerendered for their share cards while staying out of the index.
  *
- * The hub rows (`/surahs`, `/reciters` and their detail paths) resolve and prerender, but
- * the screen behind them is still the player, so they are not announced: a sitemap that
- * lists 126 URLs rendering the same document is the fastest way to teach a crawler that
- * this site has no pages. They flip to `index: true` in the commit that ships the hub
- * screens, and `test/routes.test.ts` fails until then, on purpose.
+ * A URL exists only when a screen does. `/surahs` and `/reciters` are panels inside the
+ * player, opened by a button and closed again — not destinations — so they are not routes;
+ * a surah or reciter hub is a page worth its own URL when someone designs it.
  *
  * Numeric identity, name as decoration: `/listen/minshawi/18-al-kahf` is the surah 18 page
  * whatever the second segment says, and `toPath` writes the current name so a stale one can
@@ -26,10 +24,6 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 export type RouteName =
   | 'home'
   | 'listen'
-  | 'reciters'
-  | 'reciter'
-  | 'surahs'
-  | 'surah'
   | 'about'
   | 'privacy'
   | 'account'
@@ -40,9 +34,7 @@ export type RouteName =
 
 export type Parsed =
   | { name: 'listen'; release: string; surah: number; surahName: string }
-  | { name: 'reciter'; release: string }
-  | { name: 'surah'; surah: number; surahName: string }
-  | { name: Exclude<RouteName, 'listen' | 'reciter' | 'surah'> };
+  | { name: Exclude<RouteName, 'listen'> };
 
 export type RouteRow = {
   name: RouteName;
@@ -56,10 +48,6 @@ export type RouteRow = {
 export const ROUTE_TABLE: readonly RouteRow[] = [
   { name: 'home', pattern: '/', index: true, sitemap: true, prerender: true },
   { name: 'listen', pattern: '/listen/{release}/{n}-{surah}', index: false, sitemap: false, prerender: true },
-  { name: 'reciters', pattern: '/reciters', index: false, sitemap: false, prerender: true },
-  { name: 'reciter', pattern: '/reciters/{release}', index: false, sitemap: false, prerender: true },
-  { name: 'surahs', pattern: '/surahs', index: false, sitemap: false, prerender: true },
-  { name: 'surah', pattern: '/surahs/{n}-{surah}', index: false, sitemap: false, prerender: true },
   { name: 'about', pattern: '/about', index: true, sitemap: true, prerender: true },
   { name: 'privacy', pattern: '/privacy', index: true, sitemap: true, prerender: true },
   { name: 'account', pattern: '/account', index: false, sitemap: false, prerender: false },
@@ -120,16 +108,6 @@ export function parse(pathname: string): Parsed {
     return { name: 'listen', release: segments[1], surah: surah.id, surahName: surah.name };
   }
 
-  if (segments[0] === 'reciters' && segments.length === 2) {
-    return { name: 'reciter', release: segments[1] };
-  }
-
-  if (segments[0] === 'surahs' && segments.length === 2) {
-    const surah = surahSegment(segments[1]);
-    if (!surah) return { name: 'notFound' };
-    return { name: 'surah', surah: surah.id, surahName: surah.name };
-  }
-
   return { name: 'notFound' };
 }
 
@@ -138,10 +116,6 @@ export function toPath(route: Parsed): string {
   switch (route.name) {
     case 'listen':
       return `/listen/${route.release}/${route.surah}-${surahSlug(route.surah)}`;
-    case 'reciter':
-      return `/reciters/${route.release}`;
-    case 'surah':
-      return `/surahs/${route.surah}-${surahSlug(route.surah)}`;
     case 'home':
       return '/';
     default:

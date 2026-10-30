@@ -21,9 +21,7 @@ test('the surah name segment is optional decoration', () => {
   });
 });
 
-test('hub and static paths parse by name', () => {
-  assert.deepEqual(parse('/surahs/18-al-kahf'), { name: 'surah', surah: 18, surahName: 'al-kahf' });
-  assert.deepEqual(parse('/reciters/minshawi'), { name: 'reciter', release: 'minshawi' });
+test('static paths parse by name', () => {
   assert.deepEqual(parse('/'), { name: 'home' });
   assert.deepEqual(parse('/about'), { name: 'about' });
   assert.deepEqual(parse('/settings'), { name: 'settings' });
@@ -44,10 +42,6 @@ test('toPath round-trips every canonical path', () => {
     '/account',
     '/favorites',
     '/recent',
-    '/reciters',
-    '/surahs',
-    '/reciters/minshawi',
-    '/surahs/18-al-kahf',
     '/listen/minshawi/18-al-kahf',
   ];
   for (const path of paths) assert.equal(toPath(parse(path)), path, path);
@@ -66,15 +60,12 @@ test('every indexable route is in the sitemap', () => {
   }
 });
 
-test('a hub URL is not announced until the screen behind it exists', () => {
-  // The routes resolve and prerender, but `App.tsx` still renders the player for them, so
-  // announcing them would list 126 addresses that are one document. This test is the
-  // reminder: it is deleted in the commit that ships the hub screens and flips these back.
-  for (const name of ['surahs', 'surah', 'reciters', 'reciter'] as const) {
-    const row = ROUTE_TABLE.find((entry) => entry.name === name);
-    assert.ok(row, `${name} is missing from the route table`);
-    assert.equal(row.index, false, `${name} is indexable with no page behind it`);
-    assert.equal(row.sitemap, false, `${name} is in the sitemap with no page behind it`);
+test('a panel has no URL: there is no screen at /surahs or /reciters', () => {
+  // Both lists open inside the player from a button. A URL that renders the player is a
+  // soft 404 with a pretty face, so the table refuses to own it — and nginx answers 404
+  // because the family is not in its shell list either.
+  for (const path of ['/surahs', '/surahs/18-al-kahf', '/reciters', '/reciters/minshawi']) {
+    assert.deepEqual(parse(path), { name: 'notFound' }, path);
   }
 });
 
