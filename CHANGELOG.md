@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.12.10 — 2026-10-30
+
+Minor. App versions: **web 1.12.3**, **admin 1.30.8**, **seeder 1.4.3**.
+
+### Added
+
+- **The usage screen can say what serving cost, not only how often a surah played.**
+  Two figures, two grains, never added: exact bytes nginx sent from `/media` (read
+  from a log whose format carries no address and whose filename carries the day), and
+  the seeder fleet's upload counter sampled into deltas per reciter. The second is
+  approximate — a restart loses one interval — and the screen says so beside the
+  number, not only in a comment.
+- **A device count that costs no identifier.** Each consenting device sends one
+  `device` event per UTC day with no id in it, so the server counts devices it cannot
+  join across days. The copy says devices, not people.
+- **Errors carry their count.** The errors table now shows errors, plays and the rate
+  between them, and withdraws the rate under twenty attempts.
+
+### Changed
+
+- The 7/30/90 control is one segmented control with its unit, and the window date
+  moved beside the title.
+- Most-played surahs gained a share bar and a server-bytes column — the join between
+  "popular" and "costs us".
+
+### Fixed
+
+- **"Errors by version" divided by every event, not by plays.** A play rescued by the
+  web seed wrote a second row (`fallback`), so a release that leaned on the server
+  looked healthier than one that did not — and one failure among six rows read 16.7%.
+- **The ninety-day prune never ran.** `rotate()` existed and nothing called it; the
+  hourly job now does, beside the log import.
+- **The privacy sentence did not mention the daily device report.** It enumerates what
+  arrives, so a field added without it would have made the sentence false.
+
 ## 1.12.9 — 2026-10-30
 
 Patch. App versions: **web 1.12.2**, **admin 1.30.7**, **seeder 1.4.3**.
