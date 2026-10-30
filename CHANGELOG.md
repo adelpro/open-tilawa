@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.10.6 — 2026-10-30
+
+Patch. App versions: **web 1.10.6**, **admin 1.29.1**, **seeder 1.4.3**.
+
+### Changed
+
+- **The title's chevrons are toggles.** The arrow that opened the surah or
+  reciter panel now closes it too, turns over while the panel is open, and
+  reports `aria-expanded` — pressing the word a second time no longer needs the
+  panel's own close button.
+- **The surah number sits with the surah's facts.** The seal above the title was
+  the first thing read in a header whose subject is the name. It is now a 20px
+  ring at the start of the verse-count / juz line, on that line's 12px type, so
+  the block reads name → reciter → facts.
+
 ## 1.10.5 — 2026-10-30
 
 Patch. App versions: **web 1.10.5**, **admin 1.29.1**, **seeder 1.4.3**.
