@@ -33,6 +33,22 @@ export function downsample(bins: Uint8Array, columns: number): number[] {
 }
 
 /**
+ * Peak magnitude (0..1) of a byte time-domain buffer, either polarity. Over a
+ * 1024-sample read (21 ms at 48 kHz) it covers at least two periods of any
+ * voice above ~100 Hz, so it follows loudness and not the phase the snapshot
+ * happened to land on. Smoothing the signed samples instead aliased against the
+ * read rate and made the height follow the reciter's pitch.
+ */
+export function peakMagnitude(time: Uint8Array): number {
+  let peak = 0;
+  for (let i = 0; i < time.length; i += 1) {
+    const magnitude = Math.abs(time[i] - 128);
+    if (magnitude > peak) peak = magnitude;
+  }
+  return peak / 128;
+}
+
+/**
  * Automatic gain for the wave. A time-domain peak of a voice sits around
  * 0.05–0.2 of full scale, so a fixed gain either draws a ripple on the floor or
  * clips the loud reciters. The gain lifts a quiet recording toward the block,
