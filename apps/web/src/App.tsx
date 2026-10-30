@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import AboutPage from './app/about-page';
 import PlayerPage from './app/player-page';
 import NotFoundPage from './app/not-found-page';
+import TelemetryPrompt from './components/telemetry-prompt';
 import PrivacyPage from './app/privacy-page';
 import SettingsPage from './app/settings-page';
 import AudioEngine from './components/audio-engine';
@@ -25,6 +26,14 @@ import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
 import { currentSurahIdAtom } from './jotai/player';
 import { toPath } from './routes';
+import { createTelemetry } from './utils/telemetry';
+import {
+  consentEnabled,
+  readConsent,
+  shouldPrompt,
+  writeConsent,
+  type Consent,
+} from './utils/telemetry-consent';
 import { userSettingsAtom } from './jotai/gun';
 import { patchSettings, hydrateSettings, loadState, resolveRemoteSettings, shouldPushLocalSettings } from './hooks/use-persistence';
 import { useUserSync } from './hooks/use-user-sync';
@@ -126,6 +135,40 @@ export default function App() {
     setVisualiser(next);
     patchSettings({ visualiser: next });
   };
+  /**
+   * The consent gate. `heardSound` flips once, the first time playback actually starts —
+   * asking before that is asking about something the listener has not experienced yet.
+   */
+  const [consent, setConsent] = useState<Consent>(() => readConsent());
+  const [heardSound, setHeardSound] = useState(false);
+  const playing = useAtomValue(isPlayingAtom);
+  useEffect(() => {
+    if (playing) setHeardSound(true);
+  }, [playing]);
+
+  const telemetry = useRef(
+    createTelemetry({
+      enabled: () => consentEnabled(readConsent()),
+      send: async (batch) => {
+        const base =
+          (import.meta as { env?: Record<string, string> }).env?.VITE_ADMIN_API_URL ||
+          'https://console.tilawah.cc';
+        await fetch(`${base}/api/public/telemetry`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(batch),
+          keepalive: true,
+        });
+      },
+    }),
+  );
+
+  const answerConsent = (value: Consent) => {
+    writeConsent(value);
+    setConsent(value);
+    if (!consentEnabled(value)) telemetry.current.stop();
+  };
+
   const reciter = useAtomValue(selectedReciterAtom);
 
   const chooseRate = (next: number) => {
@@ -230,6 +273,12 @@ export default function App() {
           onOpenAccount={() => setAccountOpen(true)}
         />
         <AccountSheet open={accountOpen} onClose={() => setAccountOpen(false)} />
+        {shouldPrompt(consent, heardSound) && (
+          <TelemetryPrompt
+            onAccept={() => answerConsent('on')}
+            onDecline={() => answerConsent('off')}
+          />
+        )}
       </div>
       {/* A new element per reciter class: once an element is routed through Web
           Audio it cannot be released, and a cross-origin host would play silent. */}
