@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.12.8 — 2026-10-30
+
+Minor. App versions: **web 1.12.2**, **admin 1.30.6**, **seeder 1.4.3**.
+
+### Added
+
+- **The usage tab can be narrowed, and its tables can be sorted.** Three filters —
+  source, version, reciter — go to `/api/admin/telemetry/summary` and narrow every
+  panel. They are server-side because a client-side filter would leave "Most-played
+  surahs" and "Errors by version" showing unfiltered numbers under a control that
+  says otherwise. A dimension panel ignores its own filter: the source split keeps
+  both sides while you narrow by source, which is the comparison it exists for.
+- A **most-played reciters** table, so the reciter filter has something to explain.
+- Every table header sorts (`aria-sort` plus the console's `.th-sort`), and recent
+  errors gained a **When** column — relative time, the exact date on hover.
+
+### Changed
+
+- The 7/30/90 control is a labelled, `aria-pressed` group, and the window says what
+  it is: "last 7 days, from 23 Oct" rather than a bare number.
+
+### Fixed
+
+- **The empty state said something the console cannot know.** "Statistics are off on
+  every install" is a claim about every install; the tab only knows its own window.
+  It now says "No events in the last N days", and an empty *filtered* result gets
+  its own line with a clear-filters button.
+- **The usage copy promised volume it never had.** The note claimed the server's
+  numbers were exact bytes from its log; the payload has play counts. It says so now.
+- **The committed OpenAPI document had drifted.** It never listed
+  `/api/public/telemetry` or `/api/public/slug/{slug}`, so `openapi.spec.ts` was
+  failing before this change; regenerated from the running document.
+
 ## 1.12.7 — 2026-10-30
 
 Patch. App versions: **web 1.12.2**, **admin 1.30.5**, **seeder 1.4.3**.

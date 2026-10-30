@@ -1,6 +1,6 @@
 {
   "name": "tilawa-admin",
-  "version": "1.30.5",
+  "version": "1.30.6",
   "private": true,
   "description": "Tilawa Admin Console — manage seeders, TURN, torrents, reciters, trackers",
   "license": "MIT",
