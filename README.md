@@ -117,31 +117,40 @@ Versioning, tags and the order to deploy in: [docs/RELEASING.md](docs/RELEASING.
 
 ### Seeder Node (Docker)
 
-Run on any Ubuntu/Debian server:
+Run on any Ubuntu/Debian server, as root — the script writes `/opt` and may
+install Docker, and a piped script cannot elevate itself.
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder --port 8085 --admin-user admin --admin-pass YOUR_PASSWORD
+curl -fsSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | sudo bash -s -- --type seeder --port 8085 --admin-user admin --admin-pass YOUR_PASSWORD
 ```
 
 Add a disk cap (recommended on a shared host) and follow image releases:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh \
-  | bash -s -- --type seeder --disk 500 --upload-kbps 20000 --watchtower
+curl -fsSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh \
+  | sudo bash -s -- --type seeder --disk 500 --upload-kbps 20000 --watchtower
 ```
 
 Without `--disk` the node reports its free space and accepts anything that fits;
 with it, the node refuses a magnet whose length would cross the cap. The script
-refuses a cap larger than the disk it is installing onto. The generated compose
-publishes the admin port and the peer port `6881` (TCP+UDP) and keeps
-`/data/torrents` and `/data/downloads` on separate host volumes, so a recreate or
-a Watchtower update never discards downloaded audio.
+refuses a cap larger than the disk it is installing onto, refuses to start when
+its admin or peer port is already published (naming the container that holds it)
+— one node per host — and polls `/health` for 30 s before it reports success.
+The generated compose publishes the admin port and the peer port `6881`
+(TCP+UDP) and keeps `/data/torrents` and `/data/downloads` on separate host
+volumes, so a recreate or a Watchtower update never discards downloaded audio.
+
+Open **only** `6881/tcp` and `6881/udp`; never `8085`, which answers the admin
+credentials and can add and delete torrents.
 
 Then add to console:
 1. Go to https://console.tilawah.cc
 2. Navigate to **Seeders** → **Add Seeder**
 3. Name: server hostname
-4. URL: `http://<server-ip>:8085`
+4. URL: the one the installer prints — prefer the Tailscale MagicDNS name
+   (`http://node.tailnet.ts.net:8085`) over an IP, because it survives a new DHCP
+   lease and a new ISP address. The console reaches the admin port over the
+   tailnet or the LAN.
 5. Leave *Add the catalogue to this node* ticked to queue every reciter the node
    is missing as soon as it is registered
 
@@ -152,8 +161,12 @@ the node keeps seeding.
 ### TURN Server (Native)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type turn --turn-realm turn.tilawah.cc --turn-user opentilawa --turn-pass YOUR_PASSWORD
+curl -fsSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | sudo bash -s -- --type turn --turn-realm turn.tilawah.cc --turn-user opentilawa --turn-pass YOUR_PASSWORD
 ```
+
+A TURN server must be public: unlike a seeder it cannot live behind a tailnet.
+Open `3478/udp`, `3478/tcp`, `5349/tcp` and `49160:49200/udp`; the relay range
+matches the `min-port`/`max-port` the script writes.
 
 Then add to console:
 1. Go to https://console.tilawah.cc

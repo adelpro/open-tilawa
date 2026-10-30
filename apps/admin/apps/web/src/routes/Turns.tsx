@@ -264,17 +264,22 @@ export function Turns(): ReactElement {
               </summary>
               <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
                 <p className="body muted">{t('turns.deployHint')}</p>
+                {/* sudo belongs in the line: the script writes /etc/turnserver.conf,
+                    enables a systemd unit and edits the firewall. */}
                 <CopyLine
                   value={
-                    'curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type turn --turn-pass <password>'
+                    'curl -fsSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | sudo bash -s -- --type turn --turn-pass <password>'
                   }
                   label={t('help.copy')}
+                  title={t('turns.installTitle')}
                 />
                 <CopyLine
                   value={
-                    'ufw allow 3478/udp && ufw allow 3478/tcp && ufw allow 5349/tcp && ufw allow 49160:49200/udp'
+                    'sudo ufw allow 3478/udp && sudo ufw allow 3478/tcp && sudo ufw allow 5349/tcp && sudo ufw allow 49160:49200/udp'
                   }
                   label={t('help.copy')}
+                  title={t('turns.portsTitle')}
+                  hint={t('turns.portsHint')}
                 />
                 <p className="fine-print">{t('turns.deployDns')}</p>
                 <a className="fine-print" {...linkProps('/help')}>

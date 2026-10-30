@@ -127,22 +127,34 @@ export const en = {
   'seeders.add': 'Add seeder',
   'seeders.deployTitle': 'Need a node first? Install one',
   'seeders.deployHint':
-    'Install the node on a Linux machine, then enter its address and credentials here.',
+    'Install the node on a Linux machine with root, then enter the address and credentials it prints here.',
   'seeders.deployNote':
-    'The install script prints the admin password at the end — copy it into the two fields above. Add --disk 500 to cap the node at that many gigabytes; without it the node fills the disk.',
+    'The script prints the admin password once — copy it into the two fields above. It refuses to start when a port it needs is already taken, so a host that already runs a seeder cannot hold a second one.',
   'seeders.deployMore': 'Read the full guide on the help page',
   'seeders.installTitle': 'Install command',
   'seeders.installHint':
-    'Downloads the install script from the repository and runs it on the node.',
-  'seeders.portsTitle': 'Open the ports',
+    'Runs the installer on the node as root. Add --disk 500 to cap it at 500 GB; without it the node fills the disk.',
+  'seeders.portsTitle': 'Open the peer port',
   'seeders.portsHint':
-    'Opens 8085 for admin and 6881 (TCP and UDP) for torrent traffic. Only applies to nodes running ufw.',
+    'Torrent traffic only, and only on hosts running ufw. Do not open 8085: it answers the admin credentials and can add and delete torrents, so the console reaches it over the Docker network, the LAN or the tailnet.',
+  'seeders.addressTitle': 'Address to paste above',
+  'seeders.addressCompose': 'Same Docker network as the console: http://seeder:8085',
+  'seeders.addressLan':
+    'Same LAN: http://192.168.1.100:8085 — breaks if the router hands out a new address.',
+  'seeders.addressTailnet':
+    'Tailscale, from anywhere: http://node.tailnet.ts.net:8085 — survives a new LAN or ISP address.',
+  'seeders.tailnetHint':
+    "Install Tailscale on the node and on the console host, then paste the node's MagicDNS name. It is the only address that keeps working when an IP changes.",
+  'seeders.urlBad': 'Enter a full URL, including http:// or https://.',
+  'seeders.urlBadScheme': 'The URL must start with http:// or https://.',
+  'seeders.urlNoPort': 'Add the admin port, e.g. :8085.',
   'seeders.addSubmit': 'Add',
   'seeders.pollAll': 'Probe all now',
   'seeders.probe': 'Probe',
   'seeders.name': 'Name',
   'seeders.url': 'URL',
-  'seeders.urlHint': 'Base URL of the seeder, e.g. http://192.168.1.100:8085.',
+  'seeders.urlHint':
+    'The URL the installer prints. The MagicDNS name is the one that survives an IP change.',
   'seeders.adminUser': 'Admin user',
   'seeders.adminPass': 'Admin password',
   'seeders.credentialsHint':
@@ -300,7 +312,7 @@ export const en = {
   'help.seeder.step6':
     'To hand a .torrent over, copy it into the node. A torrent added through the console is stored the same way, so it survives a restart.',
   'help.seeder.step7':
-    'Register it under Nodes with the same URL and credentials, then go to Reciters and tick the nodes that should carry each reciter. Placement is recorded: pending until the node confirms, failed if it never does, or if the node stops reporting it.',
+    "Register it under Nodes with the same URL and credentials, then go to Reciters and tick the nodes that should carry each reciter. Placement is recorded: pending until the node confirms, failed if it never does, or if the node stops reporting it. Prefer the node's Tailscale name over its IP, so the row survives a new address.",
   'help.seeder.step8':
     'The console never fills a node past 90 % of its quota. When a bulk top-up stops short it says how many reciters it left out, so an incomplete node is never silent.',
   'help.turn.title': 'Tutorial — a TURN server',
@@ -363,6 +375,10 @@ export const en = {
   'turns.deployDns':
     'Give the host a plain DNS A record pointing at the server — do not proxy it through Cloudflare, because TURN relay traffic is UDP and the proxy does not carry it.',
   'turns.deployMore': 'Read the full walkthrough on the Help screen',
+  'turns.installTitle': 'Install command',
+  'turns.portsTitle': 'Open the ports',
+  'turns.portsHint':
+    '3478 carries STUN/TURN, 5349 is TURN over TLS, and 49160-49200 is the relay range — it must match min-port/max-port in the config the script writes.',
 
   'turns.edit': 'Edit',
   'turns.editTitle': 'Edit TURN server',

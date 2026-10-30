@@ -181,9 +181,19 @@ Root `.env` (seeder + tracker + turn): `ADMIN_USER`, `ADMIN_PASS`,
 - **Deploy:** `docker compose build <service> && docker compose up -d <service>`.
   Rebuild **every** service whose code changed — a partial deploy is how a stale
   image survives. Versions, tags and branch alignment: [RELEASING.md](RELEASING.md).
-- **New node:** `bash deploy-node.sh --type seeder [--disk GB] [--upload-kbps N]
-  [--download-kbps N] [--peer-port N] [--admin-ui 0] [--watchtower]`. No cap is
-  the default; a cap larger than the free disk is refused.
+- **New node:** run it as root, or it exits before writing anything:
+  `curl -fsSL …/deploy-node.sh | sudo bash -s -- --type seeder [--disk GB]
+  [--upload-kbps N] [--download-kbps N] [--port N] [--peer-port N] [--admin-ui 0]
+  [--watchtower]`. No cap is the default; a cap larger than the free disk is
+  refused. The script stops when its admin or peer port is already published,
+  and names the container holding it — one node per host. Order of operations is
+  written, pulled, started, then `/health` polled for 30 s; a node that never
+  answers exits non-zero with its log tail.
+- **Node addresses:** prefer the node's Tailscale MagicDNS name
+  (`http://node.tailnet.ts.net:8085`) over its IP. The console stores that URL,
+  and the tailnet name survives a new DHCP lease or a new ISP address. The admin
+  port is reached over the tailnet or the LAN and is never published: it answers
+  the admin credentials and can add and delete torrents.
 - **Backup:** SQLite backup through the API container's `better-sqlite3`
   (`db.backup()`), stored inside the `admin_data` volume or copied out.
 - **Rollback:** restore the backup, then run the previous image tag. Migrations

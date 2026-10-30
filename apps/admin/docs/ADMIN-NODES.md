@@ -55,16 +55,39 @@ Root `.env` feeds the seeder and TURN containers:
 
 ## Provisioning a seeder node
 
+Two ways, differing in where the console reaches the node from.
+
+### Inside this compose stack (the primary node)
+
 1. Clone this repository on the machine that will hold the audio.
 2. Put `ADMIN_USER`/`ADMIN_PASS` in the root `.env` (a long random password; the
    compose default `change-me-in-prod` is a placeholder, not a credential).
 3. `docker compose up -d --build seeder`
 4. `curl -s http://127.0.0.1:8085/health` → `{"status":"ok", ...}`
-5. In the console, **Seeders → Add seeder**: URL `http://seeder:8085` when it
-   runs on the same compose network, or `http://<host>:8085` for a remote node
-   whose port you have opened deliberately. Enter the same admin user/password.
+5. In the console, **Seeders → Add seeder**: URL `http://seeder:8085` — a compose
+   name, so it only resolves for a console on the same Docker network. Enter the
+   same admin user/password.
 6. The status chip turns **Online** within a minute (the row's `/health` is
    public). The **Torrents** screen then reads and mutates that node.
+
+### On a host of its own (standalone)
+
+1. Run the installer **there**, as root:
+   `curl -fsSL …/deploy-node.sh | sudo bash -s -- --type seeder --disk 500`
+   It refuses to run unprivileged, refuses when its admin or peer port is already
+   published (naming the container that holds it), then polls `/health` for 30 s
+   and exits non-zero if the node never answers.
+2. Open **only** the peer port: `6881/tcp` and `6881/udp`, on the host firewall
+   and on the router if there is one. Without it the node dials out and is never
+   dialled.
+3. Do **not** open `8085`. It answers the admin credentials and can add and
+   delete torrents. Reach it over the tailnet or the LAN and nothing else.
+4. Give the node a stable name: install Tailscale on the node and on the console
+   host, then use the node's MagicDNS name — `http://node.tailnet.ts.net:8085`.
+   It survives a new DHCP lease and a new ISP address; a bare IP survives neither.
+5. Paste the four values the installer prints (name, URL, user, password) into
+   **Seeders → Add seeder**. The URL is validated before the form submits, so a
+   missing port is caught here instead of showing up as an Offline row.
 
 Credentials are stored on the row and used server-side; the API never returns
 them. To change them later, **Seeders → Edit** on the row (omit both fields to
@@ -74,8 +97,16 @@ keep what is stored; **Clear credentials** removes them).
 
 1. Set `TURN_REALM`, `TURN_USERNAME`, `TURN_PASSWORD`, `TURN_EXTERNAL_IP`.
 2. `docker compose -f docker-compose.turn.yml up -d`
-3. Open `3478/udp`, `3478/tcp`, `5349/tcp` and `49160:49200/udp`.
+3. Open `3478/udp`, `3478/tcp`, `5349/tcp` and `49160:49200/udp`. The relay
+   range must match `min-port`/`max-port`: coturn's default is 49152-65535, so a
+   firewall rule for 49160-49200 without those two lines drops allocations
+   outside it.
 4. Register it in the console as `turn:<host>:3478`.
+
+A TURN server must be reachable from the internet by every listener, so
+unlike a seeder it cannot sit behind a tailnet. The standalone installer
+(`--type turn`) writes the relay range, verifies the unit is actually running
+rather than merely restarted, and prints the same four registration values.
 
 The console probes each server with a real STUN binding request every five
 minutes (and once at boot), storing status, latency and a 24-hour history

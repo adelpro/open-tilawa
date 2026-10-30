@@ -26,10 +26,21 @@ import type { PushPlan, Seeder } from '../lib/types-seeders';
  * port 8085, admin user `admin`, peer port 6881, and no disk cap unless --disk is
  * passed. ADMIN_PASS is deliberately omitted — the script generates one and prints
  * it, which is the only moment the operator can read it.
+ *
+ * `sudo` belongs in the line, not in the script: the installer writes /opt and may
+ * install Docker, and a piped script cannot elevate itself mid-stream. Without it the
+ * run prints "Docker already installed" and then dies on mkdir with a message that
+ * reads like partial success.
  */
 const INSTALL_COMMAND =
-  'curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder';
-const FIREWALL_COMMAND = 'ufw allow 8085/tcp && ufw allow 6881/tcp && ufw allow 6881/udp';
+  'curl -fsSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | sudo bash -s -- --type seeder';
+
+/**
+ * The peer port is the only one that gets opened. 8085 is deliberately absent: it
+ * answers the admin credentials and can add and delete torrents, so it is reached
+ * over the Docker network, the LAN or the tailnet — never published to the internet.
+ */
+const PEER_PORT_COMMAND = 'sudo ufw allow 6881/tcp && sudo ufw allow 6881/udp';
 
 /**
  * Seeder nodes. The URL is public (its `/health` is); the admin credentials are
@@ -70,6 +81,27 @@ export function Seeders(): ReactElement {
   const [editUrl, setEditUrl] = useState('');
   const [editUser, setEditUser] = useState('');
   const [editPass, setEditPass] = useState('');
+
+  /**
+   * A wrong URL is the most common reason a node reads Offline: the form used to
+   * accept anything, then the probe failed with no clue which part was wrong. The
+   * node always listens on a port, so a URL without one is never right.
+   */
+  const urlProblem = useMemo(() => {
+    const raw = newUrl.trim();
+    if (!raw) return null;
+    let parsed: URL;
+    try {
+      parsed = new URL(raw);
+    } catch {
+      return t('seeders.urlBad');
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return t('seeders.urlBadScheme');
+    }
+    if (!parsed.port) return t('seeders.urlNoPort');
+    return null;
+  }, [newUrl, t]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -341,20 +373,20 @@ export function Seeders(): ReactElement {
           onSubmit={() => void add()}
           onClose={() => setShowAdd(false)}
           busy={busy === 'add'}
-          disabled={!newName.trim() || !newUrl.trim()}
+          disabled={!newName.trim() || !newUrl.trim() || Boolean(urlProblem)}
         >
           <Field label={t('seeders.name')}>
             {(id) => (
               <Input id={id} value={newName} onChange={(event) => setNewName(event.target.value)} />
             )}
           </Field>
-          <Field label={t('seeders.url')} hint={t('seeders.urlHint')}>
+          <Field label={t('seeders.url')} hint={t('seeders.urlHint')} error={urlProblem}>
             {(id) => (
               <Input
                 id={id}
                 value={newUrl}
                 onChange={(event) => setNewUrl(event.target.value)}
-                placeholder="http://192.168.1.100:8085"
+                placeholder="http://node.tailnet.ts.net:8085"
               />
             )}
           </Field>
@@ -400,11 +432,20 @@ export function Seeders(): ReactElement {
                 hint={t('seeders.installHint')}
               />
               <CopyLine
-                value={FIREWALL_COMMAND}
+                value={PEER_PORT_COMMAND}
                 label={t('help.copy')}
                 title={t('seeders.portsTitle')}
                 hint={t('seeders.portsHint')}
               />
+              {/* Which address to paste back. The installer prints all of them; this
+                  says which one keeps working when an IP changes. */}
+              <div className="stack stack--tight">
+                <p className="code-line__title">{t('seeders.addressTitle')}</p>
+                <p className="fine-print">{t('seeders.addressCompose')}</p>
+                <p className="fine-print">{t('seeders.addressLan')}</p>
+                <p className="fine-print">{t('seeders.addressTailnet')}</p>
+                <p className="fine-print">{t('seeders.tailnetHint')}</p>
+              </div>
               <p className="fine-print">{t('seeders.deployNote')}</p>
               <a className="fine-print" {...linkProps('/help')}>
                 {t('seeders.deployMore')}
