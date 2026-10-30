@@ -28,6 +28,7 @@ import {
 } from '@/jotai/player';
 import type { Reciter } from '@/types';
 import { seekBy } from '@/utils/clamp';
+import { cn } from '@/utils/cn';
 import type { StreamSource } from '@/utils/stream-source';
 import { surahIdOf } from '@/utils/surah-id';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
@@ -156,6 +157,10 @@ export default function PlayerPage({
   const riwaya =
     riwayaLabelText && !reciter?.name.includes(riwayaLabelText) ? riwayaLabelText : null;
 
+  /** The title's chevrons are toggles: the arrow that opened a panel closes it. */
+  const surahsOpen = sheet === 'surahs';
+  const recitersOpen = sheet === 'reciters';
+
   /**
    * Keyboard is a desktop affordance: wide layout *and* a real pointer. A phone
    * with a Bluetooth keyboard keeps its media keys and nothing else.
@@ -232,24 +237,19 @@ export default function PlayerPage({
     <>
       <main className="player-screen theatre">
         <div className="w-full max-w-[520px]">
-          {/* The colophon: the surah number in a ruled device, the name, then the
-              recording it is heard in. One fixed block, so the docked panel only
-              has one thing to move (`.theatre-title`). On a phone the footer
-              carries the names and this whole block stays out of the way. */}
+          {/* The colophon: the name, the recording it is heard in, and the
+              surah's own facts underneath. One fixed block, so the docked panel
+              only has one thing to move (`.theatre-title`). On a phone the
+              footer carries the names and this whole block stays out of the
+              way. */}
           <div className="theatre-title lg:fixed lg:inset-x-0 lg:top-[18vh] lg:flex lg:flex-col lg:items-center lg:text-center">
-            <p
-              aria-hidden="true"
-              className="mb-4 hidden h-7 w-7 items-center justify-center rounded-full border border-line text-[0.75rem] text-muted tnum lg:inline-flex"
-            >
-              {surahId}
-            </p>
-
             <h1 className="sr-only lg:not-sr-only lg:text-[clamp(32px,3.4vw,52px)] lg:font-semibold lg:leading-[1.3] lg:tracking-normal lg:text-ink">
               {wide ? (
                 <button
                   type="button"
-                  onClick={openSurahs}
+                  onClick={() => (surahsOpen ? close() : openSurahs())}
                   aria-haspopup="dialog"
+                  aria-expanded={surahsOpen}
                   className="group inline-flex items-center gap-3 rounded-md"
                 >
                   {/* A spacer the size of the icon keeps the name itself on the
@@ -262,7 +262,10 @@ export default function PlayerPage({
                   <Icon
                     name="expand"
                     size={20}
-                    className="w-5 shrink-0 text-muted opacity-45 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                    className={cn(
+                      'w-5 shrink-0 text-muted transition-[opacity,transform] group-hover:opacity-100 group-focus-visible:opacity-100',
+                      surahsOpen ? 'rotate-180 opacity-100' : 'opacity-45',
+                    )}
                   />
                 </button>
               ) : (
@@ -277,8 +280,9 @@ export default function PlayerPage({
               <p className="hidden lg:mt-4 lg:flex lg:justify-center">
                 <button
                   type="button"
-                  onClick={openReciters}
+                  onClick={() => (recitersOpen ? close() : openReciters())}
                   aria-haspopup="dialog"
+                  aria-expanded={recitersOpen}
                   className="group flex min-h-9 max-w-[520px] items-center gap-2 rounded-full px-3 text-[1rem] text-muted transition-colors hover:bg-line hover:text-ink focus-visible:bg-line focus-visible:text-ink"
                 >
                   <Icon name="mic" className="shrink-0" />
@@ -289,17 +293,28 @@ export default function PlayerPage({
                   <Icon
                     name="expand"
                     size={16}
-                    className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                    className={cn(
+                      'shrink-0 transition-[opacity,transform] group-hover:opacity-100 group-focus-visible:opacity-100',
+                      recitersOpen ? 'rotate-180 opacity-100' : 'opacity-0',
+                    )}
                   />
                 </button>
               </p>
             ) : null}
 
-            {surah ? (
-              <p className="mt-2 hidden text-[0.75rem] text-muted tnum lg:block">
-                {`${t.sheets.verses(surah.ayahCount)} · ${t.sheets.juz(surah.juz)}`}
-              </p>
-            ) : null}
+            {/* The surah's number belongs to its facts, not to the title: one
+                line, one type size, the seal reduced to match. */}
+            <p className="mt-2 hidden items-center justify-center gap-2 text-[0.75rem] text-muted tnum lg:flex">
+              <span
+                aria-hidden="true"
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-line"
+              >
+                {surahId}
+              </span>
+              {surah ? (
+                <span>{`${t.sheets.verses(surah.ayahCount)} · ${t.sheets.juz(surah.juz)}`}</span>
+              ) : null}
+            </p>
           </div>
           <div className="theatre-horizon mb-4 flex justify-center">
             <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 96} />
