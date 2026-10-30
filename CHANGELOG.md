@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.12.6 — 2026-10-30
+
+Patch. App versions: **web 1.12.1**, **admin 1.30.5**, **seeder 1.4.3**.
+
+### Fixed
+
+- **The install splash drew the launcher icon's plate as a box.** The splash field was
+  the page background (`#f5f5f7`) while the icon is painted on white, so the first
+  screen of an installed console was a white square on parchment. The field is the
+  plate now — `background_color` in `app.json` — and `scripts/make-assets.py` reads the
+  same value for the icon, so the artwork and the field cannot drift apart.
+  `test/seo.test.mjs` decodes the icon's top-left pixel and fails if they disagree.
+- The browser bar is unchanged: `theme_color` is still the page, `#f5f5f7` light and
+  `#1c1c1e` dark. A dark splash is not something a web manifest can do —
+  `background_color` has no `prefers-color-scheme` variant — so a launch on a dark
+  phone stays light.
+
 ## 1.12.5 — 2026-10-30
 
 Patch. App versions: **web 1.12.1**, **admin 1.30.4**, **seeder 1.4.3**.

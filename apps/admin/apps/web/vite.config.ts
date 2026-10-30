@@ -23,7 +23,6 @@ function windowChrome(): Plugin {
     ...app.manifest,
     description: pages.pages[0].en.description,
     theme_color: app.chrome.light,
-    background_color: app.chrome.light,
   };
 
   return {

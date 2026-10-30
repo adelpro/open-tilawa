@@ -1,5 +1,6 @@
 import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { inflateSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
@@ -100,9 +101,13 @@ describe('crawler files', () => {
 
 /**
  * The window chrome is the strip the OS paints around the page: the browser bar,
- * and the splash an install shows. It has to be the page's own background, or the
- * app opens inside a frame that belongs to a different design — which is what a
+ * and the splash an install shows. The bar has to be the page's own background, or
+ * the app opens inside a frame that belongs to a different design — which is what a
  * cream bar over a parchment page was.
+ *
+ * The splash is a different problem: the launcher icon and the splash are the same
+ * artwork, so the splash field has to be the plate that artwork is painted on. Any
+ * other value draws the plate as a box.
  */
 const tokensCss = readFileSync(join(WEB, 'src', 'styles', 'tokens.css'), 'utf-8');
 const parchment = [...tokensCss.matchAll(/--canvas-parchment:\s*(#[0-9a-fA-F]{3,8})/g)].map((m) =>
@@ -110,13 +115,52 @@ const parchment = [...tokensCss.matchAll(/--canvas-parchment:\s*(#[0-9a-fA-F]{3,
 );
 const manifest = JSON.parse(readFileSync(join(dist, 'manifest.webmanifest'), 'utf-8'));
 
+/** The top-left pixel of a PNG, decoded far enough to read one RGBA row. */
+function cornerPixel(file) {
+  const buf = readFileSync(file);
+  const width = buf.readUInt32BE(16);
+  const bitDepth = buf[24];
+  const colourType = buf[25];
+  assert.equal(bitDepth, 8, 'expected an 8-bit PNG');
+  assert.equal(colourType, 6, 'expected RGBA, so the plate is visible in the alpha');
+
+  const parts = [];
+  for (let i = 8; i < buf.length; ) {
+    const length = buf.readUInt32BE(i);
+    if (buf.toString('ascii', i + 4, i + 8) === 'IDAT') {
+      parts.push(buf.subarray(i + 8, i + 8 + length));
+    }
+    i += 12 + length;
+  }
+
+  const raw = inflateSync(Buffer.concat(parts));
+  const bpp = 4;
+  const filter = raw[0];
+  const row = Buffer.from(raw.subarray(1, 1 + width * bpp));
+  // The first scanline has no previous row, so Up and Paeth reduce to Sub.
+  for (let x = 0; x < row.length; x += 1) {
+    const left = x >= bpp ? row[x - bpp] : 0;
+    if (filter === 1 || filter === 4) row[x] = (row[x] + left) & 0xff;
+    if (filter === 3) row[x] = (row[x] + (left >> 1)) & 0xff;
+  }
+  return `#${[...row.subarray(0, 3)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 describe('window chrome', () => {
-  it('is the page background, in the manifest and in the head', () => {
+  it('paints the splash in the icon plate, so the launcher tile is not a box', () => {
+    const plate = cornerPixel(join(WEB, 'public', 'icon-512.png'));
+    assert.equal(
+      manifest.background_color,
+      plate,
+      'the splash field must be the plate the icon is painted on',
+    );
+  });
+
+  it('keeps the browser bar on the page background, in both themes', () => {
     assert.ok(parchment.length >= 2, 'tokens.css declares --canvas-parchment for both themes');
     const [light, dark] = parchment;
 
     assert.equal(manifest.theme_color, light, 'manifest theme is the light page');
-    assert.equal(manifest.background_color, light, 'the splash is the page it opens into');
 
     const themeMeta = (value, scheme) =>
       new RegExp(

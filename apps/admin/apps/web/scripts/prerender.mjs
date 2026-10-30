@@ -259,9 +259,9 @@ writeFileSync(
     {
       ...app.manifest,
       description: data.pages[0].en.description,
-      // The splash is painted before the app exists, so it is the page
-      // background, not the accent: the accent is what you click.
-      background_color: app.chrome.light,
+      // `background_color` comes from app.json, not from the page: the splash and
+      // the launcher share one icon, so the splash field has to be the plate that
+      // icon is painted on. The browser bar still follows the page (theme_color).
       theme_color: app.chrome.light,
       // Install UI screenshots: desktop stats panel (wide) + mobile home (narrow).
       // PNG on the console palette; captured from the product, not mocks.

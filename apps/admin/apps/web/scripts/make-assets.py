@@ -12,6 +12,7 @@ so the outputs land in the image with no extra step.
 
     python3 apps/web/scripts/make-assets.py
 """
+import json
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -24,6 +25,12 @@ LOGO = PUBLIC / 'logo.png'
 INK = (31, 77, 120, 255)
 GREY = (92, 99, 112, 255)
 WHITE = (255, 255, 255, 255)
+
+# The launcher icon and the install splash are one artwork, so the plate has to be
+# the splash field: `background_color` in app.json is where both get it from. A
+# plate that disagrees with the field draws the icon as a box on the splash.
+APP = json.loads((Path(__file__).resolve().parents[1] / 'app.json').read_text())
+PLATE = tuple(int(APP['manifest']['background_color'][i : i + 2], 16) for i in (1, 3, 5)) + (255,)
 
 
 def wordmark() -> Image.Image:
@@ -71,12 +78,12 @@ def main() -> None:
     favicon32.save(PUBLIC / 'favicon-32.png')
 
     # iOS adds its own mask and paints transparency black, so this one needs a
-    # background.
-    square_icon(mark, 180, WHITE).save(PUBLIC / 'apple-touch-icon.png')
+    # background — the same one the splash uses.
+    square_icon(mark, 180, PLATE).save(PUBLIC / 'apple-touch-icon.png')
 
-    # PWA: full-bleed white so `purpose: any maskable` can crop without clipping.
-    square_icon(mark, 192, WHITE).save(PUBLIC / 'icon-192.png')
-    square_icon(mark, 512, WHITE).save(PUBLIC / 'icon-512.png')
+    # PWA: full-bleed plate so `purpose: any maskable` can crop without clipping.
+    square_icon(mark, 192, PLATE).save(PUBLIC / 'icon-192.png')
+    square_icon(mark, 512, PLATE).save(PUBLIC / 'icon-512.png')
 
     # .ico carries several sizes in one file; Windows picks per context.
     favicon32.save(PUBLIC / 'favicon.ico', sizes=[(16, 16), (32, 32), (48, 48)])
