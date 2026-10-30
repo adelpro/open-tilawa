@@ -8,11 +8,13 @@ Minor. App versions: **web 1.11.0**, **admin 1.30.0**, **seeder 1.4.3**.
 
 - **A URL is a page.** Every screen used to be a fragment under `/#/`, so the player
   had one address and a crawler had one document. There is now a path per page —
-  `/about`, `/surahs`, `/surahs/18-al-kahf`, `/reciters/<release>` — and one module,
+  `/about`, `/privacy`, `/settings`, `/surahs`, `/reciters/<release>` — and one module,
   `apps/web/src/routes.ts`, that the router, the sitemap and the prerender step all
-  read: they cannot disagree about which pages exist. `/listen/<release>/<n>-<surah>`
-  opens that recitation **paused**, because a shared link should not shout and autoplay
-  is blocked anyway.
+  read: they cannot disagree about which pages exist.
+  `/listen/<release>/<n>-<surah>` opens that recitation **paused**, because a shared
+  link should not shout and autoplay is blocked anyway. The hub families resolve and
+  prerender but stay out of the sitemap until their screens exist (today they render the
+  player), so the site never announces 126 addresses that are one document.
 - **Pages a crawler can read without running the app.** The build writes real HTML for
   every route, a `sitemap.xml`, a `robots.txt` and a `404.html` served with a real 404.
   A build whose catalogue call fails stops instead of publishing hub pages that link
@@ -44,6 +46,11 @@ Minor. App versions: **web 1.11.0**, **admin 1.30.0**, **seeder 1.4.3**.
   answers `X-Robots-Tag: noindex, nofollow` on every response, assets included.
 - **A mistyped path is a 404**, not the player with a 200, so the site stops teaching a
   crawler that every URL it can invent is a page.
+- **The tab is the page, not the last recitation.** `audio-engine.tsx` owned
+  `document.title` and overwrote the title the prerendered HTML carried, so `/about`
+  hydrated into a tab named after whatever was playing. One `pageTitle`/`documentTitle`
+  pair now answers every route, the build writes the same strings, and the playing surah
+  only names the tab on the routes the player answers.
 
 ## 1.10.7 — 2026-10-30
 

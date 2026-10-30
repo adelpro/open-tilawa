@@ -284,7 +284,7 @@ export default function App() {
           Audio it cannot be released, and a cross-origin host would play silent. */}
       {/* `p2p` while the reciter is still unknown, so boot does not remount the
           engine and abort the session open. */}
-      <AudioEngine key={reciter && !reciter.magnet ? 'http' : 'p2p'} />
+      <AudioEngine route={route} key={reciter && !reciter.magnet ? 'http' : 'p2p'} />
     </ErrorBoundary>
   );
 }

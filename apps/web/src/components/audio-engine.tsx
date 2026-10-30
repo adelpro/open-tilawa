@@ -16,6 +16,8 @@ import {
   torrentErrorAtom,
 } from '@/jotai/player';
 import { surahById } from '@/constants/surah';
+import type { Parsed } from '@/routes';
+import { documentTitle } from '@/utils/page-title';
 import { useLocale } from '@/hooks/use-locale';
 import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
@@ -69,7 +71,7 @@ async function loadWebTorrent(): Promise<void> {
   });
 }
 
-export default function AudioEngine() {
+export default function AudioEngine({ route }: { route: Parsed }) {
   const { torrentInfo, error } = useTorrent();
   const setTorrent = useSetAtom(torrentAtom);
   const setTorrentError = useSetAtom(torrentErrorAtom);
@@ -296,12 +298,14 @@ export default function AudioEngine() {
     };
   }, [surahId, reciter, next, previous, setIsPlaying, locale, t]);
 
-  /** The tab title is the one place a listener sees the surah while elsewhere. */
+  /** The tab title is the one place a listener sees the surah while elsewhere. A page
+   *  that is not the player keeps its own title, so the name a crawler read in the
+   *  prerendered HTML is the name the hydrated tab keeps. */
   useEffect(() => {
     const surah = surahById(surahId);
     const name = surah ? (locale === 'ar' ? surah.name : SURAH_NAMES_EN[surah.id] ?? surah.name) : '';
-    document.title = name ? `${name} — Tilawah` : 'Tilawah';
-  }, [surahId, locale]);
+    document.title = documentTitle(route, t, name);
+  }, [route, surahId, locale, t]);
 
   return (
     <audio

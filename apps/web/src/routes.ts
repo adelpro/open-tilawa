@@ -12,6 +12,12 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
  * sitemap` keeps it that way — but they are separate columns because `/listen` pages are
  * prerendered for their share cards while staying out of the index.
  *
+ * The hub rows (`/surahs`, `/reciters` and their detail paths) resolve and prerender, but
+ * the screen behind them is still the player, so they are not announced: a sitemap that
+ * lists 126 URLs rendering the same document is the fastest way to teach a crawler that
+ * this site has no pages. They flip to `index: true` in the commit that ships the hub
+ * screens, and `test/routes.test.ts` fails until then, on purpose.
+ *
  * Numeric identity, name as decoration: `/listen/minshawi/18-al-kahf` is the surah 18 page
  * whatever the second segment says, and `toPath` writes the current name so a stale one can
  * be redirected to it.
@@ -50,10 +56,10 @@ export type RouteRow = {
 export const ROUTE_TABLE: readonly RouteRow[] = [
   { name: 'home', pattern: '/', index: true, sitemap: true, prerender: true },
   { name: 'listen', pattern: '/listen/{release}/{n}-{surah}', index: false, sitemap: false, prerender: true },
-  { name: 'reciters', pattern: '/reciters', index: true, sitemap: true, prerender: true },
-  { name: 'reciter', pattern: '/reciters/{release}', index: true, sitemap: true, prerender: true },
-  { name: 'surahs', pattern: '/surahs', index: true, sitemap: true, prerender: true },
-  { name: 'surah', pattern: '/surahs/{n}-{surah}', index: true, sitemap: true, prerender: true },
+  { name: 'reciters', pattern: '/reciters', index: false, sitemap: false, prerender: true },
+  { name: 'reciter', pattern: '/reciters/{release}', index: false, sitemap: false, prerender: true },
+  { name: 'surahs', pattern: '/surahs', index: false, sitemap: false, prerender: true },
+  { name: 'surah', pattern: '/surahs/{n}-{surah}', index: false, sitemap: false, prerender: true },
   { name: 'about', pattern: '/about', index: true, sitemap: true, prerender: true },
   { name: 'privacy', pattern: '/privacy', index: true, sitemap: true, prerender: true },
   { name: 'account', pattern: '/account', index: false, sitemap: false, prerender: false },

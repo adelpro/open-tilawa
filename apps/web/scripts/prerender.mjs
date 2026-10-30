@@ -20,7 +20,8 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ROUTE_TABLE, surahSlug, toPath } from '../src/routes.ts';
+import { ROUTE_TABLE, surahSlug } from '../src/routes.ts';
+import { pageTitle } from '../src/utils/page-title.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
 
@@ -99,7 +100,7 @@ add('/', {
 });
 
 add('/about', {
-  title: 'عن تلاوة — Tilawah',
+  title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة — Tilawah',
   description: copy.about.lede,
   index: true,
   body: `<h1>${escape(copy.about.title)}</h1>` +
@@ -109,7 +110,7 @@ add('/about', {
 });
 
 add('/privacy', {
-  title: 'الخصوصية — Tilawah',
+  title: pageTitle({ name: 'privacy' }, copy) ?? 'الخصوصية — Tilawah',
   description: copy.about.lede,
   index: true,
   body: `<h1>${escape(copy.privacy.title)}</h1><ul>${copy.privacy.items
@@ -199,7 +200,7 @@ writeFileSync(
   join(DIST, '404.html'),
   page({
     path: '/404',
-    title: 'هذه الصفحة غير موجودة — Tilawah',
+    title: pageTitle({ name: 'notFound' }, copy) ?? 'هذه الصفحة غير موجودة — Tilawah',
     description: copy.about.lede,
     index: false,
     canonical: false,

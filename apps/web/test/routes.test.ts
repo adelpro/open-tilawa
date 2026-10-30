@@ -66,6 +66,18 @@ test('every indexable route is in the sitemap', () => {
   }
 });
 
+test('a hub URL is not announced until the screen behind it exists', () => {
+  // The routes resolve and prerender, but `App.tsx` still renders the player for them, so
+  // announcing them would list 126 addresses that are one document. This test is the
+  // reminder: it is deleted in the commit that ships the hub screens and flips these back.
+  for (const name of ['surahs', 'surah', 'reciters', 'reciter'] as const) {
+    const row = ROUTE_TABLE.find((entry) => entry.name === name);
+    assert.ok(row, `${name} is missing from the route table`);
+    assert.equal(row.index, false, `${name} is indexable with no page behind it`);
+    assert.equal(row.sitemap, false, `${name} is in the sitemap with no page behind it`);
+  }
+});
+
 test('an old hash URL is rewritten to its path', () => {
   assert.equal(legacyHashToPath('#/about'), '/about');
   assert.equal(legacyHashToPath('#/'), '/');
