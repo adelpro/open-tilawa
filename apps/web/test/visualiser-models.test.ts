@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   autoGain,
   downsample,
+  peakMagnitude,
   mixHex,
   normaliseVisualiser,
   VISUALISERS,
@@ -66,4 +67,30 @@ test('waveTints lays four even steps from the front tint to the back one', () =>
   assert.equal(new Set(tints).size, 4);
   assert.equal(tints.at(0), '#1c4d78');
   assert.equal(tints.at(-1), '#5d97c9');
+});
+
+test('peakMagnitude is the largest deviation from centre, either polarity', () => {
+  const time = new Uint8Array(16).fill(128);
+  assert.equal(peakMagnitude(time), 0);
+  time[3] = 128 + 64;
+  assert.equal(peakMagnitude(time), 0.5);
+  time[9] = 0;
+  assert.equal(peakMagnitude(time), 1);
+});
+
+// The ribbon used to smooth signed samples from unsynchronised snapshots, which
+// aliased against the read rate and made the height follow pitch. A peak over a
+// whole read is the same for any pitch and phase of a voice.
+test('peakMagnitude gives the same loudness for any pitch and phase', () => {
+  const peaks = [100, 143, 150, 157, 210, 320].flatMap((hz) =>
+    [0, 0.7, 2.1, 4.4].map((phase) => {
+      const time = new Uint8Array(1024);
+      for (let i = 0; i < time.length; i += 1) {
+        time[i] = Math.round(128 + 128 * 0.15 * Math.sin((2 * Math.PI * hz * i) / 48000 + phase));
+      }
+      return peakMagnitude(time);
+    }),
+  );
+  assert.ok(Math.max(...peaks) - Math.min(...peaks) < 0.02, `spread ${Math.max(...peaks) - Math.min(...peaks)}`);
+  assert.ok(Math.min(...peaks) > 0.14, 'a 0.15 tone still reads about 0.15');
 });
