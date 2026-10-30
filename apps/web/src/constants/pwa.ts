@@ -71,23 +71,22 @@ export const PWA_SCREENSHOTS: PwaScreenshot[] = [
 ];
 
 /**
- * Long-press on the launcher icon. Two entries, both real destinations: the
- * listener's own list and settings. `?view=favorites` lives in the hash so a
- * cold start on a static nginx never asks the server for a route it cannot
- * serve — and because the query is inside the hash, `/#/?view=favorites` is
- * still inside `scope: '/'`.
+ * Long-press on the launcher icon. Two entries, both real pages the router
+ * knows: the listener's own list and settings. They used to carry a query
+ * inside the hash; they are paths now, so no personal state reaches an access
+ * log and the app does not have to redirect a shortcut on every cold start.
  */
 export const PWA_SHORTCUTS: PwaShortcut[] = [
   {
     name: ar.sheets.myFavorites,
     short_name: ar.sheets.myFavorites,
-    url: '/#/?view=favorites',
+    url: '/favorites',
     icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
   },
   {
     name: ar.routes.settings,
     short_name: ar.routes.settings,
-    url: '/#/settings',
+    url: '/settings',
     icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
   },
 ];

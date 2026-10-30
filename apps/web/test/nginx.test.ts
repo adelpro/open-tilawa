@@ -61,3 +61,13 @@ test('the media preflight allows the headers a torrent fetch actually sends', ()
   assert.match(media, /Access-Control-Allow-Methods "GET, HEAD, OPTIONS"/);
   assert.match(media, /Access-Control-Max-Age \d+/);
 });
+
+test('a missing page is served the prerendered 404 screen', () => {
+  assert.match(CONF, /error_page 404 \/404\.html;/);
+  assert.match(CONF, /location = \/404\.html \{\s*internal;/);
+});
+
+test('the sitemap and robots carry the types a crawler expects', () => {
+  assert.match(CONF, /location = \/sitemap\.xml \{[\s\S]*?default_type application\/xml;/);
+  assert.match(CONF, /location = \/robots\.txt \{[\s\S]*?default_type text\/plain;/);
+});
