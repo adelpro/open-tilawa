@@ -1,5 +1,50 @@
 # Changelog
 
+## 1.11.0 — 2026-10-30
+
+Minor. App versions: **web 1.11.0**, **admin 1.30.0**, **seeder 1.4.3**.
+
+### Added
+
+- **A URL is a page.** Every screen used to be a fragment under `/#/`, so the player
+  had one address and a crawler had one document. There is now a path per page —
+  `/about`, `/surahs`, `/surahs/18-al-kahf`, `/reciters/<release>` — and one module,
+  `apps/web/src/routes.ts`, that the router, the sitemap and the prerender step all
+  read: they cannot disagree about which pages exist. `/listen/<release>/<n>-<surah>`
+  opens that recitation **paused**, because a shared link should not shout and autoplay
+  is blocked anyway.
+- **Pages a crawler can read without running the app.** The build writes real HTML for
+  every route, a `sitemap.xml`, a `robots.txt` and a `404.html` served with a real 404.
+  A build whose catalogue call fails stops instead of publishing hub pages that link
+  nowhere. `/listen` pages are prerendered for their share cards and stay `noindex`.
+- **Opt-in telemetry, and the one question that asks for it.** Nothing is collected
+  until the switch is turned on in plain words; the payload carries no identifier and
+  reports the start time as a band, never a timestamp. The console gains a usage screen
+  that marks which of its numbers are approximate.
+- **A stable slug per release.** The catalogue row is a *release*, not a person, so the
+  slug is keyed on the infohash: `المنشاوي` has two rows and neither can own the name.
+  A retired slug still resolves to its successor.
+
+### Changed
+
+- **The hash router is gone.** Old `#/about` bookmarks and installed shortcuts are
+  rewritten with `replaceState` on first load, so the URL never bounces between the two
+  forms and Back does not walk the history twice.
+
+### Fixed
+
+- **`/about` no longer redirects to `/about/`.** `try_files $uri/` made nginx treat the
+  prerendered directory as the resource, so the canonical path answered 301 and every
+  page lived at a URL the sitemap did not list. The index file is named directly, the
+  trailing-slash form is the one that redirects, and the `canonical`/`og:url` the build
+  writes now matches the sitemap instead of adding a slash.
+- **The preview channel says noindex in a header.** staging.tilawah.cc serves the same
+  bundle as the site, so a canonical pointing at tilawah.cc is only a hint — a link
+  shared to the preview host could be indexed as a second copy. The staging vhost now
+  answers `X-Robots-Tag: noindex, nofollow` on every response, assets included.
+- **A mistyped path is a 404**, not the player with a 200, so the site stops teaching a
+  crawler that every URL it can invent is a page.
+
 ## 1.10.7 — 2026-10-30
 
 Patch. App versions: **web 1.10.7**, **admin 1.29.1**, **seeder 1.4.3**.
