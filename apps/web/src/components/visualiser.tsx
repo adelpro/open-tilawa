@@ -36,6 +36,13 @@ const WAVES = [
  */
 const WAVE_ALPHA = [0.72, 0.55, 0.42, 0.3];
 /**
+ * How much of the block the silhouettes fill. Bars and peaks are hairlines
+ * against air, so they use the whole height; four filled layers at full height
+ * read as a slab lying on the transport. The block itself keeps its height, so
+ * switching shape never moves the controls under the thumb.
+ */
+const RIBBON_FILL = 0.72;
+/**
  * The analyser is read every other frame, not every frame: 30 Hz is plenty for
  * a spectrum, and no one can hear the difference.
  */
@@ -143,9 +150,9 @@ export default function Visualiser({
      * its depth without any layer having to be drawn as a hairline.
      */
     const drawWaves = () => {
-      // The strip uses the whole block: only the top pixels are left empty so
-      // the loudest silhouette does not sit flush against the edge.
-      const amplitude = height - 6;
+      // Shorter than the block it lives in, so the loudest silhouette stops
+      // short of the top edge instead of filling it edge to edge.
+      const amplitude = (height - 6) * RIBBON_FILL;
       const step = width / (RIBBON_POINTS - 1);
       const floor = height;
       // Silence is the floor itself: no stub, so a gap between ayat does not
