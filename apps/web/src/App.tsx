@@ -11,6 +11,8 @@ import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
 import AccountSheet from './components/account/account-sheet';
 import { useRoute } from './hooks/use-route';
+import { useReciters } from './hooks/use-reciters';
+import { resolveDeepLink } from './utils/deep-link';
 import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
 import { useSleepTimer } from './hooks/use-sleep-timer';
@@ -21,6 +23,8 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
 import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
+import { currentSurahIdAtom } from './jotai/player';
+import { toPath } from './routes';
 import { userSettingsAtom } from './jotai/gun';
 import { patchSettings, hydrateSettings, loadState, resolveRemoteSettings, shouldPushLocalSettings } from './hooks/use-persistence';
 import { useUserSync } from './hooks/use-user-sync';
@@ -34,6 +38,7 @@ import { useHydrateRecent, useRecentSync, useRecordRecent } from './hooks/use-re
  */
 export default function App() {
   const { route, navigate, params } = useRoute();
+  const { reciters } = useReciters();
   const [menuOpen, setMenuOpen] = useState(false);
   const {
     sheet,
@@ -48,6 +53,40 @@ export default function App() {
     close,
   } = useSheet();
   const setIsPlaying = useSetAtom(isPlayingAtom);
+
+  /**
+   * A `/listen/<release>/<surah>` link opens that recitation, paused.
+   *
+   * Autoplay is blocked by the browser anyway, and a shared link that starts shouting
+   * on load is a bad first impression. A stale name segment is a redirect to the
+   * canonical one; a slug nobody knows is the not-found screen, not the player.
+   */
+  const [deepLinkMissing, setDeepLinkMissing] = useState(false);
+  const setSelectedReciter = useSetAtom(selectedReciterAtom);
+  const setSurahId = useSetAtom(currentSurahIdAtom);
+  const appliedLink = useRef('');
+
+  useEffect(() => {
+    if (route.name !== 'listen' || reciters.length === 0) return;
+    const href = toPath(route);
+    if (appliedLink.current === href) return;
+
+    const resolution = resolveDeepLink(route, reciters);
+    if (resolution.kind === 'missing') {
+      setDeepLinkMissing(true);
+      return;
+    }
+    setDeepLinkMissing(false);
+    appliedLink.current = href;
+
+    if (resolution.kind === 'moved') {
+      navigate({ name: 'listen', release: resolution.to.split('/')[2], surah: route.surah, surahName: '' }, 'replace');
+      return;
+    }
+    setSelectedReciter(resolution.reciter);
+    setSurahId(resolution.surah);
+    setIsPlaying(false);
+  }, [route, reciters, navigate, setSelectedReciter, setSurahId, setIsPlaying]);
   const wide = useMediaQuery('(min-width: 1024px)');
   const pinnedBooted = useRef(false);
   useEffect(() => {
@@ -152,7 +191,7 @@ export default function App() {
           <AboutPage />
         ) : route.name === 'privacy' ? (
           <PrivacyPage />
-        ) : route.name === 'notFound' ? (
+        ) : route.name === 'notFound' || deepLinkMissing ? (
           <NotFoundPage onHome={() => go({ name: 'home' })} />
         ) : route.name === 'settings' ? (
           <SettingsPage
