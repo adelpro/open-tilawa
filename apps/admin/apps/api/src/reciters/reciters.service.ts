@@ -3,6 +3,7 @@ import { Inject } from '@nestjs/common';
 import { SQLITE_DB } from '../store/store.module';
 import { deriveReciterState, type Db, type ReciterState } from '@tilawa-admin/core';
 import { RECITER_NAMES_AR } from './reciter-names';
+import { assignSlug, slugify } from './slug';
 
 export interface Reciter {
   id: number;
@@ -17,6 +18,8 @@ export interface Reciter {
   sizeBytes: number | null;
   /** Whether the public player lists this row. Curation, not deletion. */
   published: boolean;
+  /** The public face of the infohash; assigned once, frozen after that. */
+  slug: string;
   createdAt: string;
 }
 
@@ -59,6 +62,37 @@ export class RecitersService {
       this.db.exec('ALTER TABLE reciters ADD COLUMN published INTEGER NOT NULL DEFAULT 1');
 
     this.seedArabicNames();
+    this.ensureSlugs();
+  }
+
+  /**
+   * Fill only the rows that have no slug yet, in infohash order.
+   *
+   * Ordered by infohash rather than by id so the same database always produces the same
+   * assignment, whatever order the rows were imported in — the backfill has to be
+   * repeatable, and a second run must change nothing.
+   */
+  private ensureSlugs(): void {
+    const taken = new Set(
+      (this.db.prepare('SELECT slug FROM reciters WHERE slug IS NOT NULL').all() as {
+        slug: string;
+      }[]).map((row) => row.slug),
+    );
+    const pending = this.db
+      .prepare('SELECT id, name, riwaya, infohash FROM reciters WHERE slug IS NULL ORDER BY lower(infohash)')
+      .all() as { id: number; name: string; riwaya: string; infohash: string }[];
+
+    const update = this.db.prepare('UPDATE reciters SET slug = ? WHERE id = ?');
+    const record = this.db.prepare(
+      'INSERT OR IGNORE INTO reciter_slugs (slug, infohash) VALUES (?, ?)',
+    );
+
+    for (const row of pending) {
+      const slug = assignSlug(slugify(row.name), row.riwaya, row.infohash, taken);
+      update.run(slug, row.id);
+      record.run(slug, row.infohash.toLowerCase());
+      taken.add(slug);
+    }
   }
 
   /** Fill only the rows nobody has named yet; an edit in the console wins. */
@@ -67,6 +101,26 @@ export class RecitersService {
       'UPDATE reciters SET name_ar = ? WHERE lower(infohash) = ? AND name_ar IS NULL',
     );
     for (const [hash, name] of Object.entries(RECITER_NAMES_AR)) update.run(name, hash);
+  }
+
+  /**
+   * The successor of a slug, or null when nobody ever had it.
+   *
+   * `reciter_slugs` is append-only, so a slug retired by a rename still points at its
+   * infohash; the current row is the one that infohash holds now. A slug that resolves to
+   * itself is the ordinary case and returns itself, which is what keeps a redirect from
+   * looping.
+   */
+  resolveSlug(slug: string): string | null {
+    const known = this.db
+      .prepare('SELECT lower(infohash) AS infohash FROM reciter_slugs WHERE slug = ?')
+      .get(slug) as { infohash: string } | undefined;
+    if (!known) return null;
+
+    const current = this.db
+      .prepare('SELECT slug FROM reciters WHERE lower(infohash) = ?')
+      .get(known.infohash) as { slug: string | null } | undefined;
+    return current?.slug ?? null;
   }
 
   list(): Reciter[] {
@@ -174,6 +228,7 @@ export class RecitersService {
       fileCount: r.file_count,
       sizeBytes: (r.size_bytes as number | null) ?? null,
       published: r.published !== 0,
+      slug: (r.slug as string | null) ?? '',
       createdAt: r.created_at,
     };
   }
@@ -188,9 +243,16 @@ export class RecitersService {
     sizeBytes?: number | null;
     published?: boolean;
   }): Reciter {
+    const taken = new Set(
+      (this.db.prepare('SELECT slug FROM reciters WHERE slug IS NOT NULL').all() as {
+        slug: string;
+      }[]).map((row) => row.slug),
+    );
+    const slug = assignSlug(slugify(input.name), input.riwaya, input.infohash, taken);
+
     const info = this.db
       .prepare(
-        'INSERT INTO reciters (name, name_ar, riwaya, infohash, magnet, file_count, size_bytes, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO reciters (name, name_ar, riwaya, infohash, magnet, file_count, size_bytes, published, slug) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       )
       .run(
         input.name,
@@ -201,7 +263,11 @@ export class RecitersService {
         input.fileCount,
         input.sizeBytes ?? null,
         input.published === false ? 0 : 1,
+        slug,
       );
+    this.db
+      .prepare('INSERT OR IGNORE INTO reciter_slugs (slug, infohash) VALUES (?, ?)')
+      .run(slug, input.infohash.toLowerCase());
     return this.get(Number(info.lastInsertRowid))!;
   }
 

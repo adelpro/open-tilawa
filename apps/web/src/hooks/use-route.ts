@@ -1,0 +1,53 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { legacyHashToPath, parse, toPath, type Parsed } from '@/routes';
+
+/**
+ * The path, and the three things a page needs to act on it.
+ *
+ * The router is `popstate` plus `pushState` — a dozen routes, two parameter shapes and no
+ * data loaders. Sheets keep their own history entry through `utils/sheet-layer.ts`; the two
+ * must not both push, or Back closes a panel and changes the page at once.
+ *
+ * On the first mount it rewrites a hash URL to its path form, so an installed shortcut or a
+ * bookmark from before the move still lands on the page it named.
+ */
+/**
+ * Navigation as a plain function, so a link does not need a hook to change the page.
+ * `pushState` does not fire `popstate`, so the event is dispatched by hand — the router
+ * hears it either way, and `sheet-layer` sees no change it did not make itself.
+ */
+export function navigate(next: Parsed, mode: 'push' | 'replace' = 'push'): void {
+  const target = toPath(next);
+  if (target === `${window.location.pathname}${window.location.search}`) return;
+  if (mode === 'replace') window.history.replaceState({}, '', target);
+  else window.history.pushState({}, '', target);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
+export function useRoute(): {
+  route: Parsed;
+  navigate: (next: Parsed, mode?: 'push' | 'replace') => void;
+  params: URLSearchParams;
+} {
+  const [url, setUrl] = useState(() =>
+    typeof window === 'undefined' ? '/' : `${window.location.pathname}${window.location.search}`,
+  );
+
+  useEffect(() => {
+    const migrated = legacyHashToPath(window.location.hash);
+    if (migrated) {
+      window.history.replaceState({}, '', migrated);
+      setUrl(`${window.location.pathname}${window.location.search}`);
+    }
+
+    const onChange = (): void => setUrl(`${window.location.pathname}${window.location.search}`);
+    window.addEventListener('popstate', onChange);
+    return () => window.removeEventListener('popstate', onChange);
+  }, []);
+
+  const route = useMemo(() => parse(url), [url]);
+  const params = useMemo(() => new URLSearchParams(url.split('?')[1] ?? ''), [url]);
+
+  return { route, navigate, params };
+}

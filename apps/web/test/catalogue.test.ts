@@ -42,3 +42,11 @@ test('duplicate infohashes collapse to the first row', () => {
   assert.equal(list.length, 1);
   assert.equal(list[0].id, 7);
 });
+
+test('the catalogue publishes the slug it was given, and never invents one', () => {
+  assert.equal(toReciters([row({ slug: 'maher-al-muaiqly' })])[0].slug, 'maher-al-muaiqly');
+  // A release without a slug is still playable: it simply has no link, because the web is
+  // not allowed to derive one from a mutable name. Keeping it in the roster also means a
+  // web deploy that lands before the admin one does not empty the list.
+  assert.equal(toReciters([row({ slug: undefined })])[0].slug, '');
+});

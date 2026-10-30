@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import AboutPage from './app/about-page';
 import PlayerPage from './app/player-page';
+import NotFoundPage from './app/not-found-page';
+import TelemetryPrompt from './components/telemetry-prompt';
 import PrivacyPage from './app/privacy-page';
 import SettingsPage from './app/settings-page';
 import AudioEngine from './components/audio-engine';
@@ -9,7 +11,9 @@ import ErrorBoundary from './components/error-boundary';
 import NavSheet from './components/nav-sheet';
 import TopBar from './components/top-bar';
 import AccountSheet from './components/account/account-sheet';
-import { useHashRoute } from './hooks/use-hash-route';
+import { useRoute } from './hooks/use-route';
+import { useReciters } from './hooks/use-reciters';
+import { resolveDeepLink } from './utils/deep-link';
 import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
 import { useSleepTimer } from './hooks/use-sleep-timer';
@@ -20,6 +24,16 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
 import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
+import { currentSurahIdAtom } from './jotai/player';
+import { toPath } from './routes';
+import { createTelemetry } from './utils/telemetry';
+import {
+  consentEnabled,
+  readConsent,
+  shouldPrompt,
+  writeConsent,
+  type Consent,
+} from './utils/telemetry-consent';
 import { userSettingsAtom } from './jotai/gun';
 import { patchSettings, hydrateSettings, loadState, resolveRemoteSettings, shouldPushLocalSettings } from './hooks/use-persistence';
 import { useUserSync } from './hooks/use-user-sync';
@@ -32,7 +46,8 @@ import { useHydrateRecent, useRecentSync, useRecordRecent } from './hooks/use-re
  * them — the reason playback keeps going when you leave the player for a page.
  */
 export default function App() {
-  const { route, navigate, params } = useHashRoute();
+  const { route, navigate, params } = useRoute();
+  const { reciters } = useReciters();
   const [menuOpen, setMenuOpen] = useState(false);
   const {
     sheet,
@@ -47,6 +62,40 @@ export default function App() {
     close,
   } = useSheet();
   const setIsPlaying = useSetAtom(isPlayingAtom);
+
+  /**
+   * A `/listen/<release>/<surah>` link opens that recitation, paused.
+   *
+   * Autoplay is blocked by the browser anyway, and a shared link that starts shouting
+   * on load is a bad first impression. A stale name segment is a redirect to the
+   * canonical one; a slug nobody knows is the not-found screen, not the player.
+   */
+  const [deepLinkMissing, setDeepLinkMissing] = useState(false);
+  const setSelectedReciter = useSetAtom(selectedReciterAtom);
+  const setSurahId = useSetAtom(currentSurahIdAtom);
+  const appliedLink = useRef('');
+
+  useEffect(() => {
+    if (route.name !== 'listen' || reciters.length === 0) return;
+    const href = toPath(route);
+    if (appliedLink.current === href) return;
+
+    const resolution = resolveDeepLink(route, reciters);
+    if (resolution.kind === 'missing') {
+      setDeepLinkMissing(true);
+      return;
+    }
+    setDeepLinkMissing(false);
+    appliedLink.current = href;
+
+    if (resolution.kind === 'moved') {
+      navigate({ name: 'listen', release: resolution.to.split('/')[2], surah: route.surah, surahName: '' }, 'replace');
+      return;
+    }
+    setSelectedReciter(resolution.reciter);
+    setSurahId(resolution.surah);
+    setIsPlaying(false);
+  }, [route, reciters, navigate, setSelectedReciter, setSurahId, setIsPlaying]);
   const wide = useMediaQuery('(min-width: 1024px)');
   const pinnedBooted = useRef(false);
   useEffect(() => {
@@ -86,6 +135,40 @@ export default function App() {
     setVisualiser(next);
     patchSettings({ visualiser: next });
   };
+  /**
+   * The consent gate. `heardSound` flips once, the first time playback actually starts —
+   * asking before that is asking about something the listener has not experienced yet.
+   */
+  const [consent, setConsent] = useState<Consent>(() => readConsent());
+  const [heardSound, setHeardSound] = useState(false);
+  const playing = useAtomValue(isPlayingAtom);
+  useEffect(() => {
+    if (playing) setHeardSound(true);
+  }, [playing]);
+
+  const telemetry = useRef(
+    createTelemetry({
+      enabled: () => consentEnabled(readConsent()),
+      send: async (batch) => {
+        const base =
+          (import.meta as { env?: Record<string, string> }).env?.VITE_ADMIN_API_URL ||
+          'https://console.tilawah.cc';
+        await fetch(`${base}/api/public/telemetry`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(batch),
+          keepalive: true,
+        });
+      },
+    }),
+  );
+
+  const answerConsent = (value: Consent) => {
+    writeConsent(value);
+    setConsent(value);
+    if (!consentEnabled(value)) telemetry.current.stop();
+  };
+
   const reciter = useAtomValue(selectedReciterAtom);
 
   const chooseRate = (next: number) => {
@@ -138,6 +221,7 @@ export default function App() {
     <ErrorBoundary>
       <div className="app-shell" data-panel={sheet ? 'open' : 'closed'}>
         <TopBar
+          isHome={route.name === 'home'}
           menuOpen={menuOpen}
           onToggleMenu={() => setMenuOpen((open) => !open)}
           onOpenSurahs={openSurahs}
@@ -146,11 +230,13 @@ export default function App() {
           onOpenAccount={() => setAccountOpen(true)}
         />
 
-        {route === '/about' ? (
+        {route.name === 'about' ? (
           <AboutPage />
-        ) : route === '/privacy' ? (
+        ) : route.name === 'privacy' ? (
           <PrivacyPage />
-        ) : route === '/settings' ? (
+        ) : route.name === 'notFound' || deepLinkMissing ? (
+          <NotFoundPage onHome={() => go({ name: 'home' })} />
+        ) : route.name === 'settings' ? (
           <SettingsPage
             theme={theme}
             onTheme={setTheme}
@@ -187,6 +273,12 @@ export default function App() {
           onOpenAccount={() => setAccountOpen(true)}
         />
         <AccountSheet open={accountOpen} onClose={() => setAccountOpen(false)} />
+        {shouldPrompt(consent, heardSound) && (
+          <TelemetryPrompt
+            onAccept={() => answerConsent('on')}
+            onDecline={() => answerConsent('off')}
+          />
+        )}
       </div>
       {/* A new element per reciter class: once an element is routed through Web
           Audio it cannot be released, and a cross-origin host would play silent. */}

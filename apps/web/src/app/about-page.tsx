@@ -1,4 +1,5 @@
 import Icon from '@/components/icons';
+import Link from '@/components/link';
 import { APP_VERSION } from '@/constants/version';
 import { useLocale } from '@/hooks/use-locale';
 
@@ -10,13 +11,13 @@ export default function AboutPage() {
   return (
     <main className="page-screen">
       <div className="w-full max-w-[520px] lg:max-w-[700px]">
-        <a
-          href="#/"
+        <Link
+          to={{ name: 'home' }}
           className="inline-flex min-h-11 items-center gap-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
         >
           <Icon name="back" className="text-muted" />
           {t.routes.listen}
-        </a>
+        </Link>
 
         {/* No second logo here: the header already carries the mark. */}
         <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">{about.title}</h1>

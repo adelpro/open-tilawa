@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import Icon from '@/components/icons';
 import Sheet from '@/components/sheet';
-import type { Route } from '@/hooks/use-hash-route';
+import type { Parsed, RouteName } from '@/routes';
 import { useLocale } from '@/hooks/use-locale';
 import { cn } from '@/utils/cn';
 
@@ -19,29 +19,29 @@ export default function NavSheet({
   onOpenAccount,
 }: {
   open: boolean;
-  route: Route;
+  route: Parsed;
   onClose: () => void;
-  onNavigate: (route: Route) => void;
+  onNavigate: (route: Parsed) => void;
   onOpenAccount?: () => void;
 }) {
   const { t } = useLocale();
 
-  const items: { route?: Route; label: string; icon: ReactNode; action?: () => void }[] = [
-    { route: '/', label: t.routes.listen, icon: <Icon name="house" /> },
-    { route: '/settings', label: t.routes.settings, icon: <Icon name="gear" /> },
+  const items: { name?: RouteName; label: string; icon: ReactNode; action?: () => void }[] = [
+    { name: 'home', label: t.routes.listen, icon: <Icon name="house" /> },
+    { name: 'settings', label: t.routes.settings, icon: <Icon name="gear" /> },
     { label: t.account.title, icon: <Icon name="user" />, action: onOpenAccount },
-    { route: '/about', label: t.routes.about, icon: <Icon name="info" /> },
-    { route: '/privacy', label: t.routes.privacy, icon: <Icon name="shield" /> },
+    { name: 'about', label: t.routes.about, icon: <Icon name="info" /> },
+    { name: 'privacy', label: t.routes.privacy, icon: <Icon name="shield" /> },
   ];
 
   return (
     <Sheet title={t.menu.open} open={open} onClose={onClose} size="auto">
       <div className="pb-3">
         {items.map((item, idx) => {
-          const current = item.route ? item.route === route : false;
+          const current = item.name ? item.name === route.name : false;
           return (
             <button
-              key={item.route || item.label || idx}
+              key={item.name || item.label || idx}
               type="button"
               onClick={() => {
                 if (item.action) {
@@ -49,8 +49,8 @@ export default function NavSheet({
                   onClose();
                   return;
                 }
-                if (item.route) {
-                  onNavigate(item.route);
+                if (item.name) {
+                  onNavigate({ name: item.name } as Parsed);
                 }
               }}
               aria-current={current ? 'page' : undefined}

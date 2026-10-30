@@ -19,6 +19,7 @@ import { SeedersModule } from './seeders/seeders.module';
 import { ToolsModule } from './tools/tools.module';
 import { StatusModule } from './status/status.module';
 import { TurnsModule } from './turns/turns.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
 import { RecitersModule } from './reciters/reciters.module';
 import { TwoFaModule } from './two-fa/two-fa.module';
 import { SettingsModule } from './settings/settings.module';
@@ -44,6 +45,7 @@ import { envValidate } from './config/env/env.validate';
     StatusModule,
     TurnsModule,
     RecitersModule,
+    TelemetryModule,
     TwoFaModule,
     AdminModule,
     SetupModule,
