@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.10.4 — 2026-10-30
+
+Patch. App versions: **web 1.10.4**, **admin 1.29.1**, **seeder 1.4.3**.
+
+### Fixed
+
+- **The riwaya is said once.** 1.10.3 appended the reading to the reciter line
+  even when the catalogue already carries it in the name — "ياسين الجزائري
+  (ورش) · ورش" — so the same word arrived twice. The suffix now shows only when
+  the name does not already name that reading.
+- **The title sits on the centre line.** The chevron took its own width out of
+  the title, drawing the surah name about twenty pixels off centre. A spacer
+  the size of the glyph keeps the word itself on the line.
+
 ## 1.10.3 — 2026-10-30
 
 Patch. App versions: **web 1.10.3**, **admin 1.29.1**, **seeder 1.4.3**.
