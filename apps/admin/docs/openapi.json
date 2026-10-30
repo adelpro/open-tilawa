@@ -1139,6 +1139,27 @@
         "tags": ["Settings"]
       }
     },
+    "/api/public/slug/{slug}": {
+      "get": {
+        "operationId": "PublicRecitersController_resolveSlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["PublicReciters"]
+      }
+    },
     "/api/public/reciters": {
       "get": {
         "operationId": "PublicRecitersController_list",
@@ -1174,6 +1195,63 @@
           }
         },
         "tags": ["PublicReciters"]
+      }
+    },
+    "/api/public/telemetry": {
+      "post": {
+        "operationId": "TelemetryController_ingest",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Telemetry"]
+      }
+    },
+    "/api/admin/telemetry/summary": {
+      "get": {
+        "operationId": "TelemetryController_summary",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reciter",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Telemetry"]
       }
     },
     "/api/2fa/enable": {
@@ -1561,7 +1639,7 @@
   "info": {
     "title": "Tilawa Admin API",
     "description": "",
-    "version": "1.29.0",
+    "version": "1.30.5",
     "contact": {}
   },
   "tags": [],
@@ -1631,7 +1709,14 @@
             "description": "The provider used for authentication."
           }
         },
-        "required": ["id", "email", "name", "isActivated", "isTwoFAEnabled", "provider"]
+        "required": [
+          "id",
+          "email",
+          "name",
+          "isActivated",
+          "isTwoFAEnabled",
+          "provider"
+        ]
       },
       "ErrorResponseDTO": {
         "type": "object",

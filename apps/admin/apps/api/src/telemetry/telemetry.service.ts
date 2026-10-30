@@ -43,6 +43,41 @@ export const RETENTION_DAYS = 90;
 
 export class InvalidEvent extends Error {}
 
+/**
+ * The three filters the summary answers to.
+ *
+ * Each is optional and each is validated against what ingest would have accepted —
+ * a filter the ingest could never have produced is a typo, not an empty result.
+ */
+export type SummaryFilters = {
+  source?: (typeof SOURCES)[number];
+  version?: string;
+  reciter?: string;
+};
+
+export function assertSummaryFilters(input: {
+  source?: string;
+  version?: string;
+  reciter?: string;
+}): SummaryFilters {
+  const filters: SummaryFilters = {};
+  if (input.source) {
+    if (!SOURCES.includes(input.source as never)) {
+      throw new InvalidEvent(`unknown source: ${input.source}`);
+    }
+    filters.source = input.source as SummaryFilters['source'];
+  }
+  if (input.version) {
+    if (input.version.length > 32) throw new InvalidEvent('bad version');
+    filters.version = input.version;
+  }
+  if (input.reciter) {
+    if (input.reciter.length > 80) throw new InvalidEvent('bad reciter');
+    filters.reciter = input.reciter;
+  }
+  return filters;
+}
+
 function assertEvent(input: unknown): TelemetryEvent {
   if (!input || typeof input !== 'object') throw new InvalidEvent('not an object');
   const raw = input as Record<string, unknown>;
@@ -197,8 +232,20 @@ export class TelemetryService {
     return row?.value ?? null;
   }
 
-  summary(days: number): {
+  /**
+   * The read-out, narrowed by the filters the console offers.
+   *
+   * One rule runs through every query: a panel that *is* a dimension ignores its own
+   * filter. The source split keeps both sources while you are looking at the source
+   * split, and errors-by-version keeps every version while you are looking at one —
+   * otherwise the comparison the panel exists for collapses to a single number.
+   */
+  summary(
+    days: number,
+    filters: SummaryFilters = {},
+  ): {
     surahs: { surah: number; plays: number }[];
+    reciters: { reciter: string; plays: number }[];
     sources: { torrent: number; webseed: number };
     errorsByVersion: { version: string; rate: number }[];
     recentErrors: unknown[];
@@ -207,38 +254,78 @@ export class TelemetryService {
     const window = Math.min(Math.max(days, 1), RETENTION_DAYS);
     const since = new Date(Date.now() - window * 86_400_000).toISOString();
 
+    /** The window, plus every filter except the one this panel is the dimension of. */
+    const scope = (ignore?: keyof SummaryFilters): { where: string; params: unknown[] } => {
+      const parts = ['at >= ?'];
+      const params: unknown[] = [since];
+      if (ignore !== 'source' && filters.source) {
+        parts.push('source = ?');
+        params.push(filters.source);
+      }
+      if (ignore !== 'version' && filters.version) {
+        parts.push('version = ?');
+        params.push(filters.version);
+      }
+      if (ignore !== 'reciter' && filters.reciter) {
+        parts.push('reciter = ?');
+        params.push(filters.reciter);
+      }
+      return { where: parts.join(' AND '), params };
+    };
+
     const surahs = this.db
       .prepare(
         `SELECT surah, count(*) AS plays FROM telemetry_events
-          WHERE event = 'play' AND at >= ? GROUP BY surah ORDER BY plays DESC LIMIT 20`,
+          WHERE ${scope().where} AND event = 'play'
+          GROUP BY surah ORDER BY plays DESC, surah LIMIT 20`,
       )
-      .all(since) as { surah: number; plays: number }[];
+      .all(...scope().params) as { surah: number; plays: number }[];
 
+    const reciters = this.db
+      .prepare(
+        `SELECT reciter, count(*) AS plays FROM telemetry_events
+          WHERE ${scope('reciter').where} AND event = 'play'
+          GROUP BY reciter ORDER BY plays DESC, reciter LIMIT 20`,
+      )
+      .all(...scope('reciter').params) as { reciter: string; plays: number }[];
+
+    const sourceScope = scope('source');
     const sourceRows = this.db
       .prepare(
-        `SELECT source, count(*) AS n FROM telemetry_events WHERE at >= ? GROUP BY source`,
+        `SELECT source, count(*) AS n FROM telemetry_events
+          WHERE ${sourceScope.where} AND event = 'play' GROUP BY source`,
       )
-      .all(since) as { source: string; n: number }[];
+      .all(...sourceScope.params) as { source: string; n: number }[];
     const sources = {
       torrent: sourceRows.find((row) => row.source === 'torrent')?.n ?? 0,
       webseed: sourceRows.find((row) => row.source === 'webseed')?.n ?? 0,
     };
 
+    const versionScope = scope('version');
     const errorsByVersion = this.db
       .prepare(
         `SELECT version,
                 ROUND(1.0 * sum(CASE WHEN event = 'error' THEN 1 ELSE 0 END) / count(*), 4) AS rate
-           FROM telemetry_events WHERE at >= ? GROUP BY version ORDER BY version DESC`,
+           FROM telemetry_events WHERE ${versionScope.where}
+          GROUP BY version ORDER BY version DESC`,
       )
-      .all(since) as { version: string; rate: number }[];
+      .all(...versionScope.params) as { version: string; rate: number }[];
 
     const recentErrors = this.db
       .prepare(
         `SELECT at, reciter, surah, source, error_code AS errorCode, version
-           FROM telemetry_events WHERE event = 'error' ORDER BY id DESC LIMIT 50`,
+           FROM telemetry_events WHERE ${scope().where} AND event = 'error'
+          ORDER BY id DESC LIMIT 50`,
       )
-      .all();
+      .all(...scope().params);
 
-    return { surahs, sources, errorsByVersion, recentErrors, lastPrunedAt: this.lastPrunedAt() };
+    return {
+      surahs,
+      reciters,
+      sources,
+      errorsByVersion,
+      recentErrors,
+      lastPrunedAt: this.lastPrunedAt(),
+    };
   }
 }
