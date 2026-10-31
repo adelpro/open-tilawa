@@ -24,6 +24,7 @@ import { ROUTE_TABLE, alternatesFor, parse, surahSlug, toUrl } from '../src/rout
 import { pageTitle } from '../src/utils/page-title.ts';
 import { riwayaLabel } from '../src/utils/riwaya.ts';
 import { sortByArabicName } from '../src/utils/reciter-order.ts';
+import { surahName } from '../src/utils/surah-name.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
@@ -206,6 +207,49 @@ addPage('/reciters', (_locale, copy) => ({
       .join('') +
     '</ul>',
 }));
+
+// One page per surah, in both languages: the catalogue has 114 surahs and 10 reciters,
+// and 1,140 pages of "surah × reciter" would be a doorway set. The hub collects the
+// reciters on one page instead, and every row links to the player for that recitation.
+for (const surah of SURAHS) {
+  addPage(`/surah/${surah.id}-${surahSlug(surah.id)}`, (locale, copy) => {
+    const name = surahName(surah.id, locale);
+    const rows = catalogue
+      .filter((release) => release.slug)
+      .map(
+        (release) =>
+          `<li><a href="${toUrl(
+            {
+              name: 'listen',
+              release: release.slug,
+              surah: surah.id,
+              surahName: surahSlug(surah.id),
+            },
+            locale,
+          )}">${escape(release.nameAr ?? release.name)} — ${escape(riwayaLabel(release.riwaya))}</a></li>`,
+      )
+      .join('');
+    // Neighbours, so the 114 pages are a path a crawler can walk and a listener can follow.
+    const neighbour = (id) =>
+      `<a href="${toUrl({ name: 'surah', surah: id, surahName: surahSlug(id) }, locale)}">${escape(
+        surahName(id, locale),
+      )}</a>`;
+    const nav = [
+      surah.id > 1 ? `${escape(copy.surahPage.previous)}: ${neighbour(surah.id - 1)}` : '',
+      surah.id < SURAHS.length ? `${escape(copy.surahPage.next)}: ${neighbour(surah.id + 1)}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    return {
+      title: `${copy.surahPage.title(name)} — Tilawah`,
+      description: copy.surahPage.lede(name),
+      index: indexable('surah'),
+      body:
+        `<h1>${escape(copy.surahPage.title(name))}</h1>` +
+        `<p>${escape(copy.surahPage.lede(name))}</p><ul>${rows}</ul><p>${nav}</p>`,
+    };
+  });
+}
 
 for (const release of catalogue) {
   if (!release.slug) continue;

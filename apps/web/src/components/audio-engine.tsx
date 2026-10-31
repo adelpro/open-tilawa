@@ -20,6 +20,7 @@ import type { Parsed } from '@/routes';
 import { documentTitle } from '@/utils/page-title';
 import { useLocale } from '@/hooks/use-locale';
 import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
+import { surahName } from '@/utils/surah-name';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
 import { ensureAnalyser } from '@/utils/audio-analyser';
 import { APP_VERSION } from '@/constants/version';
@@ -322,6 +323,11 @@ export default function AudioEngine({
    *  that is not the player keeps its own title, so the name a crawler read in the
    *  prerendered HTML is the name the hydrated tab keeps. */
   useEffect(() => {
+    if (route.name === 'surah') {
+      // A surah page names its own surah, not the one the player happens to hold.
+      document.title = `${t.surahPage.title(surahName(route.surah, locale))} — Tilawah`;
+      return;
+    }
     const surah = surahById(surahId);
     const name = surah ? (locale === 'ar' ? surah.name : SURAH_NAMES_EN[surah.id] ?? surah.name) : '';
     document.title = documentTitle(route, t, name);

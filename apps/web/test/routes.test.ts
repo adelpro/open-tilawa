@@ -44,8 +44,31 @@ test('toPath round-trips every canonical path', () => {
     '/recent',
     '/reciters',
     '/listen/minshawi/18-al-kahf',
+    '/surah/18-al-kahf',
   ];
   for (const path of paths) assert.equal(toPath(parse(path)), path, path);
+});
+
+test('a surah page is a page of its own, not the player', () => {
+  assert.deepEqual(parse('/surah/18-al-kahf'), {
+    name: 'surah',
+    surah: 18,
+    surahName: 'al-kahf',
+  });
+  // The number decides the page; the name is decoration.
+  assert.deepEqual(parse('/surah/18'), { name: 'surah', surah: 18, surahName: '' });
+  assert.deepEqual(parse('/surah/115'), { name: 'notFound' });
+  assert.deepEqual(parse('/surah'), { name: 'notFound' });
+});
+
+test('the surah family is complete, so a missing file is a real 404', () => {
+  // Every URL this family can have is written by the build — 1 to 114, nothing else —
+  // which is what lets nginx answer a mistyped one with a 404 instead of the shell.
+  const row = ROUTE_TABLE.find((entry) => entry.name === 'surah');
+  assert.equal(row?.complete, true);
+  // `/listen` is the opposite: the slug comes from the catalogue, so nginx cannot know
+  // whether a pair exists and has to hand it to the app.
+  assert.equal(ROUTE_TABLE.find((entry) => entry.name === 'listen')?.complete, undefined);
 });
 
 test('toPath writes the current surah name, so a stale one can be redirected', () => {
@@ -123,7 +146,7 @@ test('toUrl writes the prefix for English and nothing for Arabic', () => {
 });
 
 test('parseUrl and toUrl round-trip every path in both languages', () => {
-  const paths = ['/', '/about', '/privacy', '/reciters', '/listen/minshawi/18-al-kahf'];
+  const paths = ['/', '/about', '/privacy', '/reciters', '/listen/minshawi/18-al-kahf', '/surah/18-al-kahf'];
   for (const path of paths) {
     for (const locale of ['ar', 'en'] as const) {
       const url = toUrl(parse(path), locale);

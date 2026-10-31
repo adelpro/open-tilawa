@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.13.20 — 2026-10-31
+
+Patch. App versions: **web 1.13.5**, **admin 1.32.9**, **seeder 1.5.7**.
+
+### Added
+
+- **A page per surah, and only one.** `/surah/18-al-kahf` and `/en/surah/18-al-kahf`
+  collect every reciter who has that surah, each row a link to the player. The obvious
+  alternative — a page per reciter per surah — is 1,140 pages of the same surah name with
+  one word changed, which is a doorway set rather than a site; Google answers those by
+  ignoring the whole family. This is 114 pages, twice for the two languages, each with ten
+  real links out and neighbours on either side, which is also how a crawler walks them.
+- **The route table grew a `complete` flag.** `/surah/{n}` can only be 1–114, and the
+  build writes all of them, so a mistyped one is a real 404 instead of the shell with a
+  200 — the soft 404 the nginx tests exist to prevent. `/listen` stays incomplete: its
+  first segment is a catalogue slug that nginx cannot verify.
+
 ## 1.13.19 — 2026-10-31
 
 Patch. App versions: **web 1.13.4**, **admin 1.32.9**, **seeder 1.5.7**.

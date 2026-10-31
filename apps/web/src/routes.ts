@@ -25,6 +25,7 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 export type RouteName =
   | 'home'
   | 'listen'
+  | 'surah'
   | 'reciters'
   | 'about'
   | 'privacy'
@@ -36,7 +37,8 @@ export type RouteName =
 
 export type Parsed =
   | { name: 'listen'; release: string; surah: number; surahName: string }
-  | { name: Exclude<RouteName, 'listen'> };
+  | { name: 'surah'; surah: number; surahName: string }
+  | { name: Exclude<RouteName, 'listen' | 'surah'> };
 
 export type RouteRow = {
   name: RouteName;
@@ -45,11 +47,21 @@ export type RouteRow = {
   index: boolean;
   sitemap: boolean;
   prerender: boolean;
+  /**
+   * The build writes every URL this family can have, so a missing file is a real 404.
+   *
+   * `surah` is 1–114 and nothing else. `listen` is the opposite: its first segment is a
+   * catalogue slug, which nginx cannot verify and the build cannot enumerate, so those
+   * requests have to reach the app. The flag is what tells the edge — and the test that
+   * guards it — which kind of family it is looking at.
+   */
+  complete?: boolean;
 };
 
 export const ROUTE_TABLE: readonly RouteRow[] = [
   { name: 'home', pattern: '/', index: true, sitemap: true, prerender: true },
   { name: 'listen', pattern: '/listen/{release}/{n}-{surah}', index: false, sitemap: false, prerender: true },
+  { name: 'surah', pattern: '/surah/{n}-{surah}', index: true, sitemap: true, prerender: true, complete: true },
   { name: 'reciters', pattern: '/reciters', index: true, sitemap: true, prerender: true },
   { name: 'about', pattern: '/about', index: true, sitemap: true, prerender: true },
   { name: 'privacy', pattern: '/privacy', index: true, sitemap: true, prerender: true },
@@ -111,6 +123,12 @@ export function parse(pathname: string): Parsed {
     return { name: 'listen', release: segments[1], surah: surah.id, surahName: surah.name };
   }
 
+  if (segments[0] === 'surah' && segments.length === 2) {
+    const surah = surahSegment(segments[1]);
+    if (!surah) return { name: 'notFound' };
+    return { name: 'surah', surah: surah.id, surahName: surah.name };
+  }
+
   return { name: 'notFound' };
 }
 
@@ -119,6 +137,8 @@ export function toPath(route: Parsed): string {
   switch (route.name) {
     case 'listen':
       return `/listen/${route.release}/${route.surah}-${surahSlug(route.surah)}`;
+    case 'surah':
+      return `/surah/${route.surah}-${surahSlug(route.surah)}`;
     case 'home':
       return '/';
     default:

@@ -29,12 +29,18 @@ test('the catch-all location answers 404 instead of the shell', () => {
   assert.doesNotMatch(rootLocation, /^\s*\/index\.html\s*$/m, 'the catch-all still falls back to the shell');
 });
 
+test('a family the build writes completely is not handed to the app', () => {
+  // `/surah/18-al-kahf` is a file on disk for every valid number, so a mistyped one must
+  // be a 404 — not the shell with a 200 and the app's 404 screen inside it.
+  assert.doesNotMatch(familyLine, /\bsurah\b/, '/surah is given a shell fallback it does not need');
+});
+
 test('every route nginx cannot resolve from disk still reaches the app', () => {
   // A prerendered page is a file on disk, and a missing one is a 404 on purpose. What
   // needs the shell is the other half: the app-only screens, and the parameterised
   // families nginx cannot verify without the catalogue.
   const families = new Set(
-    ROUTE_TABLE.filter((row) => !row.prerender || row.pattern.includes('{'))
+    ROUTE_TABLE.filter((row) => !row.complete && (!row.prerender || row.pattern.includes('{')))
       .map((row) => row.pattern.split('/').filter(Boolean)[0])
       .filter((segment): segment is string => Boolean(segment)),
   );

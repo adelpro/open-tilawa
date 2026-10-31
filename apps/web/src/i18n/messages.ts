@@ -61,6 +61,12 @@ const ar = {
     title: 'القرّاء',
     lede: 'هؤلاء هم القرّاء المنشورون في تلاوة، ولكل واحد منهم تلاوة كاملة. اختر قارئًا، ثم اختر السورة التي تريد سماعها.',
   },
+  surahPage: {
+    title: (name: string) => `سورة ${name}`,
+    lede: (name: string) => `استمع إلى سورة ${name} بصوت كل قارئ منشور في تلاوة.`,
+    previous: 'السورة السابقة',
+    next: 'السورة التالية',
+  },
   account: {
     title: 'الحساب',
     ringOf: 'حلقتك:',
@@ -339,6 +345,12 @@ const en: typeof ar = {
   recitersPage: {
     title: 'Reciters',
     lede: 'These are the reciters published in Tilawah, each with a complete recitation. Pick a reciter, then the surah you want to hear.',
+  },
+  surahPage: {
+    title: (name: string) => `Surah ${name}`,
+    lede: (name: string) => `Listen to Surah ${name} in the voice of every reciter published in Tilawah.`,
+    previous: 'Previous surah',
+    next: 'Next surah',
   },
   account: {
     title: 'Account',
