@@ -66,10 +66,11 @@ describe('public reciter catalogue', () => {
     for (const [hash, name] of Object.entries(RECITER_NAMES_AR)) {
       expect({ hash, name }).toEqual({ hash, name: expect.not.stringMatching(readings) });
     }
-    // Every retired name belongs to a seeded row whose current name differs.
-    for (const [hash, old] of Object.entries(RETIRED_RECITER_NAMES_AR)) {
-      expect(RECITER_NAMES_AR[hash]).toBeDefined();
-      expect(RECITER_NAMES_AR[hash]).not.toBe(old);
+    // Every retired name points at a name the seed still produces.
+    const seeded = new Set(Object.values(RECITER_NAMES_AR));
+    for (const [old, name] of Object.entries(RETIRED_RECITER_NAMES_AR)) {
+      expect(old).toMatch(readings);
+      expect(seeded.has(name)).toBe(true);
     }
   });
 

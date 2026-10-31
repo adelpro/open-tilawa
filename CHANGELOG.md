@@ -2,7 +2,7 @@
 
 ## 1.13.27 — 2026-10-31
 
-Patch. App versions: **web 1.13.10**, **admin 1.32.12**, **seeder 1.5.7**.
+Patch. App versions: **web 1.13.10**, **admin 1.32.13**, **seeder 1.5.7**.
 
 ### Fixed
 
@@ -11,11 +11,14 @@ Patch. App versions: **web 1.13.10**, **admin 1.32.12**, **seeder 1.5.7**.
   rows did not, because `riwaya` is a column of its own and every surface — roster,
   player, prerendered page — already prints it beside the name. Half the catalogue
   therefore said it twice (`/reciters` read `صابر عبد الحكم (ورش) — ورش`) and half
-  once. The seed no longer carries the reading, a row still holding the exact seeded
-  string is rewritten in place so a live database heals on restart, and a name typed
-  in the console is left alone. `(مجوّد)` and `(تحديث)` are style and edition
-  markers, not readings, and stay. `player-page` no longer needs the string check
-  that hid the duplicate.
+  once. The seed no longer carries the reading, and a row still holding the exact
+  seeded string is rewritten in place so a live database heals on restart; a name
+  typed in the console is left alone, because the repair matches the string itself.
+  Matching the name rather than the infohash matters: a re-torrented reciter keeps
+  the name the seed gave him and loses the hash, and the hash-keyed first pass
+  skipped exactly that row. `(مجوّد)` and `(تحديث)` are style and edition markers,
+  not readings, and stay. `player-page` no longer needs the string check that hid
+  the duplicate.
 
 ## 1.13.26 — 2026-10-31
 

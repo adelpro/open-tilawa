@@ -110,13 +110,8 @@ export class RecitersService {
     );
     for (const [hash, name] of Object.entries(RECITER_NAMES_AR)) update.run(name, hash);
 
-    const retire = this.db.prepare(
-      'UPDATE reciters SET name_ar = ? WHERE lower(infohash) = ? AND name_ar = ?',
-    );
-    for (const [hash, old] of Object.entries(RETIRED_RECITER_NAMES_AR)) {
-      const name = RECITER_NAMES_AR[hash];
-      if (name) retire.run(name, hash, old);
-    }
+    const retire = this.db.prepare('UPDATE reciters SET name_ar = ? WHERE name_ar = ?');
+    for (const [old, name] of Object.entries(RETIRED_RECITER_NAMES_AR)) retire.run(name, old);
   }
 
   /**

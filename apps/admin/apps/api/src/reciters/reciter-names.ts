@@ -44,19 +44,23 @@ export const RECITER_NAMES_AR: Record<string, string> = {
 };
 
 /**
- * The names this table used to hold, by infohash, back when the reading was
- * typed into the name as well. A database seeded before that changed still
- * carries them; the service rewrites a row only while it holds the exact seeded
- * string, so a name an operator edited is left alone.
+ * The names this table used to hold, and the name each became once the reading
+ * moved out of it. A database seeded before that change still carries them; the
+ * service rewrites a row only while it holds the exact string, so a name an
+ * operator edited is left alone.
+ *
+ * Keyed by the name, not the infohash: a reciter that was re-torrented keeps the
+ * name it was given and loses the hash the seed knew, and a hash-keyed repair
+ * skipped exactly those rows.
  */
 export const RETIRED_RECITER_NAMES_AR: Record<string, string> = {
-  '012101c66ee42d7c5905ab910e2b129335f4f30d': 'ياسين الجزائري (ورش)',
-  '110eedff1111d5028bfb853dd13ca903cffd4d10': 'عبد الباسط عبد الصمد (ورش)',
-  '2ea34e7b6c81ac42740c41ad98675cd30db99132': 'مفتاح السلطني (قالون)',
-  '87c83e0b4432d70565e2dbc4e20988285778e189': 'محمود خليل الحصري (ورش)',
-  '8f7d9f4dcdde90177b90c8ee362fe90cee58da56': 'صابر عبد الحكم (ورش)',
-  'bb7093b290ac61d10b5a6357087cd670bb6ba931': 'محمد الكنتاوي (ورش)',
-  'c4ac5dece90004fb389a2fc378847dab54d9f1d3': 'محمود خليل الحصري (قالون)',
-  'f6bd1e59ec0ed88d2c14e5548efc54cf0d5d8ba8': 'صابر عبد الحكم (الدوري)',
-  'f956a7017cf67fe1d2b4738195444137044e6970': 'مفتاح السلطني (ورش)',
+  'ياسين الجزائري (ورش)': 'ياسين الجزائري',
+  'عبد الباسط عبد الصمد (ورش)': 'عبد الباسط عبد الصمد',
+  'مفتاح السلطني (قالون)': 'مفتاح السلطني',
+  'محمود خليل الحصري (ورش)': 'محمود خليل الحصري',
+  'صابر عبد الحكم (ورش)': 'صابر عبد الحكم',
+  'محمد الكنتاوي (ورش)': 'محمد الكنتاوي',
+  'محمود خليل الحصري (قالون)': 'محمود خليل الحصري',
+  'صابر عبد الحكم (الدوري)': 'صابر عبد الحكم',
+  'مفتاح السلطني (ورش)': 'مفتاح السلطني',
 };
