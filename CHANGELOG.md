@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.13.10 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.2**, **seeder 1.5.7**.
+
+### Added
+
+- **The node's own page has Restart too**, beside Update. The two surfaces now
+  offer the same two acts, so a node up to date on its version is not a node with
+  nothing to press.
+
 ## 1.13.9 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.2**, **seeder 1.5.6**.

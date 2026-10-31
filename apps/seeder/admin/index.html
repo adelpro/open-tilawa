@@ -37,6 +37,7 @@
   <div class="toolbar">
     <span class="version" id="versionLine">الإصدار: —</span>
     <button class="btn" id="updateBtn" onclick="updateNode()" disabled>تحديث الخادم</button>
+    <button class="btn" id="restartBtn" onclick="restartNode()" disabled>إعادة التشغيل</button>
   </div>
   <p class="status" id="updateStatus"></p>
 
@@ -144,7 +145,9 @@
         document.getElementById('versionLine').textContent = `الإصدار: ${health.version}`;
         const state = await (await fetch('/api/update', { cache: 'no-store' })).json();
         const btn = document.getElementById('updateBtn');
+        const restart = document.getElementById('restartBtn');
         btn.disabled = !state.enabled || state.running;
+        restart.disabled = !state.enabled || state.running;
         if (!state.enabled) line.textContent = 'التحديث الذاتي غير مفعّل على هذا الخادم.';
         else if (state.error) line.textContent = `آخر محاولة: ${state.error}`;
         else if (!state.running) line.textContent = '';
@@ -183,6 +186,43 @@
           }
         }
         line.textContent = 'لم يعد الخادم بعد خمس دقائق.';
+      } catch (e) {
+        line.textContent = 'خطأ: ' + e.message;
+      }
+    }
+
+    // Restart is the same permission as update, without pulling anything: the
+    // version stays, the files stay, the process is new.
+    async function restartNode() {
+      if (!confirm('إعادة تشغيل هذا الخادم؟')) return;
+      const line = document.getElementById('updateStatus');
+      const restart = document.getElementById('restartBtn');
+      restart.disabled = true;
+      line.textContent = 'جارٍ إعادة التشغيل…';
+      try {
+        const res = await fetch('/api/restart', { method: 'POST' });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          line.textContent = body.error || 'تعذّرت إعادة التشغيل.';
+          restart.disabled = false;
+          return;
+        }
+        for (let attempt = 0; attempt < 60; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          try {
+            const health = await (await fetch('/health', { cache: 'no-store' })).json();
+            if (health && health.status === 'ok') {
+              document.getElementById('versionLine').textContent = `الإصدار: ${health.version}`;
+              line.textContent = 'عاد الخادم.';
+              refresh();
+              restart.disabled = false;
+              return;
+            }
+          } catch {
+            // Down for a second or two; that is the restart.
+          }
+        }
+        line.textContent = 'لم يعد الخادم بعد دقيقة.';
       } catch (e) {
         line.textContent = 'خطأ: ' + e.message;
       }
