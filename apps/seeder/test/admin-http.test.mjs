@@ -126,6 +126,38 @@ test('API /api/peers is refused without credentials', async () => {
   assert.equal(res.status, 401);
 });
 
+/**
+ * The update door is shut on a node that was not configured for it. This suite
+ * starts the real script without the flag, which is every node until its own
+ * compose file says otherwise — so the shape proven here is the default one.
+ */
+test('health says whether this node may update itself', async () => {
+  const body = await (await fetch(`http://127.0.0.1:${port}/health`)).json();
+  assert.equal(body.selfUpdate, false);
+});
+
+test('GET /api/update reports a disabled, idle node', async () => {
+  const res = await fetch(`http://127.0.0.1:${port}/api/update`, {
+    headers: { Authorization: auth },
+  });
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { enabled: false, running: false, error: null, at: null });
+});
+
+test('POST /api/update is refused when the node never opted in', async () => {
+  const res = await fetch(`http://127.0.0.1:${port}/api/update`, {
+    method: 'POST',
+    headers: { Authorization: auth },
+  });
+  assert.equal(res.status, 409);
+  assert.match((await res.json()).error, /SEEDER_SELF_UPDATE/);
+});
+
+test('POST /api/update is refused without credentials', async () => {
+  const res = await fetch(`http://127.0.0.1:${port}/api/update`, { method: 'POST' });
+  assert.equal(res.status, 401);
+});
+
 test('DELETE of a hash the node does not hold answers 404', async () => {
   const res = await fetch(
     `http://127.0.0.1:${port}/api/torrents/0000000000000000000000000000000000000000`,

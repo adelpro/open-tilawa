@@ -274,6 +274,8 @@ export const en = {
   'torrents.fillNode': 'Add catalogue recitations',
   'torrents.noSeeders': 'Add a seeder first — torrents are managed on a node.',
   'torrents.loadFailed': 'Could not read the node inventory.',
+  'torrents.updateElsewhere':
+    'This node updates itself, or is updated on its host — there is nothing to press here.',
   'torrents.removeFailed': 'Could not remove the torrent.',
   'torrents.signInRequired': 'Sign in required.',
 
@@ -439,6 +441,8 @@ export const en = {
     "Rebuilds the node's image from the repository checkout on this host, then restarts it. The files stay on disk; seeding pauses until the node is back.",
   'seeders.updateBodyPull':
     'Pulls the newest image from the registry, then restarts the node. The files stay on disk; seeding pauses until the node is back.',
+  'seeders.updateBodyRemote':
+    'The node pulls the newest image and recreates its own container. Its files stay on disk; seeding pauses for a few seconds until it is back.',
   'seeders.updateCurrent': 'Currently running {version}.',
   'seeders.updateConfirm': 'Update and restart',
   'seeders.updatedSoftware': 'Node updated — now running {version}.',

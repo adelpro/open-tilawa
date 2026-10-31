@@ -3,6 +3,7 @@
 # Usage: curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder
 #   or:  bash deploy-node.sh --type turn --port 3478
 #   or:  bash deploy-node.sh --type seeder --disk 500 --upload-kbps 20000 --watchtower
+#   or:  bash deploy-node.sh --type seeder --self-update   # the console may update it
 set -euo pipefail
 
 # Defaults
@@ -22,6 +23,10 @@ ADMIN_UI="${ADMIN_UI:-1}"
 # Inbound peer port. Published because a node that only dials out is invisible
 # to peers that cannot reach it.
 PEER_PORT="${PEER_PORT:-6881}"
+# Off by default: with it on, the node accepts "update yourself" from the console
+# and runs `docker compose pull && up -d` through the host daemon. That is root on
+# this host behind the node's admin password, so the operator opts in.
+SELF_UPDATE="${SELF_UPDATE:-0}"
 
 # Kept because the parse loop shifts everything away, and the root guard has to
 # print the invocation it actually received.
@@ -43,6 +48,7 @@ while [[ $# -gt 0 ]]; do
     --admin-ui) ADMIN_UI="$2"; shift 2 ;;
     --peer-port) PEER_PORT="$2"; shift 2 ;;
     --watchtower) WATCHTOWER=1; shift ;;
+    --self-update) SELF_UPDATE=1; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -189,6 +195,16 @@ case "$TYPE" in
       QUOTA_LINE="Disk quota: unlimited — ${FREE_GB} GB free, the node will fill the disk"
     fi
 
+    # Self-update needs two things the node cannot give itself: the host daemon
+    # and the compose file that describes it. Both are mounted only when asked
+    # for, because together they make the node's admin password root on this host.
+    SELF_UPDATE_ENV=""
+    SELF_UPDATE_MOUNTS=""
+    if [[ "${SELF_UPDATE}" == "1" ]]; then
+      SELF_UPDATE_ENV=$'\n      SEEDER_SELF_UPDATE: "1"\n      SEEDER_COMPOSE_PROJECT: tilawa-seeder\n      SEEDER_COMPOSE_FILE: /compose/docker-compose.yml'
+      SELF_UPDATE_MOUNTS=$'\n      - /var/run/docker.sock:/var/run/docker.sock\n      - /opt/tilawa-seeder/docker-compose.yml:/compose/docker-compose.yml:ro'
+    fi
+
     cat > /opt/tilawa-seeder/docker-compose.yml <<EOF
 services:
   seeder:
@@ -213,10 +229,10 @@ services:
       DISK_QUOTA_GB: ${DISK_GB}
       UPLOAD_LIMIT_KBPS: ${UPLOAD_KBPS}
       DOWNLOAD_LIMIT_KBPS: ${DOWNLOAD_KBPS}
-      ADMIN_UI: ${ADMIN_UI}
+      ADMIN_UI: ${ADMIN_UI}${SELF_UPDATE_ENV}
     volumes:
       - ${DATA_ROOT}/data:/data/torrents
-      - ${DATA_ROOT}/downloads:/data/downloads
+      - ${DATA_ROOT}/downloads:/data/downloads${SELF_UPDATE_MOUNTS}
     restart: unless-stopped
     labels:
       com.centurylinklabs.watchtower.enable: "true"

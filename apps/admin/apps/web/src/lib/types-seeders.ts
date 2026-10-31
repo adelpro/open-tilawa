@@ -28,6 +28,8 @@ export interface Seeder {
    * SEEDER_SERVICE. Pinned to the top: if it is down the site is down.
    */
   pinned: boolean;
+  /** The node accepts "update yourself" from the console (its /health says so). */
+  selfUpdate: boolean;
   updateMode: 'build' | 'pull';
   /** The version the deployment says this node should run. */
   desiredVersion: string | null;

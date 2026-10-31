@@ -11,7 +11,7 @@ import { bootHarness, type Harness } from './harness';
  * contract — including that the stored password is used but never returned.
  */
 function fakeSeeder(
-  options: { user?: string; headroom?: number; peers?: boolean } = {},
+  options: { user?: string; headroom?: number; peers?: boolean; selfUpdate?: boolean } = {},
 ): Promise<{ url: string; server: Server; seen: string[] }> {
   const user = options.user ?? 'adm';
   const pass = 'secret-pass';
@@ -37,6 +37,38 @@ function fakeSeeder(
           peers: 5,
           uploadSpeed: 10,
           downloadSpeed: 2,
+          // The capability the console keys its update button off.
+          selfUpdate: options.selfUpdate === true,
+        }),
+      );
+      return;
+    }
+    if (req.url === '/api/update') {
+      if (decoded !== `${user}:${pass}`) {
+        res.writeHead(401).end('Unauthorized');
+        return;
+      }
+      if (req.method === 'POST') {
+        if (options.selfUpdate !== true) {
+          res.writeHead(409, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'self-update is not enabled on this node' }));
+          return;
+        }
+        seen.push('update');
+        // The real node answers before it starts and then recreates itself. The
+        // stand-in answers as a node that already finished, which is the state
+        // the console's wait loop is looking for.
+        res.writeHead(202, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ started: true }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          enabled: options.selfUpdate === true,
+          running: false,
+          error: null,
+          at: null,
         }),
       );
       return;
@@ -253,6 +285,74 @@ describe('seeder proxy', () => {
     }
   });
 
+  it('keeps whether a node updates itself, and refuses the ones that do not', async () => {
+    const capable = await fakeSeeder({ selfUpdate: true });
+    const stuck = await fakeSeeder({ selfUpdate: false });
+    try {
+      const mine = await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-self', url: capable.url, adminUser: 'adm', adminPass: 'secret-pass' })
+        .expect(201);
+      const other = await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-manual', url: stuck.url, adminUser: 'adm', adminPass: 'secret-pass' })
+        .expect(201);
+      await agent.post(`/api/seeders/${mine.body.id}/poll`).set('x-csrf-token', csrf).expect(201);
+      await agent.post(`/api/seeders/${other.body.id}/poll`).set('x-csrf-token', csrf).expect(201);
+
+      const fleet = (await agent.get('/api/seeders').expect(200)).body as {
+        id: number;
+        selfUpdate: boolean;
+      }[];
+      expect(fleet.find((row) => row.id === mine.body.id)?.selfUpdate).toBe(true);
+      expect(fleet.find((row) => row.id === other.body.id)?.selfUpdate).toBe(false);
+
+      const refused = await agent
+        .post(`/api/seeders/${other.body.id}/update`)
+        .set('x-csrf-token', csrf)
+        .expect(400);
+      expect(refused.body.message).toContain('does not update itself');
+    } finally {
+      capable.server.close();
+      stuck.server.close();
+    }
+  });
+
+  it('asks a self-updating node, then waits for it to come back', async () => {
+    const capable = await fakeSeeder({ selfUpdate: true });
+    try {
+      const { body } = await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-run', url: capable.url, adminUser: 'adm', adminPass: 'secret-pass' })
+        .expect(201);
+      await agent.post(`/api/seeders/${body.id}/poll`).set('x-csrf-token', csrf).expect(201);
+
+      await agent.post(`/api/seeders/${body.id}/update`).set('x-csrf-token', csrf).expect(202);
+
+      // The request only asks. The row is what says it finished, so this waits the
+      // way the screen does rather than assuming the POST did the work.
+      let row: { updating: boolean; updateError: string | null } | undefined;
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const fleet = (await agent.get('/api/seeders').expect(200)).body as {
+          id: number;
+          updating: boolean;
+          updateError: string | null;
+        }[];
+        row = fleet.find((entry) => entry.id === body.id);
+        if (row && row.updating === false) break;
+      }
+      expect(capable.seen).toContain('update');
+      expect(row?.updating).toBe(false);
+      expect(row?.updateError).toBeNull();
+    } finally {
+      capable.server.close();
+    }
+  }, 30000);
+
   it('forwards an add request and reports the new infohash', async () => {
     const { body } = await agent
       .post(`/api/seeders/${seederId}/torrents`)
@@ -397,12 +497,12 @@ describe('seeder proxy', () => {
     expect(row.headroomBytes).toBe(35 * 1024 ** 3);
   });
 
-  it('refuses to update a node this host does not run', async () => {
+  it('refuses to update a node that cannot update itself', async () => {
     const res = await agent
       .post(`/api/seeders/${seederId}/update`)
       .set('x-csrf-token', csrf)
       .expect(400);
-    expect(res.body.message).toContain('own node');
+    expect(res.body.message).toContain('does not update itself');
     await agent.post('/api/seeders/9999/update').set('x-csrf-token', csrf).expect(404);
   });
 

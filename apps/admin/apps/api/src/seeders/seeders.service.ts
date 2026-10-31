@@ -19,6 +19,13 @@ import { updateSeederService } from './seeder-update';
 const SEEDER_TIMEOUT_MS = 8000;
 
 /**
+ * A remote node pulls its own image before it can be recreated, so its update
+ * takes longer than the local compose call does. Five minutes is a 300 MB pull
+ * on a slow line; beyond that it is a stuck node, not a slow one.
+ */
+const REMOTE_UPDATE_WAIT_MS = 300_000;
+
+/**
  * A seeder URL must be an http(s) origin. The console makes server-side requests
  * to it, so anything else (file:, gopher:) is a proxy primitive we do not need;
  * private hosts are legitimate here (nodes live inside the operator's network),
@@ -73,6 +80,11 @@ export interface Seeder {
    * SEEDER_SERVICE rather than by a flag someone has to remember to set.
    */
   pinned: boolean;
+  /**
+   * The node accepts "update yourself" from the console. Reported by its own
+   * /health, so the button exists only where the deployment enabled it.
+   */
+  selfUpdate: boolean;
   /** How this node is updated: compiled from the checkout, or pulled by tag. */
   updateMode: 'build' | 'pull';
   /** The version the operator's source of truth says it should run. */
@@ -214,6 +226,8 @@ export class SeedersService {
     add('last_update_running', 'INTEGER NOT NULL DEFAULT 0');
     add('last_update_error', 'TEXT');
     add('last_update_at', 'TEXT');
+    // Whether the node itself offers "update yourself" (its /health says so).
+    add('self_update', 'INTEGER NOT NULL DEFAULT 0');
     // Nothing can be running in a process that has just started.
     this.db.exec('UPDATE seeders SET last_update_running = 0');
   }
@@ -331,6 +345,8 @@ export class SeedersService {
       peers?: number;
       uploadSpeed?: number;
       downloadSpeed?: number;
+      /** True when the node accepts POST /api/update from the console. */
+      selfUpdate?: boolean;
       stats?: {
         totalTorrents?: number;
         totalPeers?: number;
@@ -360,7 +376,7 @@ export class SeedersService {
         `UPDATE seeders SET status = 'online', last_seen = datetime('now'),
            torrent_count = ?, peer_count = ?, upload_speed = ?, download_speed = ?,
            version = ?, sha = ?, free_bytes = ?, total_bytes = ?,
-           quota_bytes = ?, used_bytes = ?, headroom_bytes = ? WHERE id = ?`,
+           quota_bytes = ?, used_bytes = ?, headroom_bytes = ?, self_update = ? WHERE id = ?`,
       )
       .run(
         data.torrents ?? data.stats?.totalTorrents ?? 0,
@@ -374,6 +390,7 @@ export class SeedersService {
         data.quotaBytes ?? null,
         data.usedBytes ?? null,
         data.headroomBytes ?? null,
+        data.selfUpdate ? 1 : 0,
         id,
       );
 
@@ -528,10 +545,15 @@ export class SeedersService {
   ): Promise<{ started: true; mode: 'build' | 'pull' }> {
     const seeder = this.get(id);
     if (!seeder) throw new NotFoundException('seeder not found');
-    if (!seeder.pinned) {
-      throw new BadRequestException("only this host's own node can be updated from here");
+    // Two ways to update a node, and the node decides which one applies:
+    // pinned is this host (the console drives its own daemon), selfUpdate is a
+    // remote node that accepted the job (it drives its own).
+    if (!seeder.pinned && !seeder.selfUpdate) {
+      throw new BadRequestException(
+        'this node does not update itself — enable self-update on it, or update it on its host',
+      );
     }
-    if (this.config.get<string>('SEEDER_UPDATE') !== '1') {
+    if (seeder.pinned && this.config.get<string>('SEEDER_UPDATE') !== '1') {
       throw new ServiceUnavailableException(
         'node updates are not enabled on this deployment (set SEEDER_UPDATE=1 and mount the Docker socket)',
       );
@@ -542,7 +564,7 @@ export class SeedersService {
     const mode = this.config.get<string>('SEEDER_UPDATE_MODE') === 'build' ? 'build' : 'pull';
     this.updates.set(id, { running: true, error: null });
     this.writeUpdateState(id, true, null);
-    void this.runUpdate(id, mode, actorId);
+    void this.runUpdate(id, mode, actorId, !seeder.pinned);
     return { started: true, mode };
   }
 
@@ -556,16 +578,25 @@ export class SeedersService {
   }
 
   /** Never rejects: the job reports itself through the row and the audit trail. */
-  private async runUpdate(id: number, mode: 'build' | 'pull', actorId?: number): Promise<void> {
+  private async runUpdate(
+    id: number,
+    mode: 'build' | 'pull',
+    actorId?: number,
+    remote = false,
+  ): Promise<void> {
     let error: string | null = null;
     try {
-      await updateSeederService({
-        composeFile: this.config.get<string>('SEEDER_COMPOSE_FILE') ?? '/host/docker-compose.yml',
-        project: this.config.get<string>('SEEDER_COMPOSE_PROJECT') ?? 'open-tilawa',
-        service: this.config.get<string>('SEEDER_SERVICE') ?? 'seeder',
-        mode,
-        timeoutMs: Number(this.config.get<string>('SEEDER_UPDATE_TIMEOUT_MS') ?? 600_000),
-      });
+      if (remote) {
+        await this.startRemoteUpdate(id);
+      } else {
+        await updateSeederService({
+          composeFile: this.config.get<string>('SEEDER_COMPOSE_FILE') ?? '/host/docker-compose.yml',
+          project: this.config.get<string>('SEEDER_COMPOSE_PROJECT') ?? 'open-tilawa',
+          service: this.config.get<string>('SEEDER_SERVICE') ?? 'seeder',
+          mode,
+          timeoutMs: Number(this.config.get<string>('SEEDER_UPDATE_TIMEOUT_MS') ?? 600_000),
+        });
+      }
       // The node comes back on a new image; re-read /health so the row shows the
       // version it is actually running rather than the one it had before. The
       // container is only "started" when compose returns, so give the process a
@@ -576,7 +607,7 @@ export class SeedersService {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         updated = await this.poll(id);
       }
-      this.logger.log(`seeder ${id} updated (${mode}) -> ${updated?.version ?? 'unknown'}`);
+      this.logger.log(`seeder ${id} updated (${mode}) → ${updated?.version ?? 'unknown'}`);
     } catch (err) {
       error = (err as Error).message;
       this.logger.warn(`seeder ${id} update failed: ${error}`);
@@ -586,12 +617,52 @@ export class SeedersService {
     }
     this.audit.record({
       actorId: actorId ?? null,
-      userId: id,
+      // The subject is a node, not an account: `user_id` is a foreign key to
+      // users, and passing the seeder id here made the audit name whichever user
+      // happened to share that number.
+      userId: null,
       action: 'seeder:update',
       target: String(id),
       status: error ? 'error' : 'ok',
-      after: { mode, error, version: this.get(id)?.version ?? null },
+      after: { mode, remote, error, version: this.get(id)?.version ?? null },
     });
+  }
+
+  /**
+   * Ask a remote node to update itself, then wait for the proof.
+   *
+   * The POST answers 202 before the node does anything, so the request's own
+   * success says nothing. What settles it is the sequence every update produces:
+   * `running` while it pulls, then silence while it is recreated, then a node
+   * answering /health again. A failed pull keeps the node up and reports why, so
+   * both outcomes end this loop rather than a timeout.
+   */
+  private async startRemoteUpdate(id: number): Promise<void> {
+    const node = await this.requireSeeder(id);
+    const res = await this.call(node, '/api/update', { method: 'POST' });
+    if (res.status === 404) {
+      throw new Error(
+        "this node's seeder is too old to update itself — update it on its host once, then it can",
+      );
+    }
+
+    const deadline = Date.now() + REMOTE_UPDATE_WAIT_MS;
+    for (;;) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // A node being recreated is offline for a few seconds. That is the normal
+      // middle of an update, not a failure, so the read is allowed to throw.
+      const state = await this.call(node, '/api/update', { method: 'GET' })
+        .then((answer) => this.json<{ running: boolean; error: string | null }>(answer))
+        .catch(() => null);
+      if (state?.error) throw new Error(state.error);
+      const polled = await this.poll(id);
+      // A fresh process answers with `running: false`, so any answer at all after
+      // the silence means the recreate finished.
+      if (state && state.running === false && polled?.status === 'online') return;
+      if (Date.now() > deadline) {
+        throw new Error('the node did not come back within 5 minutes');
+      }
+    }
   }
 
   // ---------- proxy: the seeder's own admin API, on the console's behalf ----------
@@ -825,6 +896,7 @@ function mapSeeder(r: Record<string, unknown>): BaseSeeder {
     hasCredentials: Boolean(r.admin_user && r.admin_pass),
     version: (r.version as string | null) ?? null,
     sha: (r.sha as string | null) ?? null,
+    selfUpdate: Boolean(r.self_update),
     freeBytes: (r.free_bytes as number | null) ?? null,
     totalBytes: (r.total_bytes as number | null) ?? null,
     quotaBytes: (r.quota_bytes as number | null) ?? null,

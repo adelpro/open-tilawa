@@ -276,6 +276,7 @@ export const ar: Catalogue = {
   'torrents.fillNode': 'أضف تلاوات الفهرس',
   'torrents.noSeeders': 'أضف خادم توزيع أولًا — تُدار ملفات التورنت على خادم.',
   'torrents.loadFailed': 'تعذّرت قراءة محتوى الخادم.',
+  'torrents.updateElsewhere': 'هذا الخادم يحدّث نفسه أو يُحدَّث من جهازه، ولا شيء يُضغط هنا.',
   'torrents.removeFailed': 'تعذّرت إزالة الملف.',
   'torrents.signInRequired': 'يلزم تسجيل الدخول.',
 
@@ -437,6 +438,8 @@ export const ar: Catalogue = {
     'يُعاد بناء صورة الخادم من نسخة المستودع المثبّتة على هذا الجهاز، ثم يُعاد تشغيله. تبقى الملفات على القرص، وينقطع التوزيع حتى يعود الخادم.',
   'seeders.updateBodyPull':
     'يسحب الخادم أحدث صورة من سجل الصور ثم يعيد تشغيله. تبقى الملفات على القرص، وينقطع التوزيع حتى يعود الخادم.',
+  'seeders.updateBodyRemote':
+    'يسحب الخادم أحدث صورة وينشئ حاويته من جديد بنفسه. تبقى الملفات على القرص، وينقطع التوزيع ثوانٍ حتى يعود.',
   'seeders.updateCurrent': 'يعمل الآن بالإصدار {version}.',
   'seeders.updateConfirm': 'حدّث وأعد التشغيل',
   'seeders.updatedSoftware': 'حُدّث الخادم — يعمل الآن بالإصدار {version}.',

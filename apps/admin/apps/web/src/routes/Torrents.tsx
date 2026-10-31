@@ -261,6 +261,8 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
   const behind = Boolean(
     node?.version && node.desiredVersion && node.version !== node.desiredVersion,
   );
+  /** This screen can only ask a node that offered the capability. */
+  const updatable = node && (node.pinned || node.selfUpdate) ? node : null;
 
   function toggleSort(key: SortKey): void {
     setSort((current) =>
@@ -316,10 +318,13 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           >
             {t('torrents.probe')}
           </Button>
-          {node?.pinned && (behind || node.updating) ? (
+          {/* Two nodes can update, for two different reasons: this host's own
+              (the console drives it) and a remote node that accepted the job
+              (it drives itself). A node that does neither gets no button. */}
+          {updatable && (behind || updatable.updating) ? (
             <Button
               icon={<Icon name="refresh" />}
-              busy={busy === 'update' || node.updating}
+              busy={busy === 'update' || updatable.updating}
               onClick={() => setConfirmingUpdate(true)}
             >
               {t('seeders.updateSoftware')}
@@ -327,6 +332,12 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           ) : null}
         </div>
       </header>
+
+      {/* A node that is behind but cannot be asked says why, once. Silence next
+          to a red version chip reads as a missing button. */}
+      {node && behind && !updatable ? (
+        <p className="fine-print">{t('torrents.updateElsewhere')}</p>
+      ) : null}
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
@@ -551,7 +562,11 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
         <ConfirmModal
           title={t('seeders.updateTitle')}
           body={t(
-            node.updateMode === 'build' ? 'seeders.updateBodyBuild' : 'seeders.updateBodyPull',
+            node.pinned
+              ? node.updateMode === 'build'
+                ? 'seeders.updateBodyBuild'
+                : 'seeders.updateBodyPull'
+              : 'seeders.updateBodyRemote',
           )}
           hint={t('seeders.updateCurrent', {
             version: node.version ?? t('seeders.versionUnknown'),

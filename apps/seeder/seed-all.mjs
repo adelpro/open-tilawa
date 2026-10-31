@@ -6,6 +6,8 @@ import http from 'http';
 import crypto from 'crypto';
 import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
 import { describePeers, liveWires } from './lib/peers.mjs';
+import { composeSteps, selfUpdateConfig } from './lib/self-update.mjs';
+import { spawn } from 'node:child_process';
 import TRACKERS from './constants/TRACKERS.js';
 import parseTorrent from 'parse-torrent';
 import { readFileSync as readFile, statfsSync } from 'fs';
@@ -257,6 +259,54 @@ for (const tf of torrentFiles) {
 // Admin HTTP server
 const adminHtml = fs.readFileSync(path.join(process.cwd(), 'admin', 'index.html'), 'utf8');
 
+/**
+ * The one seeder action that runs a process: pull its own image and recreate
+ * itself. The state lives here because the console cannot see the node while it
+ * is being recreated — the answer is the node coming back with a new version.
+ */
+const selfUpdateState = { running: false, error: null, at: null };
+
+/** One command with a deadline; its last words are what the console shows. */
+function runComposeStep(args, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('docker', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    // Compose is chatty; the row in the console shows a line, not a transcript.
+    let stderr = '';
+    child.stderr.on('data', (chunk) => {
+      stderr = (stderr + chunk.toString()).slice(-4000);
+    });
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error(`docker timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      reject(new Error(`docker is not available on this node: ${error.message}`));
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code === 0) return resolve();
+      const tail = stderr.trim().split('\n').filter(Boolean).slice(-3).join(' ').slice(0, 300);
+      reject(new Error(tail || `docker exited with ${code}`));
+    });
+  });
+}
+
+/** Never rejects: the outcome is reported through `selfUpdateState`. */
+async function selfUpdate() {
+  const config = selfUpdateConfig();
+  selfUpdateState.running = true;
+  selfUpdateState.error = null;
+  try {
+    for (const step of composeSteps(config)) await runComposeStep(step, config.timeoutMs);
+  } catch (error) {
+    selfUpdateState.error = error.message;
+  } finally {
+    selfUpdateState.running = false;
+    selfUpdateState.at = new Date().toISOString();
+  }
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -284,6 +334,8 @@ const server = http.createServer((req, res) => {
       // A tracker can hand the node its own endpoint, and the handshake against
       // itself succeeds. Those wires are not listeners, so they are not counted.
       peers: client.torrents.reduce((s, t) => s + liveWires(t, client.peerId).length, 0),
+      // The console only offers its update button to nodes that say yes.
+      selfUpdate: selfUpdateConfig().enabled,
       uploadSpeed: client.uploadSpeed,
       downloadSpeed: client.downloadSpeed,
     }));
@@ -362,6 +414,49 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(describePeers(client.torrents, { selfPeerId: client.peerId })));
     return;
+  }
+
+  // Updating this node, on this node's own terms.
+  //
+  // The console can only ask: everything it would run is fixed in
+  // lib/self-update.mjs, and the deployment decides whether the door exists at
+  // all. The reply is 202 before the work starts, because the work recreates the
+  // process answering the request.
+  if (url.pathname === '/api/update') {
+    const config = selfUpdateConfig();
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(
+        JSON.stringify({
+          enabled: config.enabled,
+          running: selfUpdateState.running,
+          error: selfUpdateState.error,
+          at: selfUpdateState.at,
+        }),
+      );
+      return;
+    }
+    if (req.method === 'POST') {
+      if (!config.enabled) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            error:
+              'self-update is not enabled on this node — set SEEDER_SELF_UPDATE=1 and mount the Docker socket and its compose file',
+          }),
+        );
+        return;
+      }
+      if (selfUpdateState.running) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'an update is already running on this node' }));
+        return;
+      }
+      void selfUpdate();
+      res.writeHead(202, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ started: true }));
+      return;
+    }
   }
 
   // Handle POST /api/torrents (add torrent). The inventory branch above is
