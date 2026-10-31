@@ -113,9 +113,10 @@ in [What is actually public](how-it-works/05-public-names.md).*
   (`POST /reciters/push { nodeIds }`, on by default); the push only ever adds and
   skips what will not fit. The node's own screen shows its reported version and
   build SHA, so "is this the release I published?" needs no shell.
-- **Unlinking:** the Remove action is called **Unlink** because that is all it
-  does — `DELETE /api/seeders/:id` drops the console row, and the node keeps
-  running and seeding. Node-side data is removed per torrent, deliberately.
+- **Removing a node:** **Remove node** on the Seeders screen is row-only —
+  `DELETE /api/seeders/:id` drops the console row and the placement and
+  inventory rows cached for it, and the node keeps running and seeding. Node-side
+  data is removed per torrent, deliberately.
 - **Software updates:** `POST /api/seeders/:id/update` runs a fixed compose pair
   against the host daemon through a mounted socket. It is admin-only,
   CSRF-guarded, audited, and only works for the **local** node. Remote nodes

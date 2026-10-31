@@ -91,7 +91,9 @@ Two ways, differing in where the console reaches the node from.
 
 Credentials are stored on the row and used server-side; the API never returns
 them. To change them later, **Seeders → Edit** on the row (omit both fields to
-keep what is stored; **Clear credentials** removes them).
+keep what is stored; **Clear credentials** removes them). **Remove node** on the
+same row drops the console row and its cached placement data; the node itself
+keeps seeding.
 
 ## Provisioning a TURN server
 

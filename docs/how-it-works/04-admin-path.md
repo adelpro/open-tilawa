@@ -14,8 +14,9 @@ The console is not a remote shell. Everything it does goes through the node's ow
 API, which stays the authority — the console reads live inventory, it never keeps
 a copy.
 
-**Unlink** is called that because it is all it does: the row disappears here, the
-node keeps its files and keeps seeding. Removing data is a separate, per-torrent
-action on the node.
+**Remove node** on the Seeders screen is row-only: the console row and the
+placement and inventory data cached for it disappear, and the node keeps its
+files and keeps seeding. Removing data is a separate, per-torrent action on the
+node.
 
 Details: [INFRASTRUCTURE.md](../INFRASTRUCTURE.md) §5.
