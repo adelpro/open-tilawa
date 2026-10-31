@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.13.13 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.5**, **seeder 1.5.7**.
+
+### Changed
+
+- **Recent errors name the surah too.** The row read `2` where the most-played
+  table now reads `2 · البقرة`; both go through the same cell, so the page has one
+  way of saying which surah broke and one place to change it.
+
 ## 1.13.12 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.4**, **seeder 1.5.7**.

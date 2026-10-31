@@ -320,13 +320,7 @@ export function Usage(): ReactElement {
                   {surahs.map((row) => (
                     <tr key={row.surah}>
                       <td>
-                        {/* The id is the stored fact and the sort key; the name is
-                            what an operator actually recognises. Both, in that order. */}
-                        <bdi>{row.surah}</bdi>
-                        <span className="muted" lang="ar" dir="rtl">
-                          {' · '}
-                          <bdi>{surahName(row.surah) ?? '—'}</bdi>
-                        </span>
+                        <SurahCell id={row.surah} />
                       </td>
                       <td className="num">{row.plays}</td>
                       <td>
@@ -509,7 +503,9 @@ export function Usage(): ReactElement {
                       <td title={shortDate(row.at, locale)}>{relative(row.at, locale)}</td>
                       <td>{row.version}</td>
                       <td>{row.reciter}</td>
-                      <td>{row.surah}</td>
+                      <td>
+                        <SurahCell id={row.surah} />
+                      </td>
                       <td>{row.errorCode ?? '—'}</td>
                     </tr>
                   ))}
@@ -523,5 +519,24 @@ export function Usage(): ReactElement {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * A surah in a table cell: the id then its name.
+ *
+ * The id leads because it is the stored value and the sort key; the name is what
+ * an operator actually recognises. The name is Arabic in both locales, so it is
+ * isolated from the surrounding direction rather than translated.
+ */
+function SurahCell({ id }: { id: number }): ReactElement {
+  return (
+    <>
+      <bdi>{id}</bdi>
+      <span className="muted" lang="ar" dir="rtl">
+        {' · '}
+        <bdi>{surahName(id) ?? '—'}</bdi>
+      </span>
+    </>
   );
 }
