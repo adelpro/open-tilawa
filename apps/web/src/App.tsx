@@ -312,6 +312,7 @@ export default function App() {
             openKeys={openKeys}
             close={close}
             onOpenMenu={() => setMenuOpen(true)}
+            route={route}
           />
         )}
 

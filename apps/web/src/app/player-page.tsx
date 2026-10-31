@@ -27,11 +27,13 @@ import {
   torrentErrorAtom,
 } from '@/jotai/player';
 import type { Reciter } from '@/types';
+import type { Parsed } from '@/routes';
 import { seekBy } from '@/utils/clamp';
 import { cn } from '@/utils/cn';
 import type { StreamSource } from '@/utils/stream-source';
 import { streamSourceFor } from '@/utils/stream-source';
 import { surahIdOf } from '@/utils/surah-id';
+import { bootSelection } from '@/utils/boot-selection';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
 import { riwayaLabel } from '@/utils/riwaya';
 
@@ -68,6 +70,7 @@ export default function PlayerPage({
   openKeys,
   close,
   onOpenMenu,
+  route,
 }: {
   sheet: 'surahs' | 'reciters' | 'stream' | 'keys' | null;
   pinned: boolean;
@@ -79,6 +82,8 @@ export default function PlayerPage({
   openKeys: () => void;
   close: () => void;
   onOpenMenu: () => void;
+  /** What the address says, so boot knows whether it is allowed to restore anything. */
+  route: Parsed;
 }) {
   const { t } = useLocale();
   const {
@@ -125,12 +130,24 @@ export default function PlayerPage({
     booted.current = true;
 
     const stored = loadState();
-    const saved = reciters.find((candidate) => candidate.id === stored.reciterId) ?? reciters[0];
-    setReciter(saved);
     setRate(stored.settings.rate ?? 1);
     setVisualiser(normaliseVisualiser(stored.settings.visualiser));
-    restoreFor(saved);
-  }, [reciters, restoreFor, setReciter]);
+
+    // The address wins when it names a recitation: on `/listen/...` this returns null,
+    // because restoring "where they stopped" is what used to overwrite the surah the
+    // link asked for. Settings still come back; the selection does not.
+    const choice = bootSelection({
+      route,
+      reciters,
+      storedReciterId: stored.reciterId,
+      storedSurahId: stored.lastSurahId,
+      savedPositionFor: getPosition,
+    });
+    if (!choice) return;
+
+    setReciter(choice.reciter);
+    selectSurah(choice.surahId, choice.reciter.id);
+  }, [route, reciters, selectSurah, setReciter]);
 
   const pickReciter = (picked: Reciter) => {
     setReciter(picked);

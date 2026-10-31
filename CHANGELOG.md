@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.13.21 — 2026-10-31
+
+Patch. App versions: **web 1.13.6**, **admin 1.32.9**, **seeder 1.5.7**.
+
+### Fixed
+
+- **A `/listen/<reciter>/<surah>` link now opens the surah it names.** It set the reciter
+  and the surah, and then the player's boot step — which restores where the listener
+  stopped — overwrote both with the stored pair. The two raced, and the restore usually
+  won, so every link to a surah landed on Al-Fatihah in whichever reciter was stored. The
+  rule is now written down once, in `bootSelection`: **if the address names what to play,
+  nothing else does.** Settings still come back; the selection does not.
+- The bug predates the surah pages and the language work — staging at 1.13.0 reproduced it
+  exactly — but it is what made them useless: 228 pages whose every row opened the first
+  surah. Found by opening `/listen/maher-al-muaiqly/36-ya-sin` and reading the audio URL
+  (`…/002.mp3`) rather than the screen.
+
 ## 1.13.20 — 2026-10-31
 
 Patch. App versions: **web 1.13.5**, **admin 1.32.9**, **seeder 1.5.7**.
