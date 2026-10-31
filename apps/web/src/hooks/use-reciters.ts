@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Reciter } from '@/types';
 import { toReciters, type CatalogueRow } from '@/utils/catalogue';
+import { sortByArabicName } from '@/utils/reciter-order';
 
 /**
  * The reciter list, served by the admin catalogue.
  *
- * The catalogue is the only source: what is published there is the roster, in
- * that order. There is deliberately no built-in list to fall back to — a stale
+ * The catalogue is the only source: what is published there is the roster, read
+ * alphabetically. There is deliberately no built-in list to fall back to — a stale
  * copy of the roster is how two reciters ended up sharing a name and a stale
  * hash came back from the dead. The last good payload is cached instead, so an
  * outage costs freshness, not the player.
@@ -140,7 +141,11 @@ export function useReciters(): {
 
     try {
       const result = await fetchRosterPage(nextPage, range);
-      setReciters((prev) => [...prev, ...result.reciters]);
+      // A page arrives in catalogue order, so the merge is re-sorted: appending
+      // would leave the alphabetical default broken from the eleventh row on.
+      setReciters((prev) =>
+        sortByArabicName([...prev, ...result.reciters], (reciter) => reciter.name),
+      );
       setPage(nextPage);
       if (total === null) {
         setTotal(result.total);

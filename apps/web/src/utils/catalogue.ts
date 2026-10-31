@@ -1,9 +1,10 @@
 import type { Reciter } from '@/types';
 import { cleanTorrentName } from '@/utils/reciter-name';
+import { sortByArabicName } from '@/utils/reciter-order';
 
 /**
  * What the catalogue serves. The player adds nothing of its own: the roster is
- * this list, in this order, and a row is shown because a human published it.
+ * this list, in reading order, and a row is shown because a human published it.
  */
 export type CatalogueRow = {
   id: number;
@@ -51,5 +52,5 @@ export function toReciters(rows: CatalogueRow[]): Reciter[] {
     });
   }
 
-  return list;
+  return sortByArabicName(list, (reciter) => reciter.name);
 }

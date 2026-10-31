@@ -14,6 +14,18 @@ const row = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+test('the roster arrives in alphabetical order, not catalogue order', () => {
+  const list = toReciters([
+    row({ id: 2, nameAr: 'ياسين الجزائري' }),
+    row({ id: 4, nameAr: 'عبد الباسط عبد الصمد', infohash: 'a'.repeat(40) }),
+    row({ id: 9, nameAr: 'ماهر المعيقلي', infohash: 'b'.repeat(40) }),
+  ]);
+  assert.deepEqual(
+    list.map((reciter) => reciter.name),
+    ['عبد الباسط عبد الصمد', 'ماهر المعيقلي', 'ياسين الجزائري'],
+  );
+});
+
 test('the Arabic name wins over the cleaned torrent name', () => {
   assert.equal(toReciters([row()])[0].name, 'ماهر المعيقلي');
   assert.equal(

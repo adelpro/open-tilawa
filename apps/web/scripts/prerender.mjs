@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { ROUTE_TABLE, surahSlug } from '../src/routes.ts';
 import { pageTitle } from '../src/utils/page-title.ts';
 import { riwayaLabel } from '../src/utils/riwaya.ts';
+import { sortByArabicName } from '../src/utils/reciter-order.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
 
@@ -140,6 +141,12 @@ try {
   if (!response.ok) throw new Error(`catalogue answered ${response.status}`);
   const body = await response.json();
   catalogue = Array.isArray(body.reciters) ? body.reciters : [];
+  // The page must read the way the app reads: /reciters sorts names the same
+  // way the roster does, so the static HTML and the SPA agree row for row.
+  catalogue = sortByArabicName(
+    catalogue,
+    (release) => release.nameAr?.trim() || release.name,
+  );
   if (catalogue.length === 0) throw new Error('catalogue returned no releases');
 } catch (error) {
   console.error(`prerender: ${error instanceof Error ? error.message : error}`);

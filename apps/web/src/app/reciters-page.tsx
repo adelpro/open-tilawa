@@ -13,7 +13,7 @@ import { riwayaLabel } from '@/utils/riwaya';
  * The roster as a page, for the listener who arrives without a reciter in mind.
  *
  * `/reciters` is the one hub with a screen behind it: the catalogue is the whole
- * roster, in its order, and each row is an action — pick this release and go back to
+ * roster, read alphabetically, and each row is an action — pick this release and go back to
  * the player. The panel behind the title chevrons stays the quick way to switch while
  * listening; this is the way to browse before anything is playing.
  *

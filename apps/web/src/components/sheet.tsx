@@ -608,7 +608,7 @@ export function SurahSheet({
   );
 }
 
-/** One row per reciter, catalogue order, with the current one in bold. */
+/** One row per reciter, reading order, with the current one in bold. */
 export function ReciterSheet({
   open,
   reciters,
@@ -659,7 +659,7 @@ export function ReciterSheet({
       searched = searched.filter((r) => (r.riwaya || 'unknown') === filter);
     }
 
-    // Personal scopes keep the order the listener made, not catalogue order:
+    // Personal scopes keep the order the listener made, not reading order:
     // favourites stay in the roster's order, history stays newest first.
     if (scope === 'mine') {
       return searched.filter((r) => favorites.includes(String(r.id)));
