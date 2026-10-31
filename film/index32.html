@@ -89,9 +89,19 @@
   .stream{padding:16px;display:flex;flex-direction:column;gap:13px}
   .srow2{display:flex;align-items:center;justify-content:space-between;gap:24px}
   .sl{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
-  .sv{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sv{direction:ltr;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
   .snote{margin:0;font-size:12px;line-height:1.7;color:var(--muted)}
 
+  .dev{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;font-size:13px;color:var(--ink)}
+  .dev small{font-size:12px;color:var(--muted)}
+  .dev .tag{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--line)}
+  .qrbox{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 2px}
+  .qrbox svg{width:132px;height:132px;display:block}
+  .psolid.press{background:#444;transform:scale(.985)}
+  .pghost{margin-top:12px;width:100%;height:40px;border-radius:8px;border:1px solid var(--line);color:var(--ink);font-size:13px;display:flex;align-items:center;justify-content:center}
+  .pghost.press{background:var(--line)}
+  .ok{color:var(--ink);font-weight:500}
+  .url{position:absolute;top:438px;left:0;right:0;text-align:center;direction:ltr;font-size:28px;letter-spacing:.06em;color:var(--muted);opacity:0}
   .cursor{position:absolute;left:0;top:0;width:22px;height:29px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.22))}
   .mark{position:absolute;top:165px;left:50%;width:538px;transform:translateX(-50%);will-change:transform,filter}
   .mark img{display:block;width:100%}
@@ -155,18 +165,33 @@
 
       <aside class="panel" id="panel-account" style="display:none">
         <div class="head"><h2>الحساب</h2><div class="acts"><span id="i-close3"></span></div></div>
-        <div class="acct">
+        <div class="acct" id="acctA">
           <div class="pcard">
             <p class="pct">حلقة جديدة</p>
             <p class="pcn">الحلقة مفتاح يُولَّد هنا ويُحفظ في هذا المتصفح — لا اسم مستخدم ولا كلمة مرور. أضف جهازاً آخر إليها الآن إن أردت أن تبقى الحلقة ومفضّلاتها بعد فقد هذا الجهاز.</p>
             <span class="pfl">اسم الحلقة</span>
             <div class="pinput"><span id="ringName"></span><span class="caret" id="ringCaret" style="visibility:hidden"></span></div>
-            <div class="psolid">إنشاء حلقة</div>
+            <div class="psolid" id="mkRing">إنشاء حلقة</div>
           </div>
           <div class="pcard">
             <p class="pct">الانضمام إلى حلقة</p>
             <p class="pcn">امسح رمزاً من جهاز داخل الحلقة، فينسخ جهازك المفتاح نفسه.</p>
             <div class="prow"><span>المسح بالكاميرا</span><span>إدخال الرمز يدوياً</span></div>
+          </div>
+        </div>
+        <div class="acct" id="acctB" style="display:none">
+          <div class="pcard">
+            <p class="pct">حلقتك: <b id="rn">البيت</b></p>
+            <p class="pcn" id="devCount">جهاز واحد</p>
+            <p class="pct" style="margin-top:14px">الأجهزة</p>
+            <div class="dev"><span>هذا الجهاز <span class="tag">الأساسي</span></span><small>آخر ظهور الآن</small></div>
+            <div class="dev" id="dev2" style="display:none"><span>الهاتف</span><small>آخر ظهور الآن</small></div>
+          </div>
+          <div class="pcard" id="pairCard">
+            <p class="pct">إضافة جهاز</p>
+            <div class="pghost" id="showCode">إظهار رمز الربط</div>
+            <div class="qrbox" id="qrBox" style="display:none"><div id="qrSvg"></div><p class="pcn" id="qrTime" style="margin:0">ينتهي خلال 120 ثانية</p></div>
+            <p class="pcn ok" id="qrOk" style="display:none">تمت إضافة الجهاز إلى الحلقة</p>
           </div>
         </div>
       </aside>
@@ -180,12 +205,16 @@
   </div>
 
   <div class="mark" id="mark"><img src="brand/logo/logo.png" alt="تلاوة"></div>
+  <div class="url" id="url">tilawah.cc</div>
   <div class="light"></div>
   <div class="grain"></div>
 </div>
 
 <script src="src/icons.js"></script>
 <script src="src/peaks-32.js"></script>
+<script src="src/ribbon-32.js"></script>
+<script src="src/qr.js"></script>
+<script src="src/spectrum.js"></script>
 <script>
 const NS = 'http://www.w3.org/2000/svg';
 const FRONT = '#1c4d78', BACK = '#5d97c9';
@@ -240,55 +269,8 @@ rowsEl.innerHTML = ROWS.map((r, i) => `
   </li>`).join('');
 const rowEls = [...rowsEl.children];
 
-/* the spectrum the film uses: `peaks` — 28 bars, index 0 at the right edge (RTL),
-   with the floating peak caps above each bar. Port of visualiser.tsx drawPeaks. */
-const BARS = 28, GAP = 3;
-const BW = Math.max(2, (W - GAP * (BARS - 1)) / BARS);
-const xFor = i => W - BW - i * (BW + GAP);
-const hFor = level => Math.pow(level, 0.65) * H;
-
 const ribbonEl = document.getElementById('ribbon');
-const svgEl = document.createElementNS(NS, 'svg');
-svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
-svgEl.setAttribute('width', W); svgEl.setAttribute('height', H);
-const barEls = [], capEls = [];
-for (let i = 0; i < BARS; i++) {
-  const b = document.createElementNS(NS, 'rect');
-  b.setAttribute('fill', TINTS[0]);
-  b.setAttribute('x', xFor(i).toFixed(2));
-  b.setAttribute('width', BW.toFixed(2));
-  b.setAttribute('height', 0);
-  b.setAttribute('y', H);
-  svgEl.appendChild(b);
-  barEls.push(b);
-}
-for (let i = 0; i < BARS; i++) {
-  const c = document.createElementNS(NS, 'rect');
-  c.setAttribute('fill', TINTS[0]);
-  c.setAttribute('x', xFor(i).toFixed(2));
-  c.setAttribute('width', BW.toFixed(2));
-  c.setAttribute('height', 1.5);
-  c.setAttribute('y', H - 2);
-  svgEl.appendChild(c);
-  capEls.push(c);
-}
-ribbonEl.appendChild(svgEl);
-
-function drawPeaks(frame){
-  const data = window.WP[Math.max(0, Math.min(window.WP.length - 1, frame))];
-  for (let i = 0; i < BARS; i++) {
-    const level = data[i], peak = data[BARS + i];
-    const h = hFor(level);
-    barEls[i].setAttribute('height', h.toFixed(2));
-    barEls[i].setAttribute('y', (H - h).toFixed(2));
-    if (peak > 0) {
-      capEls[i].setAttribute('y', (H - hFor(peak) - 2).toFixed(2));
-      capEls[i].setAttribute('visibility', 'visible');
-    } else {
-      capEls[i].setAttribute('visibility', 'hidden');
-    }
-  }
-}
+Spectrum.init(ribbonEl);
 
 /* ---------- time ---------- */
 const cam = document.getElementById('cam');
@@ -352,26 +334,26 @@ function cameraAt(t){
     const k = easeIn((t-16.95)/0.45);
     return [2.84 + (1.00-2.84)*k, 1740 + (960-1740)*k, 225 + (480-225)*k];
   }
-  /* 5. the ring, 17.40–21.40 */
-  if (t < 21.40){
+  /* 5. the ring and its devices, 17.40–23.00 */
+  if (t < 23.0){
     if (t < 17.90) return [1.00, 960, 480];
-    if (t < 19.80){ const k = easeInOut((t-17.90)/1.90); return [1.00 + 1.80*k, 960 + 780*k, 480 + (296-480)*k]; }
-    if (t < 20.95){ const k = (t-19.80)/1.15; return [2.80 + 0.04*k, 1740, 296 - 3*k]; }
-    const k = easeIn((t-20.95)/0.45);
-    return [2.84 + (1.00-2.84)*k, 1740 + (960-1740)*k, 293 + (480-293)*k];
+    if (t < 19.50){ const k = easeInOut((t-17.90)/1.60); return [1.00 + 1.20*k, 960 + 780*k, 480 + (275-480)*k]; }
+    if (t < 22.55){ const k = (t-19.50)/3.05; return [2.20 + 0.04*k, 1740, 275 + 12*k]; }
+    const k = easeIn((t-22.55)/0.45);
+    return [2.24 + (1.00-2.24)*k, 1740 + (960-1740)*k, 287 + (480-287)*k];
   }
-  /* 6. the stream, 21.40–26.20 */
-  if (t < 26.20){
-    if (t < 21.90) return [1.00, 960, 480];
-    if (t < 23.70){ const k = easeInOut((t-21.90)/1.80); return [1.00 + 1.80*k, 960 + 780*k, 480 + (268-480)*k]; }
-    if (t < 25.75){ const k = (t-23.70)/2.05; return [2.80 + 0.04*k, 1740, 268 - 3*k]; }
-    const k = easeIn((t-25.75)/0.45);
-    return [2.84 + (1.00-2.84)*k, 1740 + (960-1740)*k, 265 + (480-265)*k];
+  /* 6. the source, 23.00–28.40 */
+  if (t < 28.40){
+    if (t < 23.50) return [1.00, 960, 480];
+    if (t < 25.00){ const k = easeInOut((t-23.50)/1.50); return [1.00 + 1.80*k, 960 + 780*k, 480 + (255-480)*k]; }
+    if (t < 27.95){ const k = (t-25.00)/2.95; return [2.80 + 0.04*k, 1740, 255 - 3*k]; }
+    const k = easeIn((t-27.95)/0.45);
+    return [2.84 + (1.00-2.84)*k, 1740 + (960-1740)*k, 252 + (480-252)*k];
   }
-  /* 7. the page again, 26.20–29.40 */
-  if (t < 29.40){ const k = (t-26.20)/3.20; return [1.20 + 0.02*k, 960, 560 - 4*k]; }
-  /* 8. the close, 29.40–32.00 */
-  const k = (t-29.40)/2.60;
+  /* 7. the page again, 28.40–29.60 */
+  if (t < 29.60){ const k = (t-28.40)/1.20; return [1.20 + 0.02*k, 960, 560 - 2*k]; }
+  /* 8. the close, 29.60–32.00 */
+  const k = (t-29.60)/2.40;
   return [2.60 + 0.02*k, 960, 704 - 3*k];
 }
 
@@ -389,15 +371,15 @@ function panelAt(t){
     if (t < 16.95) return ['surahs', 0, -180];
     return ['surahs', ...dockOut(16.95, 17.40)];
   }
-  if (t >= 17.40 && t < 21.40){
+  if (t >= 17.40 && t < 23.0){
     if (t < 17.90) return ['account', ...dockIn(17.40, 17.90)];
-    if (t < 20.95) return ['account', 0, -180];
-    return ['account', ...dockOut(20.95, 21.40)];
+    if (t < 22.55) return ['account', 0, -180];
+    return ['account', ...dockOut(22.55, 23.0)];
   }
-  if (t >= 21.40 && t < 26.20){
-    if (t < 21.90) return ['stream', ...dockIn(21.40, 21.90)];
-    if (t < 25.75) return ['stream', 0, -180];
-    return ['stream', ...dockOut(25.75, 26.20)];
+  if (t >= 23.0 && t < 28.40){
+    if (t < 23.50) return ['stream', ...dockIn(23.0, 23.50)];
+    if (t < 27.95) return ['stream', 0, -180];
+    return ['stream', ...dockOut(27.95, 28.40)];
   }
   return [null, 360, 0];
 }
@@ -421,19 +403,14 @@ document.getElementById('surahRows').innerHTML = SURAHS.map(([name, meta, size],
 
 const S = (label, iconName, id) => `<div class="srow2"><span class="sl"${id === 'sv-source' ? ' id="sv-source-label"' : ''}>${iconName ? icon(iconName, 18) : ''}${label}</span><span class="sv" id="${id}"></span></div>`;
 document.getElementById('streamRows').innerHTML = `
-  <div class="srow2"><span class="sl" id="sv-source-label">
-    <span id="wa-wrap" style="display:none"><svg class="wifi-bars" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path id="wa1" d="M4.5 9.5a11 11 0 0 1 15 0"/><path id="wa2" d="M7.8 13a6.5 6.5 0 0 1 8.4 0"/><path id="wa3" d="M10.9 16.4a2.2 2.2 0 0 1 2.2 0"/>
-    </svg></span>
-    <span id="wa-plain" style="display:none">${icon('WifiHigh', 18)}</span>المصدر</span><span class="sv" id="sv-source"></span></div>
+  <div class="srow2"><span class="sl">${icon('WifiHigh', 18)}المصدر</span><span class="sv" id="sv-source"></span></div>
   ${S('الأقران', 'Users', 'sv-peers')}
   ${S('التنزيل', 'DownloadSimple', 'sv-down')}
   ${S('الرفع', 'UploadSimple', 'sv-up')}
   ${S('المُنزَّل', 'DownloadSimple', 'sv-done')}
   ${S('التقدّم', 'Pulse', 'sv-prog')}
   ${S('الملفات', 'File', 'sv-files')}
-  ${S('البديل', 'LinkSimple', 'sv-fallback')}
-  <p class="snote" id="sv-note">لم يتصل أي قارئ بعد. التشغيل يبدأ عندما يظهر أوّل قرين.</p>`;
+  ${S('البديل', 'LinkSimple', 'sv-fallback')}`;
 
 document.getElementById('i-pin2').innerHTML = icon('PushPin', 20);
 document.getElementById('i-close2').innerHTML = icon('X', 20);
@@ -457,8 +434,10 @@ const sv = {
   prog: document.getElementById('sv-prog'),
   files: document.getElementById('sv-files'),
   fallback: document.getElementById('sv-fallback'),
-  note: document.getElementById('sv-note'),
 };
+(function(){ const {n, rows} = window.QR, q = 2, z = n + 2*q; let r = '';
+  rows.forEach((row, y) => [...row].forEach((c, x) => { if (c === '1') r += `<rect x="${x+q}" y="${y+q}" width="1" height="1"/>`; }));
+  document.getElementById('qrSvg').innerHTML = `<svg viewBox="0 0 ${z} ${z}" shape-rendering="crispEdges"><rect width="${z}" height="${z}" fill="#fff"/><g fill="#111">${r}</g></svg>`; })();
 const ringName = document.getElementById('ringName');
 const ringCaret = document.getElementById('ringCaret');
 
@@ -499,47 +478,53 @@ function seek(t){
     cursor.style.display = 'none';
   }
 
-  /* the ring name, typed into the product's field */
-  const typed = 'البيت';
-  const keys = Array.from({ length: 5 }, (_, i) => 19.85 + i * 0.20);
-  const n = keys.filter(k => t >= k).length;
+  /* the ring: typed name, create, show the pairing code, second device joins */
   if (kind === 'account'){
+    const typed = 'البيت';
+    const n = Array.from({ length: 5 }, (_, i) => 18.80 + i * 0.20).filter(k => t >= k).length;
     ringName.textContent = typed.slice(0, n);
-    ringCaret.style.visibility = t >= 19.70 ? 'visible' : 'hidden';
+    ringCaret.style.visibility = (t >= 18.65 && t < 20.0) ? 'visible' : 'hidden';
+    document.getElementById('mkRing').classList.toggle('press', t >= 20.00 && t < 20.14);
+    const B = t >= 20.15;
+    document.getElementById('acctA').style.display = B ? 'none' : 'flex';
+    document.getElementById('acctB').style.display = B ? 'flex' : 'none';
+    const joined = t >= 22.00;
+    document.getElementById('showCode').classList.toggle('press', t >= 20.85 && t < 20.99);
+    const showQr = t >= 21.00 && !joined;
+    document.getElementById('showCode').style.display = (t >= 21.00) ? 'none' : 'flex';
+    document.getElementById('qrBox').style.display = showQr ? 'flex' : 'none';
+    document.getElementById('qrTime').textContent = `ينتهي خلال ${Math.max(1, 120 - Math.floor(t - 21.00))} ثانية`;
+    document.getElementById('qrOk').style.display = joined ? 'block' : 'none';
+    document.getElementById('dev2').style.display = joined ? 'flex' : 'none';
+    document.getElementById('devCount').textContent = joined ? 'جهازان' : 'جهاز واحد';
   }
 
-  /* the stream: waiting until a peer answers */
-  const peer = t >= 23.90;
+  /* the source: the web seed answers first (HTTP), then a peer joins (P2P + HTTP) */
+  const peer = t >= 25.60;
   if (kind === 'stream'){
-    sv.source.textContent = peer ? 'P2P' : 'بانتظار الأقران';
-    document.getElementById('wa-wrap').style.display = peer ? 'none' : '';
-    document.getElementById('wa-plain').style.display = peer ? '' : 'none';
-    if (!peer){
-      document.getElementById('wa1').setAttribute('opacity', arcOpacity((t / 1.5) % 1).toFixed(2));
-      document.getElementById('wa2').setAttribute('opacity', arcOpacity(((t + 1.0) / 1.5) % 1).toFixed(2));
-      document.getElementById('wa3').setAttribute('opacity', (0.6 + 0.4 * Math.max(0, Math.cos(2 * Math.PI * (((t / 1.5) % 1) - 0.4)))).toFixed(2));
-    }
+    sv.source.textContent = peer ? 'P2P + HTTP' : 'HTTP';
     sv.peers.textContent = peer ? '1' : '0';
-    sv.down.textContent = peer ? '853 KB/s' : '—';
+    sv.down.textContent = peer ? '853 KB/s' : '640 KB/s';
     sv.up.textContent = peer ? '110 B/s' : '—';
-    sv.done.textContent = '0 B';
-    sv.prog.textContent = '0.0%';
-    sv.files.textContent = peer ? '114' : '0';
+    const done = Math.min(804, Math.round(300 + Math.max(0, t - 23.0) * 70));
+    sv.done.textContent = done + ' KB';
+    sv.prog.textContent = (done / 804 * 100).toFixed(1) + '%';
+    sv.files.textContent = '114';
     sv.fallback.textContent = 'متوفّر';
-    sv.note.style.display = peer ? 'none' : 'block';
   }
 
-  /* clock */
-  const audio = t < 10.0 ? 2.00 + t : t;
+  /* clock: the second voice runs from 11.05 s of the recording */
+  const audio = t < 10.0 ? 2.00 + t : 11.05 + (t - 10.0);
   const total = t < 10.0 ? 51.3 : 34.25;
   posEl.textContent = mmss(Math.min(total, audio));
   durEl.textContent = mmss(total);
   fillEl.style.width = Math.min(100, (audio/total)*100).toFixed(1) + '%';
 
-  /* the mark: 30.50 → 31.12, then a creep */
-  if (t >= 30.50){
-    const k = easeOut((t-30.50)/0.62);
-    const creep = Math.min(1, Math.max(0, (t-31.12)/0.88));
+  /* the mark: 30.20 → 30.82, then a creep; the address follows at 30.95 */
+  document.getElementById('url').style.opacity = easeOut((t-30.95)/0.40).toFixed(3);
+  if (t >= 30.20){
+    const k = easeOut((t-30.20)/0.62);
+    const creep = Math.min(1, Math.max(0, (t-30.82)/1.18));
     mark.style.opacity = 1;
     mark.style.transform = `translateX(-50%) scale(${(1.18 - 0.18*k - 0.004*creep).toFixed(4)})`;
     mark.style.filter = k < 0.999 ? `blur(${(6*(1-k)).toFixed(2)}px)` : 'none';
@@ -547,7 +532,7 @@ function seek(t){
     mark.style.opacity = 0;
   }
 
-  drawPeaks(f);
+  Spectrum.draw(t);
 }
 
 window.__seek = seek;
@@ -555,14 +540,18 @@ window.__duration = 32;
 window.__events = [
   { t: 7.20, frame: 216, type: 'cut', label: 'page → roster' },
   { t: 9.08, frame: 272, type: 'press', label: 'pick الحصري' },
-  { t: 10.00, frame: 300, type: 'beat', label: 'V2 begins' },
+  { t: 10.00, frame: 300, type: 'beat', label: 'V2 begins (source 11.05 s)' },
   { t: 13.80, frame: 414, type: 'cut', label: 'macro → السور' },
   { t: 17.40, frame: 522, type: 'cut', label: 'السور → الحساب' },
-  { t: 21.40, frame: 642, type: 'cut', label: 'الحساب → تفاصيل البث' },
-  { t: 23.90, frame: 717, type: 'beat', label: 'peer connects' },
-  { t: 26.20, frame: 786, type: 'cut', label: 'stream → page' },
-  { t: 29.40, frame: 882, type: 'cut', label: 'page → close' },
-  { t: 30.50, frame: 915, type: 'show', label: 'wordmark' },
+  { t: 20.00, frame: 600, type: 'press', label: 'إنشاء حلقة' },
+  { t: 21.00, frame: 630, type: 'beat', label: 'pairing code shown' },
+  { t: 22.00, frame: 660, type: 'beat', label: 'second device joins' },
+  { t: 23.00, frame: 690, type: 'cut', label: 'الحساب → تفاصيل البث (HTTP)' },
+  { t: 25.60, frame: 768, type: 'beat', label: 'peer connects → P2P + HTTP' },
+  { t: 28.40, frame: 852, type: 'cut', label: 'stream → page' },
+  { t: 29.60, frame: 888, type: 'cut', label: 'page → close' },
+  { t: 30.20, frame: 906, type: 'show', label: 'wordmark' },
+  { t: 30.95, frame: 929, type: 'show', label: 'tilawah.cc' },
 ];
 
 seek(0);

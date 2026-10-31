@@ -1,44 +1,60 @@
-# فيلم تلاوة — 32 s cut (option b)
+# فيلم تلاوة — 32 s cut (v2: seeds, rings, accounts)
 
-`final-32.mp4` · 1920×1080 · 30 fps · 32.0 s · 960 frames · H.264 + AAC (−16 LUFS, −1.5 dBTP)
-Source: `film/index32.html` (plain HTML + `window.__seek(t)`). Spectrum: `peaks` — the app's second option, bars + caps.
+Four deliverables share one pair of pages (`index.html` 21 s, `index32.html` 32 s) and one spectrum module (`src/spectrum.js`):
+
+- `final-21-waves.mp4`, `final-21-bars.mp4`: 21.0 s, 630 frames
+- `final-32-waves.mp4`, `final-32-bars.mp4`: 32.0 s, 960 frames
+
+1920×1080, 30 fps, H.264 + AAC, −16.0 LUFS. `waves` is the app's current ribbon (a loudness history that scrolls left, after PR #1). `bars` is `peaks` (28 columns with caps). Only the spectrum differs between a waves and a bars video.
+
+Render: `node render.mjs --page index32.html --mode waves --audio audio/mix32.wav --out final-32-waves.mp4`.
 
 ---
 
-## 1. What the long cut adds
+## 1. What changed from v1
 
-The 21 s film is one idea: *the page draws the voice, then gets out of the way*. The 32 s cut keeps that spine and opens three more layers of the **same page** — the archive, the ring, the source — with one rule that keeps it from becoming a feature tour: **the recitation never stops.** Not one frame of silence is inserted for the UI beats; the panels are what you do *while listening*. The only cuts are the camera's.
+v1 of the 32 s cut showed **بانتظار الأقران** (waiting for peers) while the recitation was already playing, which contradicts itself, and it never said where the sound came from. The ring was a form with a typed name and nothing after it. v2 fixes both and keeps the rule that the recitation never stops.
 
 | t | shot | what happens | why it holds |
 |---|---|---|---|
-| 0.0–7.2 | the page | pulls back to 1.16, the first voice draws itself, the first pause at 3.34, then the camera turns and pushes | the hook and the product in one take |
-| 7.2–10.0 | القرّاء | the roster docks (the column slides 180 px), the camera dives to 3.2×, the arrow picks الحصري at 9.08 | one click, one consequence: V2 starts at 10.00 |
-| 10.0–13.8 | the second voice | push 1.00 → 4.20, the spectrum at full width | the new voice's own shape |
-| 13.8–17.4 | السور | cut; the mushaf docks; push to 2.80 on rows 1–4: الفاتحة 7 آيات · 804 KB, البقرة 286 آية · 119 MB | **the archive**: 114 rows with real verse counts and real torrent sizes |
-| 17.4–21.4 | الحساب | cut; the panel docks; push to 2.80; «البيت» is typed into the field, the caret running | **the ring**: «مفتاح يُولَّد هنا … لا اسم مستخدم ولا كلمة مرور» |
-| 21.4–26.2 | تفاصيل البث | cut; the panel docks; push to 2.80; **بانتظار الأقران** with the wifi arcs answering, 0 peers, البديل متوفّر — then at **23.90 a peer answers**: P2P, 1 peer, 853 KB/s | **the source**: the P2P claim in the product's own numbers |
-| 26.2–29.4 | the page | cut back to 1.2; the bars, the recitation | the room again |
-| 29.4–32.0 | the close | cut to 2.6; **تلاوة** lands at 30.50 at 1.20×, settles, holds with the bars alive | the name |
+| 0.0–7.2 | the page | pull-back, the first voice draws itself, the pause at 3.4, push in | the hook |
+| 7.2–10.0 | القرّاء | roster docks, arrow picks الحصري at 9.08 | one click, one consequence |
+| 10.0–13.8 | the second voice | push to 4.2× on the spectrum | the new voice's shape |
+| 13.8–17.4 | السور | the archive: 114 rows, real verse counts and sizes | the library |
+| 17.4–23.0 | الحساب | «البيت» is typed, **إنشاء حلقة** is pressed, the ring appears (**حلقتك: البيت**, **جهاز واحد**, this device **الأساسي**); **إظهار رمز الربط** shows a QR with **ينتهي خلال 120 ثانية** counting down; at 22.00 **تمت إضافة الجهاز إلى الحلقة**, the list shows two devices, **جهازان** | **the ring and accounts**: a key on the device, a one-time code, a second device joins |
+| 23.0–28.4 | تفاصيل البث | opens on **HTTP**, 0 peers, 640 KB/s, البديل متوفّر: the web seed is already serving. At 25.60 a peer joins: **P2P + HTTP**, 1 peer, 853 KB/s up 110 B/s | **the seed**: sound starts from the web seed, peers take over |
+| 28.4–29.6 | the page | the spectrum again | the room |
+| 29.6–32.0 | the close | cut to 2.6×; **تلاوة** lands at 30.20, **tilawah.cc** fades in at 30.95 | the name and where to find it |
 
-Six cuts, seven shots. 0–10.0 s is unchanged from the 21 s film (frame for frame), so the two versions share their opening.
+The panel cuts now match what the app does: the web seed answers after the P2P wait, stays connected, and the pieces a listener has received can be shared.
 
 ## 2. What is real
 
-- Both recitations: المنشاوي 2.00–12.00 s (film 0–10), الحصري 10.00–32.00 s (film 10–32), loudness-matched, joined where the first voice pauses.
-- The spectrum: the `peaks` chain (AnalyserNode + `downsample` + `drawPeaks`), 960 frames from the real audio (`src/peaks-32.js`).
-- Every string; the type; the tokens; the wordmark; the geometry (title 237.6/56 px, ribbon 520×160 at (700,683), roster/surah panels 360 px docked right, rows 64 px, the 180 px column shift).
-- The roster's names, riwayat and counts; the surah list's verse counts, juz and file sizes; the stream numbers from a real 1-peer session (853 KB/s).
-- The wifi glyph's animation: `.wifi-arc` 1.5 s, the middle arc delayed 0.5 s, the dot peaking at 40 % — computed per frame from `t`, not a CSS animation, so it is frame-exact in the render.
+- Both recitations: المنشاوي (source 2.00–12.00 s) then الحصري (source 11.05–33.05 s), loudness-matched and joined at a pause. 11.05 is an onset, so the voice runs unbroken to the last frame.
+- The spectrum: `bars` is a port of `drawPeaks`; `waves` is a port of the ribbon in `apps/web/src/components/visualiser.tsx` (30 Hz reads, `peakMagnitude`, envelope attack .25 / release .06, `autoGain`, a push every 60 ms, per-layer rise and fall, draw gains 1/.8/.62/.46). `src/data.py` generates both from the same audio.
+- Every UI string on the account and stream sheets, the sources (HTTP, P2P + HTTP), the 2-minute code lifetime, the keypair-on-device model.
+- The roster names and counts, the surah list, the geometry.
 
-**Built (declared):** the page is a rebuilt DOM fragment; the typed name «البيت» is illustrative content (not a real ring); the peer "arriving" at 23.90 is a compressed 8-second real-world wait; the paper grain and the ticks are added; the arrow is designed.
+## 3. Built, declared
 
-## 3. Gates
+- **The ribbon history before t=0.** The ribbon is a history, so at frame 0 it must already be full. The 13 s before t=0 are a real stretch of the same Minshawi recitation (source 23.64–36.64, ending where his pause ends) plus the real 0–2 s of the file.
+- **Ring name «البيت», device name «الهاتف», the QR.** Illustrative. The QR is a real, scannable code for the demo payload `tilawa://ring/demo-7f3a`, which is not a real ring (`src/qr.js`).
+- **Stream numbers.** 640 KB/s (HTTP) and 853 KB/s / 110 B/s (1 peer) are plausible figures from a real session, not a capture of this one. The downloaded bytes and the progress climb on a made-up schedule (300 KB at 23.0, +70 KB/s, capped at the 804 KB file size).
+- **The timing.** The web seed starts after an 8 s wait with 0 peers in the app. The film compresses that: the stream sheet opens already on HTTP.
+- **The «tilawah.cc» line.** Added so the film ends on an address. Remove it by deleting `#url` if you prefer the name alone.
+- Page grain, cursor choreography, camera, motion blur (180° shutter averaged from three captures on frames where something moves more than 1.5 px).
+- Flat tops in `waves`: the front layer clips at the top on loud passages. That is the app's own clamp (`Math.min(1, sample * auto * gain)`), kept as it is.
 
-*(filled from `look.py` / `lint.mjs` after the render — see the reply)*
+## 4. Gates (measured on the files)
 
-## 4. What I would change next
+- Frames: 630 and 960, 30 fps, audio length equals video length (21.000 s, 32.000 s).
+- Loudness: −16.0 LUFS integrated on all four. True peak −1.5 dBFS (21 s) and −3.1 dBFS (32 s).
+- No silence at the end: the last silence in the 32 s film ends at 19.56 s, and the voice runs to the last frame.
+- Silences in the film are the recitation's real pauses (3.4–4.7 s, 8.7–10.0 s, 11.9–12.5 s, 14.5–15.1 s, 18.7–19.6 s).
+- Not measured here: the human-motion band and cut-to-onset sync that the v1 gates reported (`look.py` is no longer in the repo).
 
-- **The first 3 s are still the stillest** (`static-ish 1.67–4.73 s`): the pull-back plus the pause. A slow push inside the hook would give it a heartbeat without making it busy.
-- **Cut sync is 1 of 7** within ±80 ms of a sound onset. That is deliberate — the voice runs across the cuts — but a viewer who reads cuts as musical hits will feel the panels arrive off-beat. Moving the three panel cuts onto onsets (13.72, 21.28, 26.42) is a one-line change if you want it.
-- **The account beat is the quietest** of the three: 4 s on one card with a typed name. If it needs more, the join card (scan / enter code) is already built and one camera move away.
-- **The panel pushes were re-timed** after the first render: at 2.2–3.4× per second the 180° shutter turned the rows into ghost strokes. All three now run 1.00 → 2.80 over ~1.9 s (≈0.95×/s), which keeps the text sharp and still lands on a readable hold.
+## 5. What I would change next
+
+- **The pairing beat is 2.5 s of QR.** If it reads as slow, shorten the countdown hold; if it reads as fast, move the join to 22.5.
+- **Panel cuts do not land on sound onsets.** Deliberate, the voice runs across them.
+- **mobile-intro (9:16) is not re-rendered.** It still uses the old ribbon and is documented as superseded in NOTE.md.

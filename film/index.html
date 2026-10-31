@@ -68,6 +68,7 @@
   .mark{position:absolute;top:165px;left:50%;width:538px;transform:translateX(-50%);will-change:transform,filter}
   .mark img{display:block;width:100%}
 
+  .url{position:absolute;top:438px;left:0;right:0;text-align:center;direction:ltr;font-size:28px;letter-spacing:.06em;color:var(--muted);opacity:0}
   .light{position:absolute;inset:0;pointer-events:none;background:
     radial-gradient(120% 85% at 22% -12%, rgba(20,30,45,.028), rgba(20,30,45,0) 58%),
     radial-gradient(95% 70% at 104% 112%, rgba(20,30,45,.014), rgba(20,30,45,0) 60%)}
@@ -123,21 +124,18 @@
   </div>
 
   <div class="mark" id="mark"><img src="brand/logo/logo.png" alt="تلاوة"></div>
+  <div class="url" id="url">tilawah.cc</div>
   <div class="light"></div>
   <div class="grain"></div>
 </div>
 
 <script src="src/icons.js"></script>
 <script src="src/peaks-film.js"></script>
+<script src="src/ribbon-21.js"></script>
+<script src="src/spectrum.js"></script>
 <script>
-const NS = 'http://www.w3.org/2000/svg';
-const FRONT = '#1c4d78', BACK = '#5d97c9';
-const TINTS = [0, 1/3, 2/3, 1].map(t => mixHex(FRONT, BACK, t));
-const ALPHA = [0.72, 0.55, 0.42, 0.30];
 const W = 520, H = 160, POINTS = 240, FPS = 30, DUR = 21, SEAM = 10.0;
 
-function parseHex(v){ v = v.replace('#',''); return [0,2,4].map(i => parseInt(v.slice(i,i+2),16)); }
-function mixHex(a,b,t){ const A=parseHex(a),B=parseHex(b); return '#'+A.map((x,i)=>Math.round(x+(B[i]-x)*Math.min(1,Math.max(0,t))).toString(16).padStart(2,'0')).join(''); }
 function icon(name, size){ const d = (window.ICONS[name]||[''])[0]; return `<svg viewBox="0 0 256 256" width="${size}" height="${size}" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`; }
 
 /* icons */
@@ -183,55 +181,8 @@ rowsEl.innerHTML = ROWS.map((r, i) => `
   </li>`).join('');
 const rowEls = [...rowsEl.children];
 
-/* the spectrum the film uses: `peaks` — 28 bars, index 0 at the right edge (RTL),
-   with the floating peak caps above each bar. Port of visualiser.tsx drawPeaks. */
-const BARS = 28, GAP = 3;
-const BW = Math.max(2, (W - GAP * (BARS - 1)) / BARS);
-const xFor = i => W - BW - i * (BW + GAP);
-const hFor = level => Math.pow(level, 0.65) * H;
-
-const ribbonEl = document.getElementById('ribbon');
-const svgEl = document.createElementNS(NS, 'svg');
-svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
-svgEl.setAttribute('width', W); svgEl.setAttribute('height', H);
-const barEls = [], capEls = [];
-for (let i = 0; i < BARS; i++) {
-  const b = document.createElementNS(NS, 'rect');
-  b.setAttribute('fill', TINTS[0]);
-  b.setAttribute('x', xFor(i).toFixed(2));
-  b.setAttribute('width', BW.toFixed(2));
-  b.setAttribute('height', 0);
-  b.setAttribute('y', H);
-  svgEl.appendChild(b);
-  barEls.push(b);
-}
-for (let i = 0; i < BARS; i++) {
-  const c = document.createElementNS(NS, 'rect');
-  c.setAttribute('fill', TINTS[0]);
-  c.setAttribute('x', xFor(i).toFixed(2));
-  c.setAttribute('width', BW.toFixed(2));
-  c.setAttribute('height', 1.5);
-  c.setAttribute('y', H - 2);
-  svgEl.appendChild(c);
-  capEls.push(c);
-}
-ribbonEl.appendChild(svgEl);
-
-function drawPeaks(frame){
-  const data = window.WP[Math.max(0, Math.min(window.WP.length - 1, frame))];
-  for (let i = 0; i < BARS; i++) {
-    const level = data[i], peak = data[BARS + i];
-    const h = hFor(level);
-    barEls[i].setAttribute('height', h.toFixed(2));
-    barEls[i].setAttribute('y', (H - h).toFixed(2));
-    if (peak > 0) {
-      capEls[i].setAttribute('y', (H - hFor(peak) - 2).toFixed(2));
-      capEls[i].setAttribute('visibility', 'visible');
-    } else {
-      capEls[i].setAttribute('visibility', 'hidden');
-    }
-  }
-}
+/* the spectrum: bars (`peaks`) or waves (`ribbon`), chosen by ?mode= — see src/spectrum.js */
+Spectrum.init(document.getElementById('ribbon'));
 
 /* ---------- time ---------- */
 const cam = document.getElementById('cam');
@@ -239,6 +190,7 @@ const col = document.getElementById('col');
 const panel = document.getElementById('panel');
 const cursor = document.getElementById('cursor');
 const mark = document.getElementById('mark');
+const urlEl = document.getElementById('url');
 const posEl = document.getElementById('pos');
 const fillEl = document.getElementById('fill');
 const durEl = document.getElementById('dur');
@@ -255,8 +207,8 @@ const CAM = [
 ];
 function cameraAt(t){
   /* 0–7.20 one continuous camera: pull back, turn around, push in */
-  if (t < 4.20){ const k = easeOut(t/4.20); return [1.30 - 0.14*k, 960, 600 - 44*k]; }
-  if (t < 7.20){ const k = easeInOut((t-4.20)/3.00); return [1.16 + 2.04*k, 960 - 10*k, 556 + 129*k]; }
+  if (t < 3.40){ const k = easeOut(t/3.40); return [1.30 - 0.14*k, 960, 600 - 44*k]; }
+  if (t < 7.20){ const k = easeInOut((t-3.40)/3.80); return [1.16 + 2.04*k, 960 - 10*k, 556 + 129*k]; }
   if (t < 10.0){
     if (t < 7.75) return [1.00, 960, 480];
     if (t < 8.55){ const k = easeInOut((t-7.75)/0.80); return [1.00 + 2.20*k, 960 + 780*k, 480 + 120*k]; }
@@ -336,8 +288,10 @@ function seek(t){
   } else {
     mark.style.opacity = 0;
   }
+  /* the address, once the name has settled */
+  urlEl.style.opacity = easeOut((t - 20.30) / 0.50).toFixed(3);
 
-  drawPeaks(f);
+  Spectrum.draw(t);
 }
 
 window.__seek = seek;
@@ -348,6 +302,7 @@ window.__events = [
   { t: 10.00, frame: 300, type: 'beat', label: 'V2 begins' },
   { t: 17.00, frame: 510, type: 'cut', label: 'macro → close' },
   { t: 19.55, frame: 587, type: 'show', label: 'wordmark' },
+  { t: 20.30, frame: 609, type: 'show', label: 'tilawah.cc' },
 ];
 seek(0);
 </script>
