@@ -592,6 +592,7 @@ export function Usage(): ReactElement {
             <p className="muted">
               {t('usage.lastPruned')} {summary.lastPrunedAt ?? '—'}
             </p>
+            <p className="muted">{t('usage.pruneNote')}</p>
           </Panel>
         </>
       )}

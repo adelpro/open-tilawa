@@ -51,7 +51,7 @@ export const en = {
   'usage.exact': 'exact',
   'usage.approx': 'approximate',
   'usage.volumeNote':
-    'From the server is exact: it is read from the server’s own log and counts what left it, not what moved between peers. From peers is approximate: it is the difference between two samples of each node’s counter, so an interval lost to a restart is lost here. The two numbers are never added.',
+    'Server (exact): read from the server’s own log; it counts what left the server, not what moved between peers. Peers (approximate): the difference between two samples of each node’s counter. The two are never added.',
   'usage.devices': 'Devices that reported',
   'usage.devicesCount': 'Devices',
   'usage.devicesToday': 'Devices that reported today: {count}',
@@ -65,10 +65,12 @@ export const en = {
   'usage.listenersCount': 'Played',
   'usage.playedShare': 'Share who played',
   'usage.funnelNote':
-    'Both rows are daily counters with no identifier: a device that opened the app is not a device that played, and the gap between them is how many left before pressing play. A floor, not a count of people.',
+    'Devices that opened the app today are counted with no tracking number, and of them the devices that actually started a play. Each device counts once a day with no identifier, so no two days can be joined. The number stands for devices, not people, and covers only those who switched statistics on for their device.',
   'usage.recent': 'Recent errors',
   'usage.errorCode': 'Error',
   'usage.lastPruned': 'Last pruned:',
+  'usage.pruneNote':
+    'Pruning rolls events into daily tables, then deletes raw events older than 90 days. The daily tables remain, and the time of the last run is recorded (the number of rows deleted is not recorded).',
   'nav.seeders': 'Seeders',
   'nav.turns': 'TURN servers',
   'nav.reciters': 'Reciters',
