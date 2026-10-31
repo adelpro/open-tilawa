@@ -126,6 +126,14 @@ rather than the screen, and exits non-zero on any failure. 1.13.21 was a release
 where every surah page opened Al-Fatihah, and nothing in the build or the tests
 could see it: the URL was right and the file was wrong.
 
+The sitemap has a second, stricter audit — the failures Search Console reports days
+later rather than when you look, such as a listed page that is `noindex`, a canonical
+pointing somewhere else, or an `hreflang` group that is not reciprocal:
+
+```bash
+cd apps/web && python3 scripts/sitemap-audit.py   # SITEMAP_SITE= to aim elsewhere
+```
+
 The version lines are the ones that catch a half-done bump, because each app
 surface reads a different file. 1.8.0 shipped with three of admin's four
 `package.json` files left on the previous version; every screen looked right
