@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.13.27 — 2026-10-31
+
+Patch. App versions: **web 1.13.10**, **admin 1.32.12**, **seeder 1.5.7**.
+
+### Fixed
+
+- **A reciter's reading is printed once.** The seeded Arabic names for the Warsh,
+  Qalon and al-Douri releases carried the reading in parentheses, while the Hafs
+  rows did not, because `riwaya` is a column of its own and every surface — roster,
+  player, prerendered page — already prints it beside the name. Half the catalogue
+  therefore said it twice (`/reciters` read `صابر عبد الحكم (ورش) — ورش`) and half
+  once. The seed no longer carries the reading, a row still holding the exact seeded
+  string is rewritten in place so a live database heals on restart, and a name typed
+  in the console is left alone. `(مجوّد)` and `(تحديث)` are style and edition
+  markers, not readings, and stay. `player-page` no longer needs the string check
+  that hid the duplicate.
+
 ## 1.13.26 — 2026-10-31
 
 Patch. App versions: **web 1.13.9**, **admin 1.32.11**, **seeder 1.5.7**.
