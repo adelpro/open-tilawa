@@ -4,7 +4,6 @@ import { test } from 'node:test';
 import {
   mediaBase,
   mediaFileUrl,
-  mediaUrl,
   mediaUrlForFile,
   shouldAddWebSeed,
   shouldRetryDirect,
@@ -23,14 +22,18 @@ test('the web seed waits out the grace period with no peers', () => {
 test('media URLs match the torrent layout', () => {
   assert.equal(mediaBase('https://tilawa.quran.us.kg'), 'https://tilawa.quran.us.kg/media/');
   assert.equal(
-    mediaUrl('https://tilawa.quran.us.kg', 'Quran-MP3-Ghamdi', 2),
+    mediaBase('https://tilawa.quran.us.kg/'),
+    'https://tilawa.quran.us.kg/media/',
+  );
+  assert.equal(
+    mediaFileUrl('https://tilawa.quran.us.kg', 'Quran-MP3-Ghamdi', '002.mp3'),
     'https://tilawa.quran.us.kg/media/Quran-MP3-Ghamdi/002.mp3',
   );
   assert.equal(
-    mediaUrl(
+    mediaFileUrl(
       'https://tilawa.quran.us.kg',
       'The Holy Quran MP3 recited by Mishary Rashid Al Afasy',
-      114,
+      '114.mp3',
     ),
     'https://tilawa.quran.us.kg/media/The%20Holy%20Quran%20MP3%20recited%20by%20Mishary%20Rashid%20Al%20Afasy/114.mp3',
   );
@@ -46,10 +49,6 @@ test('a named file resolves to the same torrent layout', () => {
   assert.equal(
     mediaFileUrl('https://tilawah.cc/', 'Quran MP3', '002.mp3'),
     'https://tilawah.cc/media/Quran%20MP3/002.mp3',
-  );
-  assert.equal(
-    mediaUrl('https://tilawah.cc', 'Quran-MP3-Ghamdi', 2),
-    mediaFileUrl('https://tilawah.cc', 'Quran-MP3-Ghamdi', '002.mp3'),
   );
 });
 

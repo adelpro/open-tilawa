@@ -34,20 +34,12 @@ export function mediaBase(origin: string): string {
 }
 
 /**
- * `https://host/media/<torrent folder>/<NNN>.mp3` — the same path WebTorrent
- * builds itself (`<base>/<torrent name>/<file>`), which is why nginx can serve
- * the downloads volume as-is.
- */
-export function mediaUrl(origin: string, folder: string, surahId: number): string {
-  return mediaFileUrl(origin, folder, `${String(surahId).padStart(3, '0')}.mp3`);
-}
-
-/**
- * The same URL for a file whose name we did not build.
+ * `https://host/media/<torrent folder>/<file>` — the same path WebTorrent builds
+ * itself (`<base>/<torrent name>/<file>`), which is why nginx can serve the
+ * downloads volume as-is.
  *
- * Catalogues are not uniformly `001.mp3` (`ar_001_Al-Fatiha.mp3` exists), and a
- * fallback that guesses the name 404s. Each segment is encoded separately: the
- * folder is one path segment on disk, not a place slashes may appear.
+ * Each segment is encoded separately: the folder and the file name are one path
+ * segment each on disk, not places where `/` may appear.
  */
 export function mediaFileUrl(origin: string, folder: string, fileName: string): string {
   return `${mediaBase(origin)}${encodeURIComponent(folder)}/${encodeURIComponent(fileName)}`;
@@ -89,11 +81,10 @@ export function shouldRetryDirect(input: {
   return !input.alreadyTried && input.code === 4;
 }
 
-/** One HEAD per file per session; the sheet and the timer share the answer. */
+/** One HEAD per URL per session; the sheet and the timer share the answer. */
 const probes = new Map<string, Promise<boolean>>();
 
-export function probeMedia(origin: string, folder: string, surahId: number): Promise<boolean> {
-  const url = mediaUrl(origin, folder, surahId);
+export function probeMedia(url: string): Promise<boolean> {
   let pending = probes.get(url);
   if (!pending) {
     pending = fetch(url, { method: 'HEAD' })

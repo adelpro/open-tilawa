@@ -8,7 +8,8 @@ import type { Messages } from '@/i18n/messages';
 import type { TorrentInfo } from '@/types';
 import { formatBytes, formatSpeed } from '@/utils/format-bytes';
 import type { StreamSource } from '@/utils/stream-source';
-import { probeMedia } from '@/utils/webseed';
+import { surahIdOf } from '@/utils/surah-id';
+import { mediaFileUrl, probeMedia } from '@/utils/webseed';
 
 type Row = { label: string; value: string; icon: 'users' | 'download' | 'upload' | 'activity' | 'file' };
 
@@ -21,6 +22,16 @@ function rowsFor(torrent: TorrentInfo | undefined, t: Messages): Row[] {
     { label: t.stream.progress, value: `${((torrent?.progress ?? 0) * 100).toFixed(1)}%`, icon: 'activity' },
     { label: t.stream.files, value: `${torrent?.files.length ?? 0}`, icon: 'file' },
   ];
+}
+
+/**
+ * The file this surah actually is. Catalogues are not uniformly `001.mp3`
+ * (`ar_001_Al-Fatiha.mp3` ships too), so the probe asks for the name the torrent
+ * gave it — a rebuilt one is a 404, and the row would claim the fallback is
+ * missing while it is right there.
+ */
+function trackFor(torrent: TorrentInfo | undefined, surahId: number) {
+  return torrent?.files.find((file, index) => surahIdOf(file, index) === surahId);
 }
 
 const FALLBACK_LABEL = {
@@ -54,11 +65,13 @@ export default function StreamSheet({
   );
 
   const folder = torrent?.name ?? '';
+  const track = trackFor(torrent, surahId);
+  const fileName = typeof track?.file?.name === 'string' ? track.file.name : '';
 
   useEffect(() => {
-    // Without metadata there is no folder to ask about: the row says so instead
+    // Without metadata there is no path to ask about: the row says so instead
     // of sitting on "checking" for a torrent that never arrived.
-    if (!folder) {
+    if (!folder || !fileName) {
       setFallback('unknown');
       return;
     }
@@ -68,13 +81,13 @@ export default function StreamSheet({
     }
     let live = true;
     setFallback('checking');
-    void probeMedia(window.location.origin, folder, surahId).then((available) => {
+    void probeMedia(mediaFileUrl(window.location.origin, folder, fileName)).then((available) => {
       if (live) setFallback(available ? 'available' : 'missing');
     });
     return () => {
       live = false;
     };
-  }, [open, folder, surahId]);
+  }, [open, folder, fileName, surahId]);
 
   const sourceLabel =
     source === 'mixed'
