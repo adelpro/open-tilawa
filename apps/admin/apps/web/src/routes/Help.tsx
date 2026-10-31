@@ -106,6 +106,17 @@ export function Help(): ReactElement {
               <li className="body">{t('help.seeder.step7')}</li>
             </ol>
             <p className="body muted">{t('help.seeder.step8')}</p>
+            <ol className="stack" start={9}>
+              <li className="body">{t('help.seeder.step9')}</li>
+            </ol>
+            {/* For a node installed before the button existed. Literal, because a
+                translated command is a command that does not run. */}
+            <CopyLine
+              value={
+                'curl -fsSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/enable-seeder-self-update.sh | sudo bash'
+              }
+              label={copy}
+            />
           </div>
         </details>
       </Panel>

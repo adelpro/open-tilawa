@@ -155,7 +155,7 @@ export const en = {
   'seeders.deployMore': 'Read the full guide on the help page',
   'seeders.installTitle': 'Install command',
   'seeders.installHint':
-    'Runs the installer on the node as root. Add --disk 500 to cap it at 500 GB; without it the node fills the disk.',
+    'Runs the installer on the node as root. Add --disk 500 to cap it at 500 GB; without it the node fills the disk. The node can then be updated from its own page or from here.',
   'seeders.portsTitle': 'Open the peer port',
   'seeders.portsHint':
     'Torrent traffic only, and only on hosts running ufw. Do not open 8085: it answers the admin credentials and can add and delete torrents, so the console reaches it over the Docker network, the LAN or the tailnet.',
@@ -367,6 +367,8 @@ export const en = {
     "Register it under Nodes with the same URL and credentials, then go to Reciters and tick the nodes that should carry each reciter. Placement is recorded: pending until the node confirms, failed if it never does, or if the node stops reporting it. Prefer the node's Tailscale name over its IP, so the row survives a new address.",
   'help.seeder.step8':
     'The console never fills a node past 90 % of its quota. When a bulk top-up stops short it says how many reciters it left out, so an incomplete node is never silent.',
+  'help.seeder.step9':
+    "Updating is one button — on the node's own page and on this screen. A node installed before this release needs one command on its host to grant itself that right, and then behaves the same. Auto-update is separate, per node, and off until someone switches it on.",
   'help.turn.title': 'Tutorial — a TURN server',
   'help.turn.step1':
     'Set the realm, credentials and public IP in the root .env. The realm is what the server calls itself; the IP is how peers outside your network reach it.',

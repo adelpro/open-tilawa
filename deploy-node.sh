@@ -3,7 +3,7 @@
 # Usage: curl -sSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-node.sh | bash -s -- --type seeder
 #   or:  bash deploy-node.sh --type turn --port 3478
 #   or:  bash deploy-node.sh --type seeder --disk 500 --upload-kbps 20000 --watchtower
-#   or:  bash deploy-node.sh --type seeder --self-update   # the console may update it
+#   or:  bash deploy-node.sh --type seeder --no-self-update  # refuse console updates
 set -euo pipefail
 
 # Defaults
@@ -23,10 +23,12 @@ ADMIN_UI="${ADMIN_UI:-1}"
 # Inbound peer port. Published because a node that only dials out is invisible
 # to peers that cannot reach it.
 PEER_PORT="${PEER_PORT:-6881}"
-# Off by default: with it on, the node accepts "update yourself" from the console
-# and runs `docker compose pull && up -d` through the host daemon. That is root on
-# this host behind the node's admin password, so the operator opts in.
-SELF_UPDATE="${SELF_UPDATE:-0}"
+# On by default from here: the node accepts "update yourself" from its own page or
+# from the console, and runs `docker compose pull && up -d` through the host daemon
+# in a sibling container. That is root on this host behind the node's admin
+# password — the same password the console already holds to manage torrents — so
+# the trade is stated in the summary, and --no-self-update refuses it.
+SELF_UPDATE="${SELF_UPDATE:-1}"
 
 # Kept because the parse loop shifts everything away, and the root guard has to
 # print the invocation it actually received.
@@ -49,6 +51,7 @@ while [[ $# -gt 0 ]]; do
     --peer-port) PEER_PORT="$2"; shift 2 ;;
     --watchtower) WATCHTOWER=1; shift ;;
     --self-update) SELF_UPDATE=1; shift ;;
+    --no-self-update) SELF_UPDATE=0; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -69,7 +72,20 @@ if [[ "$(id -u)" -ne 0 ]]; then
 fi
 
 # The seeder refuses to start without a real password: its admin API can add and
-# delete torrents. Generate one when the operator did not supply one.
+# delete torrents. Generate one when the operator did not supply one — but never
+# on a node that already exists: rewriting the compose with a fresh password
+# would silently cut the console off from a node it is managing.
+EXISTING_COMPOSE="/opt/tilawa-seeder/docker-compose.yml"
+if [[ "$TYPE" == "seeder" && -z "$ADMIN_PASS" && -f "$EXISTING_COMPOSE" ]]; then
+  EXISTING_PASS="$(sed -n 's/^ *ADMIN_PASS: *//p' "$EXISTING_COMPOSE" | head -1)"
+  EXISTING_USER="$(sed -n 's/^ *ADMIN_USER: *//p' "$EXISTING_COMPOSE" | head -1)"
+  if [[ -n "$EXISTING_PASS" ]]; then
+    ADMIN_PASS="$EXISTING_PASS"
+    ADMIN_USER="${EXISTING_USER:-$ADMIN_USER}"
+    echo "Reusing the admin credentials already in $EXISTING_COMPOSE."
+    echo "Pass --admin-pass to change them deliberately."
+  fi
+fi
 if [[ "$TYPE" == "seeder" && -z "$ADMIN_PASS" ]]; then
   ADMIN_PASS="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)"
   echo "Generated ADMIN_PASS for this node: $ADMIN_PASS"
@@ -281,6 +297,12 @@ fi
     echo "Username:  ${ADMIN_USER}"
     echo "Password:  ${ADMIN_PASS}"
     echo "${QUOTA_LINE}"
+    if [[ "${SELF_UPDATE}" == "1" ]]; then
+      echo "Updates:   the node updates itself from its own page or the console"
+      echo "           (it holds the Docker socket; --no-self-update removes that)"
+    else
+      echo "Updates:   manual — this node refuses console updates (--self-update adds them)"
+    fi
     if (( DISK_GB == 0 )); then
       echo "Cap it later: edit DISK_QUOTA_GB in /opt/tilawa-seeder/docker-compose.yml, then:"
       echo "  cd /opt/tilawa-seeder && docker compose up -d"

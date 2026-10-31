@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.13.8 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.1**, **seeder 1.5.5**.
+
+### Changed
+
+- **A new node arrives ready to update itself.** `deploy-node.sh` now enables
+  self-update by default (`--no-self-update` refuses it) and says which mode the
+  node is in when it finishes. The trade is printed beside it, because the socket
+  makes the node's admin password root on its own host.
+- **Re-running the installer no longer invents a password.** On a node that
+  already has a compose file it reuses the stored admin user and password and says
+  so; the old behaviour silently cut the console off from a node it managed.
+
+### Added
+
+- **The seeder tutorial has an update step**, with the one-command enabler for
+  nodes installed earlier, and the install hint now says the node can be updated
+  from its own page or from the console.
+
 ## 1.13.7 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.0**, **seeder 1.5.5**.
