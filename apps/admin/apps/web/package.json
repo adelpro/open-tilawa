@@ -1,6 +1,6 @@
 {
   "name": "@tilawa-admin/web",
-  "version": "1.32.9",
+  "version": "1.32.10",
   "private": true,
   "description": "Tilawa Admin console — Vite + React.",
   "license": "MIT",

@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.13.24 — 2026-10-31
+
+Patch. App versions: **web 1.13.8**, **admin 1.32.10**, **seeder 1.5.7**.
+
+### Changed
+
+- **The usage console now says what its numbers mean.** The device note explains what
+  each of the two daily counts covers, that the second is a subset of the first, why two
+  days cannot be joined, and that it counts devices rather than people — only on devices
+  that left statistics on. The volume note states plainly which side is exact (the
+  server's own log, what left it, not what moved between peers) and which is approximate
+  (two samples of each node's counter), and that the two are never added.
+- **"Most-listened surahs" became "most-played surahs".** The column under that panel is
+  play counts, and a play is one time a surah's sound starts; the reciters panel already
+  said تشغيل.
+- **Pruning is described, not implied.** "Last pruned" keeps its short label and gains a
+  note: it rolls events into daily tables, deletes raw events older than 90 days, keeps
+  the daily tables, and records when it last ran — not how many rows it removed, which is
+  why a timestamp can move while nothing was deleted.
+
+### Fixed
+
+- Admin's four `package.json` files were out of step: the root and `libs/core` said
+  1.32.8 while `apps/api` and `apps/web` said 1.32.9. All four read 1.32.10, so `/health`
+  and the console footer finally agree.
+
 ## 1.13.23 — 2026-10-31
 
 Patch. App versions: **web 1.13.8**, **admin 1.32.9**, **seeder 1.5.7**.
