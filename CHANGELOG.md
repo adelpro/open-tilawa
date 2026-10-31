@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.12.11 — 2026-10-31
+
+Patch. App versions: **web 1.12.3**, **admin 1.30.9**, **seeder 1.4.3**.
+
+### Added
+
+- **The daily status mail has a switch.** Settings → Alerts now carries the
+  checkbox and the hour it was missing. The API had `notify.digest` from the
+  start and the translations existed; nothing rendered them, so the only way to
+  stop the mail was the database.
+
+### Changed
+
+- **The mail signs itself Tilawah.cc, and says where to reply.** `APP_NAME` moves
+  from "Tilawa Admin" to "Tilawah.cc" — every template reads it, including the
+  setup token — and the digest footer adds contact@tilawah.cc beside the
+  recipient it already names.
+
+### Fixed
+
+- **Two alert thresholds did not line up.** "Failures before an alert" and "Disk
+  floor" sat in a list row that sized each field from its own label, so the two
+  inputs came out 245px and 257px wide. A two-column grid with aligned bottoms
+  replaces it, and the mail port/TLS pair gets the same.
+
 ## 1.12.10 — 2026-10-30
 
 Minor. App versions: **web 1.12.3**, **admin 1.30.8**, **seeder 1.4.3**.
