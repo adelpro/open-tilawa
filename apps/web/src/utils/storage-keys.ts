@@ -29,6 +29,7 @@ export const STORAGE_KEYS = {
   deviceLinkedAt: `${NS}:device-linked-at`,
   telemetry: `${NS}:telemetry`,
   telemetryDeviceDay: `${NS}:telemetry-device-day`,
+  telemetryListenDay: `${NS}:telemetry-listen-day`,
 } as const;
 
 /**

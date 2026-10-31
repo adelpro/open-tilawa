@@ -7,6 +7,7 @@ import { Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
+import { funnelRows, playedShare } from '../lib/usage-funnel';
 import {
   nextSort,
   reciterLabel,
@@ -36,6 +37,7 @@ type Summary = {
     byReciter: { reciter: string; serverBytes: number; torrentBytes: number }[];
   };
   devices: { day: string; devices: number }[];
+  listeners: { day: string; listeners: number }[];
   lastPrunedAt: string | null;
 };
 
@@ -241,11 +243,22 @@ export function Usage(): ReactElement {
     [summary, volumeSort, locale, reciterNames],
   );
 
-  const devices = useMemo(() => (summary?.devices ?? []).slice(-DEVICE_ROWS), [summary]);  // The newest row can be yesterday's if nobody has reported today; the header
+  /**
+   * The funnel, oldest day first, trimmed to something a panel can hold.
+   *
+   * `funnelRows` is where the two counters meet: a day one of them missed is
+   * still a day, and the share is null — not zero — when nothing opened the app.
+   */
+  const funnel = useMemo(
+    () => funnelRows(summary?.devices ?? [], summary?.listeners ?? []).slice(-DEVICE_ROWS),
+    [summary],
+  );
+  // The newest row can be yesterday's if nobody has reported today; the header
   // claims "today", so it must read today or say nothing.
   const today = new Date().toISOString().slice(0, 10);
-  const reportedToday = summary?.devices.find((row) => row.day === today)?.devices ?? 0;
-  const peakDevices = devices.reduce((max, row) => Math.max(max, row.devices), 0);
+  const todayRow = funnel.find((row) => row.day === today);
+  const reportedToday = todayRow?.devices ?? 0;
+  const listenedToday = todayRow?.listeners ?? 0;
   const maxSurahPlays = surahs.reduce((max, row) => Math.max(max, row.plays), 0);
 
   const empty =
@@ -470,36 +483,46 @@ export function Usage(): ReactElement {
           <Panel>
             <h2 className="panel__title">{t('usage.devices')}</h2>
             <p>{t('usage.devicesToday', { count: String(reportedToday) })}</p>
+            <p>{t('usage.listeners', { count: String(listenedToday) })}</p>
             <div className="table-scroll">
               <table className="table">
                 <thead>
                   <tr>
                     <th scope="col">{t('usage.when')}</th>
                     <th scope="col">{t('usage.devicesCount')}</th>
-                    <th scope="col">{t('usage.share')}</th>
+                    <th scope="col">{t('usage.listenersCount')}</th>
+                    <th scope="col">{t('usage.playedShare')}</th>
+                    <th scope="col" aria-hidden="true" />
                   </tr>
                 </thead>
                 <tbody>
-                  {devices.map((row) => (
-                    <tr key={row.day}>
-                      <td title={shortDate(row.day, locale)}>{row.day.slice(5)}</td>
-                      <td className="num">{row.devices}</td>
-                      <td>
-                        <span className="share" aria-hidden="true">
-                          <span
-                            className="share__fill"
-                            style={{
-                              inlineSize: `${peakDevices === 0 ? 0 : (row.devices / peakDevices) * 100}%`,
-                            }}
-                          />
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {funnel.map((row) => {
+                    // A day with no opening devices has no share at all: 0% would
+                    // read as "everyone left", which is a claim nothing supports.
+                    const share = playedShare(row.listeners, row.devices);
+                    return (
+                      <tr key={row.day}>
+                        <td title={shortDate(row.day, locale)}>{row.day.slice(5)}</td>
+                        <td className="num">{row.devices}</td>
+                        <td className="num">{row.listeners}</td>
+                        <td className="num">
+                          {share === null ? '—' : `${Math.round(share * 100)}%`}
+                        </td>
+                        <td>
+                          <span className="share" aria-hidden="true">
+                            <span
+                              className="share__fill"
+                              style={{ inlineSize: `${share === null ? 0 : share * 100}%` }}
+                            />
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-            <p className="muted">{t('usage.devicesNote')}</p>
+            <p className="muted">{t('usage.funnelNote')}</p>
             {filtered ? <p className="muted">{t('usage.devicesNoFilters')}</p> : null}
           </Panel>
 

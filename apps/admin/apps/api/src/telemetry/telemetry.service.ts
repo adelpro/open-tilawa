@@ -15,7 +15,7 @@ import { MediaLogImporter } from './media-import';
  * `device` is the one event that is not a play: one per consenting device per day, with no
  * identifier in it, which is why the server can count devices but never join two days.
  */
-export const EVENTS = ['play', 'complete', 'error', 'fallback', 'device'] as const;
+export const EVENTS = ['play', 'complete', 'error', 'fallback', 'device', 'first_play'] as const;
 export const SOURCES = ['torrent', 'webseed'] as const;
 export const MS_TO_PLAY = ['0-1s', '1-3s', '3-10s', '10s+'] as const;
 const LOCALES = ['ar', 'en'] as const;
@@ -38,7 +38,18 @@ type DeviceEvent = {
   locale: (typeof LOCALES)[number];
 };
 
-export type TelemetryEvent = PlayEvent | DeviceEvent;
+/**
+ * A device saying "this is the first thing I played today"; it carries nothing
+ * else, and no reciter — a play that announced itself here would make the two
+ * counters inseparable.
+ */
+type FirstPlayEvent = {
+  event: 'first_play';
+  version: string;
+  locale: (typeof LOCALES)[number];
+};
+
+export type TelemetryEvent = PlayEvent | DeviceEvent | FirstPlayEvent;
 
 const ALLOWED_KEYS = new Set([
   'event',
@@ -103,14 +114,14 @@ function assertEvent(input: unknown): TelemetryEvent {
     throw new InvalidEvent('bad version');
   if (!LOCALES.includes(raw.locale as never)) throw new InvalidEvent('unknown locale');
 
-  if (raw.event === 'device') {
-    // The shape is the promise: a device event with a reciter on it would be a
+  if (raw.event === 'device' || raw.event === 'first_play') {
+    // The shape is the promise: a counting event with a reciter on it would be a
     // listening event wearing the wrong verb.
     for (const key of ['reciter', 'surah', 'source', 'errorCode', 'msToPlay']) {
-      if (key in raw) throw new InvalidEvent(`a device event carries no ${key}`);
+      if (key in raw) throw new InvalidEvent(`a ${raw.event} event carries no ${key}`);
     }
     return {
-      event: 'device',
+      event: raw.event,
       version: raw.version,
       locale: raw.locale as DeviceEvent['locale'],
     };
@@ -194,9 +205,14 @@ export class TelemetryService {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     let devices = 0;
+    let listeners = 0;
     for (const event of events) {
       if (event.event === 'device') {
         devices += 1;
+        continue;
+      }
+      if (event.event === 'first_play') {
+        listeners += 1;
         continue;
       }
       insert.run(
@@ -213,14 +229,22 @@ export class TelemetryService {
 
     // One row per day, incremented; the batch is already deduplicated by the
     // client, and a dishonest repeat only inflates a floor.
+    const day = new Date(now).toISOString().slice(0, 10);
     if (devices > 0) {
-      const day = new Date(now).toISOString().slice(0, 10);
       this.db
         .prepare(
           `INSERT INTO device_days (day, devices) VALUES (?, ?)
            ON CONFLICT(day) DO UPDATE SET devices = devices + excluded.devices`,
         )
         .run(day, devices);
+    }
+    if (listeners > 0) {
+      this.db
+        .prepare(
+          `INSERT INTO listener_days (day, listeners) VALUES (?, ?)
+           ON CONFLICT(day) DO UPDATE SET listeners = listeners + excluded.listeners`,
+        )
+        .run(day, listeners);
     }
     return events.length;
   }
@@ -293,8 +317,8 @@ export class TelemetryService {
    * Order matters and the invariant is explicit: a raw row is never deleted before its day
    * is rolled up, so a failed rollup leaves the data for the next pass instead of losing it.
    *
-   * `media_daily`, `torrent_daily` and `device_days` are already daily counts, so the
-   * rotation neither rolls them up nor prunes them: there is no row in them that names
+   * `media_daily`, `torrent_daily`, `device_days` and `listener_days` are already daily counts,
+   * so the rotation neither rolls them up nor prunes them: there is no row in them that names
    * anyone, and "what did Ramadan cost" is asked a year later.
    */
   rotate(now = new Date()): { rolledUp: number; pruned: number } {
@@ -383,6 +407,7 @@ export class TelemetryService {
       byReciter: { reciter: string; serverBytes: number; torrentBytes: number }[];
     };
     devices: { day: string; devices: number }[];
+    listeners: { day: string; listeners: number }[];
     lastPrunedAt: string | null;
   } {
     const window = Math.min(Math.max(days, 1), RETENTION_DAYS);
@@ -557,6 +582,12 @@ export class TelemetryService {
       .prepare('SELECT day, devices FROM device_days WHERE day >= ? ORDER BY day')
       .all(sinceDay) as { day: string; devices: number }[];
 
+    // The other half of the same funnel, and it obeys the same rule: no filter,
+    // because a listener report has neither a reciter nor a source.
+    const listeners = this.db
+      .prepare('SELECT day, listeners FROM listener_days WHERE day >= ? ORDER BY day')
+      .all(sinceDay) as { day: string; listeners: number }[];
+
     return {
       surahs,
       reciters,
@@ -565,6 +596,7 @@ export class TelemetryService {
       recentErrors,
       volume: { serverBytes: serverTotal, torrentBytes: torrentTotal, byReciter },
       devices,
+      listeners,
       lastPrunedAt: this.lastPrunedAt(),
     };
   }

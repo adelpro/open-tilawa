@@ -27,8 +27,15 @@ import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
 import { currentSurahIdAtom } from './jotai/player';
 import { toPath } from './routes';
-import { createTelemetry, deviceEvent, type TelemetryEvent } from './utils/telemetry';
-import { markDeviceDay, readDeviceDay, shouldReportDevice, utcDay } from './utils/device-day';
+import { createTelemetry, deviceEvent, firstPlayEvent, type TelemetryEvent } from './utils/telemetry';
+import {
+  markDeviceDay,
+  markListenDay,
+  readDeviceDay,
+  readListenDay,
+  shouldReportDevice,
+  utcDay,
+} from './utils/device-day';
 import { STORAGE_EVENT } from './utils/storage-keys';
 import { APP_VERSION } from './constants/version';
 import {
@@ -327,6 +334,15 @@ export default function App() {
       <AudioEngine
         route={route}
         record={(event: TelemetryEvent) => {
+          // The day's first play is announced before the play it announces: the
+          // listener count must never be behind the plays that prove it happened.
+          if (event.event === 'play' && consentEnabled(readConsent())) {
+            const day = utcDay();
+            if (shouldReportDevice(readListenDay(), day)) {
+              markListenDay(day);
+              telemetry.current.record(firstPlayEvent({ version: APP_VERSION, locale }));
+            }
+          }
           telemetry.current.record(event);
         }}
         key={reciter && !reciter.magnet ? 'http' : 'p2p'}

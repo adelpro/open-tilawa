@@ -61,6 +61,11 @@ export const en = {
     'The event carries no reciter and no source, so these numbers do not change with the filters.',
   'usage.devicesNote':
     'Each device reports at most once a day, with no identifier, so no two days can be joined. The count is a floor, not a total — a device that switched statistics off is not in it — and it counts devices, never people.',
+  'usage.listeners': 'Devices that played today: {count}',
+  'usage.listenersCount': 'Played',
+  'usage.playedShare': 'Share who played',
+  'usage.funnelNote':
+    'Both rows are daily counters with no identifier: a device that opened the app is not a device that played, and the gap between them is how many left before pressing play. A floor, not a count of people.',
   'usage.recent': 'Recent errors',
   'usage.errorCode': 'Error',
   'usage.lastPruned': 'Last pruned:',

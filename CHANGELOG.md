@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.13.18 — 2026-10-31
+
+Patch. App versions: **web 1.13.3**, **admin 1.32.9**, **seeder 1.5.7**.
+
+### Added
+
+- **The console now shows the launch funnel.** A device that opens the app is not
+  a device that plays, and until now the numbers could not tell them apart: a
+  quiet week was equally "nobody came" and "they came and left". A `first_play`
+  event — a version and a locale, nothing else — increments a new daily counter,
+  `listener_days`, on the same terms as `device_days`: once per device per UTC
+  day, no identifier, no column for a person. The usage screen lists the days
+  beside each other with the share between them, and that share is `—`, never
+  0%, on a day nothing opened the app: zero would read as "everyone left", which
+  nothing in the data supports. Neither counter is a window total — a device that
+  opens on five days is five rows — so the panel reads by day and says so.
+
 ## 1.13.17 — 2026-10-31
 
 Patch. App versions: **web 1.13.2**, **admin 1.32.8**, **seeder 1.5.7**.

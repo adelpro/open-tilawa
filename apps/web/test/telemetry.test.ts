@@ -5,6 +5,7 @@ import {
   createTelemetry,
   deviceEvent,
   errorEvent,
+  firstPlayEvent,
   msToPlayBucket,
   playEvent,
   type TelemetryEvent,
@@ -134,6 +135,13 @@ test('an error event carries the media error by name, never the code number', ()
 test('a device event carries the day\'s verb and nothing that could identify it', () => {
   const event = deviceEvent({ version: '1.12.2', locale: 'ar' });
   assert.deepEqual(event, { event: 'device', version: '1.12.2', locale: 'ar' });
+  assert.deepEqual(Object.keys(event).sort(), ['event', 'locale', 'version']);
+});
+
+test('the first play of the day says only that it played, and which build', () => {
+  const event = firstPlayEvent({ version: '1.12.2', locale: 'en' });
+  assert.deepEqual(event, { event: 'first_play', version: '1.12.2', locale: 'en' });
+  // Not a play event wearing another verb: no reciter, no surah, nothing to join.
   assert.deepEqual(Object.keys(event).sort(), ['event', 'locale', 'version']);
 });
 

@@ -170,6 +170,43 @@ describe('TelemetryController.summary validation', () => {
 });
 
 /**
+ * The listening funnel: a device that opened the app is not a device that
+ * played something. Both are daily counters with no identifier, so the two
+ * cannot be joined — only compared.
+ */
+describe('the listening funnel', () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const device = { event: 'device' as const, version: '1.12.2', locale: 'ar' as const };
+  const firstPlay = { event: 'first_play' as const, version: '1.12.2', locale: 'ar' as const };
+
+  it('counts a device that played apart from a device that only opened the app', () => {
+    const { db, telemetry } = build();
+    telemetry.ingest([device, device, firstPlay], '127.0.0.1');
+
+    expect(telemetry.summary(7).devices).toEqual([{ day: today, devices: 2 }]);
+    expect(telemetry.summary(7).listeners).toEqual([{ day: today, listeners: 1 }]);
+    // Neither event is a play: the counters must not reach the play table.
+    expect(db.prepare('SELECT count(*) AS n FROM telemetry_events').get()).toEqual({ n: 0 });
+  });
+
+  it('refuses a first_play event that carries a reciter', () => {
+    const { telemetry } = build();
+    expect(() =>
+      telemetry.ingest([{ ...firstPlay, reciter: 'maher-al-muaiqly' }], '127.0.0.2'),
+    ).toThrow(/first_play event carries no reciter/);
+  });
+
+  it('keeps a day that had no listeners out of the listener series', () => {
+    const { db, telemetry } = build();
+    telemetry.ingest([device], '127.0.0.3');
+    db.prepare('INSERT INTO listener_days (day, listeners) VALUES (?, ?)').run('2020-01-01', 4);
+
+    // The window is what makes the series honest: a day before it is not "zero".
+    expect(telemetry.summary(7).listeners).toEqual([]);
+  });
+});
+
+/**
  * Volume and devices are the two figures that do not come from the listener's
  * payoff report: one is read from the server's own log, the other is a daily
  * "a device was here" row with no identifier in it.

@@ -22,7 +22,21 @@ export type DeviceTelemetryEvent = {
   locale: 'ar' | 'en';
 };
 
-export type TelemetryEvent = PlayTelemetryEvent | DeviceTelemetryEvent;
+/**
+ * The first play of the day, on a consenting device.
+ *
+ * A `play` event cannot answer "how many devices ever started listening": one
+ * listener plays thirty surahs. This one is sent once per device per day, before
+ * the play it announces, and carries no reciter — so the server can count
+ * listeners without being able to join two days of them.
+ */
+export type FirstPlayTelemetryEvent = {
+  event: 'first_play';
+  version: string;
+  locale: 'ar' | 'en';
+};
+
+export type TelemetryEvent = PlayTelemetryEvent | DeviceTelemetryEvent | FirstPlayTelemetryEvent;
 
 export type TelemetryDeps = {
   enabled: () => boolean;
@@ -173,4 +187,12 @@ export function deviceEvent(input: {
   locale: DeviceTelemetryEvent['locale'];
 }): DeviceTelemetryEvent {
   return { event: 'device', version: input.version, locale: input.locale };
+}
+
+/** The daily "this device started listening" event; same shape, different verb. */
+export function firstPlayEvent(input: {
+  version: string;
+  locale: FirstPlayTelemetryEvent['locale'];
+}): FirstPlayTelemetryEvent {
+  return { event: 'first_play', version: input.version, locale: input.locale };
 }
