@@ -9,6 +9,8 @@
 export type SortDir = 'asc' | 'desc';
 export type Sort = { key: string; dir: SortDir };
 
+export type VolumeRow = { reciter: string; serverBytes: number; torrentBytes: number };
+
 export type SummaryFilters = {
   source?: string;
   version?: string;
@@ -42,6 +44,32 @@ export function sortRows<T>(
   if (!compare) return [...rows];
   const dir = sort.dir === 'asc' ? 1 : -1;
   return [...rows].sort((a, b) => compare(a, b) * dir);
+}
+
+/**
+ * The volume table's order.
+ *
+ * `served` is an ordering key and nothing else: the panel prints the web-seed and
+ * torrent figures side by side because one is measured and the other is inferred
+ * from deltas, and a Total column would put a number on screen that pretends to
+ * be exact. The key exists so the table can open on "what is served most", which
+ * is the order the API already ranks by.
+ */
+export function sortVolume(
+  rows: readonly VolumeRow[],
+  sort: Sort,
+  locale: 'en' | 'ar' = 'en',
+): VolumeRow[] {
+  return sortRows(
+    rows,
+    {
+      reciter: (a, b) => a.reciter.localeCompare(b.reciter, locale),
+      serverBytes: (a, b) => a.serverBytes - b.serverBytes,
+      torrentBytes: (a, b) => a.torrentBytes - b.torrentBytes,
+      served: (a, b) => a.serverBytes + a.torrentBytes - (b.serverBytes + b.torrentBytes),
+    },
+    sort,
+  );
 }
 
 /**

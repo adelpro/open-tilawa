@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { nextSort, sortRows, summaryQuery } from '../src/lib/usage-filters.ts';
+import { nextSort, sortRows, sortVolume, summaryQuery } from '../src/lib/usage-filters.ts';
 
 /**
  * The usage screen's arithmetic, kept out of the route so it can be reasoned about
@@ -62,8 +62,51 @@ describe('sortRows', () => {
   });
 });
 
-describe('summaryQuery', () => {
-  it('asks for the window alone when nothing is filtered', () => {
+describe('sortVolume', () => {
+  const volume = [
+    { reciter: 'Al-Husary', serverBytes: 0, torrentBytes: 900 },
+    { reciter: 'Al-Minshawi', serverBytes: 500, torrentBytes: 100 },
+    { reciter: 'Al-Muaiqly', serverBytes: 200, torrentBytes: 0 },
+  ];
+
+  it('opens on what is served most, whichever way it was served', () => {
+    // 900 over torrent, 600 over the web seed, 200 over the web seed: the leading
+    // row has no web-seed bytes at all, which is why the order cannot be a single
+    // column.
+    const rows = sortVolume(volume, { key: 'served', dir: 'desc' });
+    assert.deepEqual(
+      rows.map((row) => row.reciter),
+      ['Al-Husary', 'Al-Minshawi', 'Al-Muaiqly'],
+    );
+  });
+
+  it('orders each measured figure on its own', () => {
+    assert.deepEqual(
+      sortVolume(volume, { key: 'serverBytes', dir: 'desc' }).map((row) => row.serverBytes),
+      [500, 200, 0],
+    );
+    assert.deepEqual(
+      sortVolume(volume, { key: 'torrentBytes', dir: 'asc' }).map((row) => row.torrentBytes),
+      [0, 100, 900],
+    );
+  });
+
+  it('orders by name, and knows the difference between two alphabets', () => {
+    const rows = sortVolume(volume, { key: 'reciter', dir: 'asc' });
+    assert.deepEqual(
+      rows.map((row) => row.reciter),
+      ['Al-Husary', 'Al-Minshawi', 'Al-Muaiqly'],
+    );
+  });
+
+  it('does not add the two figures to anything the screen shows', () => {
+    // `served` ranks only: the rows keep their two separate numbers.
+    const [first] = sortVolume(volume, { key: 'served', dir: 'desc' });
+    assert.deepEqual(first, { reciter: 'Al-Husary', serverBytes: 0, torrentBytes: 900 });
+  });
+});
+
+describe('summaryQuery', () => {  it('asks for the window alone when nothing is filtered', () => {
     assert.equal(summaryQuery(7, {}), '/admin/telemetry/summary?days=7');
   });
 

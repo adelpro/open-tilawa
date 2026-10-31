@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.13.3 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.31.1**, **seeder 1.5.2**.
+
+### Added
+
+- **Volume served is ordered, and says how.** The usage tab's volume table sorts
+  by reciter or by either measurement, and opens on what was served most. The two
+  figures stay side by side — one is measured, the other inferred — so the opening
+  order ranks on both without printing a total that would pretend to be exact.
+
 ## 1.13.2 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.31.0**, **seeder 1.5.2**.

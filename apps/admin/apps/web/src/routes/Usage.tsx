@@ -7,7 +7,7 @@ import { Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
-import { nextSort, sortRows, summaryQuery, type Sort } from '../lib/usage-filters';
+import { nextSort, sortRows, sortVolume, summaryQuery, type Sort } from '../lib/usage-filters';
 
 type Summary = {
   surahs: { surah: number; plays: number; bytes: number }[];
@@ -77,6 +77,12 @@ export function Usage(): ReactElement {
   const [reciterSort, setReciterSort] = useState<Sort>({ key: 'plays', dir: 'desc' });
   const [versionSort, setVersionSort] = useState<Sort>({ key: 'version', dir: 'desc' });
   const [errorSort, setErrorSort] = useState<Sort>({ key: 'at', dir: 'desc' });
+  /**
+   * The volume table opens on "most served", which is the order the API ranks by:
+   * both figures combined. That key is never drawn — the panel shows the two
+   * measurements apart — so no column claims the sort until one is clicked.
+   */
+  const [volumeSort, setVolumeSort] = useState<Sort>({ key: 'served', dir: 'desc' });
 
   const load = useCallback(async () => {
     setError(false);
@@ -181,8 +187,12 @@ export function Usage(): ReactElement {
     [summary, errorSort, locale],
   );
 
-  const devices = useMemo(() => (summary?.devices ?? []).slice(-DEVICE_ROWS), [summary]);
-  // The newest row can be yesterday's if nobody has reported today; the header
+  const volumeRows = useMemo(
+    () => sortVolume(summary?.volume.byReciter ?? [], volumeSort, locale),
+    [summary, volumeSort, locale],
+  );
+
+  const devices = useMemo(() => (summary?.devices ?? []).slice(-DEVICE_ROWS), [summary]);  // The newest row can be yesterday's if nobody has reported today; the header
   // claims "today", so it must read today or say nothing.
   const today = new Date().toISOString().slice(0, 10);
   const reportedToday = summary?.devices.find((row) => row.day === today)?.devices ?? 0;
@@ -379,13 +389,13 @@ export function Usage(): ReactElement {
               <table className="table">
                 <thead>
                   <tr>
-                    <th scope="col">{t('usage.reciter')}</th>
-                    <th scope="col">{t('usage.serverBytes')}</th>
-                    <th scope="col">{t('usage.torrent')}</th>
+                    {sortHeader(t('usage.reciter'), volumeSort, setVolumeSort, 'reciter')}
+                    {sortHeader(t('usage.serverBytes'), volumeSort, setVolumeSort, 'serverBytes')}
+                    {sortHeader(t('usage.torrent'), volumeSort, setVolumeSort, 'torrentBytes')}
                   </tr>
                 </thead>
                 <tbody>
-                  {summary.volume.byReciter.map((row) => (
+                  {volumeRows.map((row) => (
                     <tr key={row.reciter}>
                       <td>{row.reciter}</td>
                       <td className="num">
