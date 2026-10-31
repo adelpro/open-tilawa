@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.13.25 — 2026-10-31
+
+Patch. App versions: **web 1.13.8**, **admin 1.32.11**, **seeder 1.5.7**.
+
+### Added
+
+- **Three launcher shortcuts on the installed console: Usage, Seeders, Status.** Each
+  is a `/console/*` path, so a long-press opens the screen an operator checks from a
+  phone instead of the landing page. They live in `app.json` with the rest of the
+  chrome, so the dev server and the build cannot disagree; `seo.test.mjs` now fails if
+  a shortcut leaves the console mount, carries a launcher label over 12 characters, or
+  names an icon the build does not copy.
+
+### Fixed
+
+- **The manifest is no longer held for a day.** It carries the splash colour, the icons
+  and now the shortcuts, so a cached copy is an installed app offering yesterday's
+  entry — which is how the cream splash outlived its own fix. It is 1.3 KB and is
+  revalidated on every launch.
+
 ## 1.13.24 — 2026-10-31
 
 Patch. App versions: **web 1.13.8**, **admin 1.32.10**, **seeder 1.5.7**.

@@ -97,6 +97,24 @@ describe('crawler files', () => {
     assert.ok(manifest.screenshots[0].label.length > 5);
     assert.ok(manifest.icons.length >= 2);
   });
+
+  /**
+   * Shortcuts are long-press targets on the launcher. A shortcut pointing outside
+   * the console mount, or at an icon the build does not copy, is a dead entry the
+   * install UI still offers — so both are asserted rather than trusted.
+   */
+  it('gives the installed app shortcuts that stay inside the console', () => {
+    const manifest = JSON.parse(readFileSync(join(dist, 'manifest.webmanifest'), 'utf-8'));
+    assert.ok(Array.isArray(manifest.shortcuts) && manifest.shortcuts.length >= 3);
+    for (const shortcut of manifest.shortcuts) {
+      assert.match(shortcut.url, /^\/console\/[a-z]+$/);
+      assert.ok(shortcut.name.length > 2, `${shortcut.url} has a name`);
+      assert.ok(shortcut.short_name.length <= 12, `${shortcut.url} fits a launcher label`);
+      for (const icon of shortcut.icons) {
+        assert.ok(existsSync(join(WEB, 'public', icon.src)), `${icon.src} is shipped`);
+      }
+    }
+  });
 });
 
 /**

@@ -51,9 +51,12 @@ server {
     default_type application/xml;
     expires 1h;
   }
+  # The manifest is what the launcher reads at install: its splash colour, icons and
+  # shortcuts. A cached copy is an installed app that keeps yesterday's entry. It is
+  # 1.3 KB, so it is revalidated on every install or launch instead of held a day.
   location = /manifest.webmanifest {
     default_type application/manifest+json;
-    expires 1d;
+    expires -1;
   }
   location = /og.png {
     expires 7d;
