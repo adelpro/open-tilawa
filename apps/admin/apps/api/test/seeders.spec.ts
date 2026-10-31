@@ -11,7 +11,7 @@ import { bootHarness, type Harness } from './harness';
  * contract — including that the stored password is used but never returned.
  */
 function fakeSeeder(
-  options: { user?: string; headroom?: number } = {},
+  options: { user?: string; headroom?: number; peers?: boolean } = {},
 ): Promise<{ url: string; server: Server; seen: string[] }> {
   const user = options.user ?? 'adm';
   const pass = 'secret-pass';
@@ -66,6 +66,64 @@ function fakeSeeder(
             },
           ],
           stats: { totalTorrents: 1, totalPeers: 3, uploadSpeed: 1, downloadSpeed: 0 },
+        }),
+      );
+      return;
+    }
+    if (req.url === '/api/peers' && req.method === 'GET') {
+      if (decoded !== `${user}:${pass}`) {
+        res.writeHead(401).end('Unauthorized');
+        return;
+      }
+      // A node built before this endpoint: the console must explain it rather
+      // than report "the seeder answered with a non-JSON body".
+      if (options.peers === false) {
+        res.writeHead(404, { 'Content-Type': 'text/html' });
+        res.end('<html>not found</html>');
+        return;
+      }
+      seen.push('peers');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          total: 2,
+          web: 1,
+          tcp: 1,
+          inbound: 1,
+          outbound: 0,
+          torrents: [
+            {
+              infoHash: 'abc123',
+              name: 'al-fatiha',
+              total: 2,
+              web: 1,
+              tcp: 1,
+              inbound: 1,
+              outbound: 0,
+              truncated: false,
+              peers: [
+                {
+                  type: 'web',
+                  direction: null,
+                  address: null,
+                  uploadSpeed: 512,
+                  downloadSpeed: 0,
+                  uploaded: 1024,
+                  downloaded: 0,
+                },
+                {
+                  type: 'tcp',
+                  direction: 'in',
+                  // Already masked by the node: the console never sees a whole one.
+                  address: '203.0.113.x',
+                  uploadSpeed: 0,
+                  downloadSpeed: 0,
+                  uploaded: 0,
+                  downloaded: 0,
+                },
+              ],
+            },
+          ],
         }),
       );
       return;
@@ -169,6 +227,30 @@ describe('seeder proxy', () => {
     const { body } = await agent.get(`/api/seeders/${seederId}/torrents`).expect(200);
     expect(body.torrents[0].infoHash).toBe('abc123');
     expect(body.stats.totalPeers).toBe(3);
+  });
+
+  it('proxies the live peer report, masked at the node', async () => {
+    const { body } = await agent.get(`/api/seeders/${seederId}/peers`).expect(200);
+    expect(body.total).toBe(2);
+    expect(body.torrents[0].peers[0]).toMatchObject({ type: 'web', direction: null });
+    // The address arrived masked and stays that way: nothing here re-expands it.
+    expect(body.torrents[0].peers[1].address).toBe('203.0.113.x');
+    expect(fake.seen).toContain('peers');
+  });
+
+  it('explains a node whose seeder predates the peer report', async () => {
+    const old = await fakeSeeder({ peers: false });
+    try {
+      const { body } = await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-old', url: old.url, adminUser: 'adm', adminPass: 'secret-pass' })
+        .expect(201);
+      const res = await agent.get(`/api/seeders/${body.id}/peers`).expect(502);
+      expect(res.body.message).toContain('does not report connected peers');
+    } finally {
+      old.server.close();
+    }
   });
 
   it('forwards an add request and reports the new infohash', async () => {

@@ -99,6 +99,33 @@ test('unauthenticated admin calls are refused', async () => {
   assert.equal(res.status, 401);
 });
 
+/**
+ * The console asks for peers live, so the route must answer a shape it can read
+ * even on a node with nothing seeding — and must not be reachable without the
+ * admin credentials, because the answer is about people.
+ */
+test('GET /api/peers answers a zero report on an empty node', async () => {
+  const res = await fetch(`http://127.0.0.1:${port}/api/peers`, {
+    headers: { Authorization: auth },
+  });
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('cache-control') ?? '', /no-store/);
+  const body = await res.json();
+  assert.deepEqual(body, {
+    total: 0,
+    web: 0,
+    tcp: 0,
+    inbound: 0,
+    outbound: 0,
+    torrents: [],
+  });
+});
+
+test('API /api/peers is refused without credentials', async () => {
+  const res = await fetch(`http://127.0.0.1:${port}/api/peers`);
+  assert.equal(res.status, 401);
+});
+
 test('DELETE of a hash the node does not hold answers 404', async () => {
   const res = await fetch(
     `http://127.0.0.1:${port}/api/torrents/0000000000000000000000000000000000000000`,
@@ -168,5 +195,38 @@ test('DELETE takes the payload and the .torrent with it, so a restart cannot re-
     false,
     'the payload is the thing that fills the disk',
   );
+});
+
+test('GET /api/peers lists a seeded torrent even with nobody connected', async () => {
+  const base = `http://127.0.0.1:${port}`;
+  const source = join(root, 'source', 'peered');
+  mkdirSync(source, { recursive: true });
+  writeFileSync(join(source, '001.mp3'), Buffer.alloc(32, 9));
+
+  const torrentFile = await new Promise((resolve, reject) => {
+    createTorrent(source, { announce: [] }, (error, buffer) =>
+      error ? reject(error) : resolve(buffer),
+    );
+  });
+  writeFileSync(join(torrentDir, 'peered.torrent'), torrentFile);
+
+  const added = await fetch(`${base}/api/torrents`, {
+    method: 'POST',
+    headers: { Authorization: auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ torrentPath: 'peered.torrent' }),
+  });
+  assert.equal(added.status, 200);
+  const { infoHash } = await added.json();
+
+  const report = await (
+    await fetch(`${base}/api/peers`, { headers: { Authorization: auth } })
+  ).json();
+  // A torrent with an empty swarm is still a row: "0 peers" is an observation,
+  // while a missing row reads as "this node does not carry it".
+  const group = report.torrents.find((entry) => entry.infoHash === infoHash);
+  assert.ok(group, 'the torrent is missing from the peer report');
+  assert.equal(group.total, 0);
+  assert.equal(group.truncated, false);
+  assert.equal(report.total, report.torrents.reduce((sum, entry) => sum + entry.total, 0));
 });
 

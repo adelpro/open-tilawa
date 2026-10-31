@@ -108,6 +108,45 @@ export interface SeederInventory {
   };
 }
 
+/**
+ * One connected peer, as the node reports it. `address` is already a masked
+ * prefix by the time it arrives — the seeder never sends a whole address — and
+ * is null when no address could be masked, which is common for a WebRTC peer.
+ * Nothing here is stored: this is a snapshot of a swarm, not a record of people.
+ */
+export interface SeederPeer {
+  type: 'web' | 'tcp' | 'other';
+  /** `in`/`out` for TCP connections; null when direction is not a port question. */
+  direction: 'in' | 'out' | null;
+  address: string | null;
+  uploadSpeed: number;
+  downloadSpeed: number;
+  uploaded: number;
+  downloaded: number;
+}
+
+export interface SeederPeerGroup {
+  infoHash: string;
+  name: string;
+  total: number;
+  web: number;
+  tcp: number;
+  inbound: number;
+  outbound: number;
+  /** True when the node holds more peers than the list carries. */
+  truncated: boolean;
+  peers: SeederPeer[];
+}
+
+export interface SeederPeers {
+  total: number;
+  web: number;
+  tcp: number;
+  inbound: number;
+  outbound: number;
+  torrents: SeederPeerGroup[];
+}
+
 @Injectable()
 export class SeedersService {
   private readonly logger = new Logger(SeedersService.name);
@@ -564,6 +603,34 @@ export class SeedersService {
     // console as a half-shaped object: the screen dereferences stats.torrents.
     if (!Array.isArray(body.torrents) || typeof body.stats !== 'object' || body.stats === null) {
       throw new BadGatewayException('the seeder answered, but not with a torrent inventory');
+    }
+    return body;
+  }
+
+  /**
+   * Who is connected, read live from the node.
+   *
+   * Deliberately not folded into `poll()`: the fleet row keeps a peer *count* as
+   * the last known answer, while this is a snapshot that is wrong thirty seconds
+   * later. It is asked for when someone opens the node's screen, and answered
+   * from memory on the node — never cached, never stored here.
+   */
+  async peers(id: number): Promise<SeederPeers> {
+    const seeder = await this.requireSeeder(id);
+    const res = await this.call(seeder, '/api/peers', { method: 'GET' });
+    // A node running a seeder from before this endpoint answers 404, which `call`
+    // lets through so DELETE can map its own. Here it means one thing: the node
+    // is too old to report peers, and saying that beats "non-JSON body".
+    if (res.status === 404) {
+      throw new BadGatewayException(
+        `this node's seeder does not report connected peers${
+          seeder.version ? ` (v${seeder.version})` : ''
+        } — update it to the current release`,
+      );
+    }
+    const body = await this.json<SeederPeers>(res);
+    if (!Array.isArray(body.torrents) || typeof body.total !== 'number') {
+      throw new BadGatewayException('the seeder answered, but not with a peer report');
     }
     return body;
   }

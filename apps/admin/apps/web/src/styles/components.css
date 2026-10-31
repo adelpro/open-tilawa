@@ -680,6 +680,22 @@ a.node-card__name:hover {
   font: var(--code);
 }
 
+/* A peer list opens under the torrent it belongs to: it is one row's contents,
+   not a row of its own, so it keeps the tint instead of taking the hover one. */
+.table__detail > td,
+.table tr.table__detail:hover > td {
+  background: var(--canvas-parchment);
+  padding-block: var(--space-2);
+}
+
+/* The nested table sits inside its parent's cell and adds no second frame. */
+.table--nested th {
+  background: none;
+}
+.table--nested tr:last-child td {
+  border-bottom: 0;
+}
+
 /* A share bar inside a cell. It repeats a number that is already in the row, so
    it is hidden from assistive tech and drawn with the one graphic token. */
 .share {

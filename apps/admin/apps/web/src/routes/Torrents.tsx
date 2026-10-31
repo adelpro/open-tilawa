@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -12,7 +20,7 @@ import { SkeletonRows } from '../components/Skeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { linkProps } from '../lib/router';
 import { statusKey, statusTone } from '../lib/seeder-status';
-import type { Seeder, SeederInventory } from '../lib/types-seeders';
+import type { Seeder, SeederInventory, SeederPeers } from '../lib/types-seeders';
 
 interface CatalogueRow {
   id: number;
@@ -46,6 +54,16 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
   const [busy, setBusy] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [confirmingUpdate, setConfirmingUpdate] = useState(false);
+  /**
+   * Who is connected, and when we asked. A swarm is live, so the answer is
+   * stamped with the moment it arrived: an unstamped list reads as current
+   * forever, which is the lie the refresh button exists to prevent.
+   */
+  const [peers, setPeers] = useState<SeederPeers | null>(null);
+  const [peersError, setPeersError] = useState<string | null>(null);
+  const [peersAt, setPeersAt] = useState<string | null>(null);
+  /** The torrent whose peer list is open. One at a time: the table stays legible. */
+  const [openPeers, setOpenPeers] = useState<string | null>(null);
   /** Column order. Clicking the active column flips it rather than resetting. */
   const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({
     key: 'name',
@@ -67,6 +85,16 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
 
   const load = useCallback(async () => {
     setError(null);
+    // The peer report is a separate question with its own failure mode: a node
+    // running an older seeder answers 502, and that must explain itself under the
+    // table rather than read as "this screen failed to load".
+    const live = api<SeederPeers>(`/seeders/${id}/peers`).then(
+      (value) => ({ value, error: null as string | null }),
+      (caught: unknown) => ({
+        value: null,
+        error: caught instanceof Error ? caught.message : t('torrents.peersFailed'),
+      }),
+    );
     try {
       const [seeders, inv, rows] = await Promise.all([
         api<Seeder[]>('/seeders'),
@@ -79,6 +107,11 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('torrents.loadFailed'));
     }
+    const report = await live;
+    if (!alive.current) return;
+    setPeers(report.value);
+    setPeersError(report.error);
+    if (report.value) setPeersAt(new Date().toISOString());
   }, [id, t]);
 
   useEffect(() => {
@@ -196,6 +229,12 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
     [byHash],
   );
 
+  /** The live peer groups, keyed the same way the table identifies a torrent. */
+  const peerGroups = useMemo(
+    () => new Map((peers?.torrents ?? []).map((group) => [group.infoHash.toLowerCase(), group])),
+    [peers],
+  );
+
   /** The node's own list, ordered. A copy: the inventory is state, not ours to sort. */
   const sorted = useMemo(() => {
     const rows = [...(inventory?.torrents ?? [])];
@@ -292,6 +331,37 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
 
+      {/* Who is connected, live. The summary answers the operator's real question —
+          is web seeding working, and is my peer port reachable — in one line; the
+          per-torrent lists live under the torrent they belong to. */}
+      {peers ? (
+        <Panel>
+          <div className="spread">
+            <div>
+              <h2 className="group-title">{t('torrents.peersTitle')}</h2>
+              <p className="body muted">
+                {t('torrents.peersCount', { count: peers.total })}
+                {peersAt ? (
+                  <> · {t('torrents.peersAsOf', { time: relative(peersAt, locale) })}</>
+                ) : null}
+              </p>
+            </div>
+            <div className="cluster">
+              <Chip tone="info">{t('torrents.peersWeb', { count: peers.web })}</Chip>
+              <Chip tone="info">{t('torrents.peersTcp', { count: peers.tcp })}</Chip>
+              <Chip tone="notice">{t('torrents.peersInbound', { count: peers.inbound })}</Chip>
+            </div>
+          </div>
+          <p className="fine-print">
+            {peers.total === 0 ? t('torrents.peersNone') : t('torrents.peersHint')}
+          </p>
+        </Panel>
+      ) : peersError ? (
+        // An older node is a fact about the node, not a fault of this screen: the
+        // message names the version to update, so it reads as a notice.
+        <Notice tone="notice">{peersError}</Notice>
+      ) : null}
+
       {inventory === null ? (
         <SkeletonRows rows={3} label={t('torrents.loading')} />
       ) : (
@@ -344,38 +414,118 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
                 <tbody>
                   {sorted.map((torrent) => {
                     const state = stateOf(torrent.infoHash);
+                    const group = peerGroups.get(torrent.infoHash.toLowerCase());
+                    const open = openPeers === torrent.infoHash;
                     return (
-                      <tr key={torrent.infoHash}>
-                        <td>
-                          <span className="row__label">{torrent.name}</span>
-                          <span className="row__id">{torrent.infoHash}</span>
-                        </td>
-                        <td className="num">{bytes(torrent.size, locale)}</td>
-                        <td>
-                          <Chip tone={state === 'healthy' ? 'ok' : 'notice'}>
-                            {t(
-                              state === 'healthy'
-                                ? 'torrents.stateHealthy'
-                                : state === 'stale'
-                                  ? 'torrents.stateStale'
-                                  : 'torrents.stateOrphan',
+                      <Fragment key={torrent.infoHash}>
+                        <tr>
+                          <td>
+                            <span className="row__label">{torrent.name}</span>
+                            <span className="row__id">{torrent.infoHash}</span>
+                          </td>
+                          <td className="num">{bytes(torrent.size, locale)}</td>
+                          <td>
+                            <Chip tone={state === 'healthy' ? 'ok' : 'notice'}>
+                              {t(
+                                state === 'healthy'
+                                  ? 'torrents.stateHealthy'
+                                  : state === 'stale'
+                                    ? 'torrents.stateStale'
+                                    : 'torrents.stateOrphan',
+                              )}
+                            </Chip>
+                          </td>
+                          <td className="num">
+                            {/* The count is the door: a number that opens the people
+                                behind it, and stays a number when there are none. */}
+                            {group && group.total > 0 ? (
+                              <button
+                                type="button"
+                                className="th-sort"
+                                aria-expanded={open}
+                                aria-label={t(open ? 'torrents.peersHide' : 'torrents.peersShow', {
+                                  count: group.total,
+                                })}
+                                onClick={() => setOpenPeers(open ? null : torrent.infoHash)}
+                              >
+                                {group.total}
+                                <Icon name={open ? 'up' : 'down'} />
+                              </button>
+                            ) : (
+                              torrent.peers
                             )}
-                          </Chip>
-                        </td>
-                        <td className="num">{torrent.peers}</td>
-                        <td>
-                          <span className="row__actions">
-                            <Button
-                              small
-                              variant="destructive"
-                              onClick={() => setRemoving(torrent.infoHash)}
-                              busy={busy === `remove-${torrent.infoHash}`}
-                            >
-                              {t('torrents.remove')}
-                            </Button>
-                          </span>
-                        </td>
-                      </tr>
+                          </td>
+                          <td>
+                            <span className="row__actions">
+                              <Button
+                                small
+                                variant="destructive"
+                                onClick={() => setRemoving(torrent.infoHash)}
+                                busy={busy === `remove-${torrent.infoHash}`}
+                              >
+                                {t('torrents.remove')}
+                              </Button>
+                            </span>
+                          </td>
+                        </tr>
+                        {open && group ? (
+                          <tr className="table__detail">
+                            <td colSpan={5}>
+                              <table className="table table--nested">
+                                <thead>
+                                  <tr>
+                                    <th scope="col">{t('torrents.peerType')}</th>
+                                    <th scope="col">{t('torrents.peerDirection')}</th>
+                                    <th scope="col">{t('torrents.peerAddress')}</th>
+                                    <th scope="col">{t('torrents.peerUp')}</th>
+                                    <th scope="col">{t('torrents.peerDown')}</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {group.peers.map((peer, index) => (
+                                    <tr key={`${peer.type}-${peer.address ?? 'web'}-${index}`}>
+                                      <td>
+                                        {t(
+                                          peer.type === 'web'
+                                            ? 'torrents.peerTypeWeb'
+                                            : peer.type === 'tcp'
+                                              ? 'torrents.peerTypeTcp'
+                                              : 'torrents.peerTypeOther',
+                                        )}
+                                      </td>
+                                      <td>
+                                        {peer.direction === null
+                                          ? t('torrents.peerDirectionUnknown')
+                                          : t(
+                                              peer.direction === 'in'
+                                                ? 'torrents.peerIn'
+                                                : 'torrents.peerOut',
+                                            )}
+                                      </td>
+                                      <td className="num">
+                                        <bdi dir="ltr">
+                                          {peer.address ?? t('torrents.peerAddressNone')}
+                                        </bdi>
+                                      </td>
+                                      <td className="num">
+                                        <bdi>{bytes(peer.uploadSpeed, locale, true)}</bdi>
+                                      </td>
+                                      <td className="num">
+                                        <bdi>{bytes(peer.downloadSpeed, locale, true)}</bdi>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              {group.truncated ? (
+                                <p className="fine-print">
+                                  {t('torrents.peersTruncated', { count: group.peers.length })}
+                                </p>
+                              ) : null}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
                     );
                   })}
                 </tbody>

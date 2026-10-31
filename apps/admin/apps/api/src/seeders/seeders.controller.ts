@@ -114,6 +114,12 @@ export class SeedersController {
     return this.service.inventory(Number(id));
   }
 
+  /** Live peer snapshot. Read-only, not cached, and never written to the database. */
+  @Get(':id/peers')
+  peers(@Param('id') id: string) {
+    return this.service.peers(Number(id));
+  }
+
   @Post(':id/torrents')
   @HttpCode(HttpStatus.CREATED)
   addTorrent(@Param('id') id: string, @Body() body: { magnet?: string; torrentPath?: string }) {

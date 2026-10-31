@@ -5,6 +5,7 @@ import path from 'path';
 import http from 'http';
 import crypto from 'crypto';
 import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
+import { describePeers } from './lib/peers.mjs';
 import TRACKERS from './constants/TRACKERS.js';
 import parseTorrent from 'parse-torrent';
 import { readFileSync as readFile, statfsSync } from 'fs';
@@ -349,6 +350,15 @@ const server = http.createServer((req, res) => {
         downloadLimit: DOWNLOAD_LIMIT,
       },
     }));
+    return;
+  }
+
+  // Who is connected, per torrent. Live by nature, so the answer is never cached:
+  // a peer report read from a cache is a number pretending to be a swarm. The
+  // addresses are masked in lib/peers.mjs — this route never sees a whole one.
+  if (url.pathname === '/api/peers' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(describePeers(client.torrents)));
     return;
   }
 

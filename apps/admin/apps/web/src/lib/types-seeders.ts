@@ -78,6 +78,43 @@ export interface SeederInventory {
   };
 }
 
+/**
+ * One connected peer. `address` is a masked prefix — the node never sends a
+ * whole one — and is null when no address could be masked, as is common for a
+ * WebRTC peer.
+ */
+export interface SeederPeer {
+  type: 'web' | 'tcp' | 'other';
+  direction: 'in' | 'out' | null;
+  address: string | null;
+  uploadSpeed: number;
+  downloadSpeed: number;
+  uploaded: number;
+  downloaded: number;
+}
+
+export interface SeederPeerGroup {
+  infoHash: string;
+  name: string;
+  total: number;
+  web: number;
+  tcp: number;
+  inbound: number;
+  outbound: number;
+  truncated: boolean;
+  peers: SeederPeer[];
+}
+
+/** A live snapshot: read when the screen opens, never kept. */
+export interface SeederPeers {
+  total: number;
+  web: number;
+  tcp: number;
+  inbound: number;
+  outbound: number;
+  torrents: SeederPeerGroup[];
+}
+
 /** Why a node will be left alone by a catalogue push. */
 export type PushSkipReason = 'offline' | 'no_credentials' | 'low_space' | 'unreachable';
 
