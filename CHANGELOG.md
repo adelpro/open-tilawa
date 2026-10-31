@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.15 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.7**, **seeder 1.5.7**.
+
+### Changed
+
+- **Reciters read as names, not slugs.** Telemetry stores the slug the player
+  sent, so "Most-played reciters" printed `maher-al-muaiqly`. The console now
+  joins that slug to the catalogue at render time — Arabic name in Arabic, the
+  Latin title in English — and falls back to the slug when the catalogue no
+  longer holds it, so an old row still says whose count it is. The same label
+  reaches the reciter filter, the volume table and recent errors, which were
+  printing the same slug.
+
 ## 1.13.14 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.6**, **seeder 1.5.7**.

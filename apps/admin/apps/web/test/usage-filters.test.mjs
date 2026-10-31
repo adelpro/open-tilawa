@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { nextSort, sortRows, sortVolume, summaryQuery } from '../src/lib/usage-filters.ts';
+import {
+  nextSort,
+  reciterLabel,
+  sortRows,
+  sortVolume,
+  summaryQuery,
+} from '../src/lib/usage-filters.ts';
 
 /**
  * The usage screen's arithmetic, kept out of the route so it can be reasoned about
@@ -99,10 +105,47 @@ describe('sortVolume', () => {
     );
   });
 
+  it('sorts named rows by what the locale prints, not by the slug', () => {
+    const named = [
+      { reciter: 'b', name: 'B', nameAr: 'ياسر', serverBytes: 0, torrentBytes: 0 },
+      { reciter: 'a', name: 'A', nameAr: 'أحمد', serverBytes: 0, torrentBytes: 0 },
+    ];
+    assert.deepEqual(
+      sortVolume(named, { key: 'reciter', dir: 'asc' }, 'ar').map((row) => row.nameAr),
+      ['أحمد', 'ياسر'],
+    );
+    assert.deepEqual(
+      sortVolume(named, { key: 'reciter', dir: 'asc' }, 'en').map((row) => row.name),
+      ['A', 'B'],
+    );
+  });
+
   it('does not add the two figures to anything the screen shows', () => {
     // `served` ranks only: the rows keep their two separate numbers.
     const [first] = sortVolume(volume, { key: 'served', dir: 'desc' });
     assert.deepEqual(first, { reciter: 'Al-Husary', serverBytes: 0, torrentBytes: 900 });
+  });
+});
+
+describe('reciterLabel', () => {
+  it('prefers the audience name in Arabic and the catalogue title in English', () => {
+    const row = { reciter: 'maher-al-muaiqly', name: 'Maher Al Muaiqly', nameAr: 'ماهر المعيقلي' };
+    assert.equal(reciterLabel(row, 'ar'), 'ماهر المعيقلي');
+    assert.equal(reciterLabel(row, 'en'), 'Maher Al Muaiqly');
+  });
+
+  it('falls back across languages rather than showing a blank', () => {
+    assert.equal(reciterLabel({ reciter: 'x', nameAr: 'ياسر الدوسري' }, 'en'), 'ياسر الدوسري');
+    assert.equal(reciterLabel({ reciter: 'x', name: 'Yasser Al Dosari' }, 'ar'), 'Yasser Al Dosari');
+  });
+
+  it('falls back to the slug when the catalogue has no row', () => {
+    assert.equal(reciterLabel({ reciter: 'retired-slug' }, 'ar'), 'retired-slug');
+    assert.equal(reciterLabel({ reciter: 'retired-slug' }, 'en'), 'retired-slug');
+  });
+
+  it('treats whitespace-only names as absent', () => {
+    assert.equal(reciterLabel({ reciter: 'slug', name: '   ', nameAr: '  ' }, 'ar'), 'slug');
   });
 });
 

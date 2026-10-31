@@ -6,10 +6,41 @@
  * both live here where a unit test can hold them.
  */
 
+import type { Locale } from './i18n';
+
 export type SortDir = 'asc' | 'desc';
 export type Sort = { key: string; dir: SortDir };
 
-export type VolumeRow = { reciter: string; serverBytes: number; torrentBytes: number };
+export type VolumeRow = {
+  reciter: string;
+  /** The catalogue's names, when it still holds this slug. */
+  name?: string | null;
+  nameAr?: string | null;
+  serverBytes: number;
+  torrentBytes: number;
+};
+
+/** A slug from the telemetry table, and the catalogue's names for it. */
+export type ReciterLabelFields = {
+  reciter: string;
+  name?: string | null;
+  nameAr?: string | null;
+};
+
+/**
+ * The name an operator reads, in the interface language.
+ *
+ * Telemetry stores the slug the player sent; the catalogue is the only place a
+ * person's name lives, so the join happens at render time and a rename reads
+ * correctly on old rows. Arabic wins in Arabic, the Latin title in English, and a
+ * slug the catalogue no longer holds stays a slug rather than a blank: the count
+ * still has to say whose count it is.
+ */
+export function reciterLabel(row: ReciterLabelFields, locale: Locale): string {
+  const preferred = locale === 'ar' ? row.nameAr : row.name;
+  const fallback = locale === 'ar' ? row.name : row.nameAr;
+  return preferred?.trim() || fallback?.trim() || row.reciter;
+}
 
 export type SummaryFilters = {
   source?: string;
@@ -63,7 +94,7 @@ export function sortVolume(
   return sortRows(
     rows,
     {
-      reciter: (a, b) => a.reciter.localeCompare(b.reciter, locale),
+      reciter: (a, b) => reciterLabel(a, locale).localeCompare(reciterLabel(b, locale), locale),
       serverBytes: (a, b) => a.serverBytes - b.serverBytes,
       torrentBytes: (a, b) => a.torrentBytes - b.torrentBytes,
       served: (a, b) => a.serverBytes + a.torrentBytes - (b.serverBytes + b.torrentBytes),

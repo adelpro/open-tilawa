@@ -7,7 +7,14 @@ import { Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
-import { nextSort, sortRows, sortVolume, summaryQuery, type Sort } from '../lib/usage-filters';
+import {
+  nextSort,
+  reciterLabel,
+  sortRows,
+  sortVolume,
+  summaryQuery,
+  type Sort,
+} from '../lib/usage-filters';
 import { surahName } from '../lib/surahs';
 
 type Summary = {
@@ -34,6 +41,10 @@ type Summary = {
 
 type Source = '' | 'torrent' | 'webseed';
 type Filters = { source: Source; version: string; reciter: string };
+
+/** What the catalogue contributes to a telemetry row: a name for the slug. */
+type CatalogueName = { name: string; nameAr: string | null };
+type CatalogueRow = CatalogueName & { slug: string };
 
 const RANGES = [7, 30, 90] as const;
 const RANGE_LABEL: Record<(typeof RANGES)[number], MessageKey> = {
@@ -84,6 +95,35 @@ export function Usage(): ReactElement {
    * measurements apart — so no column claims the sort until one is clicked.
    */
   const [volumeSort, setVolumeSort] = useState<Sort>({ key: 'served', dir: 'desc' });
+
+  /**
+   * The catalogue, read for one reason: telemetry stores the slug the player
+   * sent, and a slug is not a name. A failed read is not a failed report — the
+   * tables keep showing slugs, exactly as they did before.
+   */
+  const [reciterNames, setReciterNames] = useState<ReadonlyMap<string, CatalogueName>>(new Map());
+
+  useEffect(() => {
+    let alive = true;
+    api<CatalogueRow[]>('/reciters')
+      .then((rows) => {
+        if (!alive) return;
+        const names = new Map<string, CatalogueName>();
+        for (const row of rows) {
+          if (row.slug) names.set(row.slug, { name: row.name, nameAr: row.nameAr });
+        }
+        setReciterNames(names);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const labelFor = useCallback(
+    (slug: string) => reciterLabel({ reciter: slug, ...reciterNames.get(slug) }, locale),
+    [reciterNames, locale],
+  );
 
   const load = useCallback(async () => {
     setError(false);
@@ -149,12 +189,12 @@ export function Usage(): ReactElement {
       sortRows(
         summary?.reciters ?? [],
         {
-          reciter: (a, b) => a.reciter.localeCompare(b.reciter, locale),
+          reciter: (a, b) => labelFor(a.reciter).localeCompare(labelFor(b.reciter), locale),
           plays: (a, b) => a.plays - b.plays,
         },
         reciterSort,
       ),
-    [summary, reciterSort, locale],
+    [summary, reciterSort, locale, labelFor],
   );
 
   const versions = useMemo(
@@ -179,18 +219,26 @@ export function Usage(): ReactElement {
         {
           at: (a, b) => Date.parse(a.at) - Date.parse(b.at),
           version: (a, b) => a.version.localeCompare(b.version),
-          reciter: (a, b) => a.reciter.localeCompare(b.reciter, locale),
+          reciter: (a, b) => labelFor(a.reciter).localeCompare(labelFor(b.reciter), locale),
           surah: (a, b) => a.surah - b.surah,
           errorCode: (a, b) => (a.errorCode ?? '').localeCompare(b.errorCode ?? ''),
         },
         errorSort,
       ),
-    [summary, errorSort, locale],
+    [summary, errorSort, locale, labelFor],
   );
 
   const volumeRows = useMemo(
-    () => sortVolume(summary?.volume.byReciter ?? [], volumeSort, locale),
-    [summary, volumeSort, locale],
+    () =>
+      sortVolume(
+        (summary?.volume.byReciter ?? []).map((row) => {
+          const names = reciterNames.get(row.reciter);
+          return names ? { ...row, ...names } : row;
+        }),
+        volumeSort,
+        locale,
+      ),
+    [summary, volumeSort, locale, reciterNames],
   );
 
   const devices = useMemo(() => (summary?.devices ?? []).slice(-DEVICE_ROWS), [summary]);  // The newest row can be yesterday's if nobody has reported today; the header
@@ -277,11 +325,11 @@ export function Usage(): ReactElement {
           <option value="">{t('usage.allReciters')}</option>
           {reciters.map((row) => (
             <option key={row.reciter} value={row.reciter}>
-              {row.reciter}
+              {labelFor(row.reciter)}
             </option>
           ))}
           {filters.reciter !== '' && !reciters.some((row) => row.reciter === filters.reciter) ? (
-            <option value={filters.reciter}>{filters.reciter}</option>
+            <option value={filters.reciter}>{labelFor(filters.reciter)}</option>
           ) : null}
         </select>
 
@@ -357,7 +405,9 @@ export function Usage(): ReactElement {
                 <tbody>
                   {reciters.map((row) => (
                     <tr key={row.reciter}>
-                      <td>{row.reciter}</td>
+                      <td>
+                        <bdi>{labelFor(row.reciter)}</bdi>
+                      </td>
                       <td className="num">{row.plays}</td>
                     </tr>
                   ))}
@@ -400,7 +450,9 @@ export function Usage(): ReactElement {
                 <tbody>
                   {volumeRows.map((row) => (
                     <tr key={row.reciter}>
-                      <td>{row.reciter}</td>
+                      <td>
+                        <bdi>{labelFor(row.reciter)}</bdi>
+                      </td>
                       <td className="num">
                         {row.serverBytes === 0 ? '—' : bytes(row.serverBytes, locale)}
                       </td>
@@ -502,7 +554,9 @@ export function Usage(): ReactElement {
                     <tr key={`${row.at}-${index}`}>
                       <td title={shortDate(row.at, locale)}>{relative(row.at, locale)}</td>
                       <td>{row.version}</td>
-                      <td>{row.reciter}</td>
+                      <td>
+                        <bdi>{labelFor(row.reciter)}</bdi>
+                      </td>
                       <td>
                         <SurahCell id={row.surah} />
                       </td>
