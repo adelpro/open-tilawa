@@ -20,11 +20,12 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ROUTE_TABLE, surahSlug } from '../src/routes.ts';
+import { ROUTE_TABLE, alternatesFor, parse, surahSlug, toUrl } from '../src/routes.ts';
 import { pageTitle } from '../src/utils/page-title.ts';
 import { riwayaLabel } from '../src/utils/riwaya.ts';
 import { sortByArabicName } from '../src/utils/reciter-order.ts';
 import { SURAHS } from '../src/constants/surah.ts';
+import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
 
 const WEB = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -47,25 +48,48 @@ if (assets.length === 0) {
 const escape = (value) =>
   String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-const copy = MESSAGES.ar;
+/** The two languages the build writes. Arabic is first: it is the site's default. */
+const LOCALES = ['ar', 'en'];
+const COPY = { ar: MESSAGES.ar, en: MESSAGES.en };
 
-function page({ path, title, description, index, body, canonical = true }) {
+/** What the document itself needs: the language, the direction, the og locale. */
+const DOCUMENT = {
+  ar: { dir: 'rtl', ogLocale: 'ar_AR' },
+  en: { dir: 'ltr', ogLocale: 'en_US' },
+};
+
+/** The address of one page in one language, taken from the router and nowhere else. */
+const urlFor = (path, locale) => `${SITE}${toUrl(parse(path), locale)}`;
+
+function page({ locale, path, title, description, index, body, canonical = true }) {
   // One form per page, and it is the path the table declares — `/about`, not `/about/`.
   // The sitemap writes the same string, and nginx redirects the trailing-slash form to it.
-  const url = `${SITE}${path}`;
+  // A page with no canonical (the 404) has no language twin, so it names its own path.
+  const url = canonical ? urlFor(path, locale) : `${SITE}${path}`;
   const robots = index ? 'index, follow' : 'noindex, follow';
+  // The pair, in the form Google reads: each language, plus the page a visitor with no
+  // preference should land on. Arabic is x-default because it is the site's own language.
+  const alternates = canonical
+    ? (() => {
+        const pair = alternatesFor(path);
+        return [['ar', pair.ar], ['en', pair.en], ['x-default', pair.ar]]
+          .map(([lang, target]) => `<link rel="alternate" hreflang="${lang}" href="${SITE}${target}" />`)
+          .join('\n    ');
+      })()
+    : '';
   return `<!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="${locale}" dir="${DOCUMENT[locale].dir}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>${escape(title)}</title>
     <meta name="description" content="${escape(description)}" />
     ${canonical ? `<link rel="canonical" href="${url}" />` : ''}
+    ${alternates}
     <meta name="robots" content="${robots}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Tilawah" />
-    <meta property="og:locale" content="ar_AR" />
+    <meta property="og:locale" content="${DOCUMENT[locale].ogLocale}" />
     <meta property="og:url" content="${url}" />
     <meta property="og:title" content="${escape(title)}" />
     <meta property="og:description" content="${escape(description)}" />
@@ -99,19 +123,30 @@ const pages = [];
  */
 const indexable = (name) => ROUTE_TABLE.find((row) => row.name === name)?.index ?? false;
 
-function add(path, meta) {
-  write(path, page({ path, ...meta }));
-  pages.push({ path, ...meta });
+/**
+ * One page, both languages.
+ *
+ * `build` is asked for the words in each language, so a page cannot be written in one
+ * language and claimed to be in another: whatever it returns is used for both the HTML
+ * and the sitemap row, and the head's `lang` comes from the loop, not from the caller.
+ */
+function addPage(path, build) {
+  for (const locale of LOCALES) {
+    const meta = build(locale, COPY[locale]);
+    write(toUrl(parse(path), locale), page({ path, locale, ...meta }));
+    pages.push({ path, locale, ...meta });
+  }
 }
 
-add('/', {
-  title: 'Tilawah — القرآن الكريم ندّاً بندّ',
+addPage('/', (locale, copy) => ({
+  title:
+    locale === 'ar' ? 'Tilawah — القرآن الكريم ندّاً بندّ' : 'Tilawah — the Quran, closer',
   description: copy.about.lede,
   index: indexable('home'),
   body: `<h1>${escape(copy.about.title)}</h1><p>${escape(copy.about.lede)}</p>`,
-});
+}));
 
-add('/about', {
+addPage('/about', (_locale, copy) => ({
   title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة — Tilawah',
   description: copy.about.lede,
   index: indexable('about'),
@@ -119,16 +154,16 @@ add('/about', {
     [copy.about.how, copy.about.noPeers, copy.about.ring, copy.about.sources, copy.about.open]
       .map((section) => `<h2>${escape(section.title)}</h2><p>${escape(section.p1)}</p>`)
       .join(''),
-});
+}));
 
-add('/privacy', {
+addPage('/privacy', (_locale, copy) => ({
   title: pageTitle({ name: 'privacy' }, copy) ?? 'الخصوصية — Tilawah',
   description: copy.about.lede,
   index: indexable('privacy'),
   body: `<h1>${escape(copy.privacy.title)}</h1><ul>${copy.privacy.items
     .map((item) => `<li>${escape(item)}</li>`)
     .join('')}</ul>`,
-});
+}));
 
 // The catalogue is the only source of releases. A build without it would publish hub
 // pages that link nowhere, so it stops here instead.
@@ -157,7 +192,7 @@ try {
 // The roster, written down: the one hub with a screen behind it. The app renders the
 // same rows from the same catalogue, so the names a crawler reads are the names it can
 // act on — and the page is worth the sitemap row it gets.
-add('/reciters', {
+addPage('/reciters', (_locale, copy) => ({
   title: pageTitle({ name: 'reciters' }, copy) ?? 'القرّاء — Tilawah',
   description: copy.recitersPage.lede,
   index: indexable('reciters'),
@@ -170,16 +205,29 @@ add('/reciters', {
       )
       .join('') +
     '</ul>',
-});
+}));
 
 for (const release of catalogue) {
   if (!release.slug) continue;
   for (const surah of SURAHS) {
-    add(`/listen/${release.slug}/${surah.id}-${surahSlug(surah.id)}`, {
-      title: `سورة ${surah.name} — ${release.nameAr ?? release.name}`,
-      description: `استمع إلى سورة ${surah.name} بصوت ${release.nameAr ?? release.name}.`,
-      index: indexable('listen'),
-      body: `<h1>سورة ${escape(surah.name)} — ${escape(release.nameAr ?? release.name)}</h1>`,
+    const name = release.nameAr ?? release.name;
+    addPage(`/listen/${release.slug}/${surah.id}-${surahSlug(surah.id)}`, (locale) => {
+      // The surah name in the language of the page: a listener looking for الكهف does
+      // not search for "Al-Kahf", and a share card must read like the page behind it.
+      const surahName = locale === 'ar' ? surah.name : SURAH_NAMES_EN[surah.id] ?? surah.name;
+      return locale === 'ar'
+        ? {
+            title: `سورة ${surah.name} — ${name}`,
+            description: `استمع إلى سورة ${surah.name} بصوت ${name}.`,
+            index: indexable('listen'),
+            body: `<h1>سورة ${escape(surah.name)} — ${escape(name)}</h1>`,
+          }
+        : {
+            title: `Surah ${surahName} — ${name}`,
+            description: `Listen to Surah ${surahName} recited by ${name}.`,
+            index: indexable('listen'),
+            body: `<h1>Surah ${escape(surahName)} — ${escape(name)}</h1>`,
+          };
     });
   }
 }
@@ -188,9 +236,21 @@ const listed = pages.filter((entry) => entry.index);
 writeFileSync(
   join(DIST, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${listed
-  .map((entry) => `  <url><loc>${SITE}${entry.path === '/' ? '/' : entry.path}</loc><lastmod>${TODAY}</lastmod></url>`)
+  .map((entry) => {
+    // Both languages, each with the pair spelled out: this is the half of hreflang a
+    // crawler can read without loading either page, and the only place it can learn
+    // that `/about` and `/en/about` are one document in two languages.
+    const pair = alternatesFor(entry.path);
+    return `  <url>
+    <loc>${urlFor(entry.path, entry.locale)}</loc>
+    <lastmod>${TODAY}</lastmod>
+    <xhtml:link rel="alternate" hreflang="ar" href="${SITE}${pair.ar}" />
+    <xhtml:link rel="alternate" hreflang="en" href="${SITE}${pair.en}" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${pair.ar}" />
+  </url>`;
+  })
   .join('\n')}
 </urlset>
 `,
@@ -210,8 +270,9 @@ writeFileSync(
   join(DIST, '404.html'),
   page({
     path: '/404',
-    title: pageTitle({ name: 'notFound' }, copy) ?? 'هذه الصفحة غير موجودة — Tilawah',
-    description: copy.about.lede,
+    locale: 'ar',
+    title: pageTitle({ name: 'notFound' }, COPY.ar) ?? 'هذه الصفحة غير موجودة — Tilawah',
+    description: COPY.ar.about.lede,
     // Not a route: this is the page nginx serves with a 404, so it can never be indexed.
     index: false,
     canonical: false,

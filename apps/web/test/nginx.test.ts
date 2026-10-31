@@ -10,7 +10,10 @@ const CONF = readFileSync(new URL('../nginx.conf', import.meta.url), 'utf-8');
 const rootLocation = /location \/ \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
 
 /** The one location that hands a page path to the app. */
-const pageLocation = /location ~ \^\/\([^)]*\)\(\/\|\$\) \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
+const pageLocation = /location ~ \^\/[^\n]*\{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
+
+/** The same location's first line, which is where the families it accepts are named. */
+const familyLine = CONF.split('\n').find((line) => line.trimStart().startsWith('location ~ ^/')) ?? '';
 
 /**
  * The edge is the only place that can say "not here" with a status code.
@@ -39,8 +42,26 @@ test('every route nginx cannot resolve from disk still reaches the app', () => {
   assert.ok(families.size > 0, 'no route families to check');
 
   for (const family of families) {
-    assert.match(CONF, new RegExp(`location ~ \\^/\\([^)]*\\b${family}\\b`), `/${family} has no shell fallback`);
+    assert.match(
+      familyLine,
+      new RegExp(`\\b${family}\\b`),
+      `/${family} has no shell fallback`,
+    );
   }
+});
+
+/**
+ * English lives under a prefix, so every family the app answers itself has to be
+ * reachable with it — otherwise `/en/listen/...` misses the family location, falls
+ * through to the catch-all, and becomes a 404 in the one language whose pages the
+ * catch-all was never taught about.
+ */
+test('the app-only families answer under the language prefix too', () => {
+  assert.match(
+    CONF,
+    /location ~ \^\/\(en\/\)\?\(listen\|/,
+    'the family location does not accept the /en prefix',
+  );
 });
 
 test('a prerendered page is served at its path, never redirected to a directory', () => {

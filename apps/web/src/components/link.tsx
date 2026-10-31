@@ -1,7 +1,7 @@
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
 
-import { navigate } from '@/hooks/use-route';
-import { toPath, type Parsed } from '@/routes';
+import { hrefFor, navigate } from '@/hooks/use-route';
+import type { Parsed } from '@/routes';
 
 /**
  * A link that navigates without reloading the document.
@@ -28,7 +28,7 @@ export default function Link({
   };
 
   return (
-    <a href={toPath(to)} onClick={handleClick} {...rest}>
+    <a href={hrefFor(to)} onClick={handleClick} {...rest}>
       {children}
     </a>
   );

@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.13.19 — 2026-10-31
+
+Patch. App versions: **web 1.13.4**, **admin 1.32.9**, **seeder 1.5.7**.
+
+### Added
+
+- **English has an address of its own.** `/about` is Arabic — it always was, and every
+  URL that exists today keeps working and keeps ranking — and `/en/about` is the same
+  page in English. A language toggle can only repaint; two URLs give a crawler two
+  documents to rank, and give a share link the language it was read in. The prefix is a
+  whole segment, so `/english` is still a 404, and it lives in exactly one place
+  (`LOCALE_PREFIX` in `routes.ts`), which is what every other caller reads.
+- **The build writes both languages**, each with its own `<html lang dir>`, canonical,
+  `og:locale` and the `hreflang` pair (Arabic is `x-default`), and the sitemap carries the
+  same pair per URL with the `xhtml` namespace a crawler needs to read it.
+- **Switching language moves the address**, by `replaceState` so there is nothing to go
+  back to; links carry the current page's language in their `href`, so "open in a new
+  tab" lands where the click would have gone. A visitor whose stored choice is English
+  and who arrives on a bare URL is moved to the English one before the first paint —
+  a page painted in English never keeps an Arabic address.
+
+### Fixed
+
+- **nginx accepts the prefix on the families the app answers itself.** Without
+  `(en/)?` on `/listen|settings|account|favorites|recent`, the English player missed the
+  family location, fell through to the catch-all, and became a 404.
+
 ## 1.13.18 — 2026-10-31
 
 Patch. App versions: **web 1.13.3**, **admin 1.32.9**, **seeder 1.5.7**.

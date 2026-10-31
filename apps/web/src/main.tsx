@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './app/globals.css';
 import { registerAppWorker } from './utils/sw-registration';
-import { applyLocale, resolveInitialLocale } from './hooks/use-locale';
+import { alignUrlWithLocale, applyLocale, resolveInitialLocale } from './hooks/use-locale';
 import { applyTheme, resolveInitialTheme } from './hooks/use-theme';
 import { migrateStorageNamespace } from './utils/storage-keys';
 
@@ -16,8 +16,11 @@ try {
   // private mode: the app works, it just starts from defaults
 }
 
-// Before the first paint, so neither direction nor palette can flash.
-applyLocale(resolveInitialLocale());
+// Before the first paint, so neither direction nor palette can flash. The address is
+// moved in the same breath: a page painted in English must not keep an Arabic URL.
+const startLocale = resolveInitialLocale();
+applyLocale(startLocale);
+alignUrlWithLocale(startLocale);
 applyTheme(resolveInitialTheme());
 
 // Install the shell (and the streaming origin) immediately, not on first play.

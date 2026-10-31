@@ -131,6 +131,54 @@ export function isKnown(pathname: string): boolean {
 }
 
 /**
+ * The language layer over the path table.
+ *
+ * Arabic keeps the bare path. It is the product's first language, every URL that
+ * exists today was written for it, and a crawl history is not something to throw
+ * away — so `/about` stays Arabic and English moves under a prefix. What that
+ * buys is the one thing a language toggle cannot give: two URLs, each with one
+ * language in it, for a crawler to rank separately.
+ *
+ * The prefix is a whole segment, never a string prefix: `/english` is a 404, not
+ * English.
+ */
+export type UrlLocale = 'ar' | 'en';
+
+/** The one place the prefix is written. Moving English to `/ar` + `/en` is this map. */
+const LOCALE_PREFIX: Record<UrlLocale, string> = { ar: '', en: '/en' };
+
+export function parseUrl(pathname: string): { locale: UrlLocale; route: Parsed } {
+  const path = pathname.split('?')[0].replace(/\/+$/, '') || '/';
+  for (const locale of Object.keys(LOCALE_PREFIX) as UrlLocale[]) {
+    const prefix = LOCALE_PREFIX[locale];
+    if (!prefix) continue;
+    if (path === prefix) return { locale, route: { name: 'home' } };
+    if (path.startsWith(`${prefix}/`)) {
+      return { locale, route: parse(path.slice(prefix.length)) };
+    }
+  }
+  return { locale: 'ar', route: parse(path) };
+}
+
+export function toUrl(route: Parsed, locale: UrlLocale): string {
+  const path = toPath(route);
+  const prefix = LOCALE_PREFIX[locale];
+  if (!prefix) return path;
+  return path === '/' ? prefix : `${prefix}${path}`;
+}
+
+/**
+ * The pair a crawler is told about: each language's URL for the same page.
+ *
+ * x-default is the Arabic one, because that is the page a visitor with no
+ * language preference should land on.
+ */
+export function alternatesFor(pathname: string): { ar: string; en: string } {
+  const { route } = parseUrl(pathname);
+  return { ar: toUrl(route, 'ar'), en: toUrl(route, 'en') };
+}
+
+/**
  * The one-time migration from the hash router.
  *
  * Bookmarks and installed shortcuts still say `#/about` or `#/?view=favorites`.

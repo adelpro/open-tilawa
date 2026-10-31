@@ -30,3 +30,22 @@ test('the sitemap lists the pages the table calls indexable', () => {
   // from the helper above, so the filter is the table. Asserted on the filter's shape.
   assert.match(SOURCE, /pages\.filter\(\(entry\) => entry\.index\)/);
 });
+
+/**
+ * Two languages, one page. The pair a crawler needs is the pair the router already
+ * knows how to build — the build must not carry a second copy of the prefix rule.
+ */
+test('the prefix and the alternates come from the route table, not from this script', () => {
+  assert.match(SOURCE, /import \{[^}]*alternatesFor[^}]*\} from '\.\.\/src\/routes\.ts'/, 'alternatesFor is not taken from the router');
+  assert.match(SOURCE, /import \{[^}]*toUrl[^}]*\} from '\.\.\/src\/routes\.ts'/, 'toUrl is not taken from the router');
+  // A literal prefix here is how the router and the build drift apart.
+  assert.doesNotMatch(SOURCE, /'\/en\b/, 'the build writes its own language prefix');
+});
+
+test('every written page names its own language and the pair a crawler chooses from', () => {
+  assert.match(SOURCE, /<html lang="\$\{locale\}"/, 'the document language is not written per page');
+  assert.match(SOURCE, /hreflang="ar"/);
+  assert.match(SOURCE, /hreflang="en"/);
+  assert.match(SOURCE, /hreflang="x-default"/);
+  assert.match(SOURCE, /xmlns:xhtml=/, 'the sitemap cannot carry alternates without the namespace');
+});
