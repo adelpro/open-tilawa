@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { SQLITE_DB } from '../store/store.module';
 import { deriveReciterState, type Db, type ReciterState } from '@tilawa-admin/core';
-import { RECITER_NAMES_AR } from './reciter-names';
+import { RECITER_NAMES_AR, RETIRED_RECITER_NAMES_AR } from './reciter-names';
 import { assignSlug, slugify } from './slug';
 
 export interface Reciter {
@@ -95,12 +95,28 @@ export class RecitersService {
     }
   }
 
-  /** Fill only the rows nobody has named yet; an edit in the console wins. */
+  /**
+   * Fill only the rows nobody has named yet; an edit in the console wins.
+   *
+   * Then retire the seeded names that carried the reading in parentheses. The
+   * catalogue has a `riwaya` column and every screen prints it beside the name,
+   * so the copy inside the name said the same fact twice. Only a row still
+   * holding the exact retired string is rewritten — that is the seed talking,
+   * not an operator.
+   */
   private seedArabicNames(): void {
     const update = this.db.prepare(
       'UPDATE reciters SET name_ar = ? WHERE lower(infohash) = ? AND name_ar IS NULL',
     );
     for (const [hash, name] of Object.entries(RECITER_NAMES_AR)) update.run(name, hash);
+
+    const retire = this.db.prepare(
+      'UPDATE reciters SET name_ar = ? WHERE lower(infohash) = ? AND name_ar = ?',
+    );
+    for (const [hash, old] of Object.entries(RETIRED_RECITER_NAMES_AR)) {
+      const name = RECITER_NAMES_AR[hash];
+      if (name) retire.run(name, hash, old);
+    }
   }
 
   /**

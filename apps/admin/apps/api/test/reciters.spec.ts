@@ -2,6 +2,7 @@ import { describe, expect, it, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
 import { bootHarness, type Harness } from './harness';
 import { RecitersService } from '../src/reciters/reciters.service';
+import { RECITER_NAMES_AR, RETIRED_RECITER_NAMES_AR } from '../src/reciters/reciter-names';
 
 const HAFS = '5e0becf35d91ea4602f04db90d74621a172aa396';
 const WARSH = '012101c66ee42d7c5905ab910e2b129335f4f30d';
@@ -55,6 +56,21 @@ describe('public reciter catalogue', () => {
     });
     const res = await request(h.app.getHttpServer()).get('/api/public/reciters').expect(200);
     expect(res.body.reciters.find((r: { id: number }) => r.id === row.id).riwaya).toBe('unknown');
+  });
+
+  it('seeds a name without repeating the reading inside it', () => {
+    // The roster, the player and the prerender all print `riwaya` beside the
+    // name. A name that carried its own `(ورش)` said the same fact twice, and a
+    // row reclassified later left the old reading in the name forever.
+    const readings = /\((?:ورش|قالون|الدوري|حفص)\)/;
+    for (const [hash, name] of Object.entries(RECITER_NAMES_AR)) {
+      expect({ hash, name }).toEqual({ hash, name: expect.not.stringMatching(readings) });
+    }
+    // Every retired name belongs to a seeded row whose current name differs.
+    for (const [hash, old] of Object.entries(RETIRED_RECITER_NAMES_AR)) {
+      expect(RECITER_NAMES_AR[hash]).toBeDefined();
+      expect(RECITER_NAMES_AR[hash]).not.toBe(old);
+    }
   });
 
   it('hides a row when published flips to false', async () => {
