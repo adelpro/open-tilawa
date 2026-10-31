@@ -121,8 +121,8 @@ export function Usage(): ReactElement {
   }, []);
 
   const labelFor = useCallback(
-    (slug: string) => reciterLabel({ reciter: slug, ...reciterNames.get(slug) }, locale),
-    [reciterNames, locale],
+    (slug: string) => reciterLabel({ reciter: slug, ...reciterNames.get(slug) }),
+    [reciterNames],
   );
 
   const load = useCallback(async () => {

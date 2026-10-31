@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.13.16 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.8**, **seeder 1.5.7**.
+
+### Changed
+
+- **Reciter names are Arabic in every interface language**, as on the catalogue
+  screen. The catalogue's `name` is the torrent's file name
+  (`Maher_Al-Muaiqly`), not a title, so 1.32.7's English mode traded a slug for
+  an underscore. English now reads the same Arabic name; only a row the catalogue
+  never named falls back to the file name, and then to the slug.
+
 ## 1.13.15 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.7**, **seeder 1.5.7**.

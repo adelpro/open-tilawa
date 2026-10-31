@@ -105,7 +105,7 @@ describe('sortVolume', () => {
     );
   });
 
-  it('sorts named rows by what the locale prints, not by the slug', () => {
+  it('sorts named rows by the Arabic name, whatever the interface language', () => {
     const named = [
       { reciter: 'b', name: 'B', nameAr: 'ياسر', serverBytes: 0, torrentBytes: 0 },
       { reciter: 'a', name: 'A', nameAr: 'أحمد', serverBytes: 0, torrentBytes: 0 },
@@ -115,8 +115,8 @@ describe('sortVolume', () => {
       ['أحمد', 'ياسر'],
     );
     assert.deepEqual(
-      sortVolume(named, { key: 'reciter', dir: 'asc' }, 'en').map((row) => row.name),
-      ['A', 'B'],
+      sortVolume(named, { key: 'reciter', dir: 'asc' }, 'en').map((row) => row.nameAr),
+      ['أحمد', 'ياسر'],
     );
   });
 
@@ -128,24 +128,21 @@ describe('sortVolume', () => {
 });
 
 describe('reciterLabel', () => {
-  it('prefers the audience name in Arabic and the catalogue title in English', () => {
-    const row = { reciter: 'maher-al-muaiqly', name: 'Maher Al Muaiqly', nameAr: 'ماهر المعيقلي' };
-    assert.equal(reciterLabel(row, 'ar'), 'ماهر المعيقلي');
-    assert.equal(reciterLabel(row, 'en'), 'Maher Al Muaiqly');
+  it('prefers the Arabic name, whatever the interface language', () => {
+    const row = { reciter: 'maher-al-muaiqly', name: 'Maher_Al-Muaiqly', nameAr: 'ماهر المعيقلي' };
+    assert.equal(reciterLabel(row), 'ماهر المعيقلي');
   });
 
-  it('falls back across languages rather than showing a blank', () => {
-    assert.equal(reciterLabel({ reciter: 'x', nameAr: 'ياسر الدوسري' }, 'en'), 'ياسر الدوسري');
-    assert.equal(reciterLabel({ reciter: 'x', name: 'Yasser Al Dosari' }, 'ar'), 'Yasser Al Dosari');
+  it('falls back to the file name when nobody named the reciter', () => {
+    assert.equal(reciterLabel({ reciter: 'x', name: 'Yasser_Al_Dosari' }), 'Yasser_Al_Dosari');
   });
 
   it('falls back to the slug when the catalogue has no row', () => {
-    assert.equal(reciterLabel({ reciter: 'retired-slug' }, 'ar'), 'retired-slug');
-    assert.equal(reciterLabel({ reciter: 'retired-slug' }, 'en'), 'retired-slug');
+    assert.equal(reciterLabel({ reciter: 'retired-slug' }), 'retired-slug');
   });
 
   it('treats whitespace-only names as absent', () => {
-    assert.equal(reciterLabel({ reciter: 'slug', name: '   ', nameAr: '  ' }, 'ar'), 'slug');
+    assert.equal(reciterLabel({ reciter: 'slug', name: '  ', nameAr: ' ' }), 'slug');
   });
 });
 
