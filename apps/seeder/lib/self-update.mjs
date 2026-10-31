@@ -76,3 +76,25 @@ export function composeSteps(config) {
     [...helper(true), ...inner, 'up', '-d', '--no-deps', config.service],
   ];
 }
+
+/**
+ * Restart without touching the image: same service, same files, same version.
+ * Detached for the same reason as the recreate — the helper stops this container,
+ * so it cannot be a child of it.
+ */
+export function restartSteps(config) {
+  const inner = ['compose', '-p', config.project, '-f', config.file];
+  const helper = [
+    'run',
+    '--rm',
+    '-d',
+    '--entrypoint',
+    'docker',
+    '-v',
+    '/var/run/docker.sock:/var/run/docker.sock',
+    '-v',
+    `${config.hostFile}:${config.file}:ro`,
+    config.helperImage,
+  ];
+  return [[...helper, ...inner, 'restart', config.service]];
+}

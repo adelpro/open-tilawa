@@ -1,6 +1,6 @@
 {
   "name": "webtorrent-seeder",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "main": "seed.mjs",
   "description": "A Node.js backend for open-tilawa application for seeding torrents using WebTorrent.",
   "scripts": {

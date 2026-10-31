@@ -6,7 +6,7 @@ import http from 'http';
 import crypto from 'crypto';
 import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
 import { describePeers, liveWires } from './lib/peers.mjs';
-import { composeSteps, selfUpdateConfig } from './lib/self-update.mjs';
+import { composeSteps, restartSteps, selfUpdateConfig } from './lib/self-update.mjs';
 import getInfoHashFromMagnetLink from './utils/getInfoHashFromMagnetLink.js';
 import { saveMissingTorrents } from './lib/torrent-store.mjs';
 import { spawn } from 'node:child_process';
@@ -326,6 +326,22 @@ function runComposeStep(args, timeoutMs) {
   });
 }
 
+/** Restart only: no pull, no version change, same files. */
+async function selfRestart() {
+  const config = selfUpdateConfig();
+  selfUpdateState.running = true;
+  selfUpdateState.error = null;
+  persistLoaded();
+  try {
+    for (const step of restartSteps(config)) await runComposeStep(step, config.timeoutMs);
+  } catch (error) {
+    selfUpdateState.error = error.message;
+  } finally {
+    selfUpdateState.running = false;
+    selfUpdateState.at = new Date().toISOString();
+  }
+}
+
 /** Never rejects: the outcome is reported through `selfUpdateState`. */
 async function selfUpdate() {
   const config = selfUpdateConfig();
@@ -495,6 +511,30 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ started: true }));
       return;
     }
+  }
+
+  // Restart only. Same door as an update, so the deployment grants both with one
+  // decision; a restart is what you want when the version is already right.
+  if (url.pathname === '/api/restart' && req.method === 'POST') {
+    const config = selfUpdateConfig();
+    if (!config.enabled) {
+      res.writeHead(409, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          error: 'restarting from here is not enabled on this node — set SEEDER_SELF_UPDATE=1',
+        }),
+      );
+      return;
+    }
+    if (selfUpdateState.running) {
+      res.writeHead(409, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'a restart or update is already running on this node' }));
+      return;
+    }
+    void selfRestart();
+    res.writeHead(202, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ started: true }));
+    return;
   }
 
   // Handle POST /api/torrents (add torrent). The inventory branch above is

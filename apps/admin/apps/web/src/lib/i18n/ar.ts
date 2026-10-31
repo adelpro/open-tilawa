@@ -439,6 +439,12 @@ export const ar: Catalogue = {
   'seeders.versionUnknown': 'الإصدار غير معروف',
   'seeders.updateSoftware': 'تحديث البرنامج',
   'seeders.autoUpdateChip': 'تحديث تلقائي',
+  'seeders.restart': 'إعادة التشغيل',
+  'seeders.restartTitle': 'إعادة تشغيل هذا الخادم؟',
+  'seeders.restartBody':
+    'يُوقف حاوية التوزيع ثم يعيد تشغيلها. لا يتغير الإصدار، وتبقى الملفات في مكانها، وينقطع التوزيع ثوانٍ.',
+  'seeders.restarted': 'أُعيد تشغيل الخادم.',
+  'seeders.restartFailed': 'تعذّرت إعادة تشغيل الخادم.',
   'seeders.updateTitle': 'أتحدّث خادم التوزيع هذا؟',
   'seeders.updateBodyBuild':
     'يُعاد بناء صورة الخادم من نسخة المستودع المثبّتة على هذا الجهاز، ثم يُعاد تشغيله. تبقى الملفات على القرص، وينقطع التوزيع حتى يعود الخادم.',

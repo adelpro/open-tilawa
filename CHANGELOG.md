@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.9 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.2**, **seeder 1.5.6**.
+
+### Added
+
+- **Restart is its own button.** Updating and restarting were the same
+  action, so an up-to-date node showed a control that would rebuild it for no
+  reason. Update now appears only when the fleet target is newer; Restart is
+  always there for a node that accepts commands, and changes nothing but the
+  process — same image, same files, seconds. Pinned nodes run it through this
+  host's daemon, remote nodes through the permission their update already uses,
+  and both are audited.
+
 ## 1.13.8 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.1**, **seeder 1.5.5**.

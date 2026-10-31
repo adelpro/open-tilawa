@@ -442,6 +442,12 @@ export const en = {
   'seeders.versionUnknown': 'version unknown',
   'seeders.updateSoftware': 'Update software',
   'seeders.autoUpdateChip': 'Auto-update',
+  'seeders.restart': 'Restart',
+  'seeders.restartTitle': 'Restart this node?',
+  'seeders.restartBody':
+    'Stops and starts the seeder container. The version does not change and the files stay where they are; seeding pauses for a few seconds.',
+  'seeders.restarted': 'Node restarted.',
+  'seeders.restartFailed': 'Could not restart the node.',
   'seeders.updateTitle': 'Update this seeder?',
   'seeders.updateBodyBuild':
     "Rebuilds the node's image from the repository checkout on this host, then restarts it. The files stay on disk; seeding pauses until the node is back.",

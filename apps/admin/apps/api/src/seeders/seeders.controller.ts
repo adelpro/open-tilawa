@@ -108,6 +108,13 @@ export class SeedersController {
     return this.service.updateSoftware(Number(id), Number(actorId));
   }
 
+  /** Restart a node without changing its image. Seconds, so this one waits. */
+  @Post(':id/restart')
+  @HttpCode(HttpStatus.ACCEPTED)
+  restart(@Param('id') id: string, @CurrentUser('id') actorId: string | number) {
+    return this.service.restart(Number(id), Number(actorId));
+  }
+
   // ---------- torrent inventory, proxied to the seeder's Basic-auth admin API ----------
 
   @Get(':id/torrents')

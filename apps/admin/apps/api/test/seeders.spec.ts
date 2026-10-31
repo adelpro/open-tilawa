@@ -43,6 +43,21 @@ function fakeSeeder(
       );
       return;
     }
+    if (req.url === '/api/restart' && req.method === 'POST') {
+      if (decoded !== `${user}:${pass}`) {
+        res.writeHead(401).end('Unauthorized');
+        return;
+      }
+      if (options.selfUpdate !== true) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'restarting from here is not enabled on this node' }));
+        return;
+      }
+      seen.push('restart');
+      res.writeHead(202, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ started: true }));
+      return;
+    }
     if (req.url === '/api/update') {
       if (decoded !== `${user}:${pass}`) {
         res.writeHead(401).end('Unauthorized');
@@ -352,6 +367,34 @@ describe('seeder proxy', () => {
     } finally {
       own.server.close();
     }
+  });
+
+  it('restarts a capable node without touching its version', async () => {
+    const capable = await fakeSeeder({ selfUpdate: true });
+    try {
+      const { body } = await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-restart', url: capable.url, adminUser: 'adm', adminPass: 'secret-pass' })
+        .expect(201);
+      await agent.post(`/api/seeders/${body.id}/poll`).set('x-csrf-token', csrf).expect(201);
+
+      await agent
+        .post(`/api/seeders/${body.id}/restart`)
+        .set('x-csrf-token', csrf)
+        .expect(202);
+      expect(capable.seen).toContain('restart');
+    } finally {
+      capable.server.close();
+    }
+  });
+
+  it('refuses to restart a node that accepts no commands', async () => {
+    const res = await agent
+      .post(`/api/seeders/${seederId}/restart`)
+      .set('x-csrf-token', csrf)
+      .expect(400);
+    expect(res.body.message).toContain('does not accept commands');
   });
 
   it('asks a self-updating node, then waits for it to come back', async () => {

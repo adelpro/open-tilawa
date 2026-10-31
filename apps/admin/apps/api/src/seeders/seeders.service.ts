@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { SQLITE_DB } from '../store/store.module';
 import { AuditRepository, isExpired, nextPlacementState, type Db } from '@tilawa-admin/core';
 import { TelemetryService } from '../telemetry/telemetry.service';
-import { updateSeederService } from './seeder-update';
+import { restartSeederService, updateSeederService } from './seeder-update';
 import { shouldAutoUpdate } from './auto-update';
 
 /** Seeder admin calls are bounded: a hung seeder must not hang the console. */
@@ -624,6 +624,75 @@ export class SeedersService {
     this.writeUpdateState(id, true, null);
     void this.runUpdate(id, mode, actorId, !seeder.pinned, trigger);
     return { started: true, mode };
+  }
+
+  /**
+   * Restart a node without touching its image.
+   *
+   * The action an operator wants when the version is already right: a stuck
+   * swarm, a config change on the host, a node that stopped answering peers.
+   * Pinned nodes run it through this host's daemon; remote nodes run it
+   * themselves, through the same permission their update button uses.
+   */
+  async restart(id: number, actorId?: number): Promise<{ restarted: true }> {
+    const seeder = this.get(id);
+    if (!seeder) throw new NotFoundException('seeder not found');
+    if (!seeder.pinned && !seeder.selfUpdate) {
+      throw new BadRequestException(
+        'this node does not accept commands from the console — enable self-update on it first',
+      );
+    }
+    if (seeder.pinned && this.config.get<string>('SEEDER_UPDATE') !== '1') {
+      throw new ServiceUnavailableException(
+        'node commands are not enabled on this deployment (set SEEDER_UPDATE=1 and mount the Docker socket)',
+      );
+    }
+
+    let error: string | null = null;
+    try {
+      if (seeder.pinned) {
+        await restartSeederService({
+          composeFile: this.config.get<string>('SEEDER_COMPOSE_FILE') ?? '/host/docker-compose.yml',
+          project: this.config.get<string>('SEEDER_COMPOSE_PROJECT') ?? 'open-tilawa',
+          service: this.config.get<string>('SEEDER_SERVICE') ?? 'seeder',
+          timeoutMs: Number(this.config.get<string>('SEEDER_UPDATE_TIMEOUT_MS') ?? 120_000),
+        });
+      } else {
+        const node = await this.requireSeeder(id);
+        const res = await this.call(node, '/api/restart', { method: 'POST' });
+        if (res.status === 404) {
+          throw new Error(
+            "this node's seeder is too old to restart itself — update it on its host once",
+          );
+        }
+        await this.waitOnline(id);
+      }
+      await this.poll(id);
+    } catch (err) {
+      error = (err as Error).message;
+      this.logger.warn(`restart of node ${id} failed: ${error}`);
+    }
+
+    this.audit.record({
+      actorId: actorId ?? null,
+      userId: null,
+      action: 'seeder:restart',
+      target: String(id),
+      status: error ? 'error' : 'ok',
+      after: { error, version: this.get(id)?.version ?? null },
+    });
+    if (error) throw new ServiceUnavailableException(error);
+    return { restarted: true };
+  }
+
+  /** Wait for a node that was just restarted to answer again. */
+  private async waitOnline(id: number, attempts = 20): Promise<void> {
+    let row = await this.poll(id);
+    for (let attempt = 0; attempt < attempts && row?.status !== 'online'; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      row = await this.poll(id);
+    }
+    if (row?.status !== 'online') throw new Error('the node did not come back after the restart');
   }
 
   /** The durable half of the update state, written beside the in-memory copy. */

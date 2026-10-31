@@ -158,6 +158,24 @@ test('POST /api/update is refused without credentials', async () => {
   assert.equal(res.status, 401);
 });
 
+/**
+ * Restart is the same permission as update: one deployment decision covers both.
+ * This suite runs without the flag, so the refusal is the contract proven here.
+ */
+test('POST /api/restart is refused when the node never opted in', async () => {
+  const res = await fetch(`http://127.0.0.1:${port}/api/restart`, {
+    method: 'POST',
+    headers: { Authorization: auth },
+  });
+  assert.equal(res.status, 409);
+  assert.match((await res.json()).error, /SEEDER_SELF_UPDATE/);
+});
+
+test('POST /api/restart is refused without credentials', async () => {
+  const res = await fetch(`http://127.0.0.1:${port}/api/restart`, { method: 'POST' });
+  assert.equal(res.status, 401);
+});
+
 test('DELETE of a hash the node does not hold answers 404', async () => {
   const res = await fetch(
     `http://127.0.0.1:${port}/api/torrents/0000000000000000000000000000000000000000`,

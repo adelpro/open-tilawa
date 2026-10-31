@@ -33,8 +33,28 @@ export function composeArgs(
   ];
 }
 
-function run(args: string[], timeoutMs: number): Promise<string> {
-  return new Promise((resolve, reject) => {
+/**
+ * The compose argv for a restart: same service, same image, same files.
+ *
+ * Separate from `composeArgs` because a restart must not pull or build — asking
+ * a node that already runs the right version to "update" and getting a rebuild
+ * is how a restart becomes an outage.
+ */
+export function restartArgs(
+  settings: Pick<SeederUpdateSettings, 'composeFile' | 'project' | 'service'>,
+): string[] {
+  return [
+    'compose',
+    '-p',
+    settings.project,
+    '-f',
+    settings.composeFile,
+    'restart',
+    settings.service,
+  ];
+}
+
+function run(args: string[], timeoutMs: number): Promise<string> {  return new Promise((resolve, reject) => {
     execFile(
       'docker',
       args,
@@ -72,4 +92,17 @@ export async function updateSeederService(
     if (tail) lines.push(tail);
   }
   return { mode: settings.mode, output: lines.join('\n') };
+}
+
+/**
+ * Restart the seeder service through the host's Docker.
+ *
+ * A restart is seconds, not minutes, so unlike an update it is awaited: the node
+ * is back before the response is written, and the console can reload the row with
+ * the answer in hand.
+ */
+export async function restartSeederService(
+  settings: Omit<SeederUpdateSettings, 'mode'>,
+): Promise<string> {
+  return run(restartArgs(settings), settings.timeoutMs);
 }

@@ -54,6 +54,8 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
   const [busy, setBusy] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [confirmingUpdate, setConfirmingUpdate] = useState(false);
+  /** Restart is not an update: same image, same files, seconds. */
+  const [confirmingRestart, setConfirmingRestart] = useState(false);
   /**
    * Who is connected, and when we asked. A swarm is live, so the answer is
    * stamped with the moment it arrived: an unstamped list reads as current
@@ -172,6 +174,26 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.completeFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /**
+   * Restart without touching the image. The API waits for the node to answer, so
+   * a successful response already means it is back; the row is re-read after.
+   */
+  async function restartNode(): Promise<void> {
+    setConfirmingRestart(false);
+    setBusy('restart');
+    setError(null);
+    setMessage(null);
+    try {
+      await api(`/seeders/${id}/restart`, { method: 'POST' });
+      setMessage(t('seeders.restarted'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.restartFailed'));
     } finally {
       setBusy(null);
     }
@@ -335,17 +357,25 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           >
             {t('torrents.probe')}
           </Button>
-          {/* A node that accepts updates always offers the action, not only when
-              a newer version exists: "rebuild/pull this node now" is the same
-              command, and a button that appears only sometimes reads as a bug.
-              The confirmation says which version it is currently on. */}
-          {updatable ? (
+          {/* Update only when there is something to update to; restart always.
+              Two actions, because a rebuild is not what an up-to-date node needs
+              and a button that shows anyway makes the version chip look wrong. */}
+          {updatable && (behind || updatable.updating) ? (
             <Button
-              icon={<Icon name="refresh" />}
               busy={busy === 'update' || updatable.updating}
               onClick={() => setConfirmingUpdate(true)}
             >
               {t('seeders.updateSoftware')}
+            </Button>
+          ) : null}
+          {updatable ? (
+            <Button
+              variant="secondary"
+              icon={<Icon name="refresh" />}
+              busy={busy === 'restart'}
+              onClick={() => setConfirmingRestart(true)}
+            >
+              {t('seeders.restart')}
             </Button>
           ) : null}
         </div>
@@ -587,6 +617,20 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           busy={busy === `remove-${removing}`}
           onClose={() => setRemoving(null)}
           onConfirm={() => void remove(removing)}
+        />
+      ) : null}
+
+      {confirmingRestart && node ? (
+        <ConfirmModal
+          title={t('seeders.restartTitle')}
+          body={t('seeders.restartBody')}
+          hint={t('seeders.updateCurrent', {
+            version: node.version ?? t('seeders.versionUnknown'),
+          })}
+          confirmLabel={t('seeders.restart')}
+          busy={busy === 'restart'}
+          onClose={() => setConfirmingRestart(false)}
+          onConfirm={() => void restartNode()}
         />
       ) : null}
 
