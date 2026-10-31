@@ -25,7 +25,7 @@ import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 export type RouteName =
   | 'home'
   | 'listen'
-  | 'surah'
+  | 'reciter'
   | 'reciters'
   | 'about'
   | 'privacy'
@@ -37,8 +37,8 @@ export type RouteName =
 
 export type Parsed =
   | { name: 'listen'; release: string; surah: number; surahName: string }
-  | { name: 'surah'; surah: number; surahName: string }
-  | { name: Exclude<RouteName, 'listen' | 'surah'> };
+  | { name: 'reciter'; slug: string }
+  | { name: Exclude<RouteName, 'listen' | 'reciter'> };
 
 export type RouteRow = {
   name: RouteName;
@@ -50,10 +50,11 @@ export type RouteRow = {
   /**
    * The build writes every URL this family can have, so a missing file is a real 404.
    *
-   * `surah` is 1–114 and nothing else. `listen` is the opposite: its first segment is a
-   * catalogue slug, which nginx cannot verify and the build cannot enumerate, so those
-   * requests have to reach the app. The flag is what tells the edge — and the test that
-   * guards it — which kind of family it is looking at.
+   * `reciter` is one page per published reciter — the build knows the roster, so a slug
+   * that is not in it is a typo and nginx can say so. `listen` is the opposite: its first
+   * segment is a catalogue slug paired with a surah, which nginx cannot verify and the
+   * build cannot enumerate, so those requests have to reach the app. The flag is what
+   * tells the edge — and the test that guards it — which kind of family it is looking at.
    */
   complete?: boolean;
 };
@@ -61,7 +62,7 @@ export type RouteRow = {
 export const ROUTE_TABLE: readonly RouteRow[] = [
   { name: 'home', pattern: '/', index: true, sitemap: true, prerender: true },
   { name: 'listen', pattern: '/listen/{release}/{n}-{surah}', index: false, sitemap: false, prerender: true },
-  { name: 'surah', pattern: '/surah/{n}-{surah}', index: true, sitemap: true, prerender: true, complete: true },
+  { name: 'reciter', pattern: '/reciters/{slug}', index: true, sitemap: true, prerender: true, complete: true },
   { name: 'reciters', pattern: '/reciters', index: true, sitemap: true, prerender: true },
   { name: 'about', pattern: '/about', index: true, sitemap: true, prerender: true },
   { name: 'privacy', pattern: '/privacy', index: true, sitemap: true, prerender: true },
@@ -123,10 +124,11 @@ export function parse(pathname: string): Parsed {
     return { name: 'listen', release: segments[1], surah: surah.id, surahName: surah.name };
   }
 
-  if (segments[0] === 'surah' && segments.length === 2) {
-    const surah = surahSegment(segments[1]);
-    if (!surah) return { name: 'notFound' };
-    return { name: 'surah', surah: surah.id, surahName: surah.name };
+  if (segments[0] === 'reciters' && segments.length === 2) {
+    // A slug is assigned by the catalogue and frozen there, so the shape is checked and
+    // never derived: anything this app invented would be a URL the catalogue disagrees with.
+    if (!/^[a-z0-9-]+$/.test(segments[1])) return { name: 'notFound' };
+    return { name: 'reciter', slug: segments[1] };
   }
 
   return { name: 'notFound' };
@@ -137,8 +139,8 @@ export function toPath(route: Parsed): string {
   switch (route.name) {
     case 'listen':
       return `/listen/${route.release}/${route.surah}-${surahSlug(route.surah)}`;
-    case 'surah':
-      return `/surah/${route.surah}-${surahSlug(route.surah)}`;
+    case 'reciter':
+      return `/reciters/${route.slug}`;
     case 'home':
       return '/';
     default:

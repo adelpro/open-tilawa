@@ -146,7 +146,7 @@ async function checkListenLinks(browser, catalogue) {
 
 const locs = (xml) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
 
-async function checkSitemap() {
+async function checkSitemap(catalogue) {
   console.log('\nsitemap');
   const response = await fetch(`${SITE}/sitemap.xml`, { signal: AbortSignal.timeout(15_000) });
   if (!response.ok) return fail(`sitemap answered ${response.status}`);
@@ -177,7 +177,7 @@ async function checkSitemap() {
 
   // The pages the release is about, named explicitly: a sitemap can be well formed and
   // still be the one from three releases ago.
-  const hubs = ['/', '/about', '/privacy', '/reciters', '/surah/18-al-kahf'];
+  const hubs = ['/', '/about', '/privacy', '/reciters', `/reciters/${catalogue[0].slug}`];
   for (const path of hubs) {
     if (!set.has(`${SITE}${path}`)) fail(`missing ${path} in the sitemap`);
     if (!set.has(twinOf(`${SITE}${path}`))) fail(`missing the English twin of ${path} in the sitemap`);
@@ -223,7 +223,7 @@ const executablePath =
 const browser = await playwright.chromium.launch(executablePath ? { executablePath } : {});
 try {
   await checkListenLinks(browser, catalogue);
-  await checkSitemap();
+  await checkSitemap(catalogue);
 } finally {
   await browser.close();
 }

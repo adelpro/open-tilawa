@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.13.23 — 2026-10-31
+
+Patch. App versions: **web 1.13.8**, **admin 1.32.9**, **seeder 1.5.7**.
+
+### Changed
+
+- **The site groups by reciter, not by surah.** `/reciters` is now a directory: each
+  published reciter has a page at `/reciters/<slug>` listing all 114 surahs, every row a
+  link into the player. The `/surah/<n>-<slug>` hub is removed — the route, its component,
+  its 228 prerendered files and its sitemap entries. Two groupings was one too many; this
+  is the one the catalogue is organised by.
+- **The sitemap is 28 URLs** (home, about, privacy, the roster and 10 reciter pages, in two
+  languages), down from 236. The trade is deliberate and worth writing down: a search for
+  a surah name — "سورة الكهف" — no longer has a page to land on, because the player URLs
+  that contain one are `noindex` by design. What the site now answers is "this reciter",
+  which is the axis the product is built on.
+- `complete` moved with it: `/reciters/<slug>` is written whole by the build, so a slug
+  that is not in the roster is a real 404 rather than the shell with a 200.
+
 ## 1.13.22 — 2026-10-31
 
 Patch. App versions: **web 1.13.7**, **admin 1.32.9**, **seeder 1.5.7**.

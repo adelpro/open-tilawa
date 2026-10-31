@@ -1,6 +1,7 @@
 import { useSetAtom } from 'jotai';
 
 import Icon from '@/components/icons';
+import Link from '@/components/link';
 import { loadState, saveState } from '@/hooks/use-persistence';
 import { useLocale } from '@/hooks/use-locale';
 import { useReciters } from '@/hooks/use-reciters';
@@ -51,13 +52,9 @@ export default function RecitersPage() {
           <p className="mt-8 text-[1rem] leading-relaxed text-muted">{t.sheets.recitersError}</p>
         ) : (
           <ul className="mt-8 divide-y divide-line/60 border-y border-line/60">
-            {reciters.map((reciter) => (
-              <li key={reciter.id}>
-                <button
-                  type="button"
-                  onClick={() => pick(reciter)}
-                  className="press flex min-h-14 w-full items-center gap-3 py-3 text-start transition-colors hover:text-ink"
-                >
+            {reciters.map((reciter) => {
+              const row = (
+                <>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[1rem] text-ink">{reciter.name}</span>
                     <span className="mt-1 block text-[0.75rem] text-muted">
@@ -68,9 +65,33 @@ export default function RecitersPage() {
                     {riwayaLabel(reciter.riwaya)}
                   </span>
                   <Icon name="forward" size={16} className="icon-dir text-muted" />
-                </button>
-              </li>
-            ))}
+                </>
+              );
+
+              // The roster is a directory: a published reciter has a page of his 114
+              // surahs, and that page is where a listener chooses one. A row with no slug
+              // has no page, so it stays the old "pick and go to the player" button.
+              return (
+                <li key={reciter.id}>
+                  {reciter.slug ? (
+                    <Link
+                      to={{ name: 'reciter', slug: reciter.slug }}
+                      className="press flex min-h-14 w-full items-center gap-3 py-3 text-start transition-colors hover:text-ink"
+                    >
+                      {row}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => pick(reciter)}
+                      className="press flex min-h-14 w-full items-center gap-3 py-3 text-start transition-colors hover:text-ink"
+                    >
+                      {row}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

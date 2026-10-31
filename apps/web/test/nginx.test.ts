@@ -30,9 +30,9 @@ test('the catch-all location answers 404 instead of the shell', () => {
 });
 
 test('a family the build writes completely is not handed to the app', () => {
-  // `/surah/18-al-kahf` is a file on disk for every valid number, so a mistyped one must
-  // be a 404 — not the shell with a 200 and the app's 404 screen inside it.
-  assert.doesNotMatch(familyLine, /\bsurah\b/, '/surah is given a shell fallback it does not need');
+  // `/reciters/<slug>` is a file on disk for every published reciter, so a slug that is
+  // not in the roster must be a 404 — not the shell with a 200 and the app's 404 screen.
+  assert.doesNotMatch(familyLine, /\breciter/, '/reciters is given a shell fallback it does not need');
 });
 
 test('every route nginx cannot resolve from disk still reaches the app', () => {

@@ -43,28 +43,32 @@ test('toPath round-trips every canonical path', () => {
     '/favorites',
     '/recent',
     '/reciters',
+    '/reciters/minshawi',
     '/listen/minshawi/18-al-kahf',
-    '/surah/18-al-kahf',
   ];
   for (const path of paths) assert.equal(toPath(parse(path)), path, path);
 });
 
-test('a surah page is a page of its own, not the player', () => {
-  assert.deepEqual(parse('/surah/18-al-kahf'), {
-    name: 'surah',
-    surah: 18,
-    surahName: 'al-kahf',
+test('a reciter page is a page of its own under the roster', () => {
+  assert.deepEqual(parse('/reciters'), { name: 'reciters' });
+  assert.deepEqual(parse('/reciters/maher-al-muaiqly'), {
+    name: 'reciter',
+    slug: 'maher-al-muaiqly',
   });
-  // The number decides the page; the name is decoration.
-  assert.deepEqual(parse('/surah/18'), { name: 'surah', surah: 18, surahName: '' });
-  assert.deepEqual(parse('/surah/115'), { name: 'notFound' });
-  assert.deepEqual(parse('/surah'), { name: 'notFound' });
 });
 
-test('the surah family is complete, so a missing file is a real 404', () => {
-  // Every URL this family can have is written by the build — 1 to 114, nothing else —
-  // which is what lets nginx answer a mistyped one with a 404 instead of the shell.
-  const row = ROUTE_TABLE.find((entry) => entry.name === 'surah');
+test('the surah hub is gone: one grouping, and it is the reciter', () => {
+  // The site groups by reciter, not by surah. A leftover `/surah/...` route would be a
+  // second grouping nobody asked for — and 228 pages of surface removed for a reason.
+  assert.deepEqual(parse('/surah/18-al-kahf'), { name: 'notFound' });
+  assert.deepEqual(parse('/surah/18'), { name: 'notFound' });
+  assert.equal(ROUTE_TABLE.find((row) => row.name === 'surah'), undefined);
+});
+
+test('the reciter family is complete, so a missing file is a real 404', () => {
+  // The build writes one page per published reciter, so a slug that does not exist is a
+  // typo, not a page nginx should hand to the app with a 200.
+  const row = ROUTE_TABLE.find((entry) => entry.name === 'reciter');
   assert.equal(row?.complete, true);
   // `/listen` is the opposite: the slug comes from the catalogue, so nginx cannot know
   // whether a pair exists and has to hand it to the app.
@@ -87,8 +91,8 @@ test('every indexable route is in the sitemap', () => {
 test('a panel has no URL, a page does', () => {
   // The surah list opens inside the player from a button and has no screen of its own, so
   // the table refuses to own it and nginx answers 404. The roster is the other way round:
-  // `/reciters` is a page, and it is the one hub a crawler is invited to.
-  for (const path of ['/surahs', '/surahs/18-al-kahf', '/reciters/minshawi']) {
+  // `/reciters` is a page, and `/reciters/<slug>` is the page that carries 114 links.
+  for (const path of ['/surahs', '/surahs/18-al-kahf']) {
     assert.deepEqual(parse(path), { name: 'notFound' }, path);
   }
   assert.deepEqual(parse('/reciters'), { name: 'reciters' });
@@ -146,7 +150,7 @@ test('toUrl writes the prefix for English and nothing for Arabic', () => {
 });
 
 test('parseUrl and toUrl round-trip every path in both languages', () => {
-  const paths = ['/', '/about', '/privacy', '/reciters', '/listen/minshawi/18-al-kahf', '/surah/18-al-kahf'];
+  const paths = ['/', '/about', '/privacy', '/reciters', '/reciters/minshawi', '/listen/minshawi/18-al-kahf'];
   for (const path of paths) {
     for (const locale of ['ar', 'en'] as const) {
       const url = toUrl(parse(path), locale);

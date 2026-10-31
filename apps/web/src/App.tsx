@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import AboutPage from './app/about-page';
 import RecitersPage from './app/reciters-page';
-import SurahPage from './app/surah-page';
+import ReciterPage from './app/reciter-page';
 import PlayerPage from './app/player-page';
 import NotFoundPage from './app/not-found-page';
 import TelemetryPrompt from './components/telemetry-prompt';
@@ -278,8 +278,8 @@ export default function App() {
 
         {route.name === 'reciters' ? (
           <RecitersPage />
-        ) : route.name === 'surah' ? (
-          <SurahPage id={route.surah} />
+        ) : route.name === 'reciter' ? (
+          <ReciterPage slug={route.slug} />
         ) : route.name === 'about' ? (
           <AboutPage />
         ) : route.name === 'privacy' ? (
