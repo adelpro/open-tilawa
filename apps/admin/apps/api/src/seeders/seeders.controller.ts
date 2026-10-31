@@ -87,8 +87,8 @@ export class SeedersController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    this.service.remove(Number(id));
+  remove(@Param('id') id: string, @CurrentUser('id') actorId: string | number) {
+    this.service.remove(Number(id), Number(actorId));
   }
 
   @Post(':id/poll')

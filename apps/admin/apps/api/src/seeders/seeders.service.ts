@@ -340,8 +340,33 @@ export class SeedersService {
     return this.get(id);
   }
 
-  remove(id: number): void {
-    this.db.prepare('DELETE FROM seeders WHERE id = ?').run(id);
+  /**
+   * Removes the console row and everything that hangs off it. The node itself is
+   * untouched: it keeps running, keeps its files and keeps seeding. This is the
+   * one node action that works while the node is unreachable, which is often why
+   * it is being removed.
+   */
+  remove(id: number, actorId: number | null): void {
+    const row = this.db.prepare('SELECT name, url FROM seeders WHERE id = ?').get(id) as
+      | { name: string; url: string }
+      | undefined;
+    if (!row) throw new NotFoundException('seeder not found');
+
+    this.db.transaction(() => {
+      this.db.prepare('DELETE FROM placements WHERE seeder_id = ?').run(id);
+      this.db.prepare('DELETE FROM node_torrents WHERE seeder_id = ?').run(id);
+      this.db.prepare('DELETE FROM seeders WHERE id = ?').run(id);
+    })();
+
+    this.audit.record({
+      actorId,
+      // The subject is a node, not an account: `user_id` is a foreign key to users.
+      userId: null,
+      action: 'seeder:remove',
+      target: String(id),
+      status: 'ok',
+      before: { name: row.name, url: row.url },
+    });
   }
 
   /** Health check (public endpoint on the seeder; used for the status chip). */

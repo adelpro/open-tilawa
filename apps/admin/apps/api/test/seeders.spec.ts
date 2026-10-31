@@ -777,4 +777,43 @@ describe('seeder proxy', () => {
     // No new seeder call was made.
     expect(fake.seen.length).toBe(before);
   });
+
+  it('removes a node, its placements and its inventory, and audits it', async () => {
+    // A node at a port nothing listens on: removal must not depend on reaching it.
+    const { body } = await agent
+      .post('/api/seeders')
+      .set('x-csrf-token', csrf)
+      .send({ name: 'node-remove', url: 'http://127.0.0.1:9' })
+      .expect(201);
+    const id = body.id as number;
+
+    h.db
+      .prepare("INSERT INTO placements (reciter_id, seeder_id, state) VALUES (?, ?, 'pending')")
+      .run(999, id);
+    h.db
+      .prepare('INSERT INTO node_torrents (seeder_id, infohash, name) VALUES (?, ?, ?)')
+      .run(id, 'deadbeef', 'al-fatiha');
+
+    await agent.delete(`/api/seeders/${id}`).set('x-csrf-token', csrf).expect(204);
+
+    expect(h.db.prepare('SELECT COUNT(*) AS n FROM seeders WHERE id = ?').get(id)).toEqual({ n: 0 });
+    expect(h.db.prepare('SELECT COUNT(*) AS n FROM placements WHERE seeder_id = ?').get(id)).toEqual(
+      { n: 0 },
+    );
+    expect(
+      h.db.prepare('SELECT COUNT(*) AS n FROM node_torrents WHERE seeder_id = ?').get(id),
+    ).toEqual({ n: 0 });
+
+    const auditRow = h.db
+      .prepare("SELECT * FROM audit_log WHERE action = 'seeder:remove' ORDER BY id DESC LIMIT 1")
+      .get() as { target: string; actor_id: number | null; before_json: string };
+    expect(auditRow.target).toBe(String(id));
+    expect(auditRow.actor_id).toBe(h.ownerId);
+    expect(JSON.parse(auditRow.before_json)).toEqual({
+      name: 'node-remove',
+      url: 'http://127.0.0.1:9',
+    });
+
+    await agent.delete(`/api/seeders/${id}`).set('x-csrf-token', csrf).expect(404);
+  });
 });
