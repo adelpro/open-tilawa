@@ -1,6 +1,6 @@
 # فيلم تلاوة — NOTE (delivery)
 
-`final.mp4` · 1920×1080 · 30 fps · 21.0 s · H.264 + AAC · sound = the recitation.
+`final-21-waves.mp4` / `final-21-bars.mp4` (was `final.mp4`) · 1920×1080 · 30 fps · 21.0 s · H.264 + AAC · sound = the recitation.
 Editable source: `film/index.html` (plain HTML + `window.__seek(t)`, no build step).
 Audio bed: `film/audio/mix.wav` (−16 LUFS integrated, −1.5 dBTP).
 
@@ -11,6 +11,16 @@ Audio bed: `film/audio/mix.wav` (−16 LUFS integrated, −1.5 dBTP).
 The film uses the app's **second spectrum option, `peaks`** (28 bars with floating caps, «قِمم»), not the ribbon — Adel's call. Beat structure, camera, timing and audio are unchanged. Two consequences, both real and both traceable to the app:
 - the picture is a **frequency** spectrum: one flat blue in 28 columns, not four layered silhouettes;
 - **the pause decays instead of collapsing.** The analyser (`smoothingTimeConstant 0.75`, read every 2 frames) loses only ~3 dB per 66 ms, so the bars sink to roughly 0.4 over a second and stay — verified against a live Chrome analyser on the same audio. The ribbon's flat line in the pause was the stronger image; the bars are the app's actual `peaks` behaviour, so the film now shows that instead.
+
+## 0b. Amendment (v2: two spectra, one pipeline)
+
+The film now ships in **four versions**: 21 s and 32 s, each with `waves` (the app's current ribbon, a scrolling loudness history) and `bars` (`peaks`). Choose with `?mode=waves|bars`; `render.mjs` renders either. One generator, `src/data.py`, makes the data for both. The old per-shape scripts (`peaks-film.py`, `wave-film.py`, `wave.py`) are removed.
+
+- The 21 s film gains the address **tilawah.cc** under the wordmark at 20.30 s. The hook camera is unchanged apart from its re-timed turn (pull-back to 3.40, push 3.40–7.20); the opening is still the stillest stretch.
+- The 32 s story is rewritten around the ring, accounts and the web seed (see `NOTE-32.md`).
+- The audio beds were rebuilt and normalised: both at −16.0 LUFS; true peak −1.5 dBFS (21 s) and −3.1 dBFS (32 s).
+- `mobile-intro` (9:16) was not re-rendered and still shows the previous ribbon. Treat it as superseded until it is rebuilt on `spectrum.js`.
+- Repo hygiene: scratch JSON, `make32.py`/`patch32.py` (they would overwrite `index32.html`) and an unused third recitation (Maher al-Muaiqly mp3) were removed from the tree. The mp3 stays in git history. Please confirm you hold the rights to the two remaining recitations before publishing the videos.
 
 ## 1. The idea, in one line
 
@@ -94,14 +104,12 @@ Two cuts only (7.20, 17.00) plus the wordmark's arrival. The film is one page, o
 
 ## 7. How to re-render / verify
 
-```bash
-cd film
-node ../.claude/skills/motionmaxxing/scripts/render.mjs index.html final.mp4 \
-  --audio audio/mix.wav --shutter 180 --subframes 8 --crf 18
-python3 ../.claude/skills/motionmaxxing/scripts/look.py final.mp4 --out look-final --expect 21 --expect-audio
-node ../.claude/skills/motionmaxxing/scripts/lint.mjs index.html
+```
+node render.mjs --page index.html   --mode waves --audio audio/mix.wav   --out final-21-waves.mp4
+node render.mjs --page index.html   --mode bars  --audio audio/mix.wav   --out final-21-bars.mp4
+node render.mjs --page index32.html --mode waves --audio audio/mix32.wav --out final-32-waves.mp4
+node render.mjs --page index32.html --mode bars  --audio audio/mix32.wav --out final-32-bars.mp4
+python3 src/data.py          # regenerates peaks-*.js and ribbon-*.js from audio/*-norm.wav
 ```
 
-Data regeneration: `python3 src/peaks-film.py` (630 frames), `python3 src/wave-frames.py` (mobile), `python3 src/wave.py` (ribbon stills).
-
-*I looked at every frame of `look/sheet.jpg`, at `mid.jpg`, and at the stills above. I am describing what I checked, not certifying the film as good — that is yours to decide.*
+Needs node, playwright (chromium) and ffmpeg. About 2.5 to 4 minutes per video on 2 CPUs.
