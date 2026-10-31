@@ -81,6 +81,8 @@ export function Seeders(): ReactElement {
   const [editUrl, setEditUrl] = useState('');
   const [editUser, setEditUser] = useState('');
   const [editPass, setEditPass] = useState('');
+  /** The node whose removal is waiting for confirmation. */
+  const [removing, setRemoving] = useState<Seeder | null>(null);
 
   /**
    * A wrong URL is the most common reason a node reads Offline: the form used to
@@ -214,6 +216,27 @@ export function Seeders(): ReactElement {
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /**
+   * Row-only removal. The node is never contacted, so this works when it is
+   * offline — often the reason it is being removed.
+   */
+  async function removeNode(): Promise<void> {
+    if (!removing) return;
+    const { id } = removing;
+    setBusy(`remove-${id}`);
+    setError(null);
+    try {
+      await api(`/seeders/${id}`, { method: 'DELETE' });
+      setRemoving(null);
+      setMessage(t('seeders.removed'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.removeFailed'));
     } finally {
       setBusy(null);
     }
@@ -506,6 +529,19 @@ export function Seeders(): ReactElement {
         </FormModal>
       ) : null}
 
+      {removing ? (
+        <ConfirmModal
+          title={t('seeders.removeTitle')}
+          body={t('seeders.removeBody')}
+          hint={removing.pinned ? t('seeders.removePinnedHint') : t('seeders.removeHint')}
+          confirmLabel={t('seeders.removeConfirm')}
+          destructive
+          busy={busy === `remove-${removing.id}`}
+          onClose={() => setRemoving(null)}
+          onConfirm={() => void removeNode()}
+        />
+      ) : null}
+
       {confirmingComplete && plan ? (
         <ConfirmModal
           title={t('seeders.completeTitle')}
@@ -666,6 +702,14 @@ export function Seeders(): ReactElement {
                       </Button>
                       <Button small variant="tertiary" onClick={() => startEdit(seeder)}>
                         {t('seeders.edit')}
+                      </Button>
+                      <Button
+                        small
+                        variant="destructive"
+                        onClick={() => setRemoving(seeder)}
+                        busy={busy === `remove-${seeder.id}`}
+                      >
+                        {t('seeders.remove')}
                       </Button>
                     </>
                   }

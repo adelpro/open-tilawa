@@ -408,6 +408,16 @@ export const en = {
   'seeders.credentialsCleared': 'Credentials cleared.',
   'seeders.updated': 'Seeder updated.',
   'seeders.updateFailed': 'Could not update the seeder.',
+  'seeders.remove': 'Remove node',
+  'seeders.removeTitle': 'Remove this node from the console?',
+  'seeders.removeBody':
+    'The console forgets this node. The node keeps running, keeps its files and keeps seeding.',
+  'seeders.removeHint': 'To free its disk or stop it, use the node’s own host.',
+  'seeders.removePinnedHint':
+    'This is the server running this console. Removing it only hides it here; the node keeps seeding.',
+  'seeders.removeConfirm': 'Remove node',
+  'seeders.removed': 'Node removed from the console.',
+  'seeders.removeFailed': 'Could not remove the node.',
 
   'twofa.recoveryLink': 'Use a recovery code',
   'twofa.recoveryLede':

@@ -131,9 +131,18 @@ describe('console audit — every destructive action asks first', () => {
       ['Torrents', torrents],
       ['Turns', turns],
       ['Status', status],
+      ['Seeders', read('routes/Seeders.tsx')],
     ]) {
       assert.match(source, /ConfirmModal/, `${name} has no ConfirmModal`);
     }
+  });
+
+  it('removes a node through the API, with the pinned warning in the same dialog', () => {
+    const seeders = read('routes/Seeders.tsx');
+    assert.match(seeders, /api\(`\/seeders\/\$\{id\}`, \{ method: 'DELETE' \}\)/);
+    assert.match(seeders, /removing\.pinned/);
+    assert.match(seeders, /seeders\.removePinnedHint/);
+    assert.match(seeders, /busy === `remove-\$\{removing\.id\}`/);
   });
 
   it('has no hand-rolled destructive dialog left', () => {

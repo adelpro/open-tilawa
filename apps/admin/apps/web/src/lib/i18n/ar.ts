@@ -406,6 +406,15 @@ export const ar: Catalogue = {
   'seeders.credentialsCleared': 'مُسحت بيانات الاعتماد.',
   'seeders.updated': 'حُدّث خادم التوزيع.',
   'seeders.updateFailed': 'تعذّر تحديث خادم التوزيع.',
+  'seeders.remove': 'إزالة',
+  'seeders.removeTitle': 'أتزيل هذا الخادم من اللوحة؟',
+  'seeders.removeBody': 'يزيل هذا الخادم من اللوحة فقط. يبقى يعمل، وتبقى ملفاته، ويواصل التوزيع.',
+  'seeders.removeHint': 'لتحرير مساحته أو إيقافه، افعل ذلك على مضيف الخادم.',
+  'seeders.removePinnedHint':
+    'هذا هو الخادم الذي تشغّله هذه اللوحة. إزالته تخفيه من هنا فقط، ويبقى يوزّع.',
+  'seeders.removeConfirm': 'أزل',
+  'seeders.removed': 'أُزيل الخادم من اللوحة.',
+  'seeders.removeFailed': 'تعذّرت إزالة الخادم.',
 
   'twofa.recoveryLink': 'استخدم رمز استعادة',
   'twofa.recoveryLede':
