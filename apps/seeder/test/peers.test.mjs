@@ -40,9 +40,17 @@ test('an IPv6 address keeps its prefix and drops the interface', () => {
 });
 
 test('an address it cannot mask is reported as unknown, not verbatim', () => {
-  for (const value of ['', null, undefined, 'localhost', '203.0.113', '::ffff:203.0.113.7', 42]) {
+  for (const value of ['', null, undefined, 'localhost', '203.0.113', '::ffff:not-an-ip', 42]) {
     assert.equal(maskAddress(value), null, `expected null for ${String(value)}`);
   }
+});
+
+test('an IPv4 peer carried on a dual-stack socket is still an IPv4 peer', () => {
+  // Node reports a v4 connection on a dual-stack listener as `::ffff:a.b.c.d`,
+  // which is the shape most peers arrive in — and the one that used to read as
+  // "address unknown".
+  assert.equal(maskAddress('::ffff:203.0.113.7'), '203.0.113.x');
+  assert.equal(maskAddress('[::ffff:198.51.100.9]:51413'.split(']')[0].slice(1)), '198.51.100.x');
 });
 
 test('no full address survives into the report', () => {
@@ -95,6 +103,24 @@ test('type and direction are separate facts', () => {
       ['other', null],
     ],
   );
+});
+
+test('a uTP peer is a torrent peer, not an unknown one', () => {
+  // WebTorrent opens uTP (UDP) sockets by default, so on a real node most peers
+  // arrive as utpIncoming/utpOutgoing. Bucketing those as "other" hid exactly
+  // the traffic the screen exists to show.
+  const report = describePeers([
+    torrent({ wires: [wire({ type: 'utpIncoming' }), wire({ type: 'utpOutgoing' })] }),
+  ]);
+  assert.deepEqual(
+    report.torrents[0].peers.map((peer) => [peer.type, peer.direction]),
+    [
+      ['tcp', 'in'],
+      ['tcp', 'out'],
+    ],
+  );
+  assert.equal(report.tcp, 2);
+  assert.equal(report.inbound + report.outbound, 2);
 });
 
 test('the node totals count every torrent', () => {

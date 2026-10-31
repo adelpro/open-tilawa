@@ -246,7 +246,7 @@ export const ar: Catalogue = {
   'torrents.peersCount': 'متصل الآن: {count}',
   'torrents.peersAsOf': 'آخر تحديث: {time}',
   'torrents.peersWeb': 'ويب: {count}',
-  'torrents.peersTcp': 'عبر TCP: {count}',
+  'torrents.peersTorrent': 'تورنت: {count}',
   'torrents.peersInbound': 'واردة: {count}',
   'torrents.peersHint':
     'اضغط العدد لترى الأقران خلفه. أقران الويب مستمعون في المتصفح، والواردة وصلت عبر منفذ الأقران.',
@@ -257,7 +257,7 @@ export const ar: Catalogue = {
   'torrents.peersTruncated': 'تُعرض {count} من الأقران فقط.',
   'torrents.peerType': 'الاتصال',
   'torrents.peerTypeWeb': 'ويب',
-  'torrents.peerTypeTcp': 'عبر TCP',
+  'torrents.peerTypeTorrent': 'تورنت',
   'torrents.peerTypeOther': 'غير ذلك',
   'torrents.peerDirection': 'الاتجاه',
   'torrents.peerDirectionUnknown': 'عبر المتتبع',

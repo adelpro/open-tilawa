@@ -243,7 +243,7 @@ export const en = {
   'torrents.peersCount': '{count} connected now',
   'torrents.peersAsOf': 'Updated {time}',
   'torrents.peersWeb': '{count} web',
-  'torrents.peersTcp': '{count} TCP',
+  'torrents.peersTorrent': '{count} torrent',
   'torrents.peersInbound': '{count} in',
   'torrents.peersHint':
     'A peer count opens the list behind it. Web peers are listeners in a browser; inbound ones reached this node through its peer port.',
@@ -254,7 +254,7 @@ export const en = {
   'torrents.peersTruncated': 'Showing the first {count}.',
   'torrents.peerType': 'Connection',
   'torrents.peerTypeWeb': 'Web',
-  'torrents.peerTypeTcp': 'TCP',
+  'torrents.peerTypeTorrent': 'Torrent',
   'torrents.peerTypeOther': 'Other',
   'torrents.peerDirection': 'Direction',
   'torrents.peerDirectionUnknown': 'Via tracker',

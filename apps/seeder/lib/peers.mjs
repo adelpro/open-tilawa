@@ -27,12 +27,19 @@ export function maskAddress(address) {
   const value = address.trim();
   if (!value) return null;
   // A zone id (`fe80::1%eth0`) is host configuration, not part of the address.
-  const bare = value.split('%')[0];
+  // Brackets are the `[addr]:port` form, and the port is never part of the answer.
+  const bare = value.split('%')[0].replace(/^\[|\]$/g, '');
+
+  // Node reports an IPv4 peer on a dual-stack listener as `::ffff:a.b.c.d`.
+  // That is an IPv4 address wearing an IPv6 costume: masking it as IPv6 would
+  // hide nothing and leak the octets that identify the connection.
+  const mapped = bare.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i);
+  if (mapped) return maskAddress(mapped[1]);
 
   if (bare.includes(':')) {
     // Keep the leading groups only: the interface identifier is what identifies
-    // the machine. An empty head (`::1`, or an IPv4-mapped address) is not
-    // maskable without guessing, so it reads as unknown.
+    // the machine. A compressed head (`::1`, or an address that is all prefix)
+    // cannot be masked without guessing, so it reads as unknown.
     const head = bare.split('::')[0].split(':').filter(Boolean);
     if (head.length === 0) return null;
     return `${head.slice(0, 3).join(':')}::`;
@@ -54,16 +61,23 @@ function bytes(value) {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
-/** `tcpIncoming` / `tcpOutgoing` / `webrtc` / `webSeed` -> the three buckets. */
+/**
+ * `tcpIncoming` / `utpOutgoing` / `webrtc` / `webSeed` -> the three buckets.
+ *
+ * uTP is BitTorrent over UDP: the same torrent peer reached by a different
+ * socket, and the shape most peers arrive in, so it belongs with TCP rather
+ * than in "other".
+ */
 function typeOf(wireType) {
   if (wireType === 'webrtc') return 'web';
-  if (typeof wireType === 'string' && wireType.startsWith('tcp')) return 'tcp';
+  if (typeof wireType === 'string' && /^(tcp|utp)/.test(wireType)) return 'tcp';
   return 'other';
 }
 
 function directionOf(wireType) {
-  if (wireType === 'tcpIncoming') return 'in';
-  if (wireType === 'tcpOutgoing') return 'out';
+  if (typeof wireType !== 'string') return null;
+  if (/Incoming$/.test(wireType)) return 'in';
+  if (/Outgoing$/.test(wireType)) return 'out';
   return null;
 }
 

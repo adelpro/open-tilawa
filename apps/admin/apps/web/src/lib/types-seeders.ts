@@ -98,6 +98,7 @@ export interface SeederPeerGroup {
   name: string;
   total: number;
   web: number;
+  /** TCP and uTP: the same BitTorrent peer over two socket kinds. */
   tcp: number;
   inbound: number;
   outbound: number;

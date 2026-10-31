@@ -348,7 +348,7 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
             </div>
             <div className="cluster">
               <Chip tone="info">{t('torrents.peersWeb', { count: peers.web })}</Chip>
-              <Chip tone="info">{t('torrents.peersTcp', { count: peers.tcp })}</Chip>
+              <Chip tone="info">{t('torrents.peersTorrent', { count: peers.tcp })}</Chip>
               <Chip tone="notice">{t('torrents.peersInbound', { count: peers.inbound })}</Chip>
             </div>
           </div>
@@ -489,7 +489,7 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
                                           peer.type === 'web'
                                             ? 'torrents.peerTypeWeb'
                                             : peer.type === 'tcp'
-                                              ? 'torrents.peerTypeTcp'
+                                              ? 'torrents.peerTypeTorrent'
                                               : 'torrents.peerTypeOther',
                                         )}
                                       </td>
