@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.12 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.4**, **seeder 1.5.7**.
+
+### Changed
+
+- **A surah has a name.** The most-played table now reads `2 · البقرة` instead of a
+  bare id. The id stays first because it is the stored value and the sort key; the
+  name is what an operator actually recognises. The 114 names are a console-local
+  list, Arabic in both locales, so the console still builds on its own.
+- **The console wears the mark.** The header lockup is now the تلاوة wordmark beside
+  "Admin v1.32.4" — one brand, one artwork. The mark is drawn in the surrounding
+  ink rather than the artwork's flat blue, so it survives the dark canvas.
+
 ## 1.13.11 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.3**, **seeder 1.5.7**.

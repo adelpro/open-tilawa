@@ -8,6 +8,7 @@ import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
 import { nextSort, sortRows, sortVolume, summaryQuery, type Sort } from '../lib/usage-filters';
+import { surahName } from '../lib/surahs';
 
 type Summary = {
   surahs: { surah: number; plays: number; bytes: number }[];
@@ -318,7 +319,15 @@ export function Usage(): ReactElement {
                 <tbody>
                   {surahs.map((row) => (
                     <tr key={row.surah}>
-                      <td>{row.surah}</td>
+                      <td>
+                        {/* The id is the stored fact and the sort key; the name is
+                            what an operator actually recognises. Both, in that order. */}
+                        <bdi>{row.surah}</bdi>
+                        <span className="muted" lang="ar" dir="rtl">
+                          {' · '}
+                          <bdi>{surahName(row.surah) ?? '—'}</bdi>
+                        </span>
+                      </td>
                       <td className="num">{row.plays}</td>
                       <td>
                         {/* The count beside it is the fact; the bar is decoration, so it

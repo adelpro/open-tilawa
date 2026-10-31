@@ -938,13 +938,17 @@ button.chip[aria-pressed='true'] {
   text-decoration: none;
 }
 
-.shell__brand-dot {
+/* The تلاوة wordmark, drawn in the surrounding ink rather than the artwork's own
+   blue: the flat mark disappears against the dark canvas, and the shell's text
+   colour already has the contrast we want in both themes. */
+.brand-mark {
   display: inline-block;
-  width: auto;
-  height: 22px;
-  object-fit: contain;
-  color: var(--primary);
+  inline-size: 47px;
+  block-size: 22px;
   flex: none;
+  background-color: currentColor;
+  -webkit-mask: url('/logo-wordmark.png') no-repeat center / contain;
+  mask: url('/logo-wordmark.png') no-repeat center / contain;
 }
 
 .shell__menu,
@@ -1298,16 +1302,6 @@ button.chip[aria-pressed='true'] {
 [data-theme='dark'] .landing__nav {
   background: var(--canvas);
   border-bottom: 1px solid var(--hairline);
-}
-
-.landing__nav-dot,
-.shell__brand-dot {
-  display: inline-block;
-  width: auto;
-  height: 24px;
-  object-fit: contain;
-  color: var(--accent, #086288);
-  flex-shrink: 0;
 }
 
 .landing__nav-brand {
