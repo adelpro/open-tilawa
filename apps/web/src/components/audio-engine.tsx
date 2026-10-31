@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { usePlayerNav } from '@/hooks/use-player-nav';
 import { flushPosition, getPosition, setPosition } from '@/hooks/use-persistence';
@@ -25,6 +25,7 @@ import { ensureAnalyser } from '@/utils/audio-analyser';
 import { APP_VERSION } from '@/constants/version';
 import { errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
 import { streamSourceFor, telemetrySource } from '@/utils/stream-source';
+import { mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
 
 /**
  * The only <audio> element in the app, mounted once next to the page.
@@ -107,10 +108,21 @@ export default function AudioEngine({
   const fileCount = files.length;
   const magnetURI = torrentInfo?.magnetURI ?? '';
 
+  /**
+   * The element was re-pointed at the node's own copy of this surah because the
+   * service-worker stream failed. The torrent's web seed may not be active yet,
+   * so this is stated, not inferred: the sound is coming over HTTP either way.
+   */
+  const [directFallback, setDirectFallback] = useState(false);
+  /** One direct retry per surah file; a second failure is the real error. */
+  const retriedRef = useRef<string | null>(null);
+
   /** What is feeding the sound right now, in the two words telemetry accepts. */
-  const source = telemetrySource(
-    streamSourceFor({ webSeed: torrentInfo?.webSeed, peers: torrentInfo?.peers }),
-  );
+  const source = directFallback
+    ? 'webseed'
+    : telemetrySource(
+        streamSourceFor({ webSeed: torrentInfo?.webSeed, peers: torrentInfo?.peers }),
+      );
   /** When play was asked for, so the first sound can be reported as a band. */
   const startedAtRef = useRef(0);
   /** The surah already counted, so a resume or a re-buffer is not a second play. */
@@ -189,6 +201,8 @@ export default function AudioEngine({
       audio.load();
     }
 
+    // A new source supersedes any earlier direct retry.
+    setDirectFallback(false);
     restoredForRef.current = null;
   }, [surahId, magnetURI, fileCount, reciter]);
 
@@ -364,6 +378,29 @@ export default function AudioEngine({
       }}
       onEnded={() => next()}
       onError={(event) => {
+        const audio = event.currentTarget;
+        const code = audio.error?.code;
+        const file = trackRef.current?.file;
+        const direct = mediaUrlForFile(window.location.origin, torrentInfo?.name, file);
+        const retryKey = `${surahId}:${(file as { name?: string } | null)?.name ?? ''}`;
+
+        // The service-worker stream is the fast path, not the only one: when the
+        // element refuses it outright, the node still has the same file over
+        // HTTP. One retry per surah, and only for a source-level failure.
+        if (
+          direct &&
+          shouldRetryDirect({ code, alreadyTried: retriedRef.current === retryKey })
+        ) {
+          retriedRef.current = retryKey;
+          // The stored position belongs to the new load, not the failed one.
+          restoredForRef.current = null;
+          audio.src = direct;
+          audio.load();
+          setDirectFallback(true);
+          if (isPlaying) audio.play().catch(() => setIsPlaying(false));
+          return;
+        }
+
         console.error('Audio playback error');
         if (!reciter || typeof surahId !== 'number') return;
         record(
@@ -373,7 +410,7 @@ export default function AudioEngine({
             source,
             version: APP_VERSION,
             locale,
-            code: event.currentTarget.error?.code,
+            code,
           }),
         );
       }}

@@ -39,8 +39,54 @@ export function mediaBase(origin: string): string {
  * the downloads volume as-is.
  */
 export function mediaUrl(origin: string, folder: string, surahId: number): string {
-  const file = `${String(surahId).padStart(3, '0')}.mp3`;
-  return `${mediaBase(origin)}${encodeURIComponent(folder)}/${file}`;
+  return mediaFileUrl(origin, folder, `${String(surahId).padStart(3, '0')}.mp3`);
+}
+
+/**
+ * The same URL for a file whose name we did not build.
+ *
+ * Catalogues are not uniformly `001.mp3` (`ar_001_Al-Fatiha.mp3` exists), and a
+ * fallback that guesses the name 404s. Each segment is encoded separately: the
+ * folder is one path segment on disk, not a place slashes may appear.
+ */
+export function mediaFileUrl(origin: string, folder: string, fileName: string): string {
+  return `${mediaBase(origin)}${encodeURIComponent(folder)}/${encodeURIComponent(fileName)}`;
+}
+
+/**
+ * The direct URL for a file the torrent owns, or `undefined` if either half of
+ * the path is missing.
+ *
+ * `file.name` is used verbatim: catalogues are not uniformly `001.mp3` (some ship
+ * `ar_001_Al-Fatiha.mp3`), and a rebuilt name is a 404. The folder is the torrent
+ * name — the same segment nginx serves under `/media`.
+ */
+export function mediaUrlForFile(
+  origin: string,
+  folder: string | undefined,
+  file: { name?: unknown } | null | undefined,
+): string | undefined {
+  const name = file?.name;
+  if (!folder || typeof name !== 'string' || !name) return undefined;
+  return mediaFileUrl(origin, folder, name);
+}
+
+/**
+ * When the element refuses the service-worker stream, is the direct file worth
+ * one try?
+ *
+ * `MEDIA_ERR_SRC_NOT_SUPPORTED` (4) is the only code that means "the source as a
+ * whole did not work": the service worker never resolved the range request, or
+ * answered with something that is not audio. `MEDIA_ERR_DECODE` (3) is different
+ * — the bytes arrived and the browser could not read them, so our own copy of the
+ * same bytes fails the same way. Network/abort (2/1) are transient and belong to
+ * the torrent's own retry, not to a second source.
+ */
+export function shouldRetryDirect(input: {
+  code?: number | null;
+  alreadyTried: boolean;
+}): boolean {
+  return !input.alreadyTried && input.code === 4;
 }
 
 /** One HEAD per file per session; the sheet and the timer share the answer. */
