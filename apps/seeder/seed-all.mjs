@@ -5,7 +5,7 @@ import path from 'path';
 import http from 'http';
 import crypto from 'crypto';
 import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
-import { describePeers } from './lib/peers.mjs';
+import { describePeers, liveWires } from './lib/peers.mjs';
 import TRACKERS from './constants/TRACKERS.js';
 import parseTorrent from 'parse-torrent';
 import { readFileSync as readFile, statfsSync } from 'fs';
@@ -281,7 +281,9 @@ const server = http.createServer((req, res) => {
         reserveBytes: DISK_RESERVE_BYTES,
       }).headroomBytes,
       torrents: client.torrents.length,
-      peers: client.torrents.reduce((s, t) => s + t.numPeers, 0),
+      // A tracker can hand the node its own endpoint, and the handshake against
+      // itself succeeds. Those wires are not listeners, so they are not counted.
+      peers: client.torrents.reduce((s, t) => s + liveWires(t, client.peerId).length, 0),
       uploadSpeed: client.uploadSpeed,
       downloadSpeed: client.downloadSpeed,
     }));
@@ -330,7 +332,7 @@ const server = http.createServer((req, res) => {
       infoHash: t.infoHash,
       size: t.length,
       progress: (t.progress * 100).toFixed(2),
-      peers: t.numPeers,
+      peers: liveWires(t, client.peerId).length,
       uploadSpeed: t.uploadSpeed,
       downloadSpeed: t.downloadSpeed,
       uploaded: t.uploaded,
@@ -343,7 +345,7 @@ const server = http.createServer((req, res) => {
       torrents,
       stats: {
         totalTorrents: client.torrents.length,
-        totalPeers: client.torrents.reduce((s, t) => s + t.numPeers, 0),
+        totalPeers: client.torrents.reduce((s, t) => s + liveWires(t, client.peerId).length, 0),
         uploadSpeed: client.uploadSpeed,
         downloadSpeed: client.downloadSpeed,
         uploadLimit: UPLOAD_LIMIT,
@@ -358,7 +360,7 @@ const server = http.createServer((req, res) => {
   // addresses are masked in lib/peers.mjs — this route never sees a whole one.
   if (url.pathname === '/api/peers' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-    res.end(JSON.stringify(describePeers(client.torrents)));
+    res.end(JSON.stringify(describePeers(client.torrents, { selfPeerId: client.peerId })));
     return;
   }
 
@@ -543,7 +545,7 @@ server.listen(ADMIN_PORT, () => {
 
 // Stats logging
 setInterval(() => {
-  const totalPeers = client.torrents.reduce((s, t) => s + t.numPeers, 0);
+  const totalPeers = client.torrents.reduce((s, t) => s + liveWires(t, client.peerId).length, 0);
   log.info(`[stats] torrents=${client.torrents.length} peers=${totalPeers} ↑${(client.uploadSpeed/1024).toFixed(1)}KB/s ↓${(client.downloadSpeed/1024).toFixed(1)}KB/s`);
 }, 30000);
 

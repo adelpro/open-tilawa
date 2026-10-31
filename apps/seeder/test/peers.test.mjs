@@ -151,6 +151,33 @@ test('a swarm is not a directory: the list is capped, the counts are not', () =>
   assert.equal(group.total, MAX_PEERS_PER_TORRENT + 7);
 });
 
+test('the node answering itself is not a listener', () => {
+  // A tracker that includes the announcer hands the node its own endpoint, and
+  // the handshake succeeds against itself. Counted, that number measured the
+  // node's self-connections instead of its audience.
+  const own = 'aa'.repeat(20);
+  const report = describePeers(
+    [
+      torrent({
+        wires: [
+          wire({ peerId: own, type: 'tcpOutgoing' }),
+          wire({ peerId: own, type: 'tcpIncoming' }),
+          wire({ peerId: 'bb'.repeat(20), type: 'utpIncoming' }),
+        ],
+      }),
+    ],
+    { selfPeerId: own.toUpperCase() },
+  );
+  assert.equal(report.total, 1);
+  assert.equal(report.inbound, 1);
+  assert.equal(report.torrents[0].peers.length, 1);
+});
+
+test('without a peer id nothing is filtered', () => {
+  const report = describePeers([torrent({ wires: [wire({ peerId: 'cc'.repeat(20) })] })]);
+  assert.equal(report.total, 1);
+});
+
 test('an empty node answers with zeros rather than nothing', () => {
   assert.deepEqual(describePeers([]), {
     total: 0,

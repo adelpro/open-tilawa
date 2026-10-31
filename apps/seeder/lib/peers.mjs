@@ -94,6 +94,23 @@ function describePeer(wire) {
   };
 }
 
+/**
+ * Wires that are actually somebody else.
+ *
+ * A tracker that hands the announcer its own endpoint produces a connection
+ * from the node to itself, and WebTorrent keeps it: the handshake completes,
+ * because both ends speak the same protocol. Counting those made the fleet's
+ * peer number (and this screen) a measure of the node's self-connections.
+ * The peer id settles it without knowing any address: our own id can only come
+ * back from us.
+ */
+export function liveWires(torrent, selfPeerId) {
+  const wires = Array.isArray(torrent?.wires) ? torrent.wires : [];
+  if (!selfPeerId) return wires;
+  const own = String(selfPeerId).toLowerCase();
+  return wires.filter((wire) => String(wire?.peerId ?? '').toLowerCase() !== own);
+}
+
 function countPeers(peers) {
   const counts = { ...EMPTY_COUNTS, total: peers.length };
   for (const peer of peers) {
@@ -105,8 +122,8 @@ function countPeers(peers) {
   return counts;
 }
 
-function describeTorrent(torrent) {
-  const wires = Array.isArray(torrent?.wires) ? torrent.wires : [];
+function describeTorrent(torrent, selfPeerId) {
+  const wires = liveWires(torrent, selfPeerId);
   const peers = wires.map(describePeer);
   return {
     infoHash: torrent?.infoHash ?? null,
@@ -120,9 +137,13 @@ function describeTorrent(torrent) {
 /**
  * @param {Array<{ infoHash?: string, name?: string, wires?: unknown[] }>} torrents
  *   `client.torrents` as WebTorrent holds it.
+ * @param {{ selfPeerId?: string }} [options] the node's own peer id, so wires it
+ *   opened to itself are not reported as listeners.
  */
-export function describePeers(torrents = []) {
-  const groups = (Array.isArray(torrents) ? torrents : []).map(describeTorrent);
+export function describePeers(torrents = [], options = {}) {
+  const groups = (Array.isArray(torrents) ? torrents : []).map((torrent) =>
+    describeTorrent(torrent, options.selfPeerId),
+  );
   const counts = { ...EMPTY_COUNTS };
   for (const group of groups) {
     for (const key of Object.keys(counts)) counts[key] += group[key];
