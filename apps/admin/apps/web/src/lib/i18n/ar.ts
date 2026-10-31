@@ -277,6 +277,9 @@ export const ar: Catalogue = {
   'torrents.noSeeders': 'أضف خادم توزيع أولًا — تُدار ملفات التورنت على خادم.',
   'torrents.loadFailed': 'تعذّرت قراءة محتوى الخادم.',
   'torrents.updateElsewhere': 'هذا الخادم لا يستقبل التحديث من لوحة التحكم. حدّثه على جهازه مرة واحدة، ثم يتحدّث بنفسه.',
+  'torrents.autoUpdate': 'حدّث هذا الخادم تلقائيًا',
+  'torrents.autoUpdateHint':
+    'يُفحص كل خمس دقائق: إذا تقدّم إصدار الأسطول على إصدار الخادم، حدّث نفسه. معطّل ما لم تُشغّله.',
   'torrents.removeFailed': 'تعذّرت إزالة الملف.',
   'torrents.signInRequired': 'يلزم تسجيل الدخول.',
 
@@ -433,6 +436,7 @@ export const ar: Catalogue = {
 
   'seeders.versionUnknown': 'الإصدار غير معروف',
   'seeders.updateSoftware': 'تحديث البرنامج',
+  'seeders.autoUpdateChip': 'تحديث تلقائي',
   'seeders.updateTitle': 'أتحدّث خادم التوزيع هذا؟',
   'seeders.updateBodyBuild':
     'يُعاد بناء صورة الخادم من نسخة المستودع المثبّتة على هذا الجهاز، ثم يُعاد تشغيله. تبقى الملفات على القرص، وينقطع التوزيع حتى يعود الخادم.',

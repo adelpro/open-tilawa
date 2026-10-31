@@ -276,6 +276,9 @@ export const en = {
   'torrents.loadFailed': 'Could not read the node inventory.',
   'torrents.updateElsewhere':
     'This node does not accept updates from the console. Update it on its host once — after that it can update itself.',
+  'torrents.autoUpdate': 'Update this node automatically',
+  'torrents.autoUpdateHint':
+    'Checked every five minutes: when the fleet target is newer, the node updates itself. Off unless switched on.',
   'torrents.removeFailed': 'Could not remove the torrent.',
   'torrents.signInRequired': 'Sign in required.',
 
@@ -436,6 +439,7 @@ export const en = {
 
   'seeders.versionUnknown': 'version unknown',
   'seeders.updateSoftware': 'Update software',
+  'seeders.autoUpdateChip': 'Auto-update',
   'seeders.updateTitle': 'Update this seeder?',
   'seeders.updateBodyBuild':
     "Rebuilds the node's image from the repository checkout on this host, then restarts it. The files stay on disk; seeding pauses until the node is back.",

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.5 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.31.2**, **seeder 1.5.3**.
+
+### Fixed
+
+- **A duplicate add killed the node.** Asking a seeder for a torrent it already
+  held made WebTorrent emit `error`, and an unhandled `error` event exits the
+  process — the container restarted and came back with an empty inventory while
+  its gigabytes sat on disk. That is what "the update lost every torrent" looked
+  like: not deleted, just no longer listed. A duplicate now answers
+  `{already:true}` and repairs a missing `.torrent` file, and the client has an
+  error listener so nothing else it raises can take the node down.
+
 ## 1.13.4 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.31.2**, **seeder 1.5.2**.

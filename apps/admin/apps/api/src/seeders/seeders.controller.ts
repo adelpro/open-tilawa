@@ -72,6 +72,7 @@ export class SeedersController {
       url?: string;
       adminUser?: string | null;
       adminPass?: string | null;
+      autoUpdate?: boolean;
     },
   ) {
     let updated;

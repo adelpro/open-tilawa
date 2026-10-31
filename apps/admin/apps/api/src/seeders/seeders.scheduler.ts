@@ -30,6 +30,13 @@ export class SeedersScheduler implements OnModuleInit {
     } catch (error) {
       this.logger.warn(`seeder poll failed: ${(error as Error).message}`);
     }
+    // After the poll, never before: the decision reads the versions it just wrote.
+    try {
+      const started = await this.seeders.autoUpdateFleet();
+      if (started > 0) this.logger.log(`auto-update started on ${started} node(s)`);
+    } catch (error) {
+      this.logger.warn(`auto-update pass failed: ${(error as Error).message}`);
+    }
   }
 
   /**

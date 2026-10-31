@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
 import { describePeers, liveWires } from './lib/peers.mjs';
 import { composeSteps, selfUpdateConfig } from './lib/self-update.mjs';
+import getInfoHashFromMagnetLink from './utils/getInfoHashFromMagnetLink.js';
 import { spawn } from 'node:child_process';
 import TRACKERS from './constants/TRACKERS.js';
 import parseTorrent from 'parse-torrent';
@@ -111,6 +112,17 @@ const client = new WebTorrent({
   ...(DOWNLOAD_LIMIT > 0 ? { downloadLimit: DOWNLOAD_LIMIT } : {}),
 });
 globalThis.wtClient = client;
+
+/**
+ * A client-level error is one torrent's problem, not the node's death.
+ *
+ * Adding a torrent the node already holds makes WebTorrent emit `error` ("Cannot
+ * add duplicate torrent"). With no listener Node turns that into an uncaught
+ * exception and the process exits — which is how a node came back from a push
+ * with an empty inventory while its gigabytes sat on disk. Duplicates are refused
+ * before the add now; this is the backstop for everything else the client raises.
+ */
+client.on('error', (error) => log.error(`client error: ${error.message}`));
 
 /**
  * Who to announce to. `TRACKER_ANNOUNCE` overrides the built-in list — an empty
@@ -474,7 +486,7 @@ const server = http.createServer((req, res) => {
     // A magnet that never resolves must fail visibly, not hang the console.
     const timer = setTimeout(() => answer(504, { error: 'timed out waiting for torrent metadata' }), 20000);
     req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
+    req.on('end', async () => {
       try {
         const { magnet, torrentPath } = JSON.parse(body);
         let source = null;
@@ -499,6 +511,26 @@ const server = http.createServer((req, res) => {
         if (!source) {
           clearTimeout(timer);
           answer(400, { error: 'magnet or torrentPath required' });
+          return;
+        }
+        // A torrent the node already holds must not be added again: WebTorrent
+        // answers with an `error` event, and an unhandled one kills the process.
+        // `client.get()` is async here, like everywhere else in this file.
+        const known = source.startsWith('magnet:')
+          ? getInfoHashFromMagnetLink(source)
+          : (await parseTorrent(fs.readFileSync(source)))?.infoHash;
+        const existing = known ? await client.get(String(known).toLowerCase()) : null;
+        if (existing) {
+          // Re-adding is how a node repairs a missing `.torrent` file, so it
+          // succeeds — it just does not add a second copy.
+          persistSource(existing, source);
+          clearTimeout(timer);
+          answer(200, {
+            ok: true,
+            already: true,
+            name: existing.name,
+            infoHash: existing.infoHash,
+          });
           return;
         }
         const quotaCheck = (incomingBytes) =>

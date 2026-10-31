@@ -30,6 +30,10 @@ export interface Seeder {
   pinned: boolean;
   /** The node accepts "update yourself" from the console (its /health says so). */
   selfUpdate: boolean;
+  /** Update without asking. Off unless the operator turns it on. */
+  autoUpdate: boolean;
+  /** When the last update attempt started or finished. */
+  lastUpdateAt: string | null;
   updateMode: 'build' | 'pull';
   /** The version the deployment says this node should run. */
   desiredVersion: string | null;

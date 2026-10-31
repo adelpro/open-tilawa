@@ -14,6 +14,7 @@ import { SQLITE_DB } from '../store/store.module';
 import { AuditRepository, isExpired, nextPlacementState, type Db } from '@tilawa-admin/core';
 import { TelemetryService } from '../telemetry/telemetry.service';
 import { updateSeederService } from './seeder-update';
+import { shouldAutoUpdate } from './auto-update';
 
 /** Seeder admin calls are bounded: a hung seeder must not hang the console. */
 const SEEDER_TIMEOUT_MS = 8000;
@@ -85,6 +86,11 @@ export interface Seeder {
    * /health, so the button exists only where the deployment enabled it.
    */
   selfUpdate: boolean;
+  /**
+   * Update without asking. Off by default: this is the one path where the console
+   * restarts a machine while nobody is looking.
+   */
+  autoUpdate: boolean;
   /** How this node is updated: compiled from the checkout, or pulled by tag. */
   updateMode: 'build' | 'pull';
   /** The version the operator's source of truth says it should run. */
@@ -93,6 +99,8 @@ export interface Seeder {
   updating: boolean;
   /** The last update's failure, kept until the next one starts. */
   updateError: string | null;
+  /** When the last attempt started (or finished); the retry window reads this. */
+  lastUpdateAt: string | null;
 }
 
 /** One torrent as the seeder reports it. */
@@ -228,6 +236,8 @@ export class SeedersService {
     add('last_update_at', 'TEXT');
     // Whether the node itself offers "update yourself" (its /health says so).
     add('self_update', 'INTEGER NOT NULL DEFAULT 0');
+    // The operator's switch for unattended updates. Off unless someone turns it on.
+    add('auto_update', 'INTEGER NOT NULL DEFAULT 0');
     // Nothing can be running in a process that has just started.
     this.db.exec('UPDATE seeders SET last_update_running = 0');
   }
@@ -298,6 +308,7 @@ export class SeedersService {
       url?: string;
       adminUser?: string | null;
       adminPass?: string | null;
+      autoUpdate?: boolean;
     },
   ): Seeder | null {
     if (!this.db.prepare('SELECT id FROM seeders WHERE id = ?').get(id)) return null;
@@ -318,6 +329,10 @@ export class SeedersService {
     if (input.adminPass !== undefined) {
       sets.push('admin_pass = ?');
       values.push(emptyToNull(input.adminPass));
+    }
+    if (input.autoUpdate !== undefined) {
+      sets.push('auto_update = ?');
+      values.push(input.autoUpdate ? 1 : 0);
     }
     if (sets.length > 0) {
       this.db.prepare(`UPDATE seeders SET ${sets.join(', ')} WHERE id = ?`).run(...values, id);
@@ -405,6 +420,48 @@ export class SeedersService {
   async pollAll(): Promise<Seeder[]> {
     await Promise.all(this.list().map((s) => this.poll(s.id)));
     return this.list();
+  }
+
+  /**
+   * The unattended half of the update flow.
+   *
+   * Runs after the fleet poll: a node whose operator turned auto-update on, that
+   * accepts updates and is behind the fleet's target, is asked to update itself —
+   * the same call the button makes, with no actor. `updateSoftware` only starts
+   * the job, so this returns quickly and the jobs report themselves through their
+   * rows; one node failing must not stop the rest of the fleet from being
+   * considered.
+   */
+  async autoUpdateFleet(now = Date.now()): Promise<number> {
+    let started = 0;
+    for (const seeder of this.list()) {
+      if (
+        !shouldAutoUpdate({
+          autoUpdate: seeder.autoUpdate,
+          capable: seeder.pinned || seeder.selfUpdate,
+          status: seeder.status,
+          version: seeder.version,
+          desiredVersion: seeder.desiredVersion,
+          updating: seeder.updating,
+          lastAttemptAt: seeder.lastUpdateAt,
+          now,
+        })
+      ) {
+        continue;
+      }
+      try {
+        await this.updateSoftware(seeder.id, undefined, 'auto');
+        started += 1;
+        this.logger.log(
+          `auto-update started on node ${seeder.id}: ${seeder.version ?? '?'} → ${seeder.desiredVersion ?? '?'}`,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `auto-update of node ${seeder.id} not started: ${(error as Error).message}`,
+        );
+      }
+    }
+    return started;
   }
 
   /**
@@ -542,6 +599,7 @@ export class SeedersService {
   async updateSoftware(
     id: number,
     actorId?: number,
+    trigger: 'manual' | 'auto' = 'manual',
   ): Promise<{ started: true; mode: 'build' | 'pull' }> {
     const seeder = this.get(id);
     if (!seeder) throw new NotFoundException('seeder not found');
@@ -564,7 +622,7 @@ export class SeedersService {
     const mode = this.config.get<string>('SEEDER_UPDATE_MODE') === 'build' ? 'build' : 'pull';
     this.updates.set(id, { running: true, error: null });
     this.writeUpdateState(id, true, null);
-    void this.runUpdate(id, mode, actorId, !seeder.pinned);
+    void this.runUpdate(id, mode, actorId, !seeder.pinned, trigger);
     return { started: true, mode };
   }
 
@@ -583,6 +641,7 @@ export class SeedersService {
     mode: 'build' | 'pull',
     actorId?: number,
     remote = false,
+    trigger: 'manual' | 'auto' = 'manual',
   ): Promise<void> {
     let error: string | null = null;
     try {
@@ -624,7 +683,7 @@ export class SeedersService {
       action: 'seeder:update',
       target: String(id),
       status: error ? 'error' : 'ok',
-      after: { mode, remote, error, version: this.get(id)?.version ?? null },
+      after: { mode, remote, trigger, error, version: this.get(id)?.version ?? null },
     });
   }
 
@@ -897,6 +956,7 @@ function mapSeeder(r: Record<string, unknown>): BaseSeeder {
     version: (r.version as string | null) ?? null,
     sha: (r.sha as string | null) ?? null,
     selfUpdate: Boolean(r.self_update),
+    autoUpdate: Boolean(r.auto_update),
     freeBytes: (r.free_bytes as number | null) ?? null,
     totalBytes: (r.total_bytes as number | null) ?? null,
     quotaBytes: (r.quota_bytes as number | null) ?? null,
@@ -904,5 +964,6 @@ function mapSeeder(r: Record<string, unknown>): BaseSeeder {
     headroomBytes: (r.headroom_bytes as number | null) ?? null,
     updateRunning: Boolean(r.last_update_running),
     updateError: (r.last_update_error as string | null) ?? null,
+    lastUpdateAt: (r.last_update_at as string | null) ?? null,
   } as BaseSeeder & { updateRunning: boolean; updateError: string | null };
 }

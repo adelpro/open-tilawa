@@ -178,6 +178,23 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
   }
 
   /**
+   * The operator's switch for unattended updates. It is a row flag, not node
+   * state, so it survives the node being offline — which is when it matters most.
+   */
+  async function toggleAutoUpdate(next: boolean): Promise<void> {
+    setBusy('auto-update');
+    setError(null);
+    try {
+      await api(`/seeders/${id}`, { method: 'PATCH', body: { autoUpdate: next } });
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /**
    * Rebuild or pull the node's image on the host, then wait for it to answer.
    *
    * The request returns as soon as the job starts: a build takes minutes, and the
@@ -335,8 +352,22 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
       </header>
 
       {/* A node that cannot be asked says why — always, because the missing
-          button is the question. */}
-      {node && !updatable ? (
+          button is the question. A node that can be asked offers the switch for
+          doing it without anyone here. */}
+      {updatable ? (
+        <div className="stack stack--tight">
+          <label className="cluster">
+            <input
+              type="checkbox"
+              checked={updatable.autoUpdate}
+              disabled={busy === 'auto-update'}
+              onChange={(event) => void toggleAutoUpdate(event.target.checked)}
+            />
+            <span>{t('torrents.autoUpdate')}</span>
+          </label>
+          <p className="fine-print">{t('torrents.autoUpdateHint')}</p>
+        </div>
+      ) : node ? (
         <p className="fine-print">{t('torrents.updateElsewhere')}</p>
       ) : null}
 

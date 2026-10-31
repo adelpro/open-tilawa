@@ -229,6 +229,42 @@ test('DELETE takes the payload and the .torrent with it, so a restart cannot re-
   );
 });
 
+test('a duplicate add is refused, not fatal', async () => {
+  // WebTorrent emits `error` for a duplicate add, and an unhandled error event
+  // exits the process: a node that was asked twice came back with an empty
+  // inventory. The second request must answer, and the node must still be there.
+  const base = `http://127.0.0.1:${port}`;
+  const source = join(root, 'source', 'duplicate');
+  mkdirSync(source, { recursive: true });
+  writeFileSync(join(source, '001.mp3'), Buffer.alloc(64, 3));
+
+  const torrentFile = await new Promise((resolve, reject) => {
+    createTorrent(source, { announce: [] }, (error, buffer) =>
+      error ? reject(error) : resolve(buffer),
+    );
+  });
+  writeFileSync(join(torrentDir, 'duplicate.torrent'), torrentFile);
+
+  const add = () =>
+    fetch(`${base}/api/torrents`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ torrentPath: 'duplicate.torrent' }),
+    });
+
+  const first = await add();
+  assert.equal(first.status, 200);
+
+  const second = await add();
+  assert.equal(second.status, 200);
+  const body = await second.json();
+  assert.equal(body.already, true, 'the duplicate was not reported as already present');
+
+  // The proof is that anything answers at all.
+  const alive = await fetch(`${base}/health`);
+  assert.equal(alive.status, 200);
+});
+
 test('GET /api/peers lists a seeded torrent even with nobody connected', async () => {
   const base = `http://127.0.0.1:${port}`;
   const source = join(root, 'source', 'peered');

@@ -285,8 +285,7 @@ describe('seeder proxy', () => {
     }
   });
 
-  it('keeps whether a node updates itself, and refuses the ones that do not', async () => {
-    const capable = await fakeSeeder({ selfUpdate: true });
+  it('keeps whether a node updates itself, and refuses the ones that do not', async () => {    const capable = await fakeSeeder({ selfUpdate: true });
     const stuck = await fakeSeeder({ selfUpdate: false });
     try {
       const mine = await agent
@@ -317,6 +316,41 @@ describe('seeder proxy', () => {
     } finally {
       capable.server.close();
       stuck.server.close();
+    }
+  });
+
+  it('stores the auto-update switch, off by default', async () => {
+    const own = await fakeSeeder({ selfUpdate: true });
+    try {
+      const { body } = await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-auto', url: own.url, adminUser: 'adm', adminPass: 'secret-pass' })
+        .expect(201);
+      // The default is the whole point: nobody gets unattended restarts by accident.
+      expect(body.autoUpdate).toBe(false);
+
+      const on = await agent
+        .patch(`/api/seeders/${body.id}`)
+        .set('x-csrf-token', csrf)
+        .send({ autoUpdate: true })
+        .expect(200);
+      expect(on.body.autoUpdate).toBe(true);
+
+      const fleet = (await agent.get('/api/seeders').expect(200)).body as {
+        id: number;
+        autoUpdate: boolean;
+      }[];
+      expect(fleet.find((row) => row.id === body.id)?.autoUpdate).toBe(true);
+
+      const off = await agent
+        .patch(`/api/seeders/${body.id}`)
+        .set('x-csrf-token', csrf)
+        .send({ autoUpdate: false })
+        .expect(200);
+      expect(off.body.autoUpdate).toBe(false);
+    } finally {
+      own.server.close();
     }
   });
 

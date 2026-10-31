@@ -629,7 +629,14 @@ export function Seeders(): ReactElement {
                   statusTone={statusTone(seeder.status)}
                   statusLabel={t(statusKey(seeder.status))}
                   badges={
-                    seeder.pinned ? <Chip tone="info">{t('seeders.pinned')}</Chip> : undefined
+                    seeder.pinned || seeder.autoUpdate ? (
+                      <>
+                        {seeder.pinned ? <Chip tone="info">{t('seeders.pinned')}</Chip> : null}
+                        {seeder.autoUpdate ? (
+                          <Chip tone="notice">{t('seeders.autoUpdateChip')}</Chip>
+                        ) : null}
+                      </>
+                    ) : undefined
                   }
                   note={t('seeders.credentialsNote', {
                     state: t(
