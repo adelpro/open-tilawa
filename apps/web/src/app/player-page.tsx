@@ -166,14 +166,12 @@ export default function PlayerPage({
 
   /**
    * `unknown` is the catalogue saying it does not know. Printing that as a
-   * reading would assert a riwaya on a recording nobody classified, and a name
-   * that already ends in "(ورش)" does not need the reading twice.
+   * reading would assert a riwaya on a recording nobody classified. The name is
+   * the name: the reading lives in its own column and is printed here, once.
    */
   const riwayaCode = reciter?.riwaya?.trim();
-  const riwayaLabelText =
-    riwayaCode && riwayaCode.toLowerCase() !== 'unknown' ? riwayaLabel(riwayaCode) : null;
   const riwaya =
-    riwayaLabelText && !reciter?.name.includes(riwayaLabelText) ? riwayaLabelText : null;
+    riwayaCode && riwayaCode.toLowerCase() !== 'unknown' ? riwayaLabel(riwayaCode) : null;
 
   /** The title's chevrons are toggles: the arrow that opened a panel closes it. */
   const surahsOpen = sheet === 'surahs';
