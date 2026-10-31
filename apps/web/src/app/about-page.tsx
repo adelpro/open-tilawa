@@ -60,6 +60,22 @@ export default function AboutPage() {
           </h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p1}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p2}</p>
+          {/* The catalogue is a community project, so the credit is a link and not
+              a line of text: whoever reads it can go and see the source itself. */}
+          <a
+            href="https://itqan.dev"
+            target="_blank"
+            rel="noreferrer"
+            className="group mt-4 inline-flex min-h-11 items-center gap-3"
+          >
+            <img src="/images/itqan.png" alt="" aria-hidden="true" className="itqan-mark h-12 w-auto" />
+            <span
+              dir="ltr"
+              className="text-[0.875rem] text-muted underline underline-offset-4 transition-colors group-hover:text-ink"
+            >
+              itqan.dev
+            </span>
+          </a>
         </section>
 
         <section className="mt-10">

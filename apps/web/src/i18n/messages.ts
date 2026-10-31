@@ -264,7 +264,7 @@ const ar = {
     },
     sources: {
       title: 'التسجيلات والروايات',
-      p1: 'تأتي التسجيلات في تطبيق تلاوة من كتالوج مجتمع إتقان (itqan.dev)، والحقوق تعود إلى أصحابها من القرّاء والناشرين.',
+      p1: 'تأتي التسجيلات في تطبيق تلاوة من كتالوج مجتمع إتقان (itqan.dev)، عبر منصّة «فنار» لنشر المحتوى القرآني؛ والحقوق تعود إلى أصحابها من القرّاء والناشرين.',
       p2: 'وتظهر الرواية، مثل حفص أو ورش أو قالون، بجانب اسم القارئ متى عُرفت؛ وإن لم تُعرف، لا نفترض رواية بعينها.',
     },
     open: {
@@ -542,7 +542,7 @@ const en: typeof ar = {
     },
     sources: {
       title: 'Recordings and riwayat',
-      p1: 'The recordings in Tilawah come from the Itqan community catalogue (itqan.dev); rights remain with the reciters and publishers.',
+      p1: 'The recordings in Tilawah come from the Itqan community catalogue (itqan.dev), published through its Fanar platform for Quranic content; rights remain with the reciters and publishers.',
       p2: 'The riwaya — Hafs, Warsh, Qalon — appears beside the reciter when it is known; when it is not, no reading is assumed.',
     },
     open: {

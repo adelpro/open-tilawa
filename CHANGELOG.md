@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.13.17 — 2026-10-31
+
+Patch. App versions: **web 1.13.2**, **admin 1.32.8**, **seeder 1.5.7**.
+
+### Added
+
+- **The about page credits Itqan with its mark.** The sources section links to
+  itqan.dev beside the partner's logo — drained to the page's ink rather than a
+  second brand competing with the product's own. The copy now also names Fanar as
+  the platform the catalogue is published through, in both languages.
+
 ## 1.13.16 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.8**, **seeder 1.5.7**.
