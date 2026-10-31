@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { shellHeadTags } from '../scripts/head.mjs';
 
 /**
  * The rule the release got wrong once: `routes.ts` says it is the one place a path
@@ -48,4 +49,55 @@ test('every written page names its own language and the pair a crawler chooses f
   assert.match(SOURCE, /hreflang="en"/);
   assert.match(SOURCE, /hreflang="x-default"/);
   assert.match(SOURCE, /xmlns:xhtml=/, 'the sitemap cannot carry alternates without the namespace');
+});
+
+/**
+ * The install metadata is the shell's, not the page's.
+ *
+ * The prerenderer writes its own head from the words of one page, and it used to
+ * keep only the script and the stylesheet. A manifest link, the window chrome, the
+ * launcher icon and the font preloads went out with the replaced head — the site
+ * served a valid manifest that no document referenced, so nothing offered install.
+ */
+test('the head carries what the shell had, and not the copy of one page', () => {
+  const shell = `<!doctype html><html><head>
+    <meta charset="UTF-8" />
+    <title>Tilawah</title>
+    <meta name="description" content="a page description" />
+    <meta name="text-scale" content="scale" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:title" content="a page title" />
+    <link rel="canonical" href="https://tilawah.cc/" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" href="/favicon.ico" />
+    <link
+      rel="preload"
+      as="font"
+      href="/fonts/a.woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/assets/index.css" />
+  </head><body></body></html>`;
+
+  const kept = shellHeadTags(shell);
+  const keptText = kept.join('\n');
+  for (const wanted of [
+    'rel="manifest"',
+    'rel="apple-touch-icon"',
+    'rel="icon"',
+    'rel="preload"',
+    'name="theme-color"',
+    'name="text-scale"',
+    'og:image:width',
+  ]) {
+    assert.match(keptText, new RegExp(wanted.replace(/[[\]]/g, '\\$&')), `${wanted} is kept`);
+  }
+  // One page's words belong to that page, and page() writes them itself.
+  for (const dropped of ['<title>', 'name="description"', 'og:title', 'rel="canonical"', 'stylesheet']) {
+    assert.doesNotMatch(keptText, new RegExp(dropped.replace(/[[\]]/g, '\\$&')), `${dropped} is not copied`);
+  }
+  // A tag Vite left wrapped across lines is still one tag.
+  assert.match(keptText, /rel="preload"[\s\S]*href="\/fonts\/a\.woff2"/);
 });

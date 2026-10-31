@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.13.26 — 2026-10-31
+
+Patch. App versions: **web 1.13.9**, **admin 1.32.11**, **seeder 1.5.7**.
+
+### Added
+
+- **The player is installable again.** Every prerendered page replaced the whole
+  `<head>` and kept only the script and the stylesheet, so the manifest link the PWA
+  plugin injects — with `theme-color`, `apple-touch-icon`, the favicons, the font
+  preloads and the og image dimensions — never reached a visitor. The site published
+  a valid manifest that no document referenced: no install prompt, and "Add to Home
+  screen" on Android was a bookmark with no splash and no shortcuts. `scripts/head.mjs`
+  now carries those tags over by pattern, `test/prerender.test.ts` asserts both that
+  they survive and that one page's copy does not leak into another, and the head no
+  longer drops `text-scale` either.
+
+### Fixed
+
+- **The manifest is served as `application/manifest+json`.** nginx's stock mime table
+  has no `.webmanifest`, so it went out as `application/octet-stream`. A `default_type`
+  in a `location` for that one path fills the gap; a `types` block would have replaced
+  the inherited table instead of adding to it.
+
 ## 1.13.25 — 2026-10-31
 
 Patch. App versions: **web 1.13.8**, **admin 1.32.11**, **seeder 1.5.7**.

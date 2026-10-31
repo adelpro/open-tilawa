@@ -28,6 +28,7 @@ import { surahName } from '../src/utils/surah-name.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
+import { shellHeadTags } from './head.mjs';
 
 const WEB = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(WEB, 'dist');
@@ -40,6 +41,10 @@ const assets = [
   ...shell.matchAll(/<script[^>]*src="[^"]+"[^>]*><\/script>/g),
   ...shell.matchAll(/<link[^>]*rel="stylesheet"[^>]*>/g),
 ].map((match) => match[0]);
+// Everything in the head that is not copy: the manifest link, the chrome, the
+// launcher icon, the font preloads. Replacing <head> used to drop them on every
+// page, which is how the site kept a manifest no document linked.
+const shellHead = shellHeadTags(shell).join('\n    ');
 
 if (assets.length === 0) {
   console.error('prerender: no module script in dist/index.html — run vite build first');
@@ -96,6 +101,7 @@ function page({ locale, path, title, description, index, body, canonical = true 
     <meta property="og:description" content="${escape(description)}" />
     <meta property="og:image" content="${SITE}/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    ${shellHead}
     ${assets.join('\n    ')}
   </head>
   <body>
