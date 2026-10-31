@@ -275,7 +275,7 @@ export const en = {
   'torrents.noSeeders': 'Add a seeder first — torrents are managed on a node.',
   'torrents.loadFailed': 'Could not read the node inventory.',
   'torrents.updateElsewhere':
-    'This node updates itself, or is updated on its host — there is nothing to press here.',
+    'This node does not accept updates from the console. Update it on its host once — after that it can update itself.',
   'torrents.removeFailed': 'Could not remove the torrent.',
   'torrents.signInRequired': 'Sign in required.',
 

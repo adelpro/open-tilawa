@@ -318,10 +318,11 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           >
             {t('torrents.probe')}
           </Button>
-          {/* Two nodes can update, for two different reasons: this host's own
-              (the console drives it) and a remote node that accepted the job
-              (it drives itself). A node that does neither gets no button. */}
-          {updatable && (behind || updatable.updating) ? (
+          {/* A node that accepts updates always offers the action, not only when
+              a newer version exists: "rebuild/pull this node now" is the same
+              command, and a button that appears only sometimes reads as a bug.
+              The confirmation says which version it is currently on. */}
+          {updatable ? (
             <Button
               icon={<Icon name="refresh" />}
               busy={busy === 'update' || updatable.updating}
@@ -333,9 +334,9 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
         </div>
       </header>
 
-      {/* A node that is behind but cannot be asked says why, once. Silence next
-          to a red version chip reads as a missing button. */}
-      {node && behind && !updatable ? (
+      {/* A node that cannot be asked says why — always, because the missing
+          button is the question. */}
+      {node && !updatable ? (
         <p className="fine-print">{t('torrents.updateElsewhere')}</p>
       ) : null}
 

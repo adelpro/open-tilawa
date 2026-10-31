@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.13.4 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.31.2**, **seeder 1.5.2**.
+
+### Fixed
+
+- **The update button appeared only when a newer version existed,** so a node that
+  could update offered nothing to press and the screen read as broken. A node that
+  accepts updates always shows the action — "rebuild or pull this node now" is the
+  same command — and the dialog still says which version it is on. A node that
+  cannot be asked now says so in words instead of leaving a gap beside its version.
+
 ## 1.13.3 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.31.1**, **seeder 1.5.2**.

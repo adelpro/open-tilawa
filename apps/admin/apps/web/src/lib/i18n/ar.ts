@@ -276,7 +276,7 @@ export const ar: Catalogue = {
   'torrents.fillNode': 'أضف تلاوات الفهرس',
   'torrents.noSeeders': 'أضف خادم توزيع أولًا — تُدار ملفات التورنت على خادم.',
   'torrents.loadFailed': 'تعذّرت قراءة محتوى الخادم.',
-  'torrents.updateElsewhere': 'هذا الخادم يحدّث نفسه أو يُحدَّث من جهازه، ولا شيء يُضغط هنا.',
+  'torrents.updateElsewhere': 'هذا الخادم لا يستقبل التحديث من لوحة التحكم. حدّثه على جهازه مرة واحدة، ثم يتحدّث بنفسه.',
   'torrents.removeFailed': 'تعذّرت إزالة الملف.',
   'torrents.signInRequired': 'يلزم تسجيل الدخول.',
 
