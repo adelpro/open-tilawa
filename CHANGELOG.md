@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.13.2 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.31.0**, **seeder 1.5.2**.
+
+### Fixed
+
+- **The seeder reported the repository version.** 1.5.1 shipped with the seeder's
+  `package.json` set to the repo release number, so `/health` answered `1.13.1` —
+  a version no seeder tag had, which is worse than being behind, because the fleet
+  cannot plan an update against a number that never existed. A test now holds the
+  package, its lockfile and the image's `LABEL version` to the same number.
+
 ## 1.13.1 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.31.0**, **seeder 1.5.1**.
