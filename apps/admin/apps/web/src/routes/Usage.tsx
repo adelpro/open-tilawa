@@ -523,19 +523,20 @@ export function Usage(): ReactElement {
 }
 
 /**
- * A surah in a table cell: the id then its name.
+ * A surah in a table cell: the id then its name in the interface language.
  *
  * The id leads because it is the stored value and the sort key; the name is what
- * an operator actually recognises. The name is Arabic in both locales, so it is
- * isolated from the surrounding direction rather than translated.
+ * an operator actually recognises. Arabic text is isolated from the surrounding
+ * direction; the English romanisation is read left to right.
  */
 function SurahCell({ id }: { id: number }): ReactElement {
+  const { locale } = useI18n();
   return (
     <>
       <bdi>{id}</bdi>
-      <span className="muted" lang="ar" dir="rtl">
+      <span className="muted" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
         {' · '}
-        <bdi>{surahName(id) ?? '—'}</bdi>
+        <bdi>{surahName(id, locale) ?? '—'}</bdi>
       </span>
     </>
   );

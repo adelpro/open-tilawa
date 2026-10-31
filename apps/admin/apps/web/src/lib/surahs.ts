@@ -2,13 +2,18 @@
  * The 114 surah names in mushaf order, so a number in a report reads as a surah.
  *
  * The telemetry tables store only the id: it is what the player sends and what
- * survives a rename. The names are Arabic in both locales — it is the surah's
- * own name, not a sentence — so they are not in the translation catalogue.
+ * survives a rename. Arabic shows the surah's own name; English shows the same
+ * romanisation the player uses, because an operator looking for الكهف looks for
+ * "Al-Kahf", not "The Cave". Both lists live here rather than the translation
+ * catalogue: they are names, not sentences, and `ar`/`en` are data files.
  *
- * Kept as a plain array rather than importing the player's `constants/surah.ts`:
- * the console is built and shipped on its own, and a build-time import across
- * apps would couple two release trains for a list that does not change.
+ * Kept as plain literals rather than importing the player's `constants/surah.ts`
+ * or `i18n/surah-names-en.ts`: the console is built and shipped on its own, and a
+ * build-time import across apps would couple two release trains for a list that
+ * does not change. If the two ever drift, the player is the source of truth.
  */
+import type { Locale } from './i18n';
+
 const SURAH_NAMES = [
   'الفاتحة',
   'البقرة',
@@ -126,7 +131,125 @@ const SURAH_NAMES = [
   'الناس',
 ] as const;
 
-/** A surah's Arabic name, or null for an id outside 1…114. */
-export function surahName(id: number): string | null {
-  return SURAH_NAMES[id - 1] ?? null;
+/** The same 114 names romanised, matching the player's English list. */
+const SURAH_NAMES_EN: Record<number, string> = {
+  1: 'Al-Fatihah',
+  2: 'Al-Baqarah',
+  3: 'Al Imran',
+  4: "An-Nisa'",
+  5: "Al-Ma'idah",
+  6: "Al-An'am",
+  7: "Al-A'raf",
+  8: 'Al-Anfal',
+  9: 'At-Tawba',
+  10: 'Yunus',
+  11: 'Hud',
+  12: 'Yusuf',
+  13: "Ar-Ra'd",
+  14: 'Ibrahim',
+  15: 'Al-Hijr',
+  16: 'An-Nahl',
+  17: 'Al-Israa',
+  18: 'Al-Kahf',
+  19: 'Maryam',
+  20: 'Ta-ha',
+  21: 'Al-Anbiyaa',
+  22: 'Al-Hajj',
+  23: 'Al-Muminoon',
+  24: 'An-Nur',
+  25: 'Al-Furqan',
+  26: "Ash-Shu'araa",
+  27: 'An-Naml',
+  28: 'Al-Qasas',
+  29: 'Al-Ankabut',
+  30: 'Ar-Rum',
+  31: 'Luqman',
+  32: 'As-Sajda',
+  33: 'Al-Ahzab',
+  34: 'Saba',
+  35: 'Fatir',
+  36: 'Ya-Sin',
+  37: 'As-Saaffat',
+  38: 'Sad',
+  39: 'Az-Zumar',
+  40: 'Ghafir',
+  41: 'Fussilat',
+  42: 'Ash-Shura',
+  43: 'Az-Zukhruf',
+  44: 'Ad-Dukhan',
+  45: 'Al-Jathiya',
+  46: 'Al-Ahqaf',
+  47: 'Muhammad',
+  48: 'Al-Fath',
+  49: 'Al-Hujurat',
+  50: 'Qaf',
+  51: 'Adh-Dhariyat',
+  52: 'At-Tur',
+  53: 'An-Najm',
+  54: 'Al-Qamar',
+  55: 'Ar-Rahman',
+  56: "Al-Waqi'a",
+  57: 'Al-Hadid',
+  58: 'Al-Mujadila',
+  59: 'Al-Hashr',
+  60: 'Al-Mumtahina',
+  61: 'As-Saff',
+  62: 'Al-Jumua',
+  63: 'Al-Munafiqun',
+  64: 'At-Taghabun',
+  65: 'At-Talaq',
+  66: 'At-Tahrim',
+  67: 'Al-Mulk',
+  68: 'Al-Qalam',
+  69: 'Al-Haaqqa',
+  70: 'Al-Maarij',
+  71: 'Nuh',
+  72: 'Al-Jinn',
+  73: 'Al-Muzzammil',
+  74: 'Al-Muddathir',
+  75: 'Al-Qiyama',
+  76: 'Al-Insan',
+  77: 'Al-Mursalat',
+  78: 'An-Naba',
+  79: 'An-Naziat',
+  80: 'Abasa',
+  81: 'At-Takwir',
+  82: 'Al-Infitar',
+  83: 'Al-Mutaffifin',
+  84: 'Al-Inshiqaq',
+  85: 'Al-Burooj',
+  86: 'At-Tariq',
+  87: 'Al-Ala',
+  88: 'Al-Ghashiya',
+  89: 'Al-Fajr',
+  90: 'Al-Balad',
+  91: 'Ash-Shams',
+  92: 'Al-Lail',
+  93: 'Ad-Dhuha',
+  94: 'Al-Inshirah',
+  95: 'At-Tin',
+  96: 'Al-Alaq',
+  97: 'Al-Qadr',
+  98: 'Al-Bayyina',
+  99: 'Az-Zalzala',
+  100: 'Al-Adiyat',
+  101: 'Al-Qaria',
+  102: 'At-Takathur',
+  103: 'Al-Asr',
+  104: 'Al-Humaza',
+  105: 'Al-Fil',
+  106: 'Quraysh',
+  107: "Al-Ma'un",
+  108: 'Al-Kawthar',
+  109: 'Al-Kafirun',
+  110: 'An-Nasr',
+  111: 'Al-Masadd',
+  112: 'Al-Ikhlas',
+  113: 'Al-Falaq',
+  114: 'Al-Nas',
+};
+
+/** A surah's name in the interface language, or null outside 1…114. */
+export function surahName(id: number, locale: Locale): string | null {
+  return locale === 'ar' ? (SURAH_NAMES[id - 1] ?? null) : (SURAH_NAMES_EN[id] ?? null);
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.13.14 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.6**, **seeder 1.5.7**.
+
+### Changed
+
+- **Surah names follow the interface language.** English reads `2 · Al-Baqarah`;
+  Arabic keeps `2 · البقرة`. The English list is the player's own romanisation
+  (`surah-names-en.ts`) — a listener looking for الكهف looks for "Al-Kahf", not
+  "The Cave" — copied into the console for the same reason as the Arabic list:
+  the console builds on its own.
+
 ## 1.13.13 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.5**, **seeder 1.5.7**.
