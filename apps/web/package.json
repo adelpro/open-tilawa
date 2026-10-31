@@ -1,6 +1,6 @@
 {
   "name": "open-tilawa-vite",
-  "version": "1.13.6",
+  "version": "1.13.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --import ./test/alias-register.mjs --test test/*.test.ts"
+    "test": "node --experimental-strip-types --import ./test/alias-register.mjs --test test/*.test.ts",
+    "check": "node scripts/check-deployed.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

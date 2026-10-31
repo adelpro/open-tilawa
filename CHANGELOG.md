@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.13.22 — 2026-10-31
+
+Patch. App versions: **web 1.13.7**, **admin 1.32.9**, **seeder 1.5.7**.
+
+### Added
+
+- **`npm run check` — a check of the deployed site, not the tree.** It opens
+  `/listen/<reciter>/<surah>` in a real browser and reads the `<audio>` source, asserting
+  the file is that surah in that release, then reads `sitemap.xml` and asserts every page
+  has its language twin, three `hreflang` alternates, and answers 200. Pointed at
+  staging (1.13.0) it fails six of six listen links with “plays surah 1”, which is exactly
+  the bug 1.13.21 fixed — the net catches the thing it was built for.
+- **The sitemap is checked, not trusted.** 236 URLs, 118 Arabic and 118 English, three
+  alternates each, every Arabic URL with its `/en` twin, and a sampled crawl that answers
+  200. It is still written by `prerender.mjs`; what is new is that a release now proves it
+  before calling itself shipped.
+
 ## 1.13.21 — 2026-10-31
 
 Patch. App versions: **web 1.13.6**, **admin 1.32.9**, **seeder 1.5.7**.

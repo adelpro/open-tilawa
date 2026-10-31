@@ -113,6 +113,19 @@ asset=$(curl -s https://tilawah.cc/ | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' 
 curl -s "https://tilawah.cc/$asset" | grep -c '<a string you changed>'
 ```
 
+Then run the two checks no file can answer — that a `/listen` link plays the
+surah it names, and that the sitemap lists pages that exist:
+
+```bash
+cd apps/web && npm run check          # CHECK_URL=https://staging.tilawah.cc to aim elsewhere
+```
+
+It opens the deployed site in a real browser (Playwright is not a dependency; see
+the note at the top of `scripts/screenshots.mjs`), reads the `<audio>` source
+rather than the screen, and exits non-zero on any failure. 1.13.21 was a release
+where every surah page opened Al-Fatihah, and nothing in the build or the tests
+could see it: the URL was right and the file was wrong.
+
 The version lines are the ones that catch a half-done bump, because each app
 surface reads a different file. 1.8.0 shipped with three of admin's four
 `package.json` files left on the previous version; every screen looked right
