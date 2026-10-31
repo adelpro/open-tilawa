@@ -680,6 +680,45 @@ a.node-card__name:hover {
   font: var(--code);
 }
 
+/* A job's progress, as words and ticks. No bar: the console cannot know how far a
+   pull has gone, and a percentage it invented would be worse than none. */
+.job {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.job__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font: var(--caption);
+}
+.job__step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-secondary);
+}
+.job__step[data-state='current'] {
+  color: var(--ink);
+}
+.job__step[data-state='done'] {
+  color: var(--success);
+}
+.job__step[data-state='failed'] {
+  color: var(--error);
+}
+.job__dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+}
+
 /* A peer list opens under the torrent it belongs to: it is one row's contents,
    not a row of its own, so it keeps the tint instead of taking the hover one. */
 .table__detail > td,

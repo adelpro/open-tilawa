@@ -10,10 +10,10 @@ import {
 
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
-import { useI18n } from '../lib/i18n';
-import { bytes, relative } from '../lib/format';
+import { useI18n, type MessageKey } from '../lib/i18n';
+import { bytes, duration, relative } from '../lib/format';
 import { Button } from '../components/Button';
-import { Icon } from '../components/icons';
+import { Icon, Spinner } from '../components/icons';
 import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
@@ -36,6 +36,20 @@ const RANK: Record<RowState, number> = { healthy: 0, stale: 1, orphan: 2 };
 type SortKey = 'name' | 'size' | 'state' | 'peers';
 
 /**
+ * A job this screen started. `at` is the last stage the console actually saw, so
+ * the strip never claims progress it cannot observe — and `failed` marks that
+ * stage rather than inventing where it broke.
+ */
+type Job = {
+  kind: 'update' | 'restart';
+  at: 'pull' | 'restart' | 'done';
+  failed: boolean;
+  startedAt: number;
+  version: string | null;
+  error: string | null;
+};
+
+/**
  * One node, and only what is on it.
  *
  * Adding lives on the Reciters screen: a torrent enters the system through the
@@ -56,6 +70,12 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
   const [confirmingUpdate, setConfirmingUpdate] = useState(false);
   /** Restart is not an update: same image, same files, seconds. */
   const [confirmingRestart, setConfirmingRestart] = useState(false);
+  /**
+   * The job the operator started, and how far it got. The console cannot see a
+   * pull's internals, so this records only the stages it can actually observe:
+   * the row is updating, the node is silent, the node answers again.
+   */
+  const [job, setJob] = useState<Job | null>(null);
   /**
    * Who is connected, and when we asked. A swarm is live, so the answer is
    * stamped with the moment it arrived: an unstamped list reads as current
@@ -188,14 +208,36 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
     setBusy('restart');
     setError(null);
     setMessage(null);
+    const startedAt = Date.now();
+    setJob({ kind: 'restart', at: 'restart', failed: false, startedAt, version: null, error: null });
     try {
+      // The API waits for the node to answer before it replies, so reaching this
+      // line is the proof — no polling needed here.
       await api(`/seeders/${id}/restart`, { method: 'POST' });
-      setMessage(t('seeders.restarted'));
+      const rows = await api<Seeder[]>('/seeders');
+      const latest = rows.find((entry) => entry.id === id);
+      if (!alive.current) return;
+      setJob({
+        kind: 'restart',
+        at: 'done',
+        failed: false,
+        startedAt,
+        version: latest?.version ?? null,
+        error: null,
+      });
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('seeders.restartFailed'));
+      if (!alive.current) return;
+      setJob({
+        kind: 'restart',
+        at: 'restart',
+        failed: true,
+        startedAt,
+        version: null,
+        error: caught instanceof Error ? caught.message : t('seeders.restartFailed'),
+      });
     } finally {
-      setBusy(null);
+      if (alive.current) setBusy(null);
     }
   }
 
@@ -228,28 +270,54 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
     setBusy('update');
     setError(null);
     setMessage(null);
+    const startedAt = Date.now();
+    setJob({ kind: 'update', at: 'pull', failed: false, startedAt, version: null, error: null });
     try {
       await api(`/seeders/${id}/update`, { method: 'POST' });
-      let latest: Seeder | undefined = node ?? undefined;
       for (let attempt = 0; attempt < 100 && alive.current; attempt += 1) {
-        await new Promise((resolve) => window.setTimeout(resolve, 3000));
+        await new Promise((resolve) => window.setTimeout(resolve, 2000));
         const rows = await api<Seeder[]>('/seeders');
-        latest = rows.find((entry) => entry.id === id);
-        if (!latest?.updating) break;
+        const latest = rows.find((entry) => entry.id === id);
+        if (!latest) break;
+        // Three observable stages, in the order the node goes through them:
+        // the job runs, the node stops answering, the node answers a version.
+        if (latest.updating) {
+          setJob((current) => (current ? { ...current, at: 'pull' } : current));
+          continue;
+        }
+        if (latest.status !== 'online') {
+          setJob((current) => (current ? { ...current, at: 'restart' } : current));
+          continue;
+        }
+        if (!alive.current) return;
+        setJob({
+          kind: 'update',
+          at: 'done',
+          failed: Boolean(latest.updateError),
+          startedAt,
+          version: latest.version,
+          error: latest.updateError,
+        });
+        await load();
+        return;
       }
       if (!alive.current) return;
-      if (latest?.updateError) {
-        setError(t('seeders.updateError', { error: latest.updateError }));
-      } else {
-        setMessage(
-          t('seeders.updatedSoftware', {
-            version: latest?.version ?? t('seeders.versionUnknown'),
-          }),
-        );
-      }
-      await load();
+      setJob((current) =>
+        current
+          ? { ...current, failed: true, error: t('torrents.jobTimeout') }
+          : current,
+      );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
+      if (!alive.current) return;
+      setJob((current) =>
+        current
+          ? {
+              ...current,
+              failed: true,
+              error: caught instanceof Error ? caught.message : t('seeders.updateFailed'),
+            }
+          : current,
+      );
     } finally {
       if (alive.current) setBusy(null);
     }
@@ -380,6 +448,8 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           ) : null}
         </div>
       </header>
+
+      {job ? <JobProgress job={job} /> : null}
 
       {/* A node that cannot be asked says why — always, because the missing
           button is the question. A node that can be asked offers the switch for
@@ -653,6 +723,70 @@ export function Torrents({ seederId }: { seederId?: string }): ReactElement {
           onConfirm={() => void updateSoftware()}
         />
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * The three stages of an update, as words and ticks.
+ *
+ * Deliberately not a progress bar: the console knows "the job is running", not
+ * "the pull is 40 % done", and a bar would invent the difference. What it can say
+ * honestly is which stage it last observed, and how long the whole thing took.
+ */
+function JobProgress({ job }: { job: Job }): ReactElement {
+  const { t, locale } = useI18n();
+  const steps: { key: Job['at']; label: MessageKey }[] =
+    job.kind === 'update'
+      ? [
+          { key: 'pull', label: 'torrents.jobPull' },
+          { key: 'restart', label: 'torrents.jobRestart' },
+          { key: 'done', label: 'torrents.jobBack' },
+        ]
+      : [
+          { key: 'restart', label: 'torrents.jobRestart' },
+          { key: 'done', label: 'torrents.jobBack' },
+        ];
+
+  const reached = steps.findIndex((step) => step.key === job.at);
+  const stateOf = (index: number): 'done' | 'current' | 'pending' | 'failed' => {
+    if (index < reached) return 'done';
+    if (index > reached) return 'pending';
+    if (job.failed) return 'failed';
+    return job.at === 'done' ? 'done' : 'current';
+  };
+
+  const summary = job.failed
+    ? (job.error ?? t('torrents.jobTimeout'))
+    : job.at === 'done'
+      ? job.kind === 'update'
+        ? t('torrents.jobUpdated', {
+            version: job.version ?? t('seeders.versionUnknown'),
+            time: duration(Date.now() - job.startedAt, locale),
+          })
+        : t('torrents.jobRestarted', { time: duration(Date.now() - job.startedAt, locale) })
+      : t('torrents.jobWorking');
+
+  return (
+    <div className="job" role="status" aria-live="polite">
+      <ol className="job__steps">
+        {steps.map((step, index) => {
+          const state = stateOf(index);
+          return (
+            <li key={step.key} className="job__step" data-state={state}>
+              {state === 'done' ? (
+                <Icon name="check" />
+              ) : state === 'current' ? (
+                <Spinner size={12} />
+              ) : (
+                <span className="job__dot" aria-hidden="true" />
+              )}
+              <span>{t(step.label)}</span>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="fine-print">{summary}</p>
     </div>
   );
 }

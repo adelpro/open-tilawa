@@ -277,6 +277,13 @@ export const en = {
   'torrents.updateElsewhere':
     'This node does not accept updates from the console. Update it on its host once — after that it can update itself.',
   'torrents.autoUpdate': 'Update this node automatically',
+  'torrents.jobPull': 'Pull the image',
+  'torrents.jobRestart': 'Restart the seeder',
+  'torrents.jobBack': 'Back online',
+  'torrents.jobWorking': 'Working — this usually takes a minute.',
+  'torrents.jobUpdated': 'Updated to {version} in {time}.',
+  'torrents.jobRestarted': 'Restarted in {time}.',
+  'torrents.jobTimeout': 'The node did not come back in time.',
   'torrents.autoUpdateHint':
     'Checked every five minutes: when the fleet target is newer, the node updates itself. Off unless switched on.',
   'torrents.removeFailed': 'Could not remove the torrent.',

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.13.11 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.3**, **seeder 1.5.7**.
+
+### Added
+
+- **A job shows its stages.** Pressing Update or Restart now leaves a quiet strip
+  under the node's name: *Pull the image · Restart the seeder · Back online*, with
+  a spinner on the stage the console is watching, ticks behind it, and the elapsed
+  time when it lands. Failures mark the stage that broke and quote the node's own
+  error. No progress bar — the console knows the job is running, not how far a pull
+  has got, and a percentage it invented would be worse than none.
+
 ## 1.13.10 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.32.2**, **seeder 1.5.7**.

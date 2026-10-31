@@ -278,6 +278,13 @@ export const ar: Catalogue = {
   'torrents.loadFailed': 'تعذّرت قراءة محتوى الخادم.',
   'torrents.updateElsewhere': 'هذا الخادم لا يستقبل التحديث من لوحة التحكم. حدّثه على جهازه مرة واحدة، ثم يتحدّث بنفسه.',
   'torrents.autoUpdate': 'حدّث هذا الخادم تلقائيًا',
+  'torrents.jobPull': 'سحب الصورة',
+  'torrents.jobRestart': 'إعادة تشغيل الخادم',
+  'torrents.jobBack': 'عاد متصلًا',
+  'torrents.jobWorking': 'جارٍ العمل، ويستغرق هذا دقيقة عادة.',
+  'torrents.jobUpdated': 'حُدّث إلى {version} في {time}.',
+  'torrents.jobRestarted': 'أُعيد التشغيل في {time}.',
+  'torrents.jobTimeout': 'لم يعد الخادم في الوقت المتوقع.',
   'torrents.autoUpdateHint':
     'يُفحص كل خمس دقائق: إذا تقدّم إصدار الأسطول على إصدار الخادم، حدّث نفسه. معطّل ما لم تُشغّله.',
   'torrents.removeFailed': 'تعذّرت إزالة الملف.',
