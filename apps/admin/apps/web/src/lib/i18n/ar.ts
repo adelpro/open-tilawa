@@ -406,9 +406,9 @@ export const ar: Catalogue = {
   'seeders.credentialsCleared': 'مُسحت بيانات الاعتماد.',
   'seeders.updated': 'حُدّث خادم التوزيع.',
   'seeders.updateFailed': 'تعذّر تحديث خادم التوزيع.',
-  'seeders.remove': 'إزالة',
+  'seeders.remove': 'إزالة الخادم',
   'seeders.removeTitle': 'أتزيل هذا الخادم من اللوحة؟',
-  'seeders.removeBody': 'يزيل هذا الخادم من اللوحة فقط. يبقى يعمل، وتبقى ملفاته، ويواصل التوزيع.',
+  'seeders.removeBody': 'تزيل اللوحة هذا الخادم من قائمتها فقط. يبقى يعمل، وتبقى ملفاته، ويواصل التوزيع.',
   'seeders.removeHint': 'لتحرير مساحته أو إيقافه، افعل ذلك على مضيف الخادم.',
   'seeders.removePinnedHint':
     'هذا هو الخادم الذي تشغّله هذه اللوحة. إزالته تخفيه من هنا فقط، ويبقى يوزّع.',

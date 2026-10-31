@@ -793,6 +793,26 @@ describe('seeder proxy', () => {
     h.db
       .prepare('INSERT INTO node_torrents (seeder_id, infohash, name) VALUES (?, ?, ?)')
       .run(id, 'deadbeef', 'al-fatiha');
+    // A decommissioned node is usually the one with an open alert. Removal
+    // must close it, or the console reports a node that no longer exists.
+    h.db
+      .prepare("INSERT INTO alerts (kind, subject, title) VALUES ('seeder.offline', ?, 'node down')")
+      .run(`seeder:${id}`);
+
+    // A second node keeps its rows: the delete is scoped by seeder id.
+    const other = (
+      await agent
+        .post('/api/seeders')
+        .set('x-csrf-token', csrf)
+        .send({ name: 'node-keep', url: 'http://127.0.0.1:10' })
+        .expect(201)
+    ).body.id as number;
+    h.db
+      .prepare("INSERT INTO placements (reciter_id, seeder_id, state) VALUES (?, ?, 'placed')")
+      .run(998, other);
+    h.db
+      .prepare('INSERT INTO node_torrents (seeder_id, infohash, name) VALUES (?, ?, ?)')
+      .run(other, 'cafebabe', 'al-baqara');
 
     await agent.delete(`/api/seeders/${id}`).set('x-csrf-token', csrf).expect(204);
 
@@ -803,6 +823,21 @@ describe('seeder proxy', () => {
     expect(
       h.db.prepare('SELECT COUNT(*) AS n FROM node_torrents WHERE seeder_id = ?').get(id),
     ).toEqual({ n: 0 });
+    expect(
+      h.db.prepare("SELECT COUNT(*) AS n FROM alerts WHERE state = 'open' AND subject = ?").get(
+        `seeder:${id}`,
+      ),
+    ).toEqual({ n: 0 });
+    // The untouched node is proof the deletes carry their `WHERE seeder_id`.
+    expect(
+      h.db.prepare('SELECT COUNT(*) AS n FROM placements WHERE seeder_id = ?').get(other),
+    ).toEqual({ n: 1 });
+    expect(
+      h.db.prepare('SELECT COUNT(*) AS n FROM node_torrents WHERE seeder_id = ?').get(other),
+    ).toEqual({ n: 1 });
+    expect(h.db.prepare('SELECT COUNT(*) AS n FROM seeders WHERE id = ?').get(other)).toEqual({
+      n: 1,
+    });
 
     const auditRow = h.db
       .prepare("SELECT * FROM audit_log WHERE action = 'seeder:remove' ORDER BY id DESC LIMIT 1")

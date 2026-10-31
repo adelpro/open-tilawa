@@ -347,16 +347,31 @@ export class SeedersService {
    * it is being removed.
    */
   remove(id: number, actorId: number | null): void {
-    const row = this.db.prepare('SELECT name, url FROM seeders WHERE id = ?').get(id) as
-      | { name: string; url: string }
-      | undefined;
-    if (!row) throw new NotFoundException('seeder not found');
+    // `immediate` takes the write lock before the read. Two API processes share
+    // this database, so a deferred transaction could let both see the row and
+    // both report success; with the lock, the second one finds nothing and 404s.
+    const apply = this.db.transaction(() => {
+      const row = this.db.prepare('SELECT name, url FROM seeders WHERE id = ?').get(id) as
+        | { name: string; url: string }
+        | undefined;
+      if (!row) throw new NotFoundException('seeder not found');
 
-    this.db.transaction(() => {
       this.db.prepare('DELETE FROM placements WHERE seeder_id = ?').run(id);
       this.db.prepare('DELETE FROM node_torrents WHERE seeder_id = ?').run(id);
       this.db.prepare('DELETE FROM seeders WHERE id = ?').run(id);
-    })();
+      // An open alert for this node can never resolve through the scheduler:
+      // it only evaluates nodes that are still in the fleet. Close it here,
+      // silently — the node is gone, not recovered.
+      this.db
+        .prepare(
+          `UPDATE alerts SET state = 'resolved', resolved_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')
+            WHERE state = 'open' AND subject = ?`,
+        )
+        .run(`seeder:${id}`);
+      return row;
+    });
+
+    const row = apply.immediate();
 
     this.audit.record({
       actorId,

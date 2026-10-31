@@ -236,7 +236,12 @@ export function Seeders(): ReactElement {
       setMessage(t('seeders.removed'));
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t('seeders.removeFailed'));
+      const message = caught instanceof Error ? caught.message : t('seeders.removeFailed');
+      // Another tab may have removed it already. Reload so the list tells the
+      // truth, close the dialog, and leave the reason on the page.
+      await load();
+      setError(message);
+      setRemoving(null);
     } finally {
       setBusy(null);
     }

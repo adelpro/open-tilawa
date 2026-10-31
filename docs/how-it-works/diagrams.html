@@ -156,8 +156,8 @@ const SHEETS = [
       { from: [1180, 370], via: [[1210, 370], [1210, 320]], to: [1240, 320], label: '8085 · basic auth', lx: 1040, ly: 356 },
       { from: [1040, 460], via: [[1040, 560]], to: [1240, 560], dashed: true, label: 'docker socket', lx: 1140, ly: 548 }
     ],
-    notes: [[120, 760, 'Remove node only drops the row in the console. The node keeps its files and keeps seeding.'],
-            [120, 788, 'That is why the action is called Remove node and not Delete.']]
+    notes: [[120, 760, 'Remove node drops the console row and its cached placement data. The node keeps its files and keeps seeding.'],
+            [120, 788, 'Node-side data is removed per torrent, deliberately.']]
   },
 
   /* ------------------------------------------------------------------ 05 */

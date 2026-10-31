@@ -145,6 +145,17 @@ describe('console audit — every destructive action asks first', () => {
     assert.match(seeders, /busy === `remove-\$\{removing\.id\}`/);
   });
 
+  it('closes the dialog and reloads the fleet when removal fails', () => {
+    const seeders = read('routes/Seeders.tsx');
+    const handler = seeders.slice(seeders.indexOf('async function removeNode'));
+    const body = handler.slice(0, handler.indexOf('\n  }'));
+    // A row removed in another tab answers 404; the dialog must not sit there
+    // with the reason hidden behind its scrim.
+    assert.match(body, /await load\(\);/);
+    assert.match(body, /setError\(message\);/);
+    assert.match(body, /setRemoving\(null\);\n\s*\} finally/);
+  });
+
   it('has no hand-rolled destructive dialog left', () => {
     const handRolled =
       /<Modal title=\{t\('(reciters\.deleteTitle|torrents\.untrackedTitle|seeders\.updateTitle|seeders\.unlink)'\)/;

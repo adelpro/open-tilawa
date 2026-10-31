@@ -11,8 +11,8 @@ One page, one API, two things behind it.
   audited.
 
 The console is not a remote shell. Everything it does goes through the node's own
-API, which stays the authority — the console reads live inventory, it never keeps
-a copy.
+API, which stays the authority — the console reads live inventory and caches it
+for its own screens, but the node stays the truth.
 
 **Remove node** on the Seeders screen is row-only: the console row and the
 placement and inventory data cached for it disappear, and the node keeps its
