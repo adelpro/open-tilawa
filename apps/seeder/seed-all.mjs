@@ -8,6 +8,7 @@ import { exactLengthFromMagnet, fits, quotaFromEnv } from './lib/policy.mjs';
 import { describePeers, liveWires } from './lib/peers.mjs';
 import { composeSteps, selfUpdateConfig } from './lib/self-update.mjs';
 import getInfoHashFromMagnetLink from './utils/getInfoHashFromMagnetLink.js';
+import { saveMissingTorrents } from './lib/torrent-store.mjs';
 import { spawn } from 'node:child_process';
 import TRACKERS from './constants/TRACKERS.js';
 import parseTorrent from 'parse-torrent';
@@ -169,6 +170,27 @@ function persistSource(torrent, source) {
 }
 
 /**
+ * Everything loaded, on disk. Called before anything that replaces this process
+ * and on the stats beat, so an update can never throw the inventory away: the
+ * boot scan is what rebuilds the swarm, and it can only rebuild what it finds.
+ *
+ * Returns how many files it had to write, so the log says whether anything was
+ * missing rather than pretending all was well.
+ */
+function persistLoaded() {
+  try {
+    const written = saveMissingTorrents(TORRENT_DIR, client.torrents, sourceFiles);
+    if (written.length > 0) {
+      log.info(`[persist] wrote ${written.length} torrent file(s) for the next start`);
+    }
+    return written.length;
+  } catch (error) {
+    log.error(`[persist] could not write the loaded torrents: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
  * Remove a torrent, its payload, and the file that would bring it back.
  *
  * Three separate defects lived here:
@@ -309,6 +331,10 @@ async function selfUpdate() {
   const config = selfUpdateConfig();
   selfUpdateState.running = true;
   selfUpdateState.error = null;
+  // The recreate below ends this process. Anything loaded but not written down
+  // would be gone from the inventory until someone pushed it again — the one
+  // thing an update must never do.
+  persistLoaded();
   try {
     for (const step of composeSteps(config)) await runComposeStep(step, config.timeoutMs);
   } catch (error) {
@@ -672,11 +698,16 @@ server.listen(ADMIN_PORT, () => {
 
 // Stats logging
 setInterval(() => {
+  // Cheap and idempotent: it only writes what has no file yet, so a crash or a
+  // stop that never reached the update path cannot cost the inventory.
+  persistLoaded();
   const totalPeers = client.torrents.reduce((s, t) => s + liveWires(t, client.peerId).length, 0);
   log.info(`[stats] torrents=${client.torrents.length} peers=${totalPeers} ↑${(client.uploadSpeed/1024).toFixed(1)}KB/s ↓${(client.downloadSpeed/1024).toFixed(1)}KB/s`);
 }, 30000);
 
 process.on('SIGTERM', () => {
   log.warning('Shutting down...');
+  // A stop is also a restart from the next start's point of view.
+  persistLoaded();
   client.destroy(() => process.exit(0));
 });

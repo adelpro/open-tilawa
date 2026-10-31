@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.13.6 — 2026-10-31
+
+Minor. App versions: **web 1.13.1**, **admin 1.32.0**, **seeder 1.5.4**.
+
+### Added
+
+- **Auto-update, per node, off by default.** The node screen carries the switch
+  the scheduler reads every five minutes: a node that opted in, that accepts
+  updates and is behind the fleet's target, updates itself. A failed attempt
+  waits half an hour before it is tried again, so a node that cannot pull is not
+  rebuilt every tick. The fleet card marks a node that is switched on.
+
+### Fixed
+
+- **An update could drop the list it was updating.** The boot scan rebuilds the
+  swarm from the torrent directory, so anything loaded without a file there
+  disappeared the moment the container was recreated — 17 GB still on disk, the
+  inventory empty. The node now writes a `.torrent` for everything loaded before
+  it starts an update, on the stats beat, and on shutdown, so a restart finds
+  what it had.
+
 ## 1.13.5 — 2026-10-31
 
 Patch. App versions: **web 1.13.1**, **admin 1.31.2**, **seeder 1.5.3**.
