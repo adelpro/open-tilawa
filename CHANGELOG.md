@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.13.0 — 2026-10-31
+
+Minor. App versions: **web 1.13.1**, **admin 1.31.0**, **seeder 1.5.0**.
+
+### Added
+
+- **A node screen answers "who is connected".** The seeder reports its live
+  wires: counts by connection type and direction, and the peers behind each
+  torrent. The node page opens a summary (web, torrent, inbound, and when it was
+  read) and the peer count in the table opens that torrent's list.
+- **A node can update itself when the console asks.** The console's update
+  button no longer belongs to this host alone: a remote node that opts in
+  (`SEEDER_SELF_UPDATE=1`, `deploy-node.sh --self-update`) pulls the published
+  image and recreates itself, and the console waits for it to answer again. A
+  node that cannot be asked now says so under its version chip.
+
+### Changed
+
+- **The peer number is a door, not decoration.** It opens the list instead of
+  only counting it, and a swarm larger than 50 peers says how many it is showing.
+
+### Fixed
+
+- **A node counted itself as a peer.** A tracker that hands the announcer its own
+  endpoint produced connections from the node to itself, and the handshake
+  against itself succeeds — so every peer count measured that instead of the
+  audience. Wires carrying our own peer id are no longer counted.
+- **uTP peers were invisible, and most addresses were blank.** WebTorrent opens
+  uTP sockets by default, so a real node's peers arrived as a type the report
+  called "other"; a dual-stack socket reports an IPv4 peer as `::ffff:a.b.c.d`,
+  which the masker refused. Both are read correctly now.
+- **A node update was audited against a user.** The audit wrote the seeder id
+  into `user_id`, a foreign key to users, so the entry named whichever account
+  shared that number. A seeder is not an account.
+
 ## 1.12.11 — 2026-10-31
 
 Patch. App versions: **web 1.12.3**, **admin 1.30.9**, **seeder 1.4.3**.
