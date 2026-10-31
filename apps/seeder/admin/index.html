@@ -25,10 +25,20 @@
     .form-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
     .form-row input { flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 0.5rem; color: #e5e5e5; }
     .status { font-size: 0.75rem; color: #888; margin-top: 0.5rem; }
+    .toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .toolbar .version { font-size: 0.875rem; color: #aaa; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
   </style>
 </head>
 <body>
   <h1>Seeder Admin — Open Tilawa</h1>
+
+  <!-- The node updates itself: the button asks this server, not the console. -->
+  <div class="toolbar">
+    <span class="version" id="versionLine">الإصدار: —</span>
+    <button class="btn" id="updateBtn" onclick="updateNode()" disabled>تحديث الخادم</button>
+  </div>
+  <p class="status" id="updateStatus"></p>
 
   <div class="stats" id="stats"></div>
 
@@ -125,8 +135,63 @@
       refresh();
     }
 
+    // Whether this node may update itself is the deployment's answer, not the
+    // page's: the button is enabled only when /api/update says so.
+    async function loadUpdate() {
+      const line = document.getElementById('updateStatus');
+      try {
+        const health = await (await fetch('/health', { cache: 'no-store' })).json();
+        document.getElementById('versionLine').textContent = `الإصدار: ${health.version}`;
+        const state = await (await fetch('/api/update', { cache: 'no-store' })).json();
+        const btn = document.getElementById('updateBtn');
+        btn.disabled = !state.enabled || state.running;
+        if (!state.enabled) line.textContent = 'التحديث الذاتي غير مفعّل على هذا الخادم.';
+        else if (state.error) line.textContent = `آخر محاولة: ${state.error}`;
+        else if (!state.running) line.textContent = '';
+      } catch (e) {
+        line.textContent = 'خطأ: ' + e.message;
+      }
+    }
+
+    // The update pulls the image and recreates this container, which kills the
+    // process serving this page. What settles it is /health answering again.
+    async function updateNode() {
+      const line = document.getElementById('updateStatus');
+      const btn = document.getElementById('updateBtn');
+      btn.disabled = true;
+      line.textContent = 'جارٍ سحب الصورة وإعادة التشغيل…';
+      try {
+        const res = await fetch('/api/update', { method: 'POST' });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          line.textContent = body.error || 'تعذّر بدء التحديث.';
+          btn.disabled = false;
+          return;
+        }
+        for (let attempt = 0; attempt < 150; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          try {
+            const health = await (await fetch('/health', { cache: 'no-store' })).json();
+            if (health && health.status === 'ok') {
+              document.getElementById('versionLine').textContent = `الإصدار: ${health.version}`;
+              line.textContent = `الآن الإصدار ${health.version}`;
+              refresh();
+              return;
+            }
+          } catch {
+            // The container is being recreated; no answer is the middle of it.
+          }
+        }
+        line.textContent = 'لم يعد الخادم بعد خمس دقائق.';
+      } catch (e) {
+        line.textContent = 'خطأ: ' + e.message;
+      }
+    }
+
     refresh();
+    loadUpdate();
     setInterval(refresh, 3000);
+    setInterval(loadUpdate, 30000);
   </script>
 </body>
 </html>

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.7 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.32.0**, **seeder 1.5.5**.
+
+### Added
+
+- **An update button on the node's own page** (`http://<node>:8085/`), so a
+  seeder can be updated without opening the console at all. It shows the version
+  it is on, asks the node to update itself, and waits for `/health` to answer
+  again. Disabled with the reason when the deployment has not enabled it.
+- **`enable-seeder-self-update.sh`** — one command, run on the node, that grants
+  that permission (Docker socket + three env values, backed up first), pulls the
+  latest image and recreates the node. Idempotent; a second run changes nothing.
+
 ## 1.13.6 — 2026-10-31
 
 Minor. App versions: **web 1.13.1**, **admin 1.32.0**, **seeder 1.5.4**.
