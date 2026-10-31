@@ -195,14 +195,15 @@ case "$TYPE" in
       QUOTA_LINE="Disk quota: unlimited — ${FREE_GB} GB free, the node will fill the disk"
     fi
 
-    # Self-update needs two things the node cannot give itself: the host daemon
-    # and the compose file that describes it. Both are mounted only when asked
-    # for, because together they make the node's admin password root on this host.
+    # Self-update needs the host daemon, and only that: the recreate runs in a
+    # sibling container, because a container cannot stop itself and finish. The
+    # socket is mounted only when asked for — it makes the node's admin password
+    # root on this host, which is a decision, not a default.
     SELF_UPDATE_ENV=""
     SELF_UPDATE_MOUNTS=""
     if [[ "${SELF_UPDATE}" == "1" ]]; then
-      SELF_UPDATE_ENV=$'\n      SEEDER_SELF_UPDATE: "1"\n      SEEDER_COMPOSE_PROJECT: tilawa-seeder\n      SEEDER_COMPOSE_FILE: /compose/docker-compose.yml'
-      SELF_UPDATE_MOUNTS=$'\n      - /var/run/docker.sock:/var/run/docker.sock\n      - /opt/tilawa-seeder/docker-compose.yml:/compose/docker-compose.yml:ro'
+      SELF_UPDATE_ENV=$'\n      SEEDER_SELF_UPDATE: "1"\n      SEEDER_COMPOSE_PROJECT: tilawa-seeder\n      SEEDER_COMPOSE_HOST_FILE: /opt/tilawa-seeder/docker-compose.yml'
+      SELF_UPDATE_MOUNTS=$'\n      - /var/run/docker.sock:/var/run/docker.sock'
     fi
 
     cat > /opt/tilawa-seeder/docker-compose.yml <<EOF

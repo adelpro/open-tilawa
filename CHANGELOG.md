@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.13.1 — 2026-10-31
+
+Patch. App versions: **web 1.13.1**, **admin 1.31.0**, **seeder 1.5.1**.
+
+### Fixed
+
+- **A node could not update itself, because it stopped itself.** `compose up`
+  stops the container it is recreating, so the CLI living inside that container
+  died halfway: the old container stopped, the new one created and never started.
+  The recreate now runs in a detached sibling container, which the daemon owns
+  and which therefore outlives the container it replaces. Caught by running the
+  update against a throwaway node before any node opted in.
+
 ## 1.13.0 — 2026-10-31
 
 Minor. App versions: **web 1.13.1**, **admin 1.31.0**, **seeder 1.5.0**.
