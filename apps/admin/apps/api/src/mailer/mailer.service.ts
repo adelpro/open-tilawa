@@ -107,7 +107,7 @@ export class MailerService {
   }
 
   private get appName(): string {
-    return this.configService.get<string>('APP_NAME') ?? 'Tilawa Admin';
+    return this.configService.get<string>('APP_NAME') ?? 'Tilawah.cc';
   }
 
   private get website(): string {
@@ -356,8 +356,8 @@ export class MailerService {
       : '';
     return this.deliver({
       to,
-      subject: `Tilawa Admin setup token (valid 1 hour, single use)`,
-      html: `<p>Your Tilawa Admin super-admin setup token is:</p><p style="font-family:monospace;font-size:16px">${token}</p>${linkHtml}<p>It is valid for one hour and can be used once. Visit <code>/setup</code> and enter the token with your credentials.</p><p>If you did not request this, ignore this email and rotate the deployment.</p>`,
+      subject: `${this.appName} setup token (valid 1 hour, single use)`,
+      html: `<p>Your ${this.appName} super-admin setup token is:</p><p style="font-family:monospace;font-size:16px">${token}</p>${linkHtml}<p>It is valid for one hour and can be used once. Visit <code>/setup</code> and enter the token with your credentials.</p><p>If you did not request this, ignore this email and rotate the deployment.</p>`,
     });
   }
   static requireRecipient(user: MailRecipient | null): MailRecipient {

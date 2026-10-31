@@ -21,7 +21,7 @@ export class EnvConfigDTO {
 
   @IsString()
   @IsOptional()
-  APP_NAME = 'Tilawa Admin';
+  APP_NAME = 'Tilawah.cc';
 
   @IsString()
   @IsOptional()

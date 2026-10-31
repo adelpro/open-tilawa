@@ -94,7 +94,7 @@ export async function bootHarness(options: { claimed?: boolean } = {}): Promise<
   process.env.TEMP_JWT_TTL_MS = '900000';
   process.env.COOKIE_JWT_TTL_MS = '604800000';
   process.env.TILAWA_PEPPER = 'test-pepper';
-  process.env.APP_NAME = 'Tilawa Admin';
+  process.env.APP_NAME = 'Tilawah.cc';
   process.env.WEBSITE = 'http://localhost:9320';
   // Providers are "configured" only when both halves of the credential exist, so the
   // harness sets them: without them `/auth/providers` is empty and every callback

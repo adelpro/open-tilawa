@@ -273,6 +273,24 @@
   color: var(--ink-secondary);
 }
 
+/*
+ * Two controls that belong on one line: a port and a protocol, or two thresholds.
+ * These were a flex row, which sizes each field from its own label — so "Failures
+ * before an alert" came out wider than "Disk floor (GB)" and the two inputs never
+ * lined up. Equal columns and bottoms aligned: a label that wraps pushes its own
+ * control up rather than the row's.
+ */
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}
+/* One control alone on its line — wide enough for a number, not for a sentence. */
+.field-row--compact {
+  grid-template-columns: minmax(0, 12rem);
+}
+
 .field__input,
 .field__textarea,
 .field__select {
@@ -2217,6 +2235,10 @@ button.chip[aria-pressed='true'] {
 @media (max-width: 560px) {
   .panel {
     padding: var(--space-4);
+  }
+  .field-row,
+  .field-row--compact {
+    grid-template-columns: minmax(0, 1fr);
   }
   .tabs {
     margin-inline: calc(var(--space-4) * -1);

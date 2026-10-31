@@ -277,7 +277,7 @@ export function Settings(): ReactElement {
                 )}
               </Field>
 
-              <div className="row">
+              <div className="field-row">
                 <Field label={t('settings.mail.port')}>
                   {(id) => (
                     <Input
@@ -354,7 +354,7 @@ export function Settings(): ReactElement {
                 {t('settings.mail.skipVerify')}
               </label>
 
-              <div className="row">
+              <div className="cluster">
                 <Button onClick={() => void saveMail()} busy={busy === 'mail'}>
                   {t('settings.mail.save')}
                 </Button>
@@ -392,7 +392,7 @@ export function Settings(): ReactElement {
                     </label>
                   ))}
 
-                  <div className="row">
+                  <div className="field-row">
                     <Field label={t('settings.alerts.serviceFailures')}>
                       {(id) => (
                         <Input
@@ -436,7 +436,50 @@ export function Settings(): ReactElement {
                     )}
                   </Field>
 
-                  <div className="row">
+                  <div className="stack stack--tight">
+                    <label className="row">
+                      <input
+                        type="checkbox"
+                        checked={rules.digest.enabled}
+                        onChange={(event) =>
+                          setRules({
+                            ...rules,
+                            digest: { ...rules.digest, enabled: event.target.checked },
+                          })
+                        }
+                      />{' '}
+                      {t('settings.alerts.digest')}
+                    </label>
+                    <p className="muted">{t('settings.alerts.digestHint')}</p>
+                    <div className="field-row field-row--compact">
+                      <Field label={t('settings.alerts.digestHour')}>
+                        {(id) => (
+                          <Input
+                            id={id}
+                            value={String(rules.digest.hourUtc)}
+                            inputMode="numeric"
+                            disabled={!rules.digest.enabled}
+                            onChange={(event) =>
+                              setRules({
+                                ...rules,
+                                digest: {
+                                  ...rules.digest,
+                                  // The API rejects anything outside 0-23; clamping
+                                  // here keeps a slip from failing the whole save.
+                                  hourUtc: Math.min(
+                                    23,
+                                    Math.max(0, Number(event.target.value) || 0),
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        )}
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div className="cluster">
                     <Button onClick={() => void saveRules()} busy={busy === 'rules'}>
                       {t('settings.alerts.save')}
                     </Button>
