@@ -12,19 +12,31 @@ export const WEBSEED_GRACE_MS = 8_000;
 
 export type WebSeedDecision = {
   ready: boolean;
-  peers: number;
-  progress: number;
-  waitedMs: number;
+  /** WebTorrent's `idle`: nothing is selected, so the player is not waiting. */
+  idle: boolean;
+  /** Time since the last verified byte arrived. */
+  stalledMs: number;
   alreadyAdded: boolean;
 };
 
+/**
+ * Silence, not absence.
+ *
+ * This used to require `peers === 0`, and WebTorrent counts every wire — a peer
+ * that is connected but delivering nothing therefore held the fallback off for
+ * the whole session, which is the stall this exists to prevent. `progress` went
+ * too: it is `downloaded / length` over every file in the torrent, so it says
+ * the same thing as the byte clock, only later.
+ *
+ * `idle` is the one thing bytes cannot answer: a paused, buffered player is
+ * silent by design and must not pull our server into the swarm.
+ */
 export function shouldAddWebSeed(input: WebSeedDecision): boolean {
   return (
     input.ready &&
     !input.alreadyAdded &&
-    input.peers === 0 &&
-    input.progress < 1 &&
-    input.waitedMs >= WEBSEED_GRACE_MS
+    !input.idle &&
+    input.stalledMs >= WEBSEED_GRACE_MS
   );
 }
 

@@ -9,14 +9,29 @@ import {
   shouldRetryDirect,
 } from '../src/utils/webseed.ts';
 
-test('the web seed waits out the grace period with no peers', () => {
-  const base = { ready: true, peers: 0, progress: 0, waitedMs: 8000, alreadyAdded: false };
+test('the web seed waits for silence, not for an empty swarm', () => {
+  const base = { ready: true, idle: false, stalledMs: 8000, alreadyAdded: false };
   assert.equal(shouldAddWebSeed(base), true);
-  assert.equal(shouldAddWebSeed({ ...base, waitedMs: 7999 }), false);
-  assert.equal(shouldAddWebSeed({ ...base, peers: 1 }), false);
+  assert.equal(shouldAddWebSeed({ ...base, stalledMs: 7999 }), false);
   assert.equal(shouldAddWebSeed({ ...base, ready: false }), false);
-  assert.equal(shouldAddWebSeed({ ...base, progress: 1 }), false);
   assert.equal(shouldAddWebSeed({ ...base, alreadyAdded: true }), false);
+});
+
+test('a connected peer that sends nothing does not hold the fallback back', () => {
+  // The old predicate required `peers === 0`, and WebTorrent counts every wire,
+  // so one idle or leeching peer kept the seed off for the whole session. Peer
+  // count is not part of the decision any more: only delivered bytes are.
+  assert.equal(
+    shouldAddWebSeed({ ready: true, idle: false, stalledMs: 30_000, alreadyAdded: false }),
+    true,
+  );
+});
+
+test('a paused, buffered player is silence by design, not a stall', () => {
+  assert.equal(
+    shouldAddWebSeed({ ready: true, idle: true, stalledMs: 60_000, alreadyAdded: false }),
+    false,
+  );
 });
 
 test('media URLs match the torrent layout', () => {
