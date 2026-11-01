@@ -25,6 +25,7 @@ import { pageTitle } from '../src/utils/page-title.ts';
 import { riwayaLabel } from '../src/utils/riwaya.ts';
 import { sortByArabicName } from '../src/utils/reciter-order.ts';
 import { surahName } from '../src/utils/surah-name.ts';
+import { breadcrumbTrail, websiteGraph } from '../src/utils/schema.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
@@ -67,7 +68,10 @@ const DOCUMENT = {
 /** The address of one page in one language, taken from the router and nowhere else. */
 const urlFor = (path, locale) => `${SITE}${toUrl(parse(path), locale)}`;
 
-function page({ locale, path, title, description, index, body, canonical = true }) {
+/** The name the page shows for the site, not a second spelling invented here. */
+const siteName = (locale) => (locale === 'ar' ? 'تلاوة' : 'Tilawah');
+
+function page({ locale, path, title, description, index, body, jsonLd, canonical = true }) {
   // One form per page, and it is the path the table declares — `/about`, not `/about/`.
   // The sitemap writes the same string, and nginx redirects the trailing-slash form to it.
   // A page with no canonical (the 404) has no language twin, so it names its own path.
@@ -83,6 +87,11 @@ function page({ locale, path, title, description, index, body, canonical = true 
           .join('\n    ');
       })()
     : '';
+  // JSON-LD is data, not copy: `<` is the only character that can end the script
+  // element, so it is escaped and the rest is the serialised graph.
+  const structuredData = jsonLd
+    ? `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>`
+    : '';
   return `<!doctype html>
 <html lang="${locale}" dir="${DOCUMENT[locale].dir}">
   <head>
@@ -93,6 +102,7 @@ function page({ locale, path, title, description, index, body, canonical = true 
     ${canonical ? `<link rel="canonical" href="${url}" />` : ''}
     ${alternates}
     <meta name="robots" content="${robots}" />
+    ${structuredData}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Tilawah" />
     <meta property="og:locale" content="${DOCUMENT[locale].ogLocale}" />
@@ -150,6 +160,13 @@ addPage('/', (locale, copy) => ({
     locale === 'ar' ? 'Tilawah — القرآن الكريم ندّاً بندّ' : 'Tilawah — the Quran, closer',
   description: copy.about.lede,
   index: indexable('home'),
+  // The app itself is the document: `WebSite` says what the address is, and
+  // `WebApplication` says it is a free, browser-run player.
+  jsonLd: websiteGraph({
+    site: SITE,
+    name: siteName(locale),
+    alternateName: locale === 'ar' ? 'Tilawah' : 'تلاوة',
+  }),
   body: `<h1>${escape(copy.about.title)}</h1><p>${escape(copy.about.lede)}</p>`,
 }));
 
@@ -199,10 +216,14 @@ try {
 // The roster, written down: the one hub with a screen behind it. The app renders the
 // same rows from the same catalogue, so the names a crawler reads are the names it can
 // act on — and the page is worth the sitemap row it gets.
-addPage('/reciters', (_locale, copy) => ({
+addPage('/reciters', (locale, copy) => ({
   title: pageTitle({ name: 'reciters' }, copy) ?? 'القرّاء — Tilawah',
   description: copy.recitersPage.lede,
   index: indexable('reciters'),
+  jsonLd: breadcrumbTrail([
+    { name: siteName(locale), url: urlFor('/', locale) },
+    { name: copy.recitersPage.title, url: urlFor('/reciters', locale) },
+  ]),
   body:
     `<h1>${escape(copy.recitersPage.title)}</h1><p>${escape(copy.recitersPage.lede)}</p><ul>` +
     catalogue
@@ -237,6 +258,11 @@ for (const release of catalogue) {
       title: `${name} — Tilawah`,
       description: copy.reciterPage.lede(name),
       index: indexable('reciter'),
+      jsonLd: breadcrumbTrail([
+        { name: siteName(locale), url: urlFor('/', locale) },
+        { name: copy.recitersPage.title, url: urlFor('/reciters', locale) },
+        { name, url: urlFor(`/reciters/${release.slug}`, locale) },
+      ]),
       body:
         `<h1>${escape(name)}</h1>` +
         `<p>${escape(copy.reciterPage.lede(name))}</p><ul>${rows}</ul>`,

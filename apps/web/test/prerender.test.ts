@@ -101,3 +101,20 @@ test('the head carries what the shell had, and not the copy of one page', () => 
   // A tag Vite left wrapped across lines is still one tag.
   assert.match(keptText, /rel="preload"[\s\S]*href="\/fonts\/a\.woff2"/);
 });
+
+/**
+ * Structured data is data, not copy: a literal graph in the build is how the
+ * `WebApplication` description drifts from the page, and an unescaped `<` in a
+ * JSON-LD block ends the script element.
+ */
+test('the graph comes from the schema module and is escaped', () => {
+  assert.match(SOURCE, /import \{[^}]*websiteGraph[^}]*\} from '\.\.\/src\/utils\/schema\.ts'/);
+  assert.match(SOURCE, /import \{[^}]*breadcrumbTrail[^}]*\} from '\.\.\/src\/utils\/schema\.ts'/);
+  assert.match(SOURCE, /application\/ld\+json/);
+  assert.ok(
+    SOURCE.includes("replace(/</g, '\\\\u003c')"),
+    'a `<` in JSON-LD can end the script element',
+  );
+  assert.match(SOURCE, /jsonLd: websiteGraph\(/);
+  assert.match(SOURCE, /jsonLd: breadcrumbTrail\(/);
+});
