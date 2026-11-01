@@ -21,6 +21,12 @@
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+/* A provider row: the mark, then the words. */
+.signin-method {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
 .spread {
   display: flex;
   align-items: center;
@@ -165,6 +171,15 @@
   place-items: center;
   padding: var(--space-12) var(--space-6);
 }
+/* The method this browser used last: one quiet line, so the card says it before
+   the person scans two forms for the familiar one. */
+.auth__last-used {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
 .auth__card {
   width: 100%;
   max-width: 440px;

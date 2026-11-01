@@ -101,7 +101,8 @@ export const en = {
   'auth.signIn.providerGitHub': 'Continue with GitHub',
   'auth.signIn.providerOther': 'Continue with {provider}',
   'auth.signIn.or': 'or',
-  'auth.signIn.recentlyUsed': 'Recently used',
+  'auth.signIn.lastUsed': 'Last sign-in:',
+  'auth.signIn.methodPassword': 'password',
   'setup.title': 'Initial setup',
   'setup.lede':
     'Create the Owner account for this instance. The Owner appoints super admins and cannot be deleted.',

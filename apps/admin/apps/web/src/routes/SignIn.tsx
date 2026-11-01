@@ -8,7 +8,7 @@ import type { MessageKey } from '../lib/i18n';
 import { Button } from '../components/Button';
 import { GoogleMark, GitHubMark } from '../components/icons';
 import { EmailField, PasswordField } from '../components/fields';
-import { Chip, Notice } from '../components/Chip';
+import { Notice } from '../components/Chip';
 import { deviceId } from '../lib/device';
 import { readLastAuth, writeLastAuth } from '../lib/last-auth';
 import type { AuthMethod } from '../lib/last-auth';
@@ -124,8 +124,13 @@ export function SignIn(): ReactElement {
     }
   };
 
-  const recent = (method: AuthMethod): ReactElement | null =>
-    lastAuth === method ? <Chip tone="info">{t('auth.signIn.recentlyUsed')}</Chip> : null;
+  /** The name a person reads for the method they used last. */
+  const methodName = (method: AuthMethod): string =>
+    method === 'local'
+      ? t('auth.signIn.methodPassword')
+      : method === 'google'
+        ? 'Google'
+        : 'GitHub';
 
   return (
     <main className="auth">
@@ -134,6 +139,15 @@ export function SignIn(): ReactElement {
           <h1 className="display-lg">{t('auth.signIn.title')}</h1>
           <p className="body muted">{t('auth.signIn.lede')}</p>
         </div>
+
+        {lastAuth ? (
+          <p className="fine-print auth__last-used">
+            <span>{t('auth.signIn.lastUsed')}</span>
+            {lastAuth === 'google' ? <GoogleMark size={14} /> : null}
+            {lastAuth === 'github' ? <GitHubMark size={14} /> : null}
+            <strong>{methodName(lastAuth)}</strong>
+          </p>
+        ) : null}
 
         {providerError ? <Notice tone="bad">{providerError}</Notice> : null}
         {error ? <Notice tone="bad">{error}</Notice> : null}
@@ -159,7 +173,6 @@ export function SignIn(): ReactElement {
             <Button type="submit" busy={busy}>
               {t('auth.signIn.submit')}
             </Button>
-            {recent('local')}
             <Button variant="tertiary" onClick={() => navigate('/reset-password')}>
               {t('auth.signIn.forgot')}
             </Button>
@@ -184,7 +197,6 @@ export function SignIn(): ReactElement {
                     ? t(PROVIDER_KEYS[provider])
                     : t('auth.signIn.providerOther', { provider })}
                 </span>
-                {recent(provider as AuthMethod)}
               </a>
             ))}
           </div>

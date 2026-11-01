@@ -15,6 +15,7 @@ import { AsyncButton } from '../components/AsyncButton';
 import { Field, Input } from '../components/Field';
 import { PasswordField } from '../components/fields';
 import { Chip, Notice } from '../components/Chip';
+import { GoogleMark, GitHubMark } from '../components/icons';
 import { Panel } from '../components/Panel';
 import { ThemeToggle } from '../components/ThemeToggle';
 
@@ -434,8 +435,10 @@ export function Account(): ReactElement {
 
               {identities.map((identity) => (
                 <div key={identity.provider} className="spread">
-                  <span className="body">
-                    <code>{identity.provider}</code>{' '}
+                  <span className="body signin-method">
+                    {identity.provider === 'google' ? <GoogleMark size={16} /> : null}
+                    {identity.provider === 'github' ? <GitHubMark size={16} /> : null}
+                    <code>{identity.provider}</code>
                     <span className="muted">{identity.email}</span>
                   </span>
                   <Button
@@ -462,6 +465,8 @@ export function Account(): ReactElement {
                         className="btn btn--secondary btn--sm"
                         href={`/api/auth/${provider}/link?device=${deviceId()}`}
                       >
+                        {provider === 'google' ? <GoogleMark size={18} /> : null}
+                        {provider === 'github' ? <GitHubMark size={18} /> : null}
                         {t('account.signin.connect', { provider })}
                       </a>
                     ))}
