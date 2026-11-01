@@ -45,9 +45,11 @@ export function websiteGraph(input: {
     alternateName: 'تلاوة',
     url: siteUrl,
     logo: `${siteUrl}icons/icon-512.png`,
-    // The same project under the names a search engine and an assistant can
-    // follow: the source, and the community catalogue the recordings come from.
-    sameAs: ['https://github.com/adelpro/open-tilawa', 'https://itqan.dev'],
+    // `sameAs` is identity, not attribution: the project's own repository. The
+    // Itqan catalogue the recordings come from is a different organisation and
+    // stays in the About copy, where it is a fact rather than a claim to be the
+    // same entity.
+    sameAs: ['https://github.com/adelpro/open-tilawa'],
   };
 
   return {

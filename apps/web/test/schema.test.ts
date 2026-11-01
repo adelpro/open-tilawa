@@ -22,10 +22,7 @@ test('the home graph names the site and the free application', () => {
   assert.deepEqual(website.inLanguage, ['ar', 'en']);
   assert.equal(website.publisher['@id'], 'https://tilawah.cc/#organization');
   assert.equal(organization.logo, 'https://tilawah.cc/icons/icon-512.png');
-  assert.deepEqual(organization.sameAs, [
-    'https://github.com/adelpro/open-tilawa',
-    'https://itqan.dev',
-  ]);
+  assert.deepEqual(organization.sameAs, ['https://github.com/adelpro/open-tilawa']);
 
   assert.equal(app.applicationCategory, 'MultimediaApplication');
   assert.equal(app.isAccessibleForFree, true);
