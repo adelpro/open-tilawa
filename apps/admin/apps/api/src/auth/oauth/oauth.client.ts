@@ -44,13 +44,14 @@ export const defaultOAuthHttp: OAuthHttp = (url, init) =>
 /**
  * One provider call is allowed to be flaky; the flow is not.
  *
- * GitHub's edge intermittently drops the SYN from this network (`UND_ERR_CONNECT_TIMEOUT`),
- * and a single dropped connection used to end the sign-in with "provider could not
- * complete". Three attempts with an 8s bound each recover the common case and still
- * fail in the time a person will wait.
+ * GitHub's edge intermittently drops the SYN from this network (`UND_ERR_CONNECT_TIMEOUT`):
+ * during one window, two of every three connections never opened. A single dropped
+ * connection used to end the flow, so the call now gets several short attempts —
+ * a working edge answers in ~150ms, a dead one costs the timeout — inside the time a
+ * person will wait at a redirect (6 × 5s worst case).
  */
-const PROVIDER_TIMEOUT_MS = 8_000;
-const PROVIDER_ATTEMPTS = 3;
+const PROVIDER_TIMEOUT_MS = 5_000;
+const PROVIDER_ATTEMPTS = 6;
 
 const retryable = (error: unknown): boolean => {
   const code =
