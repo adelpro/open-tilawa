@@ -47,7 +47,10 @@ export default function useTorrent() {
     let detach: (() => void) | undefined;
     /** Set once the grace period has passed with nobody answering. */
     let webSeedAdded = false;
-    let readyAt = 0;
+    /** The last moment the torrent delivered verified bytes. */
+    let lastByteAt = 0;
+    /** WebTorrent says no piece is selected: the player is not waiting on data. */
+    let idle = false;
     let webSeedTimer: ReturnType<typeof setInterval> | undefined;
 
     const run = async () => {
@@ -92,6 +95,17 @@ export default function useTorrent() {
           file.name.endsWith(".mp3"),
         );
 
+      /**
+       * Peers a listener is actually sharing with. A web seed is a peer to
+       * WebTorrent, so counting it would report "1 peer" with nobody else in the
+       * swarm — and would make the stream read as "mixed" the moment the
+       * fallback was added.
+       */
+      const realPeers = () =>
+        ((torrent.wires as { type?: string }[] | undefined) ?? []).filter(
+          (wire) => wire.type !== 'webSeed',
+        ).length;
+
       const showPlaylist = () => {
         const files: TrackType[] = mp3Files()
           .map((file: TorrentFile) => {
@@ -109,7 +123,7 @@ export default function useTorrent() {
           downloadSpeed: torrent.downloadSpeed,
           uploadSpeed: torrent.uploadSpeed,
           progress: torrent.progress,
-          peers: torrent.numPeers,
+          peers: realPeers(),
           webSeed: webSeedAdded ? 'active' : 'off',
           files,
           ready: true,
@@ -117,25 +131,22 @@ export default function useTorrent() {
       };
 
       /**
-       * Nobody is answering: give the torrent an HTTP source of its own.
+       * Nothing is arriving: give the torrent an HTTP source of its own.
        *
        * The audio element is never touched — this only adds a peer-like source,
        * so the pieces it delivers are verified and seeded like any other.
+       *
+       * The trigger is silence, not an empty swarm: a connected peer that sends
+       * nothing is exactly the stall this is for, and WebTorrent offers no way
+       * to take the seed back afterwards.
        */
       const maybeAddWebSeed = () => {
         if (cancelled || webSeedAdded || !torrent.ready) return;
-        if (torrent.numPeers > 0) {
-          readyAt = Date.now();
-          return;
-        }
-        if (!readyAt) readyAt = Date.now();
-        const waitedMs = Date.now() - readyAt;
         if (
           !shouldAddWebSeed({
             ready: torrent.ready,
-            peers: torrent.numPeers,
-            progress: torrent.progress,
-            waitedMs,
+            idle,
+            stalledMs: Date.now() - lastByteAt,
             alreadyAdded: webSeedAdded,
           })
         )
@@ -151,7 +162,7 @@ export default function useTorrent() {
 
       const startWebSeedWatch = () => {
         if (webSeedTimer) return;
-        readyAt = Date.now();
+        lastByteAt = Date.now();
         webSeedTimer = setInterval(maybeAddWebSeed, 1_000);
       };
 
@@ -185,6 +196,8 @@ export default function useTorrent() {
       };
       const onDownload = () => {
         if (cancelled) return;
+        lastByteAt = Date.now();
+        idle = false;
         setTorrentInfo((prev) =>
           prev
             ? {
@@ -193,7 +206,7 @@ export default function useTorrent() {
                 downloadSpeed: torrent.downloadSpeed,
                 uploadSpeed: torrent.uploadSpeed,
                 progress: torrent.progress,
-                peers: torrent.numPeers,
+                peers: realPeers(),
               }
             : prev,
         );
@@ -201,13 +214,26 @@ export default function useTorrent() {
       const onWire = () => {
         if (cancelled) return;
         setTorrentInfo((prev) =>
-          prev ? { ...prev, peers: torrent.numPeers } : prev,
+          prev ? { ...prev, peers: realPeers() } : prev,
         );
+      };
+      /** Demand resumed after a buffer: the swarm gets its grace period again. */
+      const onInterested = () => {
+        if (cancelled) return;
+        idle = false;
+        lastByteAt = Date.now();
+      };
+      /** Nothing selected: silence here is a paused player, not a stall. */
+      const onIdle = () => {
+        if (cancelled) return;
+        idle = true;
       };
 
       torrent.on("error", onError);
       torrent.on("download", onDownload);
       torrent.on("wire", onWire);
+      torrent.on("interested", onInterested);
+      torrent.on("idle", onIdle);
 
       // Listeners are ours; the torrent is not. It outlives this mount so a
       // second consumer of the hook — or coming back to this screen — finds it
@@ -217,6 +243,8 @@ export default function useTorrent() {
         torrent.off("error", onError);
         torrent.off("download", onDownload);
         torrent.off("wire", onWire);
+        torrent.off("interested", onInterested);
+        torrent.off("idle", onIdle);
       };
     };
 
