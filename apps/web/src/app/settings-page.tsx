@@ -52,6 +52,8 @@ export default function SettingsPage({
   sleepActive,
   sleepRemaining,
   onSleep,
+  shares,
+  onShares,
 }: {
   theme: Theme;
   onTheme: (theme: Theme) => void;
@@ -64,6 +66,8 @@ export default function SettingsPage({
   sleepActive: boolean;
   sleepRemaining: number;
   onSleep: (minutes: number) => void;
+  shares: boolean;
+  onShares: (allowed: boolean) => void;
 }) {
   const { t } = useLocale();
 
@@ -184,6 +188,24 @@ export default function SettingsPage({
                 className={cn(chip, visualiser === value ? chipOn : chipOff)}
               >
                 {t.shapes[value]}
+              </button>
+            ))}
+          </Group>
+
+          <Group
+            icon={<Icon name="upload" size={20} />}
+            title={t.settings.share}
+            hint={t.settings.shareHint}
+          >
+            {[true, false].map((value) => (
+              <button
+                key={String(value)}
+                type="button"
+                onClick={() => onShares(value)}
+                aria-pressed={shares === value}
+                className={cn(chip, shares === value ? chipOn : chipOff)}
+              >
+                {value ? t.settings.shareOn : t.settings.shareOff}
               </button>
             ))}
           </Group>

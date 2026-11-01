@@ -30,6 +30,8 @@ export const STORAGE_KEYS = {
   telemetry: `${NS}:telemetry`,
   telemetryDeviceDay: `${NS}:telemetry-device-day`,
   telemetryListenDay: `${NS}:telemetry-listen-day`,
+  /** `on` | `off` — whether this device shares pieces with other listeners. */
+  seed: `${NS}:seed`,
 } as const;
 
 /**
