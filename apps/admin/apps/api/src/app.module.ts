@@ -14,6 +14,7 @@ import { StoreModule } from './store/store.module';
 import { TokensModule } from './tokens/tokens.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { OAuthModule } from './auth/oauth/oauth.module';
 import { MeModule } from './me/me.module';
 import { SeedersModule } from './seeders/seeders.module';
 import { ToolsModule } from './tools/tools.module';
@@ -38,6 +39,7 @@ import { envValidate } from './config/env/env.validate';
     StoreModule,
     UsersModule,
     AuthModule,
+    OAuthModule,
     TokensModule,
     MeModule,
     SeedersModule,

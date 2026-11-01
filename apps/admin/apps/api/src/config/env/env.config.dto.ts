@@ -5,10 +5,11 @@ import { Enveronements } from './types';
  * The environment surface Tilawa Admin actually reads.
  *
  * Dropped from the ported DTO, with reasons: `MONGODB_URI` (SQLite now),
- * `TRACE_*` (OpenTelemetry is gone), the Google/GitHub/Facebook client ids
- * (social sign-in is deferred to P5, so requiring them would block a boot that
- * needs none of them), `EMAIL_SERVICE`/`MAILER_HOST`/`MAILER_PORT` (mail goes
- * through Gmail's service preset), and `BACKEND_*` (`PORT` covers it).
+ * `TRACE_*` (OpenTelemetry is gone), `EMAIL_SERVICE`/`MAILER_HOST`/`MAILER_PORT`
+ * (mail goes through Gmail's service preset), and `BACKEND_*` (`PORT` covers it).
+ *
+ * The provider credentials are back and optional: a deployment without them still
+ * serves email/password sign-in, and `/auth/providers` simply offers nothing.
  *
  * Nothing here is `@IsDefined()`: keys that are genuinely required are enforced
  * in `envValidate` against `NODE_ENV`, so development and test can boot on
@@ -60,6 +61,26 @@ export class EnvConfigDTO {
   @IsString()
   @IsOptional()
   TILAWA_PEPPER?: string;
+
+  /**
+   * A provider is offered only when both halves exist. Optional here on purpose:
+   * an instance with no OAuth app must still boot and sign people in by password.
+   */
+  @IsString()
+  @IsOptional()
+  GOOGLE_CLIENT_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  GOOGLE_CLIENT_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  GITHUB_CLIENT_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  GITHUB_CLIENT_SECRET?: string;
 
   @IsString()
   @IsOptional()

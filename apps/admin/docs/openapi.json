@@ -470,6 +470,132 @@
         ]
       }
     },
+    "/api/auth/providers": {
+      "get": {
+        "operationId": "OAuthController_providers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Which provider buttons this deployment can offer",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/{provider}/start": {
+      "get": {
+        "operationId": "OAuthController_start",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Begin a provider sign-in",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/{provider}/link": {
+      "get": {
+        "operationId": "OAuthController_link",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Begin linking a provider to the signed-in account",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/{provider}/callback": {
+      "get": {
+        "operationId": "OAuthController_callback",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Provider redirect target: sets the session and returns to the app",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/me/identities": {
+      "get": {
+        "operationId": "IdentitiesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Providers connected to this account",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/me/identities/{provider}": {
+      "delete": {
+        "operationId": "IdentitiesController_unlink",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Disconnect a provider, refusing to strand the account",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/me": {
       "get": {
         "operationId": "MeController_getMe",
@@ -850,6 +976,67 @@
         },
         "tags": [
           "Seeders"
+        ]
+      }
+    },
+    "/api/public/telemetry": {
+      "post": {
+        "operationId": "TelemetryController_ingest",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Telemetry"
+        ]
+      }
+    },
+    "/api/admin/telemetry/summary": {
+      "get": {
+        "operationId": "TelemetryController_summary",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reciter",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Telemetry"
         ]
       }
     },
@@ -1373,67 +1560,6 @@
         ]
       }
     },
-    "/api/public/telemetry": {
-      "post": {
-        "operationId": "TelemetryController_ingest",
-        "parameters": [],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Telemetry"
-        ]
-      }
-    },
-    "/api/admin/telemetry/summary": {
-      "get": {
-        "operationId": "TelemetryController_summary",
-        "parameters": [
-          {
-            "name": "days",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "source",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "version",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "reciter",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Telemetry"
-        ]
-      }
-    },
     "/api/2fa/enable": {
       "get": {
         "operationId": "TwoFaController_enable",
@@ -1857,7 +1983,7 @@
   "info": {
     "title": "Tilawa Admin API",
     "description": "",
-    "version": "1.30.5",
+    "version": "1.32.19",
     "contact": {}
   },
   "tags": [],

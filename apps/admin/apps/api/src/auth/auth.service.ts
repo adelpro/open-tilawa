@@ -122,9 +122,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isValidPassword = user.password
-      ? await argonVerify(user.password, password, argonConfig)
-      : false;
+    if (!user.password) {
+      // A provider-only account has no hash to verify. Without the equaliser the
+      // clock would still answer "this address exists" while the body refuses to —
+      // the same oracle the generic message exists to close.
+      await this.equaliseTiming(password);
+      this.logger.warn(`auth.signin failed reason=no_password user=${user.id}`);
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const isValidPassword = await argonVerify(user.password, password, argonConfig);
     if (!isValidPassword) {
       this.logger.warn(`auth.signin failed reason=bad_password user=${user.id}`);
       throw new UnauthorizedException('Invalid email or password');
