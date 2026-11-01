@@ -12,6 +12,8 @@ Deliverables of this stage: this file + `film/screens/` (8 frames, rendered from
 > - **the pause no longer collapses to a line**: an AnalyserNode with `smoothingTimeConstant 0.75` read at 15 Hz only decays ~3 dB per 66 ms, so the bars sink to ~0.4 over a second and stay there. That is the app's real behaviour (verified against a live Chrome analyser), and it is the one thing the ribbon did better.
 > - data: `src/peaks-film.py` → `src/peaks-film.js` (630 frames), calibrated against a live tone (0.5 amplitude at 440 Hz reads −19.8 dB in its peak bin).
 
+> **Amendment v2:** the film ships as 21 s and 32 s, each in two spectra: `waves` (the app's current ribbon) and `bars` (`peaks`). The 32 s story (section 12) now covers the ring, the account with QR pairing, and the web seed (HTTP, then P2P + HTTP) and no longer shows "waiting for peers" while audio plays. Both end on **tilawah.cc**. Details and what is built vs real: `NOTE-32.md`, `NOTE.md`.
+
 ---
 
 ## 1. PAGE
@@ -243,4 +245,10 @@ The long cut keeps the 21 s film's first ten seconds **frame for frame**, then o
 - **الحساب** — ownership without an account: «الحلقة مفتاح يُولَّد هنا … لا اسم مستخدم ولا كلمة مرور», performed by typing a name into the product's own field.
 - **تفاصيل البث** — the P2P claim in the product's own numbers, in one unbroken shot: waiting → a peer → 853 KB/s → «البديل: متوفّر». No diagram, no arrow, no invented chart.
 
-Source: `film/index32.html` · `film/src/peaks-32.js` (960 frames) · `film/audio/mix32.wav` · delivered as `film/final-32.mp4`, written up in `film/NOTE-32.md`.
+Source: `film/index32.html` · `film/src/peaks-32.js` (960 frames) · `film/audio/mix32.wav` · delivered as `film/final-32-waves.mp4` and `film/final-32-bars.mp4`, written up in `film/NOTE-32.md`.
+
+### 12b. v2 timeline (supersedes the 17.4–32.0 rows above)
+
+- 17.4–23.0 الحساب: type «البيت», press إنشاء حلقة, the ring shows (جهاز واحد), إظهار رمز الربط shows a QR with a 120 s countdown, 22.00 تمت إضافة الجهاز إلى الحلقة (جهازان).
+- 23.0–28.4 تفاصيل البث: HTTP with 0 peers (the web seed serves), 25.60 a peer joins: P2P + HTTP.
+- 28.4–29.6 the page. 29.6–32.0 the close: wordmark 30.20, tilawah.cc 30.95.
