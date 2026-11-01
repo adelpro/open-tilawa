@@ -42,10 +42,33 @@ The same screen sends the four operational alerts (service down, node offline,
 disk headroom, failed node update) to every active admin plus any extra
 addresses, one message when a condition starts and one when it clears.
 
-- `WEBSITE` — the public origin stamped into activation and reset links. The
-  compose file sets it to `${ADMIN_WEBSITE:-https://console.tilawah.cc}`
-  so a dev `.env` value (`http://localhost:9400`) cannot leak into production
-  mail, and the API refuses to start in production while it points at loopback.
+- `WEBSITE` — the public origin stamped into activation and reset links, and the
+  base of the provider callback URLs. The compose file sets it to
+  `${ADMIN_WEBSITE:-https://console.tilawah.cc}` so a dev `.env` value
+  (`http://localhost:9400`) cannot leak into production mail, and the API refuses
+  to start in production while it points at loopback.
+
+### Social sign-in (optional)
+
+Google and GitHub are offered only when both halves of their credential exist;
+with neither, the console signs in by password exactly as before:
+
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
+
+Register the redirect URI with each provider. It is derived from `WEBSITE`:
+`https://console.tilawah.cc/api/auth/google/callback` in production, and
+`http://localhost:9400/api/auth/google/callback` for a local console. `WEBSITE`
+must be the origin the browser reaches, not the API's internal service name.
+
+Two rules the API enforces: an existing account is never merged by email — the
+person signs in with their password and connects the provider from **Account →
+Profile → Sign-in methods** — and a 2FA-enabled account still answers the code on
+a device it does not know. An account created by a provider is a plain `user`
+with no password; it holds no fleet access until an admin changes its role.
+
+After adding the values: `docker compose up -d --build admin-api` (and
+`admin-web` once, for the buttons).
 
 Root `.env` feeds the seeder and TURN containers:
 
