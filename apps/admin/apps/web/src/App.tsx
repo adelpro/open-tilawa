@@ -6,6 +6,8 @@ import { ThemeProvider } from './lib/theme.tsx';
 import { navigate, useRouter } from './lib/router';
 import { navItemsFor, consolePathFor } from './lib/nav';
 import type { AppRole } from './lib/nav';
+import { readFolded, writeFolded } from './lib/nav-fold';
+import type { Folded, NavGroup } from './lib/nav-fold';
 import { api } from './lib/api';
 import { BrandLabel } from './components/BrandLabel';
 import { SignIn } from './routes/SignIn';
@@ -357,6 +359,7 @@ function AppNav({
 }): ReactElement {
   const { t } = useI18n();
   const items = navItemsFor(role);
+  const [folded, setFolded] = useState<Folded>(readFolded);
   const groups = [
     { id: 'workspace' as const, label: t('nav.workspace') },
     ...(items.some((item) => item.group === 'admin')
@@ -364,22 +367,40 @@ function AppNav({
       : []),
   ];
 
+  /** Fold is a preference, so it is written as it is set, not on unmount. */
+  const toggleGroup = (id: NavGroup): void => {
+    const next = { ...folded, [id]: !folded[id] };
+    setFolded(next);
+    writeFolded(next);
+  };
+
   return (
     <nav className="nav" aria-label={t('a11y.primaryNav')}>
       {groups.map((group) => (
         <div className="nav__group" key={group.id}>
-          <span className="nav__label">{group.label}</span>
-          {items
-            .filter((item) => item.group === group.id)
-            .map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                label={t(item.labelKey)}
-                icon={item.icon}
-                onNavigate={onNavigate}
-              />
-            ))}
+          <button
+            type="button"
+            className="nav__toggle"
+            aria-expanded={!folded[group.id]}
+            aria-controls={`nav-group-${group.id}`}
+            onClick={() => toggleGroup(group.id)}
+          >
+            <span className="nav__label">{group.label}</span>
+            <Icon name="down" size={16} className="nav__chevron" />
+          </button>
+          <div className="nav__items" id={`nav-group-${group.id}`} hidden={folded[group.id]}>
+            {items
+              .filter((item) => item.group === group.id)
+              .map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  label={t(item.labelKey)}
+                  icon={item.icon}
+                  onNavigate={onNavigate}
+                />
+              ))}
+          </div>
         </div>
       ))}
     </nav>

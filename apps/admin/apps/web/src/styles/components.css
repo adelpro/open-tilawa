@@ -993,13 +993,52 @@ button.chip[aria-pressed='true'] {
   gap: 2px;
 }
 
-.nav__label {
+/* The category label is the control: the chevron is the affordance, the word is
+   the accessible name, and `aria-expanded` is what tells a screen reader which
+   way it is. */
+.nav__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
   padding: 0 12px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  color: var(--ink-secondary);
+}
+
+.nav__toggle:hover {
+  color: var(--ink);
+}
+
+.nav__label {
   font: var(--caption-strong);
   font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-secondary);
+}
+
+.nav__chevron {
+  flex: none;
+  opacity: 0.7;
+  transition: transform var(--motion-ui);
+}
+
+/* Down means "there is a list under this"; the turn says it is already open. */
+.nav__toggle[aria-expanded='true'] .nav__chevron {
+  transform: rotate(180deg);
+}
+
+.nav__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav__items[hidden] {
+  display: none;
 }
 
 .nav__link {
