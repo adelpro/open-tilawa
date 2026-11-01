@@ -248,7 +248,13 @@ export default function AudioEngine({
       // The graph needs a gesture; this is one. If it fails, audio still plays.
       ensureAnalyser(audio);
       startedAtRef.current = Date.now();
-      audio.play().catch(() => setIsPlaying(false));
+      // A new source interrupts a pending play(); that rejection is the switch,
+      // not a pause. Flipping `isPlaying` off here is what left the next reciter
+      // loaded and paused.
+      audio.play().catch((error: DOMException) => {
+        if (error?.name === 'AbortError') return;
+        setIsPlaying(false);
+      });
     } else {
       audio.pause();
       persist();
@@ -439,7 +445,12 @@ export default function AudioEngine({
           audio.src = direct;
           audio.load();
           setDirectFallback(true);
-          if (isPlaying) audio.play().catch(() => setIsPlaying(false));
+          if (isPlaying) {
+            audio.play().catch((error: DOMException) => {
+              if (error?.name === 'AbortError') return;
+              setIsPlaying(false);
+            });
+          }
           return;
         }
 
