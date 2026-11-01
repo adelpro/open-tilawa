@@ -23,6 +23,9 @@ LOGO = PUBLIC / 'logo.png'
 # The wordmark's own ink, sampled from logo.png; matching it keeps the raster
 # icons and the artwork indistinguishable.
 INK = (31, 77, 120, 255)
+# The icons are aligned with the web app's: the same flattened #111 mark the
+# public site ships, not the navy original with its drop shadow.
+ICON_INK = (17, 17, 17, 255)
 GREY = (92, 99, 112, 255)
 WHITE = (255, 255, 255, 255)
 
@@ -40,6 +43,27 @@ def wordmark() -> Image.Image:
     if box is None:
         raise SystemExit(f'make-assets: {LOGO} is fully transparent')
     return image.crop(box)
+
+
+def glyph() -> Image.Image:
+    """The mark the public site ships: shadow dropped, flattened to #111.
+
+    The source logo is navy with a soft shadow baked into its alpha. The web's
+    `make-assets.py` thresholds that alpha and forces the ink, so the two apps'
+    launcher tiles read as one brand; this is the same operation, kept here so
+    the console does not depend on the other app's build.
+    """
+    image = Image.open(LOGO).convert('RGBA')
+    # Keep the antialiased edge, discard the shadow: below half alpha is shadow.
+    alpha = image.getchannel('A').point(
+        lambda a: 0 if a <= 128 else min(255, (a - 128) * 255 // 127)
+    )
+    flat = Image.new('RGBA', image.size, ICON_INK[:3] + (0,))
+    flat.putalpha(alpha)
+    box = flat.getbbox()
+    if box is None:
+        raise SystemExit(f'make-assets: {LOGO} is fully transparent')
+    return flat.crop(box)
 
 
 def fit(mark: Image.Image, width: int) -> Image.Image:
@@ -69,34 +93,85 @@ def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
-def main() -> None:
-    mark = wordmark()
+def lockup(
+    mark: Image.Image,
+    size: int,
+    fill: tuple[int, int, int, int] | None,
+    width_fraction: float = 0.72,
+) -> Image.Image:
+    """The shared mark with ADMIN above it, on the plate the launcher paints.
 
-    # Browser tab: transparent and as wide as a 32px slot allows — a wordmark
-    # loses too much detail with the padding the larger icons can afford.
-    favicon32 = square_icon(mark, 32, None, 0.9)
+    The wordmark keeps the web app's 0.72 width, so the two icons sit at the same
+    scale side by side; the label is the only thing the console adds. It is
+    letter-spaced by hand because PIL has no tracking, and the label's cap height
+    is what the block is centred on — not the font's line box, which includes
+    ascender space the eye does not read.
+    """
+    canvas = Image.new('RGBA', (size, size), fill or (0, 0, 0, 0))
+    draw = ImageDraw.Draw(canvas)
+
+    label = 'ADMIN'
+    label_size = max(3, round(size * 0.058))
+    face = font(label_size, bold=True)
+    tracking = max(1, round(size * 0.014))
+    widths = [draw.textlength(char, font=face) for char in label]
+    label_width = sum(widths) + tracking * (len(label) - 1)
+    box = draw.textbbox((0, 0), label, font=face)
+    label_height = box[3] - box[1]
+
+    mark_width = round(size * width_fraction)
+    scaled = fit(mark, mark_width)
+    gap = round(size * 0.045)
+    block = label_height + gap + scaled.height
+    top = (size - block) // 2
+
+    x = (size - label_width) / 2
+    for char, char_width in zip(label, widths):
+        draw.text((x, top - box[1]), char, font=face, fill=GREY)
+        x += char_width + tracking
+
+    canvas.alpha_composite(scaled, ((size - mark_width) // 2, top + label_height + gap))
+    return canvas
+
+
+def main() -> None:
+    # The icons use the flattened mark the public site ships; the in-app wordmark
+    # and the share card keep the navy original they were designed with.
+    mark = glyph()
+    brand = wordmark()
+
+    # Browser tab: transparent, mark plus the console's label. The 16px frame is
+    # the mark alone — "ADMIN" at sixteen pixels is a smudge, not a word.
+    favicon16 = square_icon(mark, 16, None, 1.0)
+    favicon32 = lockup(mark, 32, None)
+    favicon48 = lockup(mark, 48, None)
     favicon32.save(PUBLIC / 'favicon-32.png')
+    frames = [favicon16, favicon32, favicon48]
+    frames[-1].save(
+        PUBLIC / 'favicon.ico',
+        format='ICO',
+        sizes=[(16, 16), (32, 32), (48, 48)],
+        append_images=frames[:-1],
+    )
 
     # iOS adds its own mask and paints transparency black, so this one needs a
     # background — the same one the splash uses.
-    square_icon(mark, 180, PLATE).save(PUBLIC / 'apple-touch-icon.png')
+    lockup(mark, 180, PLATE).save(PUBLIC / 'apple-touch-icon.png')
 
     # PWA: full-bleed plate so `purpose: any maskable` can crop without clipping.
-    square_icon(mark, 192, PLATE).save(PUBLIC / 'icon-192.png')
-    square_icon(mark, 512, PLATE).save(PUBLIC / 'icon-512.png')
-
-    # .ico carries several sizes in one file; Windows picks per context.
-    favicon32.save(PUBLIC / 'favicon.ico', sizes=[(16, 16), (32, 32), (48, 48)])
+    lockup(mark, 192, PLATE).save(PUBLIC / 'icon-192.png')
+    lockup(mark, 512, PLATE).save(PUBLIC / 'icon-512.png')
 
     # In-app lockup: the trimmed wordmark, so the header mark is the brand rather
-    # than a letterform that only resembles it.
-    fit(mark, 512).save(PUBLIC / 'logo-wordmark.png')
+    # than a letterform that only resembles it. This one stays navy: it is the
+    # console's own chrome, not the launcher tile.
+    fit(brand, 512).save(PUBLIC / 'logo-wordmark.png')
 
     # Share card: the wordmark plus a latin line, because the artwork itself is
     # Arabic and a link preview may be read by someone who does not know it.
     og = Image.new('RGBA', (1200, 630), WHITE)
     draw = ImageDraw.Draw(og)
-    big = fit(mark, 520)
+    big = fit(brand, 520)
     og.alpha_composite(big, ((1200 - big.width) // 2, 180))
     draw.text((600, 400), 'Tilawa Admin', font=font(56, bold=True), fill=INK, anchor='mm')
     draw.text(
