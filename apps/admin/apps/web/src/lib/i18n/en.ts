@@ -97,6 +97,11 @@ export const en = {
   'auth.signIn.forgot': 'Forgot password',
   'auth.signIn.noAccount': 'No account?',
   'auth.signIn.createOne': 'Create one',
+  'auth.signIn.providerGoogle': 'Continue with Google',
+  'auth.signIn.providerGitHub': 'Continue with GitHub',
+  'auth.signIn.providerOther': 'Continue with {provider}',
+  'auth.signIn.or': 'or',
+  'auth.signIn.recentlyUsed': 'Recently used',
   'setup.title': 'Initial setup',
   'setup.lede':
     'Create the Owner account for this instance. The Owner appoints super admins and cannot be deleted.',
@@ -711,6 +716,19 @@ export const en = {
   'auth.signIn.resendSent': 'If that address needs activation, a new link has been sent.',
   'auth.signIn.resendFailed': 'Could not resend the activation email.',
 
+  'auth.error.account_exists':
+    'An account with that email already exists. Sign in with your password, then connect the provider from Account, Profile, Sign-in methods.',
+  'auth.error.unverified_email':
+    'The provider did not confirm that email address, so it cannot be used to sign in here.',
+  'auth.error.identity_taken':
+    'That provider account is already connected to a different Tilawa account.',
+  'auth.error.account_disabled': 'This account is disabled.',
+  'auth.error.state_invalid': 'The sign-in request expired or was tampered with. Try again.',
+  'auth.error.provider_disabled': 'That sign-in method is not enabled on this server.',
+  'auth.error.provider_error': 'The provider could not complete the sign-in. Try again.',
+  'auth.error.setup_required':
+    'This console has not finished setup. Complete setup, then try again.',
+
   'signup.title': 'Create an account.',
   'signup.lede': 'One account to run the tilawa infrastructure.',
   'common.showPassword': 'Show password',
@@ -806,6 +824,19 @@ export const en = {
   'account.photo.removed': 'Photo removed.',
   'account.photo.failed': 'That image was not accepted.',
   'account.photo.removeFailed': 'Could not remove the photo.',
+
+  'account.signin.title': 'Sign-in methods',
+  'account.signin.noPasswordLead': 'No password on this account.',
+  'account.signin.noPasswordBody':
+    'It signs in with a provider. To be able to sign in without one — and to disconnect it safely — set a password from the Password tab.',
+  'account.signin.hasPassword': 'This account signs in with a password.',
+  'account.signin.disconnect': 'Disconnect',
+  'account.signin.connect': 'Connect {provider}',
+  'account.signin.connected': '{provider} connected.',
+  'account.signin.disconnected': '{provider} disconnected.',
+  'account.signin.disconnectFailed': 'Could not disconnect.',
+  'account.signin.none': 'No provider sign-in is configured on this server.',
+  'account.signin.providerError': 'That connection could not be completed. Try again.',
 
   'account.profile.title': 'Profile',
   'account.profile.about': 'About',

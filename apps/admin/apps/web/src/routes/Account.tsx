@@ -5,6 +5,7 @@ import { api, apiUpload } from '../lib/api';
 import { squareAvatar } from '../lib/avatar';
 import { relative } from '../lib/format';
 import { useSession } from '../lib/session';
+import { deviceId } from '../lib/device';
 import { LOCALES, LOCALE_NAMES, useI18n } from '../lib/i18n';
 import type { Locale } from '../lib/i18n';
 import type { Session } from '../lib/types';
@@ -55,6 +56,9 @@ export function Account(): ReactElement {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [recoveryBusy, setRecoveryBusy] = useState(false);
+  const [identities, setIdentities] = useState<{ provider: string; email: string }[]>([]);
+  const [providers, setProviders] = useState<string[]>([]);
+  const [signInMessage, setSignInMessage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -66,6 +70,56 @@ export function Account(): ReactElement {
       }
     })();
   }, []);
+
+  // What this account can sign in with, and what the server can offer. Both are
+  // read once: the link flow leaves the page, so a stale list cannot linger.
+  useEffect(() => {
+    let live = true;
+    void Promise.all([
+      api<{ identities: { provider: string; email: string }[] }>('/me/identities').catch(() => ({
+        identities: [],
+      })),
+      api<{ providers: string[] }>('/auth/providers').catch(() => ({ providers: [] })),
+    ]).then(([linked, available]) => {
+      if (!live) return;
+      setIdentities(linked.identities);
+      setProviders(available.providers);
+    });
+    return () => {
+      live = false;
+    };
+  }, [user?.id]);
+
+  // The provider redirect lands here with one of two parameters. They are read once
+  // and removed, so a refresh does not repeat the sentence.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('connected');
+    const failed = params.get('error');
+    if (!connected && !failed) return;
+
+    setSignInMessage(
+      connected
+        ? t('account.signin.connected', { provider: connected })
+        : t('account.signin.providerError'),
+    );
+    params.delete('connected');
+    params.delete('error');
+    const query = params.toString();
+    window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+  }, [t]);
+
+  const disconnect = async (provider: string): Promise<void> => {
+    setError(null);
+    setSignInMessage(null);
+    try {
+      await api(`/me/identities/${provider}`, { method: 'DELETE' });
+      setIdentities((current) => current.filter((entry) => entry.provider !== provider));
+      setSignInMessage(t('account.signin.disconnected', { provider }));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('account.signin.disconnectFailed'));
+    }
+  };
 
   const disableTwoFactor = async (): Promise<void> => {
     setError(null);
@@ -359,6 +413,65 @@ export function Account(): ReactElement {
               <div>
                 <AsyncButton onClick={() => saveProfile()}>{t('common.save')}</AsyncButton>
               </div>
+            </div>
+          </Panel>
+
+          <Panel>
+            <h3 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>
+              {t('account.signin.title')}
+            </h3>
+            <div className="stack">
+              <p className="body">
+                {user?.passwordSet === false ? (
+                  <>
+                    <strong>{t('account.signin.noPasswordLead')}</strong>{' '}
+                    {t('account.signin.noPasswordBody')}
+                  </>
+                ) : (
+                  t('account.signin.hasPassword')
+                )}
+              </p>
+
+              {identities.map((identity) => (
+                <div key={identity.provider} className="spread">
+                  <span className="body">
+                    <code>{identity.provider}</code>{' '}
+                    <span className="muted">{identity.email}</span>
+                  </span>
+                  <Button
+                    variant="tertiary"
+                    small
+                    onClick={() => void disconnect(identity.provider)}
+                  >
+                    {t('account.signin.disconnect')}
+                  </Button>
+                </div>
+              ))}
+
+              {providers.some(
+                (provider) => !identities.some((entry) => entry.provider === provider),
+              ) ? (
+                <div className="cluster">
+                  {providers
+                    .filter(
+                      (provider) => !identities.some((entry) => entry.provider === provider),
+                    )
+                    .map((provider) => (
+                      <a
+                        key={provider}
+                        className="btn btn--secondary btn--sm"
+                        href={`/api/auth/${provider}/link?device=${deviceId()}`}
+                      >
+                        {t('account.signin.connect', { provider })}
+                      </a>
+                    ))}
+                </div>
+              ) : null}
+
+              {signInMessage ? <Notice tone="ok">{signInMessage}</Notice> : null}
+              {providers.length === 0 ? (
+                <p className="fine-print">{t('account.signin.none')}</p>
+              ) : null}
             </div>
           </Panel>
         </>

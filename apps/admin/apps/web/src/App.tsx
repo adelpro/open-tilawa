@@ -8,6 +8,7 @@ import { navItemsFor, consolePathFor } from './lib/nav';
 import type { AppRole } from './lib/nav';
 import { readFolded, writeFolded } from './lib/nav-fold';
 import type { Folded, NavGroup } from './lib/nav-fold';
+import { rememberAuthFromUrl } from './lib/last-auth';
 import { api } from './lib/api';
 import { BrandLabel } from './components/BrandLabel';
 import { SignIn } from './routes/SignIn';
@@ -70,6 +71,13 @@ function Screens(): ReactElement {
   const closeButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const closeMenu = (): void => setMenuOpen(false);
+
+  // A provider sign-in ends with a redirect carrying `?auth=<provider>`. Record it
+  // for the "Recently used" label on the sign-in screen, then take it out of the
+  // URL so a refresh or a bookmark does not carry it.
+  useEffect(() => {
+    rememberAuthFromUrl();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

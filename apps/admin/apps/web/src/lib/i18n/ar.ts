@@ -102,6 +102,11 @@ export const ar: Catalogue = {
   'auth.signIn.forgot': 'نسيت كلمة المرور',
   'auth.signIn.noAccount': 'ليس لديك حساب؟',
   'auth.signIn.createOne': 'أنشئ حسابًا',
+  'auth.signIn.providerGoogle': 'المتابعة عبر Google',
+  'auth.signIn.providerGitHub': 'المتابعة عبر GitHub',
+  'auth.signIn.providerOther': 'المتابعة عبر {provider}',
+  'auth.signIn.or': 'أو',
+  'auth.signIn.recentlyUsed': 'آخر ما استُخدم',
   'setup.title': 'الإعداد الأولي',
   'setup.lede': 'أنشئ حساب المالك لهذا المثيل. يعيّن المالك المشرفين العامّين ولا يمكن حذفه.',
   'setup.token': 'رمز الإعداد',
@@ -705,6 +710,17 @@ export const ar: Catalogue = {
   'auth.signIn.resendSent': 'إن كانت تلك العنوان بحاجة إلى تفعيل، فقد أُرسل رابط جديد.',
   'auth.signIn.resendFailed': 'تعذّر إعادة إرسال رسالة التفعيل.',
 
+  'auth.error.account_exists':
+    'يوجد حساب بهذا البريد الإلكتروني. سجّل الدخول بكلمة المرور، ثم اربط المزوّد من الحساب، الملف الشخصي، طرق تسجيل الدخول.',
+  'auth.error.unverified_email':
+    'لم يؤكّد المزوّد هذا البريد الإلكتروني، لذا لا يمكن استخدامه لتسجيل الدخول هنا.',
+  'auth.error.identity_taken': 'حساب المزوّد هذا مرتبط بحساب تلاوة آخر.',
+  'auth.error.account_disabled': 'هذا الحساب معطّل.',
+  'auth.error.state_invalid': 'انتهت صلاحية طلب تسجيل الدخول أو جرى العبث به. أعد المحاولة.',
+  'auth.error.provider_disabled': 'طريقة تسجيل الدخول هذه غير مفعّلة على هذا الخادم.',
+  'auth.error.provider_error': 'تعذّر على المزوّد إتمام تسجيل الدخول. أعد المحاولة.',
+  'auth.error.setup_required': 'لم يكتمل إعداد هذه اللوحة بعد. أكمل الإعداد ثم أعد المحاولة.',
+
   'signup.title': 'أنشئ حسابًا.',
   'signup.lede': 'حساب واحد لإدارة بنية توزيع التلاوة.',
   'common.showPassword': 'إظهار كلمة المرور',
@@ -797,6 +813,19 @@ export const ar: Catalogue = {
   'account.photo.removed': 'تمت إزالة الصورة.',
   'account.photo.failed': 'لم تُقبل هذه الصورة.',
   'account.photo.removeFailed': 'تعذّرت إزالة الصورة.',
+
+  'account.signin.title': 'طرق تسجيل الدخول',
+  'account.signin.noPasswordLead': 'لا توجد كلمة مرور لهذا الحساب.',
+  'account.signin.noPasswordBody':
+    'يدخل عبر أحد المزوّدين. لتتمكّن من الدخول دونه — ومن فصله بأمان — عيّن كلمة مرور من تبويب كلمة المرور.',
+  'account.signin.hasPassword': 'يدخل هذا الحساب بكلمة مرور.',
+  'account.signin.disconnect': 'فصل',
+  'account.signin.connect': 'ربط {provider}',
+  'account.signin.connected': 'تم ربط {provider}.',
+  'account.signin.disconnected': 'تم فصل {provider}.',
+  'account.signin.disconnectFailed': 'تعذّر الفصل.',
+  'account.signin.none': 'لا يوجد مزوّد تسجيل دخول مُعدّ على هذا الخادم.',
+  'account.signin.providerError': 'تعذّر إتمام الربط. أعد المحاولة.',
 
   'account.profile.title': 'الملف الشخصي',
   'account.profile.about': 'نبذة',
