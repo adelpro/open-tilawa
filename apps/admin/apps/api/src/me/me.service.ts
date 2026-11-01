@@ -19,9 +19,9 @@ import { TokensService } from '@/tokens/tokens.service';
  * The account half of the ported `me.service.ts`.
  *
  * Activation moved to `AuthService`, because it has to be reachable by an
- * account that cannot authenticate yet — see the note there. The image methods
- * stay out until `P6`, where an avatar is actually displayed and can be served
- * from the same origin rather than through a second route family.
+ * account that cannot authenticate yet — see the note there. Avatars are not
+ * here either: they live in `avatar/`, where the bytes stay out of every `/me`
+ * response and are served from the same origin that holds the session cookie.
  *
  * One behavioural change, and it is the reason a password change exists: **every
  * other session dies** with the old password, and the device that made the

@@ -16,6 +16,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { OAuthModule } from './auth/oauth/oauth.module';
 import { MeModule } from './me/me.module';
+import { AvatarModule } from './avatar/avatar.module';
 import { SeedersModule } from './seeders/seeders.module';
 import { ToolsModule } from './tools/tools.module';
 import { StatusModule } from './status/status.module';
@@ -42,6 +43,7 @@ import { envValidate } from './config/env/env.validate';
     OAuthModule,
     TokensModule,
     MeModule,
+    AvatarModule,
     SeedersModule,
     ToolsModule,
     StatusModule,
