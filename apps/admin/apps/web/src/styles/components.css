@@ -354,6 +354,96 @@
   margin: 0;
 }
 
+/* The heading is the control: the whole row is the target, the chevron is the
+   affordance, and `aria-expanded` is the state. */
+.panel__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.panel__chevron {
+  flex: none;
+  color: var(--ink-secondary);
+  transition: transform var(--motion-ui);
+}
+
+.panel__toggle[aria-expanded='true'] .panel__chevron {
+  transform: rotate(180deg);
+}
+
+.panel__body {
+  margin-top: var(--space-4);
+}
+
+.panel__body[hidden] {
+  display: none;
+}
+
+/* One chart, one form: grouped bars, no curve between days that were not
+   measured. The table in the same panel is the same data as text. */
+.usage-trend {
+  margin-block: var(--space-4) var(--space-2);
+}
+
+.usage-trend__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+  font: var(--caption);
+  color: var(--ink-secondary);
+}
+
+.usage-trend__swatch {
+  display: inline-block;
+  inline-size: 10px;
+  block-size: 10px;
+  margin-inline-end: 6px;
+  border-radius: 2px;
+  background: var(--primary);
+  vertical-align: -1px;
+}
+
+.usage-trend__swatch--listeners {
+  opacity: 0.4;
+}
+
+.usage-trend svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.usage-trend__baseline {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.usage-trend__bar--devices {
+  fill: var(--primary);
+}
+
+.usage-trend__bar--listeners {
+  fill: var(--primary);
+  fill-opacity: 0.4;
+}
+
+.usage-trend__label {
+  fill: var(--ink-secondary);
+  font-size: 9px;
+}
+
 /* ---------- hierarchical rows (the Notes three-line pattern) ---------- */
 
 .rows {

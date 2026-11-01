@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from 're
 
 import { api } from '../lib/api';
 import { useI18n, type MessageKey } from '../lib/i18n';
-import { Panel } from '../components/Panel';
+import { FoldPanel } from '../components/FoldPanel';
+import { TrendBars } from '../components/TrendBars';
 import { Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
 import { funnelRows, playedShare } from '../lib/usage-funnel';
+import { readFolded, writeFolded, type Folded, type UsagePanel } from '../lib/usage-fold';
 import {
   nextSort,
   reciterLabel,
@@ -86,6 +88,15 @@ export function Usage(): ReactElement {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState(false);
+  /** Every panel starts open; the stored value is a preference, not a default. */
+  const [folded, setFolded] = useState<Folded>(readFolded);
+
+  /** Fold is written as it is set, so a reload lands on the same page shape. */
+  const togglePanel = (panel: UsagePanel): void => {
+    const next = { ...folded, [panel]: !folded[panel] };
+    setFolded(next);
+    writeFolded(next);
+  };
 
   const [surahSort, setSurahSort] = useState<Sort>({ key: 'plays', dir: 'desc' });
   const [reciterSort, setReciterSort] = useState<Sort>({ key: 'plays', dir: 'desc' });
@@ -365,8 +376,11 @@ export function Usage(): ReactElement {
 
       {summary && !empty && (
         <>
-          <Panel>
-            <h2 className="panel__title">{t('usage.surahs')}</h2>
+          <FoldPanel
+            title={t('usage.surahs')}
+            open={!folded.surahs}
+            onToggle={() => togglePanel('surahs')}
+          >
             <div className="table-scroll">
               <table className="table">
                 <thead>
@@ -403,10 +417,13 @@ export function Usage(): ReactElement {
               </table>
             </div>
             {filtered ? <p className="muted">{t('usage.bytesNote')}</p> : null}
-          </Panel>
+          </FoldPanel>
 
-          <Panel>
-            <h2 className="panel__title">{t('usage.reciters')}</h2>
+          <FoldPanel
+            title={t('usage.reciters')}
+            open={!folded.reciters}
+            onToggle={() => togglePanel('reciters')}
+          >
             <div className="table-scroll">
               <table className="table">
                 <thead>
@@ -427,20 +444,26 @@ export function Usage(): ReactElement {
                 </tbody>
               </table>
             </div>
-          </Panel>
+          </FoldPanel>
 
-          <Panel>
-            <h2 className="panel__title">{t('usage.source')}</h2>
+          <FoldPanel
+            title={t('usage.source')}
+            open={!folded.source}
+            onToggle={() => togglePanel('source')}
+          >
             <p>
               {t('usage.torrent')} {summary.sources.torrent} ({share(summary.sources.torrent)}%)
               {' · '}
               {t('usage.webseed')} {summary.sources.webseed} ({share(summary.sources.webseed)}%)
             </p>
             <p className="muted">{t('usage.countsNote')}</p>
-          </Panel>
+          </FoldPanel>
 
-          <Panel>
-            <h2 className="panel__title">{t('usage.volume')}</h2>
+          <FoldPanel
+            title={t('usage.volume')}
+            open={!folded.volume}
+            onToggle={() => togglePanel('volume')}
+          >
             <p className="spread">
               <span>
                 {t('usage.webseed')} ({t('usage.exact')}):{' '}
@@ -478,12 +501,16 @@ export function Usage(): ReactElement {
               </table>
             </div>
             <p className="muted">{t('usage.volumeNote')}</p>
-          </Panel>
+          </FoldPanel>
 
-          <Panel>
-            <h2 className="panel__title">{t('usage.devices')}</h2>
+          <FoldPanel
+            title={t('usage.devices')}
+            open={!folded.devices}
+            onToggle={() => togglePanel('devices')}
+          >
             <p>{t('usage.devicesToday', { count: String(reportedToday) })}</p>
             <p>{t('usage.listeners', { count: String(listenedToday) })}</p>
+            <TrendBars rows={funnel} />
             <div className="table-scroll">
               <table className="table">
                 <thead>
@@ -524,10 +551,13 @@ export function Usage(): ReactElement {
             </div>
             <p className="muted">{t('usage.funnelNote')}</p>
             {filtered ? <p className="muted">{t('usage.devicesNoFilters')}</p> : null}
-          </Panel>
+          </FoldPanel>
 
-          <Panel>
-            <h2 className="panel__title">{t('usage.errors')}</h2>
+          <FoldPanel
+            title={t('usage.errors')}
+            open={!folded.errors}
+            onToggle={() => togglePanel('errors')}
+          >
             <div className="table-scroll">
               <table className="table">
                 <thead>
@@ -557,10 +587,13 @@ export function Usage(): ReactElement {
               </table>
             </div>
             <p className="muted">{t('usage.rateNote')}</p>
-          </Panel>
+          </FoldPanel>
 
-          <Panel>
-            <h2 className="panel__title">{t('usage.recent')}</h2>
+          <FoldPanel
+            title={t('usage.recent')}
+            open={!folded.recent}
+            onToggle={() => togglePanel('recent')}
+          >
             <div className="table-scroll">
               <table className="table">
                 <thead>
@@ -593,7 +626,7 @@ export function Usage(): ReactElement {
               {t('usage.lastPruned')} {summary.lastPrunedAt ?? '—'}
             </p>
             <p className="muted">{t('usage.pruneNote')}</p>
-          </Panel>
+          </FoldPanel>
         </>
       )}
     </div>
