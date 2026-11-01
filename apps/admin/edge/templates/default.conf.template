@@ -25,6 +25,12 @@ server {
   # service ends up unreachable over http one day.
   add_header Strict-Transport-Security "max-age=31536000" always;
 
+  # The console is an operator surface, not a public page. Every response carries
+  # this — the SPA shell, the prerendered pages and the API alike — so a crawler
+  # that already holds a URL drops it on the next visit. It lives here rather than
+  # in robots.txt: a `Disallow` would hide the header and leave the stale result.
+  add_header X-Robots-Tag "noindex, nofollow" always;
+
   # Liveness for the deploy gate and the tunnel check. Proxied to the API
   # rather than answered here: a 200 from nginx would say nothing about whether
   # the database is reachable. The service name is `admin-api` in this compose

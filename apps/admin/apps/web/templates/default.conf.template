@@ -36,20 +36,20 @@ server {
     expires -1;
   }
 
-  # Crawler files: short cache, so a corrected sitemap is not stuck at the edge for a
-  # day. They are files in dist/ now, not routes the SPA answers.
+  # Crawler files: short cache, so a corrected robots is not stuck at the edge for
+  # a day. They are files in dist/ now, not routes the SPA answers.
   location = /robots.txt {
     default_type text/plain;
     expires 1h;
   }
-  # llms.txt: the public pages in the format an assistant reads, not a crawler.
-  location = /llms.txt {
-    default_type text/plain;
-    expires 1h;
-  }
+  # Retired with the public SEO surface: the console is noindex (see the edge's
+  # X-Robots-Tag). 410 is the signal that these files are gone for good, not
+  # misplaced — a crawler drops the URLs instead of retrying them.
   location = /sitemap.xml {
-    default_type application/xml;
-    expires 1h;
+    return 410;
+  }
+  location = /llms.txt {
+    return 410;
   }
   # The manifest is what the launcher reads at install: its splash colour, icons and
   # shortcuts. A cached copy is an installed app that keeps yesterday's entry. It is

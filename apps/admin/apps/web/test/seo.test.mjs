@@ -48,6 +48,10 @@ describe('prerendered page', () => {
     assert.match(html, /<html lang="en" dir="ltr"/);
   });
 
+  it('tells a crawler not to index the console', () => {
+    assert.match(html, /<meta name="robots" content="noindex, nofollow"/);
+  });
+
   it('has a canonical, an og card and structured data', () => {
     assert.match(html, new RegExp(`<link rel="canonical" href="${data.site}/"`));
     assert.match(html, /property="og:title"/);
@@ -69,25 +73,21 @@ describe('prerendered page', () => {
 });
 
 describe('crawler files', () => {
-  it('writes robots.txt that disallows the app and names the sitemap', () => {
+  it('writes robots.txt that retires the app and names no sitemap', () => {
     const robots = readFileSync(join(dist, 'robots.txt'), 'utf-8');
     assert.match(robots, /^User-agent: \*$/m);
     assert.match(robots, /^Disallow: \/console$/m);
     assert.match(robots, /^Disallow: \/api\/$/m);
-    assert.match(robots, new RegExp(`^Sitemap: ${data.site}/sitemap\\.xml$`, 'm'));
-    // A robots.txt that is HTML is what the site served before this phase.
+    // A sitemap is an invitation; this host is noindex, so it must not have one.
+    assert.ok(!/^Sitemap:/m.test(robots), 'no sitemap is advertised');
+    // A blanket Disallow would hide the noindex from the crawler.
+    assert.ok(!/^Disallow: \/$/m.test(robots), 'the HTML stays crawlable');
     assert.ok(!robots.includes('<html'));
   });
 
-  it('writes a sitemap that lists exactly the public pages', () => {
-    const sitemap = readFileSync(join(dist, 'sitemap.xml'), 'utf-8');
-    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-    assert.deepEqual(
-      locs,
-      data.pages.map((page) => `${data.site}${page.path}`),
-    );
-    assert.match(sitemap, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
-    assert.match(sitemap, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
+  it('ships no sitemap and no llms.txt', () => {
+    assert.equal(existsSync(join(dist, 'sitemap.xml')), false);
+    assert.equal(existsSync(join(dist, 'llms.txt')), false);
   });
 
   it('writes an install manifest with icons and a theme colour', () => {
@@ -283,13 +283,10 @@ describe('the edge no longer answers everything with the app', () => {
     assert.match(conf, /try_files \$uri \$uri\/index\.html \/index\.html;/);
   });
 
-  it('serves robots and sitemap with their own types', () => {
+  it('serves robots.txt as plain text and retires the crawler files', () => {
     assert.match(conf, /location = \/robots\.txt \{\s*default_type text\/plain;/);
-    assert.match(conf, /location = \/sitemap\.xml \{\s*default_type application\/xml;/);
-  });
-
-  it('serves llms.txt as plain text', () => {
-    assert.match(conf, /location = \/llms\.txt \{\s*default_type text\/plain;/);
+    assert.match(conf, /location = \/sitemap\.xml \{\s*return 410;/);
+    assert.match(conf, /location = \/llms\.txt \{\s*return 410;/);
   });
 });
 
@@ -298,22 +295,13 @@ describe('the build actually produces these files', () => {
   it('has a prerendered index when dist exists', { skip: !existsSync(built) }, () => {
     const output = readFileSync(join(built, 'index.html'), 'utf-8');
     assert.match(output, /<h1/);
-    assert.ok(existsSync(join(built, 'sitemap.xml')));
+    assert.match(output, /<meta name="robots" content="noindex, nofollow"/);
+    assert.equal(existsSync(join(built, 'sitemap.xml')), false);
+    assert.equal(existsSync(join(built, 'llms.txt')), false);
     assert.ok(existsSync(join(built, 'robots.txt')));
     assert.ok(existsSync(join(built, 'og.png')));
     for (const entry of data.pages.slice(1)) {
       assert.ok(existsSync(join(built, entry.file)), `${entry.file} was not prerendered`);
-    }
-  });
-
-  it('writes an llms.txt that names every public page', { skip: !existsSync(built) }, () => {
-    const file = join(built, 'llms.txt');
-    assert.ok(existsSync(file), 'llms.txt is missing from dist');
-    const text = readFileSync(file, 'utf-8');
-    assert.match(text, /^# Tilawa Admin\n\n> .+/);
-    for (const entry of data.pages) {
-      const url = entry.path === '/' ? `${site}/` : `${site}${entry.path}`;
-      assert.ok(text.includes(url), `${url} is missing from llms.txt`);
     }
   });
 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Prerender the public pages, and write the files a crawler asks for first.
+ * Prerender the shell, and write the files a browser asks for first.
  *
  * Why prerender rather than SSR: the app is a Vite SPA with a hand-rolled router and
  * no data loaders, so there is nothing to stream — the only thing a crawler was
@@ -8,18 +8,23 @@
  * markup the Landing screen also renders, and leaves the SPA to take over on mount.
  * No server, no framework, no runtime cost.
  *
+ * The console is deliberately **not indexable**: every page carries
+ * `noindex, nofollow` in its meta robots, and `apps/admin/edge` sends the same as
+ * `X-Robots-Tag` on every response. There is no sitemap and no llms.txt — they told
+ * a crawler these were public pages, which is how the admin host ended up in
+ * search results. robots.txt stays crawlable (no blanket `Disallow`) so the
+ * noindex is seen and the stale results are dropped.
+ *
  * The outputs:
  *   dist/<file>                 the page, with its own head and its static content
- *   dist/robots.txt             disallow the app, allow the roots
- *   dist/sitemap.xml            the public pages, with lastmod
- *   dist/llms.txt               the same pages, as the llms.txt an assistant reads
+ *   dist/robots.txt             the retired app paths, no sitemap
  *   dist/manifest.webmanifest   install metadata
  *
  * The copy comes from `seo/pages.json`, which is the same text the catalogue renders.
  * A page that says one thing to a crawler and another to a visitor is cloaking; the
  * test `seo.test.mjs` compares them.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
@@ -31,7 +36,6 @@ const DIST = process.argv[2] ? resolve(process.argv[2]) : join(WEB, 'dist');
 const data = JSON.parse(readFileSync(join(WEB, 'seo', 'pages.json'), 'utf-8'));
 const app = JSON.parse(readFileSync(join(WEB, 'app.json'), 'utf-8'));
 const site = data.site.replace(/\/$/, '');
-const builtAt = new Date().toISOString();
 
 /** The shell Vite produced: its asset tags are the only parts worth keeping. */
 const shell = readFileSync(join(DIST, 'index.html'), 'utf-8');
@@ -81,7 +85,7 @@ function head(page, copy, canonicalUrl) {
     <title>${escape(copy.title)}</title>
     <meta name="description" content="${escape(copy.description)}" />
     <link rel="canonical" href="${canonicalUrl}" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="${app.chrome.light}" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="${app.chrome.dark}" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
@@ -190,68 +194,32 @@ for (const entry of data.pages) {
   writeFileSync(target, page(entry, entry.en), 'utf-8');
 }
 
-const urls = data.pages
-  .map(
-    (entry) => `  <url>
-    <loc>${site}${entry.path}</loc>
-    <lastmod>${builtAt.slice(0, 10)}</lastmod>
-    <changefreq>${entry.changefreq}</changefreq>
-    <priority>${entry.priority}</priority>
-  </url>`,
-  )
-  .join('\n');
-
-writeFileSync(
-  join(DIST, 'sitemap.xml'),
-  `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>
-`,
-  'utf-8',
-);
-
 writeFileSync(
   join(DIST, 'robots.txt'),
-  `# The public pages are the only thing worth indexing. Everything under /console is
-# behind a session, and the API and MCP endpoint have nothing for a crawler.
+  `# The console is not a public surface. Every response carries
+# X-Robots-Tag: noindex, nofollow (apps/admin/edge) and every page says the same in
+# meta robots. The HTML is deliberately left crawlable: a blanket Disallow would
+# hide the noindex from a crawler and the stale search result would stay.
 User-agent: *
-Allow: /$
 Disallow: /console
 Disallow: /api/
 Disallow: /mcp
 Disallow: /reset-password
 Disallow: /activate
 Disallow: /2fa
-
-Sitemap: ${site}/sitemap.xml
 `,
   'utf-8',
 );
 
-// llms.txt, generated from the same pages as the sitemap: one source, so an
-// assistant and a crawler can never be told different things about the product.
-// The console needing an account is the fact a visitor would learn from the page
-// and an assistant would not.
-const lines = data.pages.map((entry) => {
-  const url = entry.path === '/' ? `${site}/` : `${site}${entry.path}`;
-  return `- [${entry.en.title}](${url}): ${entry.en.description}`;
-});
-
-writeFileSync(
-  join(DIST, 'llms.txt'),
-  `# Tilawa Admin
-
-> ${data.pages[0].en.lede}
-
-The console itself requires an account. The pages below describe what it does and
-how it is run; \`/console\`, the API and the MCP endpoint are not public.
-
-## Pages
-${lines.join('\n')}
-`,
-  'utf-8',
-);
+// A previous build left these behind; the console is noindex now, and an old
+// sitemap in a reused dist/ is exactly the invitation this change retires.
+for (const retired of ['sitemap.xml', 'llms.txt']) {
+  try {
+    rmSync(join(DIST, retired));
+  } catch {
+    // not there: the normal case on a clean build
+  }
+}
 
 writeFileSync(
   join(DIST, 'manifest.webmanifest'),
@@ -289,5 +257,5 @@ writeFileSync(
 );
 
 console.log(
-  `prerender: ${data.pages.length} page(s), sitemap, robots, llms.txt and manifest written to dist/`,
+  `prerender: ${data.pages.length} page(s), robots and manifest written to dist/ (noindex)`,
 );
