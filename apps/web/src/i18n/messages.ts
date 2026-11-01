@@ -166,6 +166,11 @@ const ar = {
     languageHint: 'لغة الواجهة واتجاه الصفحة.',
     playbackHint: 'سرعة التلاوة ومؤقّت يوقف التشغيل وحده.',
     shapeHint: 'شكل الطيف فوق شريط التقدّم.',
+    share: 'المشاركة مع المستمعين',
+    shareHint:
+      'ما دامت الصفحة مفتوحة، يشارك جهازك الأجزاء التي نزّلها مع مستمعين آخرين. إيقاف المشاركة لا يغيّر الاستماع ولا التنزيل.',
+    shareOn: 'مفعّلة',
+    shareOff: 'معطّلة',
     minutes: (count: number) => `${count} د`,
   },
   shapes: { bars: 'أعمدة', peaks: 'قِمم', ribbon: 'شريط' } as Record<string, string>,
@@ -478,6 +483,11 @@ const en: typeof ar = {
     languageHint: 'Interface language and page direction.',
     playbackHint: 'Recitation speed, and a timer that stops playback on its own.',
     shapeHint: 'The shape of the spectrum above the scrubber.',
+    share: 'Sharing with listeners',
+    shareHint:
+      'While the page is open, your device shares the pieces it has downloaded with other listeners. Turning it off changes neither listening nor downloading.',
+    shareOn: 'On',
+    shareOff: 'Off',
     minutes: (count: number) => `${count} min`,
   },
   shapes: { bars: 'Bars', peaks: 'Peaks', ribbon: 'Ribbon' },

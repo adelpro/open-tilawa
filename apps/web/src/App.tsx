@@ -38,6 +38,8 @@ import {
   utcDay,
 } from './utils/device-day';
 import { STORAGE_EVENT } from './utils/storage-keys';
+import { setSharesPieces, sharesPieces } from './utils/seed-preference';
+import { applySharing } from './utils/webtorrent-client';
 import { APP_VERSION } from './constants/version';
 import {
   consentEnabled,
@@ -131,6 +133,7 @@ export default function App() {
   const [rate, setRate] = useAtom(rateAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const [accountOpen, setAccountOpen] = useAtom(accountSheetOpenAtom);
+  const [shares, setShares] = useState(() => sharesPieces());
   const remoteSettings = useAtomValue(userSettingsAtom);
 
   // One mount, one set of relay subscriptions and one device heartbeat. This
@@ -221,6 +224,17 @@ export default function App() {
     setRate(next);
     patchSettings({ rate: next });
   };
+
+  /**
+   * Sharing is this device's answer, so it is written to `tilawah:seed` and not
+   * to settings — the ring must not carry a phone onto the desktop's choice.
+   */
+  const chooseShares = (allowed: boolean) => {
+    setShares(allowed);
+    setSharesPieces(allowed);
+    applySharing(allowed);
+  };
+
   const sleep = useSleepTimer(() => setIsPlaying(false));
 
   /**
@@ -299,6 +313,8 @@ export default function App() {
             sleepActive={sleep.active}
             sleepRemaining={sleep.remaining}
             onSleep={sleep.start}
+            shares={shares}
+            onShares={chooseShares}
           />
         ) : (
           <PlayerPage
