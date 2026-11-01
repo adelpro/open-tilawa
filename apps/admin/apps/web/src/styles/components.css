@@ -355,7 +355,8 @@
 }
 
 /* The heading is the control: the whole row is the target, the chevron is the
-   affordance, and `aria-expanded` is the state. */
+   affordance, and `aria-expanded` is the state. The chevron answers the pointer
+   too — a wash behind it says this row is a control, not a caption. */
 .panel__toggle {
   display: flex;
   align-items: center;
@@ -364,6 +365,7 @@
   width: 100%;
   padding: 0;
   border: 0;
+  border-radius: var(--radius-sm);
   background: none;
   color: inherit;
   font: inherit;
@@ -375,7 +377,20 @@
 .panel__chevron {
   flex: none;
   color: var(--ink-secondary);
-  transition: transform var(--motion-ui);
+  border-radius: 50%;
+  /* The wash is a shadow, not padding: the disc grows without moving the glyph
+     or changing the row's height. */
+  box-shadow: 0 0 0 4px transparent;
+  transition:
+    transform var(--motion-ui),
+    color var(--motion-ui),
+    box-shadow var(--motion-ui);
+}
+
+.panel__toggle:hover .panel__chevron,
+.panel__toggle:focus-visible .panel__chevron {
+  color: var(--ink);
+  box-shadow: 0 0 0 4px var(--canvas-parchment);
 }
 
 .panel__toggle[aria-expanded='true'] .panel__chevron {
@@ -388,6 +403,13 @@
 
 .panel__body[hidden] {
   display: none;
+}
+
+/* A finger needs the row, not the 16px glyph. */
+@media (pointer: coarse) {
+  .panel__toggle {
+    min-height: 44px;
+  }
 }
 
 /* One chart, one form: grouped bars, no curve between days that were not

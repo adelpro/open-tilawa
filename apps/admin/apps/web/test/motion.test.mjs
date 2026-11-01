@@ -87,6 +87,16 @@ describe('targets', () => {
   it('gives a coarse pointer the full 44', () => {
     assert.match(all, /@media \(pointer: coarse\)[\s\S]{0,200}min-height:\s*44px/);
   });
+
+  it('makes the fold chevron answer the pointer', () => {
+    // The row is the control; the chevron has to look like part of it.
+    assert.match(all, /\.panel__toggle:hover \.panel__chevron/);
+    assert.match(all, /\.panel__toggle:focus-visible \.panel__chevron/);
+  });
+
+  it('gives the fold header a thumb-sized row', () => {
+    assert.match(all, /@media \(pointer: coarse\) \{\s*\.panel__toggle \{\s*min-height: 44px/);
+  });
 });
 
 describe('the frame survives loading', () => {
