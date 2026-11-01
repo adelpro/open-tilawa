@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { randomBytes } from 'node:crypto';
@@ -71,6 +72,7 @@ export class OAuthController {
     return { providers: this.oauth.available() };
   }
 
+  @Throttle({ default: { limit: 10, ttl: 900_000 } })
   @Get(':provider/start')
   @ApiOperation({ summary: 'Begin a provider sign-in' })
   start(
@@ -81,6 +83,7 @@ export class OAuthController {
     this.redirectToProvider(provider, response, null, device);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 900_000 } })
   @Get(':provider/link')
   @UseGuards(JWTAuthGuard)
   @ApiOperation({ summary: 'Begin linking a provider to the signed-in account' })
