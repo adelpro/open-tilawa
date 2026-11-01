@@ -6,6 +6,7 @@ import { squareAvatar } from '../lib/avatar';
 import { relative } from '../lib/format';
 import { useSession } from '../lib/session';
 import { deviceId } from '../lib/device';
+import { oauthErrorKey } from '../lib/oauth-errors';
 import { LOCALES, LOCALE_NAMES, useI18n } from '../lib/i18n';
 import type { Locale } from '../lib/i18n';
 import type { Session } from '../lib/types';
@@ -60,6 +61,7 @@ export function Account(): ReactElement {
   const [identities, setIdentities] = useState<{ provider: string; email: string }[]>([]);
   const [providers, setProviders] = useState<string[]>([]);
   const [signInMessage, setSignInMessage] = useState<string | null>(null);
+  const [signInError, setSignInError] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -99,10 +101,13 @@ export function Account(): ReactElement {
     const failed = params.get('error');
     if (!connected && !failed) return;
 
+    // A provider failure is not a confirmation: it says its own sentence, in the
+    // error tone. It used to render green because both outcomes shared one notice.
+    setSignInError(!connected);
     setSignInMessage(
       connected
         ? t('account.signin.connected', { provider: connected })
-        : t('account.signin.providerError'),
+        : t(oauthErrorKey(failed)),
     );
     params.delete('connected');
     params.delete('error');
@@ -116,6 +121,7 @@ export function Account(): ReactElement {
     try {
       await api(`/me/identities/${provider}`, { method: 'DELETE' });
       setIdentities((current) => current.filter((entry) => entry.provider !== provider));
+      setSignInError(false);
       setSignInMessage(t('account.signin.disconnected', { provider }));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('account.signin.disconnectFailed'));
@@ -473,7 +479,9 @@ export function Account(): ReactElement {
                 </div>
               ) : null}
 
-              {signInMessage ? <Notice tone="ok">{signInMessage}</Notice> : null}
+              {signInMessage ? (
+                <Notice tone={signInError ? 'bad' : 'ok'}>{signInMessage}</Notice>
+              ) : null}
               {providers.length === 0 ? (
                 <p className="fine-print">{t('account.signin.none')}</p>
               ) : null}

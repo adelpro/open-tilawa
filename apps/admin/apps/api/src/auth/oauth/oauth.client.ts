@@ -41,6 +41,37 @@ export class OAuthProviderError extends Error {
 export const defaultOAuthHttp: OAuthHttp = (url, init) =>
   fetch(url, init) as unknown as Promise<OAuthResponse>;
 
+/**
+ * One provider call is allowed to be flaky; the flow is not.
+ *
+ * GitHub's edge intermittently drops the SYN from this network (`UND_ERR_CONNECT_TIMEOUT`),
+ * and a single dropped connection used to end the sign-in with "provider could not
+ * complete". Three attempts with an 8s bound each recover the common case and still
+ * fail in the time a person will wait.
+ */
+const PROVIDER_TIMEOUT_MS = 8_000;
+const PROVIDER_ATTEMPTS = 3;
+
+const retryable = (error: unknown): boolean => {
+  const code =
+    (error as { cause?: { code?: string } })?.cause?.code ?? (error as { code?: string })?.code;
+  const name = (error as Error)?.name;
+  return (
+    code === 'UND_ERR_CONNECT_TIMEOUT' ||
+    code === 'ECONNRESET' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ENOTFOUND' ||
+    code === 'EAI_AGAIN' ||
+    name === 'TimeoutError' ||
+    name === 'AbortError'
+  );
+};
+
+const detailOf = (error: unknown): string =>
+  (error as { cause?: { code?: string } })?.cause?.code ??
+  (error as Error)?.message ??
+  'unknown error';
+
 @Injectable()
 export class OAuthClient {
   constructor(@Inject(OAUTH_HTTP) private readonly http: OAuthHttp) {}
@@ -76,12 +107,39 @@ export class OAuthClient {
       : this.githubIdentity(accessToken);
   }
 
+  /**
+   * A provider call with a deadline and a retry. HTTP failures are not retried here —
+   * they are answers, not accidents — only connections that never produced one.
+   */
+  private async request(
+    url: string,
+    init: RequestInit,
+    failure: 'token_exchange_failed' | 'profile_fetch_failed',
+  ): Promise<OAuthResponse> {
+    let last: unknown;
+    for (let attempt = 0; attempt < PROVIDER_ATTEMPTS; attempt += 1) {
+      try {
+        return await this.http(url, {
+          ...init,
+          signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+        });
+      } catch (error) {
+        last = error;
+        if (!retryable(error)) break;
+      }
+    }
+    throw new OAuthProviderError(
+      failure,
+      `${new URL(url).host} was unreachable: ${detailOf(last)}`,
+    );
+  }
+
   private async exchange(
     config: ProviderConfig,
     code: string,
     env: (key: string) => string | undefined,
   ): Promise<string> {
-    const response = await this.http(config.tokenUrl, {
+    const response = await this.request(config.tokenUrl, {
       method: 'POST',
       headers: {
         'content-type': 'application/x-www-form-urlencoded',
@@ -94,7 +152,7 @@ export class OAuthClient {
         grant_type: 'authorization_code',
         redirect_uri: callbackUrl(config.name, env),
       }).toString(),
-    });
+    }, 'token_exchange_failed');
 
     const raw = await response.text();
     if (!response.ok) {
@@ -126,10 +184,14 @@ export class OAuthClient {
   }
 
   private async googleIdentity(accessToken: string): Promise<OAuthIdentity> {
-    const response = await this.http('https://openidconnect.googleapis.com/v1/userinfo', {
-      method: 'GET',
-      headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
-    });
+    const response = await this.request(
+      'https://openidconnect.googleapis.com/v1/userinfo',
+      {
+        method: 'GET',
+        headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
+      },
+      'profile_fetch_failed',
+    );
     const raw = await response.text();
     if (!response.ok) {
       throw new OAuthProviderError('profile_fetch_failed', 'google profile request failed');
@@ -166,8 +228,12 @@ export class OAuthClient {
     };
 
     const [userResponse, emailResponse] = await Promise.all([
-      this.http('https://api.github.com/user', { method: 'GET', headers }),
-      this.http('https://api.github.com/user/emails', { method: 'GET', headers }),
+      this.request('https://api.github.com/user', { method: 'GET', headers }, 'profile_fetch_failed'),
+      this.request(
+        'https://api.github.com/user/emails',
+        { method: 'GET', headers },
+        'profile_fetch_failed',
+      ),
     ]);
 
     if (!userResponse.ok) {

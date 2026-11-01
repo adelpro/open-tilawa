@@ -167,10 +167,13 @@ export class OAuthController {
       const code =
         error instanceof OAuthFlowError
           ? error.code
-          : error instanceof OAuthProviderError
-            ? 'provider_error'
+          : error instanceof OAuthProviderError && error.code === 'email_unavailable'
+            ? 'unverified_email'
             : 'provider_error';
-      this.logger.warn(`auth.oauth failed provider=${provider} reason=${code}`);
+      // The code is what the SPA explains; the message is what an operator needs when
+      // the answer is "the provider was unreachable" rather than "the person exists".
+      const detail = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`auth.oauth failed provider=${provider} reason=${code} detail=${detail}`);
       this.fail(response, verified, code);
     }
   }

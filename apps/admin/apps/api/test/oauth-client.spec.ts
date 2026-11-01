@@ -97,6 +97,37 @@ describe('oauth client', () => {
     });
   });
 
+  it('retries a connection that never opened, and says so when every attempt fails', async () => {
+    const drop = () => {
+      const error = new TypeError('fetch failed');
+      (error as { cause?: { code?: string } }).cause = { code: 'UND_ERR_CONNECT_TIMEOUT' };
+      return error;
+    };
+
+    let calls = 0;
+    const flaky: OAuthHttp = async (url) => {
+      calls += 1;
+      if (calls < 3) throw drop();
+      if (url.includes('/token')) return json({ access_token: 'token' });
+      return json({ sub: 'g-1', email: 'a@example.com', email_verified: true, name: 'A' });
+    };
+
+    const identity = await new OAuthClient(flaky).identity(config('google'), 'code', env({}));
+    expect(identity.email).toBe('a@example.com');
+    // Two dropped connections, then the token and the profile.
+    expect(calls).toBe(4);
+
+    const dead: OAuthHttp = async () => {
+      throw drop();
+    };
+    await expect(
+      new OAuthClient(dead).identity(config('google'), 'code', env({})),
+    ).rejects.toMatchObject({
+      code: 'token_exchange_failed',
+      message: expect.stringMatching(/unreachable: UND_ERR_CONNECT_TIMEOUT/),
+    });
+  });
+
   it('turns a non-JSON token answer into a provider error, not a crash', async () => {
     const http: OAuthHttp = async () => ({
       ok: true,

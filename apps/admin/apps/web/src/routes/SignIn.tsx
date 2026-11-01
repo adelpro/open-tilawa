@@ -5,6 +5,7 @@ import { navigate } from '../lib/router';
 import { useSession } from '../lib/session';
 import { useI18n } from '../lib/i18n';
 import type { MessageKey } from '../lib/i18n';
+import { oauthErrorKey } from '../lib/oauth-errors';
 import { Button } from '../components/Button';
 import { GoogleMark, GitHubMark } from '../components/icons';
 import { EmailField, PasswordField } from '../components/fields';
@@ -12,25 +13,6 @@ import { Notice } from '../components/Chip';
 import { deviceId } from '../lib/device';
 import { readLastAuth, writeLastAuth } from '../lib/last-auth';
 import type { AuthMethod } from '../lib/last-auth';
-
-/**
- * What a failed provider round trip says.
- *
- * The codes are the API's; the sentences are the catalogue's. They are deliberately
- * different sentences: "something went wrong" after a Google redirect leaves a person
- * with no idea whether to retry, use a password, or ask for help — and the commonest
- * failure of all, an address that already has an account, has a specific answer.
- */
-const OAUTH_ERROR_KEYS = {
-  account_exists: 'auth.error.account_exists',
-  unverified_email: 'auth.error.unverified_email',
-  identity_taken: 'auth.error.identity_taken',
-  account_disabled: 'auth.error.account_disabled',
-  state_invalid: 'auth.error.state_invalid',
-  provider_disabled: 'auth.error.provider_disabled',
-  provider_error: 'auth.error.provider_error',
-  setup_required: 'auth.error.setup_required',
-} as const satisfies Record<string, MessageKey>;
 
 const PROVIDER_KEYS: Record<string, MessageKey> = {
   google: 'auth.signIn.providerGoogle',
@@ -64,8 +46,7 @@ export function SignIn(): ReactElement {
   const [providerError] = useState<string | null>(() => {
     const code = new URLSearchParams(window.location.search).get('error');
     if (!code) return null;
-    const key = OAUTH_ERROR_KEYS[code as keyof typeof OAUTH_ERROR_KEYS] ?? 'auth.error.provider_error';
-    return t(key);
+    return t(oauthErrorKey(code));
   });
 
   // Only offer a provider the server can actually complete: a button that fails after
