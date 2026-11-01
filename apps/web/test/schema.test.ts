@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { breadcrumbTrail, websiteGraph } from '../src/utils/schema.ts';
+import { breadcrumbTrail, faqPage, websiteGraph } from '../src/utils/schema.ts';
 
 test('the home graph names the site and the free application', () => {
   const graph = websiteGraph({
@@ -22,6 +22,10 @@ test('the home graph names the site and the free application', () => {
   assert.deepEqual(website.inLanguage, ['ar', 'en']);
   assert.equal(website.publisher['@id'], 'https://tilawah.cc/#organization');
   assert.equal(organization.logo, 'https://tilawah.cc/icons/icon-512.png');
+  assert.deepEqual(organization.sameAs, [
+    'https://github.com/adelpro/open-tilawa',
+    'https://itqan.dev',
+  ]);
 
   assert.equal(app.applicationCategory, 'MultimediaApplication');
   assert.equal(app.isAccessibleForFree, true);
@@ -62,4 +66,27 @@ test('the breadcrumb is contiguous and absolute', () => {
     trail.itemListElement[2].item,
     'https://tilawah.cc/reciters/yassine-el-jazairi-warsh',
   );
+});
+
+test('the FAQ markup is the same questions the page answers', () => {
+  const items = [
+    { question: 'هل تلاوة مجانية؟', answer: 'نعم، بلا إعلانات ولا اشتراكات.' },
+    { question: 'هل أحتاج إلى حساب؟', answer: 'لا، الحساب غير مطلوب للاستماع.' },
+  ];
+  const page = faqPage(items) as {
+    '@type': string;
+    mainEntity: Array<Record<string, any>>;
+  };
+  assert.equal(page['@type'], 'FAQPage');
+  assert.equal(page.mainEntity.length, items.length);
+  assert.deepEqual(
+    page.mainEntity.map((entry) => entry.name),
+    items.map((item) => item.question),
+  );
+  assert.deepEqual(
+    page.mainEntity.map((entry) => entry.acceptedAnswer.text),
+    items.map((item) => item.answer),
+  );
+  assert.ok(page.mainEntity.every((entry) => entry['@type'] === 'Question'));
+  assert.ok(page.mainEntity.every((entry) => entry.acceptedAnswer['@type'] === 'Answer'));
 });

@@ -25,7 +25,7 @@ import { pageTitle } from '../src/utils/page-title.ts';
 import { riwayaLabel } from '../src/utils/riwaya.ts';
 import { sortByArabicName } from '../src/utils/reciter-order.ts';
 import { surahName } from '../src/utils/surah-name.ts';
-import { breadcrumbTrail, websiteGraph } from '../src/utils/schema.ts';
+import { breadcrumbTrail, faqPage, websiteGraph } from '../src/utils/schema.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
@@ -174,9 +174,18 @@ addPage('/about', (_locale, copy) => ({
   title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة — Tilawah',
   description: copy.about.lede,
   index: indexable('about'),
+  // The visible questions and the markup are one list; a page that answers in
+  // words and tells a crawler something else is cloaking.
+  jsonLd: faqPage(
+    copy.about.faq.items.map((item) => ({ question: item.q, answer: item.a })),
+  ),
   body: `<h1>${escape(copy.about.title)}</h1>` +
     [copy.about.how, copy.about.noPeers, copy.about.ring, copy.about.sources, copy.about.open]
       .map((section) => `<h2>${escape(section.title)}</h2><p>${escape(section.p1)}</p>`)
+      .join('') +
+    `<h2>${escape(copy.about.faq.title)}</h2>` +
+    copy.about.faq.items
+      .map((item) => `<h3>${escape(item.q)}</h3><p>${escape(item.a)}</p>`)
       .join(''),
 }));
 

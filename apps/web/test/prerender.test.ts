@@ -118,3 +118,14 @@ test('the graph comes from the schema module and is escaped', () => {
   assert.match(SOURCE, /jsonLd: websiteGraph\(/);
   assert.match(SOURCE, /jsonLd: breadcrumbTrail\(/);
 });
+
+/**
+ * The About page has to answer its FAQ in the HTML a crawler reads, and the
+ * markup has to be built from the same list the page renders — not a second
+ * copy that can drift.
+ */
+test('the about page carries its FAQ in words and in JSON-LD', () => {
+  assert.match(SOURCE, /jsonLd: faqPage\(/);
+  assert.match(SOURCE, /copy\.about\.faq\.items/);
+  assert.match(SOURCE, /<h3>\$\{escape\(item\.q\)\}<\/h3>/);
+});

@@ -79,6 +79,18 @@ export default function AboutPage() {
         </section>
 
         <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.faq.title}</h2>
+          <dl className="mt-4 space-y-5">
+            {about.faq.items.map((item) => (
+              <div key={item.q}>
+                <dt className="text-[1rem] font-semibold leading-snug text-ink">{item.q}</dt>
+                <dd className="mt-1 text-[1rem] leading-relaxed text-muted">{item.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section className="mt-10">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.open.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.open.p1}</p>
           <div className="mt-4 flex flex-col gap-2 text-[1rem] leading-relaxed">

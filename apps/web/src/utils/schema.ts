@@ -20,6 +20,11 @@ export type BreadcrumbItem = {
   url: string;
 };
 
+export type FaqItem = {
+  question: string;
+  answer: string;
+};
+
 /**
  * `WebSite` + `Organization` + `WebApplication`, one graph.
  *
@@ -40,6 +45,9 @@ export function websiteGraph(input: {
     alternateName: 'تلاوة',
     url: siteUrl,
     logo: `${siteUrl}icons/icon-512.png`,
+    // The same project under the names a search engine and an assistant can
+    // follow: the source, and the community catalogue the recordings come from.
+    sameAs: ['https://github.com/adelpro/open-tilawa', 'https://itqan.dev'],
   };
 
   return {
@@ -88,6 +96,29 @@ export function breadcrumbTrail(items: BreadcrumbItem[]): Record<string, unknown
       position: index + 1,
       name: item.name,
       item: item.url,
+    })),
+  };
+}
+
+/**
+ * `FAQPage` for the questions the About page answers in words.
+ *
+ * The same items feed the visible `<dl>` and this markup, so a crawler and a
+ * visitor cannot be told different answers. Google may not show FAQ rich
+ * results for every site any more; the markup is still the clearest statement
+ * of what the page answers, and it is what an assistant reads.
+ */
+export function faqPage(items: FaqItem[]): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
     })),
   };
 }

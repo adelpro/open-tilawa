@@ -270,6 +270,35 @@ const ar = {
       p1: 'تأتي التسجيلات في تطبيق تلاوة من كتالوج مجتمع إتقان (itqan.dev)، عبر منصّة «فنار» لنشر المحتوى القرآني؛ والحقوق تعود إلى أصحابها من القرّاء والناشرين.',
       p2: 'وتظهر الرواية، مثل حفص أو ورش أو قالون، بجانب اسم القارئ متى عُرفت؛ وإن لم تُعرف، لا نفترض رواية بعينها.',
     },
+    faq: {
+      title: 'أسئلة شائعة',
+      items: [
+        {
+          q: 'هل تلاوة مجانية؟',
+          a: 'نعم. تلاوة مجانية بلا إعلانات ولا اشتراكات، ولا تحتاج إلى حساب للاستماع.',
+        },
+        {
+          q: 'من أين تأتي التسجيلات؟',
+          a: 'من كتالوج مجتمع إتقان (itqan.dev) عبر منصّة «فنار» لنشر المحتوى القرآني، والحقوق تعود إلى أصحابها من القرّاء والناشرين.',
+        },
+        {
+          q: 'هل أحتاج إلى حساب؟',
+          a: 'لا. الحساب غير مطلوب للاستماع؛ وإذا أردت مزامنة المفضّلة والإعدادات بين أجهزتك، أنشئ حلقة وانقل مفتاحها برمز QR.',
+        },
+        {
+          q: 'ماذا يحدث إن لم يكن هناك مستمعون آخرون؟',
+          a: 'يجلب المشغّل الأجزاء من خادم المشروع بعد ثماني ثوانٍ بلا أقران، بحدّ أقصى مقداره 1 ميغابايت في الثانية للاتصال الواحد، ويستمر التشغيل.',
+        },
+        {
+          q: 'هل يعمل على الهاتف؟',
+          a: 'نعم. يعمل في متصفح الهاتف، ويمكن تثبيته تطبيقاً على أندرويد وiOS.',
+        },
+        {
+          q: 'كيف أساهم أو أبلّغ عن مشكلة؟',
+          a: 'الشيفرة المصدرية على GitHub، وللإبلاغ عن تسجيل لا يعمل أو قارئ ناقص راسلنا على contact@tilawah.cc.',
+        },
+      ],
+    },
     open: {
       title: 'مشروع مفتوح المصدر',
       p1: 'تطبيق تلاوة مشروع مفتوح المصدر: يمكنك الاطلاع على الشيفرة والمساهمة في تطويرها.',
@@ -550,6 +579,35 @@ const en: typeof ar = {
       title: 'Recordings and riwayat',
       p1: 'The recordings in Tilawah come from the Itqan community catalogue (itqan.dev), published through its Fanar platform for Quranic content; rights remain with the reciters and publishers.',
       p2: 'The riwaya — Hafs, Warsh, Qalon — appears beside the reciter when it is known; when it is not, no reading is assumed.',
+    },
+    faq: {
+      title: 'Frequently asked questions',
+      items: [
+        {
+          q: 'Is Tilawah free?',
+          a: 'Yes. Tilawah is free, with no adverts, no subscriptions, and no account needed to listen.',
+        },
+        {
+          q: 'Where do the recordings come from?',
+          a: 'From the Itqan community catalogue (itqan.dev), published through its Fanar platform for Quranic content. Rights remain with the reciters and publishers.',
+        },
+        {
+          q: 'Do I need an account?',
+          a: 'No. Listening needs no account. To sync favourites and settings between your devices, create a ring and carry its key across with a QR code.',
+        },
+        {
+          q: 'What happens when nobody else is listening?',
+          a: 'After eight seconds without peers, the player fetches the pieces from the project server, capped at 1 MB/s per connection, and playback continues.',
+        },
+        {
+          q: 'Does it work on a phone?',
+          a: 'Yes. It runs in the phone browser and can be installed as an app on Android and iOS.',
+        },
+        {
+          q: 'How can I contribute or report a problem?',
+          a: 'The source is on GitHub. To report a recording that will not play or a missing reciter, write to contact@tilawah.cc.',
+        },
+      ],
     },
     open: {
       title: 'Open source',
