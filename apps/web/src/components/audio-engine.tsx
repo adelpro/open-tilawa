@@ -26,6 +26,8 @@ import { APP_VERSION } from '@/constants/version';
 import { errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
 import { streamSourceFor, telemetrySource } from '@/utils/stream-source';
 import { mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
+import { sameRelease } from '@/utils/release';
+import { surahIdOf } from '@/utils/surah-id';
 
 /**
  * The only <audio> element in the app, mounted once next to the page.
@@ -97,16 +99,30 @@ export default function AudioEngine({
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
 
-  const { track, files, next, previous } = usePlayerNav();
+  const { files, next, previous } = usePlayerNav();
   const audioRef = useRef<HTMLAudioElement>(null);
   const selectedFileRef = useRef<any>(null);
   const restoredForRef = useRef<number | null>(null);
   const lastSurahRef = useRef<number | undefined>(undefined);
-  const trackRef = useRef(track);
-  trackRef.current = track;
 
   const fileCount = files.length;
-  const magnetURI = torrentInfo?.magnetURI ?? '';
+
+  /**
+   * The track of the *selected* reciter, read from the hook's live value.
+   *
+   * `usePlayerNav` reads a Jotai mirror that the audio engine fills one effect
+   * later, so on a reciter swap it still holds the previous release for a render.
+   * Building the source from it pointed the element at
+   * `<old infohash>/<old folder>/<new surah>.mp3` — a path inside the torrent that
+   * was just destroyed. The service worker answered 404, the element reported
+   * MEDIA_ERR_SRC_NOT_SUPPORTED, and because `torrentInfo` is cleared during the
+   * swap there was no `/media` URL to retry. The infohash is the identity that
+   * cannot lie about which release is live.
+   */
+  const tracksCurrent = torrentInfo ? sameRelease(torrentInfo.magnetURI, reciter?.magnet) : false;
+  const liveTrack = tracksCurrent
+    ? torrentInfo?.files.find((file, index) => surahIdOf(file, index) === surahId)
+    : undefined;
 
   /**
    * The element was re-pointed at the node's own copy of this surah because the
@@ -155,11 +171,10 @@ export default function AudioEngine({
     };
   }, [setTorrentError, setWebtorrentReady]);
 
-  /** Swap the source when the surah changes (or its file finally lands). */
+  /** Swap the source when the surah — or the release behind it — changes. */
   useEffect(() => {
     const audio = audioRef.current;
-    const current = trackRef.current;
-    if (!audio || !current) return;
+    if (!audio) return;
 
     // Park the outgoing surah under its own id before the source changes, or
     // "next" would record the new surah at the old surah's timestamp.
@@ -177,7 +192,26 @@ export default function AudioEngine({
     } catch {
       // ignore
     }
-    const file = (current as any).file;
+
+    // A new source supersedes any earlier direct retry.
+    setDirectFallback(false);
+    restoredForRef.current = null;
+
+    // A reciter swap destroys the old torrent before the new one is ready. Until
+    // the selected release has a file for this surah, the element stays empty:
+    // keeping the old source would request a path inside the destroyed torrent,
+    // and there is no direct URL to fall back to while `torrentInfo` is cleared.
+    if (!liveTrack) {
+      try {
+        selectedFileRef.current?.deselect?.();
+      } catch {
+        // ignore
+      }
+      selectedFileRef.current = null;
+      return;
+    }
+
+    const file = liveTrack.file;
     const streamURL = getStreamURL(file);
 
     // One surah in flight: the previous file stops competing for pieces.
@@ -200,17 +234,17 @@ export default function AudioEngine({
       audio.src = streamURL;
       audio.load();
     }
-
-    // A new source supersedes any earlier direct retry.
-    setDirectFallback(false);
-    restoredForRef.current = null;
-  }, [surahId, magnetURI, fileCount, reciter]);
+  }, [surahId, liveTrack, reciter]);
 
   /** Play / pause. Deliberately does not re-assign src. */
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !trackRef.current) return;
+    if (!audio) return;
     if (isPlaying) {
+      // Between a switch and the new torrent's metadata there is no file yet.
+      // Keep the listener's intent: play() on an empty element rejects, which
+      // would flip `isPlaying` off and the new selection would open paused.
+      if (!liveTrack) return;
       // The graph needs a gesture; this is one. If it fails, audio still plays.
       ensureAnalyser(audio);
       startedAtRef.current = Date.now();
@@ -220,7 +254,7 @@ export default function AudioEngine({
       persist();
       flushPosition();
     }
-  }, [isPlaying, surahId, fileCount, setIsPlaying]);
+  }, [isPlaying, surahId, liveTrack, setIsPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -379,10 +413,18 @@ export default function AudioEngine({
       onEnded={() => next()}
       onError={(event) => {
         const audio = event.currentTarget;
+
+        // A failure from a selection the listener has already left is not a
+        // playback failure: the element was cleared or re-pointed, and the old
+        // torrent is destroyed. Only the live selection owns this element, so
+        // only it can produce a real error.
+        if (!liveTrack) return;
+
         const code = audio.error?.code;
-        const file = trackRef.current?.file;
+        const file = liveTrack.file;
+        if (!file) return;
         const direct = mediaUrlForFile(window.location.origin, torrentInfo?.name, file);
-        const retryKey = `${surahId}:${(file as { name?: string } | null)?.name ?? ''}`;
+        const retryKey = `${surahId}:${file.name ?? ''}`;
 
         // The service-worker stream is the fast path, not the only one: when the
         // element refuses it outright, the node still has the same file over
