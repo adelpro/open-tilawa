@@ -6,6 +6,7 @@ import {
   RecoveryCodesRepository,
   SessionsRepository,
   TrustedDevicesRepository,
+  UserIdentitiesRepository,
   UsersRepository,
   openDatabase,
   type Db,
@@ -59,6 +60,11 @@ class DatabaseLifecycle implements OnApplicationShutdown {
       useFactory: (db: Db) => new TrustedDevicesRepository(db),
     },
     {
+      provide: UserIdentitiesRepository,
+      inject: [SQLITE_DB],
+      useFactory: (db: Db) => new UserIdentitiesRepository(db),
+    },
+    {
       provide: AuditRepository,
       inject: [SQLITE_DB],
       useFactory: (db: Db) => new AuditRepository(db),
@@ -80,6 +86,7 @@ class DatabaseLifecycle implements OnApplicationShutdown {
     UsersRepository,
     SessionsRepository,
     TrustedDevicesRepository,
+    UserIdentitiesRepository,
     AuditRepository,
     EmailOtpRepository,
     RecoveryCodesRepository,

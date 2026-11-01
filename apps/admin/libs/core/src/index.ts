@@ -23,6 +23,11 @@ export {
   type CreateUserInput,
   type UpdateUserInput,
 } from './store/users.repo';
+export {
+  UserIdentitiesRepository,
+  type IdentityProvider,
+  type UserIdentity,
+} from './store/user-identities.repo';
 export { SessionsRepository } from './store/sessions.repo';
 export { EmailOtpRepository, type EmailOtpRecord } from './store/email-otp.repo';
 export { TrustedDevicesRepository } from './store/trusted-devices.repo';
