@@ -60,9 +60,12 @@ export const en = {
   'usage.devicesNoFilters':
     'The event carries no reciter and no source, so these numbers do not change with the filters.',
   'usage.devicesNote':
-    'Each device reports at most once a day, with no identifier, so no two days can be joined. The count is a floor, not a total — a device that switched statistics off is not in it — and it counts devices, never people.',
+    'Each device reports at most once a day, with no identifier — the age range it carries is computed on the device and cannot join two days. The count is a floor, not a total — a device that switched statistics off is not in it — and it counts devices, never people.',
   'usage.listeners': 'Devices that played today: {count}',
   'usage.listenersCount': 'Played',
+  'usage.returning': 'Returning devices (7+ days)',
+  'usage.returningOf': '{returning} of {known} devices',
+  'usage.returningNote': 'Among devices that reported an age; older clients are not counted.',
   'usage.playedShare': 'Share who played',
   'usage.funnelNote':
     'Devices that opened the app today are counted with no tracking number, and of them the devices that actually started a play. Each device counts once a day with no identifier, so no two days can be joined. The number stands for devices, not people, and covers only those who switched statistics on for their device.',

@@ -296,6 +296,33 @@ describe('TelemetryService volume and devices', () => {
     ).toEqual({ n: 0 });
   });
 
+  it('counts a device age range separately and refuses an unknown one', () => {
+    const { telemetry } = build();
+    const device = { event: 'device' as const, version: '1.13.16', locale: 'ar' as const };
+
+    expect(
+      telemetry.ingest(
+        [{ ...device, age: 'new' }, { ...device, age: '7-13' }, { ...device, age: '7-13' }],
+        '127.0.0.1',
+      ),
+    ).toBe(3);
+    expect(telemetry.summary(7).deviceAges).toEqual(
+      expect.arrayContaining([
+        { day: today, age: '7-13', devices: 2 },
+        { day: today, age: 'new', devices: 1 },
+      ]),
+    );
+
+    // An older client sends no age: it is a device, but not an age row.
+    expect(telemetry.ingest([device], '127.0.0.2')).toBe(1);
+    expect(telemetry.summary(7).devices).toEqual([{ day: today, devices: 4 }]);
+    expect(telemetry.summary(7).deviceAges).toHaveLength(2);
+
+    expect(() => telemetry.ingest([{ ...device, age: 'old' }], '127.0.0.3')).toThrow(
+      /unknown device age/,
+    );
+  });
+
   it('turns a node counter into a delta, and treats a restart as a new baseline', () => {
     const { db, telemetry } = build();
     catalogue(db);

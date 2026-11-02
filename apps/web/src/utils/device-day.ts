@@ -14,6 +14,7 @@ import { STORAGE_KEYS } from '@/utils/storage-keys';
 
 const KEY = STORAGE_KEYS.telemetryDeviceDay;
 const LISTEN_KEY = STORAGE_KEYS.telemetryListenDay;
+const FIRST_KEY = STORAGE_KEYS.telemetryFirstSeen;
 
 export function utcDay(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10);
@@ -50,6 +51,25 @@ export function markListenDay(
   storage: Pick<Storage, 'setItem'> = window.localStorage,
 ): void {
   markDay(LISTEN_KEY, day, storage);
+}
+
+/**
+ * The UTC day this browser first reported itself.
+ *
+ * It stays local. The device event sends only the bucket this date falls into, so
+ * the console can say how old a device is without learning when it was born.
+ */
+export function readFirstSeen(
+  storage: Pick<Storage, 'getItem'> = window.localStorage,
+): string | null {
+  return readDay(FIRST_KEY, storage);
+}
+
+export function markFirstSeen(
+  day: string,
+  storage: Pick<Storage, 'setItem'> = window.localStorage,
+): void {
+  markDay(FIRST_KEY, day, storage);
 }
 
 function readDay(key: string, storage: Pick<Storage, 'getItem'>): string | null {

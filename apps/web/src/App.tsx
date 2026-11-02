@@ -31,12 +31,15 @@ import { toPath } from './routes';
 import { createTelemetry, deviceEvent, firstPlayEvent, type TelemetryEvent } from './utils/telemetry';
 import {
   markDeviceDay,
+  markFirstSeen,
   markListenDay,
   readDeviceDay,
+  readFirstSeen,
   readListenDay,
   shouldReportDevice,
   utcDay,
 } from './utils/device-day';
+import { ageBucket, daysBetween } from './utils/device-age';
 import { STORAGE_EVENT } from './utils/storage-keys';
 import { setSharesPieces, sharesPieces } from './utils/seed-preference';
 import { applySharing } from './utils/webtorrent-client';
@@ -189,8 +192,13 @@ export default function App() {
     if (!consentEnabled(consent)) return;
     const day = utcDay();
     if (!shouldReportDevice(readDeviceDay(), day)) return;
+    // The first-open date stays local; the event carries only the range it falls
+    // in, so the console can count returning devices without an identifier.
+    const first = readFirstSeen();
+    if (!first) markFirstSeen(day);
+    const age = ageBucket(first ? daysBetween(first, day) : 0);
     markDeviceDay(day);
-    telemetry.current.record(deviceEvent({ version: APP_VERSION, locale }));
+    telemetry.current.record(deviceEvent({ version: APP_VERSION, locale, age }));
   }, [consent, locale]);
 
   const answerConsent = (value: Consent) => {

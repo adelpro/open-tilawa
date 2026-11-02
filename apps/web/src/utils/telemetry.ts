@@ -1,3 +1,5 @@
+import type { AgeBucket } from './device-age';
+
 export type PlayTelemetryEvent = {
   event: 'play' | 'complete' | 'error' | 'fallback';
   reciter: string;
@@ -18,6 +20,8 @@ export type PlayTelemetryEvent = {
  */
 export type DeviceTelemetryEvent = {
   event: 'device';
+  /** How long ago this browser first reported itself, as a range. */
+  age: AgeBucket;
   version: string;
   locale: 'ar' | 'en';
 };
@@ -185,8 +189,9 @@ export function errorEvent(input: {
 export function deviceEvent(input: {
   version: string;
   locale: DeviceTelemetryEvent['locale'];
+  age: AgeBucket;
 }): DeviceTelemetryEvent {
-  return { event: 'device', version: input.version, locale: input.locale };
+  return { event: 'device', age: input.age, version: input.version, locale: input.locale };
 }
 
 /** The daily "this device started listening" event; same shape, different verb. */

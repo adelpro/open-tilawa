@@ -20,6 +20,15 @@ export const SOURCES = ['torrent', 'webseed'] as const;
 export const MS_TO_PLAY = ['0-1s', '1-3s', '3-10s', '10s+'] as const;
 const LOCALES = ['ar', 'en'] as const;
 
+/**
+ * The age ranges a device may report, measured locally from its own first open.
+ *
+ * The client never sends the date, only the range, so this stays a count of
+ * devices rather than a way to follow one. An older client sends no age at all;
+ * it still counts in `device_days` and is absent from `device_ages`.
+ */
+export const AGE_BUCKETS = ['new', '1-3', '4-6', '7-13', '14-29', '30+'] as const;
+
 type PlayEvent = {
   event: 'play' | 'complete' | 'error' | 'fallback';
   reciter: string;
@@ -34,6 +43,8 @@ type PlayEvent = {
 /** A device saying "a consenting device opened the app today"; it carries nothing else. */
 type DeviceEvent = {
   event: 'device';
+  /** Optional: clients before 1.13.16 do not send it. */
+  age?: (typeof AGE_BUCKETS)[number];
   version: string;
   locale: (typeof LOCALES)[number];
 };
@@ -60,6 +71,7 @@ const ALLOWED_KEYS = new Set([
   'msToPlay',
   'version',
   'locale',
+  'age',
 ]);
 
 /** Ninety days of raw rows; the daily counts outlive them. */
@@ -114,16 +126,31 @@ function assertEvent(input: unknown): TelemetryEvent {
     throw new InvalidEvent('bad version');
   if (!LOCALES.includes(raw.locale as never)) throw new InvalidEvent('unknown locale');
 
-  if (raw.event === 'device' || raw.event === 'first_play') {
+  if (raw.event === 'device') {
     // The shape is the promise: a counting event with a reciter on it would be a
     // listening event wearing the wrong verb.
     for (const key of ['reciter', 'surah', 'source', 'errorCode', 'msToPlay']) {
-      if (key in raw) throw new InvalidEvent(`a ${raw.event} event carries no ${key}`);
+      if (key in raw) throw new InvalidEvent(`a device event carries no ${key}`);
+    }
+    if (raw.age !== undefined && !AGE_BUCKETS.includes(raw.age as never)) {
+      throw new InvalidEvent('unknown device age');
     }
     return {
-      event: raw.event,
+      event: 'device',
+      ...(raw.age !== undefined ? { age: raw.age as DeviceEvent['age'] } : {}),
       version: raw.version,
       locale: raw.locale as DeviceEvent['locale'],
+    };
+  }
+
+  if (raw.event === 'first_play') {
+    for (const key of ['reciter', 'surah', 'source', 'errorCode', 'msToPlay', 'age']) {
+      if (key in raw) throw new InvalidEvent(`a first_play event carries no ${key}`);
+    }
+    return {
+      event: 'first_play',
+      version: raw.version,
+      locale: raw.locale as FirstPlayEvent['locale'],
     };
   }
 
@@ -206,9 +233,11 @@ export class TelemetryService {
     );
     let devices = 0;
     let listeners = 0;
+    const ages = new Map<(typeof AGE_BUCKETS)[number], number>();
     for (const event of events) {
       if (event.event === 'device') {
         devices += 1;
+        if (event.age) ages.set(event.age, (ages.get(event.age) ?? 0) + 1);
         continue;
       }
       if (event.event === 'first_play') {
@@ -237,6 +266,13 @@ export class TelemetryService {
            ON CONFLICT(day) DO UPDATE SET devices = devices + excluded.devices`,
         )
         .run(day, devices);
+    }
+    if (ages.size > 0) {
+      const upsertAge = this.db.prepare(
+        `INSERT INTO device_ages (day, age, devices) VALUES (?, ?, ?)
+         ON CONFLICT(day, age) DO UPDATE SET devices = devices + excluded.devices`,
+      );
+      for (const [age, count] of ages) upsertAge.run(day, age, count);
     }
     if (listeners > 0) {
       this.db
@@ -408,6 +444,7 @@ export class TelemetryService {
     };
     devices: { day: string; devices: number }[];
     listeners: { day: string; listeners: number }[];
+    deviceAges: { day: string; age: string; devices: number }[];
     lastPrunedAt: string | null;
   } {
     const window = Math.min(Math.max(days, 1), RETENTION_DAYS);
@@ -582,6 +619,13 @@ export class TelemetryService {
       .prepare('SELECT day, devices FROM device_days WHERE day >= ? ORDER BY day')
       .all(sinceDay) as { day: string; devices: number }[];
 
+    // The age mix per day, from the clients new enough to send a range. It can sum
+    // to fewer devices than `device_days`: a device that reported before the age
+    // shipped has no bucket, and the screen says so rather than assuming "new".
+    const deviceAges = this.db
+      .prepare('SELECT day, age, devices FROM device_ages WHERE day >= ? ORDER BY day, age')
+      .all(sinceDay) as { day: string; age: string; devices: number }[];
+
     // The other half of the same funnel, and it obeys the same rule: no filter,
     // because a listener report has neither a reciter nor a source.
     const listeners = this.db
@@ -597,6 +641,7 @@ export class TelemetryService {
       volume: { serverBytes: serverTotal, torrentBytes: torrentTotal, byReciter },
       devices,
       listeners,
+      deviceAges,
       lastPrunedAt: this.lastPrunedAt(),
     };
   }

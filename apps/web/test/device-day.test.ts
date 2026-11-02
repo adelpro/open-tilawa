@@ -3,8 +3,10 @@ import { test } from 'node:test';
 
 import {
   markDeviceDay,
+  markFirstSeen,
   markListenDay,
   readDeviceDay,
+  readFirstSeen,
   readListenDay,
   shouldReportDevice,
   utcDay,
@@ -75,4 +77,14 @@ test('a blocked store asks again rather than inventing an answer', () => {
   assert.equal(readDeviceDay(blocked), null);
   assert.doesNotThrow(() => markDeviceDay('2026-10-30', blocked));
   assert.equal(shouldReportDevice(readDeviceDay(blocked), '2026-10-30'), true);
+});
+
+test('the first-open date is local and written once', () => {
+  const store = memory();
+  assert.equal(readFirstSeen(store), null);
+  markFirstSeen('2026-10-30', store);
+  assert.equal(readFirstSeen(store), '2026-10-30');
+  // A second report does not move the date: age is measured from the first.
+  markFirstSeen('2026-11-02', store);
+  assert.equal(readFirstSeen(store), '2026-11-02');
 });

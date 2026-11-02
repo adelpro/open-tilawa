@@ -30,6 +30,8 @@ export const STORAGE_KEYS = {
   telemetry: `${NS}:telemetry`,
   telemetryDeviceDay: `${NS}:telemetry-device-day`,
   telemetryListenDay: `${NS}:telemetry-listen-day`,
+  /** The UTC day this browser first reported a device event; never sent as a date. */
+  telemetryFirstSeen: `${NS}:telemetry-first-seen`,
   /** `on` | `off` — whether this device shares pieces with other listeners. */
   seed: `${NS}:seed`,
 } as const;

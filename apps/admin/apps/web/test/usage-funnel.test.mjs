@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { funnelRows, playedShare } from '../src/lib/usage-funnel.ts';
+import { funnelRows, playedShare, returningDevices } from '../src/lib/usage-funnel.ts';
 
 /**
  * The launch funnel: devices that opened the app, devices that played, and the
@@ -61,5 +61,30 @@ describe('playedShare', () => {
     // A device that cleared its storage can report a second "first play" without
     // a second "device": the honest reading is a floor, not 150%.
     assert.equal(playedShare(6, 4), 1);
+  });
+});
+
+describe('returningDevices', () => {
+  it('reads the latest day that reported an age, not the window total', () => {
+    const result = returningDevices([
+      { day: '2026-10-31', age: 'new', devices: 5 },
+      { day: '2026-11-01', age: 'new', devices: 2 },
+      { day: '2026-11-01', age: '7-13', devices: 3 },
+      { day: '2026-11-01', age: '30+', devices: 1 },
+    ]);
+    assert.deepEqual(result, { day: '2026-11-01', returning: 4, known: 6 });
+  });
+
+  it('counts an unknown age as known but not as returning', () => {
+    const result = returningDevices([
+      { day: '2026-11-01', age: 'new', devices: 1 },
+      { day: '2026-11-01', age: 'unknown', devices: 4 },
+    ]);
+    assert.deepEqual(result, { day: '2026-11-01', returning: 0, known: 5 });
+  });
+
+  it('says nothing when no device reported an age', () => {
+    assert.equal(returningDevices([]), null);
+    assert.equal(returningDevices([{ day: '2026-11-01', age: 'new', devices: 0 }]), null);
   });
 });

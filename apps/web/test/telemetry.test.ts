@@ -133,9 +133,10 @@ test('an error event carries the media error by name, never the code number', ()
 });
 
 test('a device event carries the day\'s verb and nothing that could identify it', () => {
-  const event = deviceEvent({ version: '1.12.2', locale: 'ar' });
-  assert.deepEqual(event, { event: 'device', version: '1.12.2', locale: 'ar' });
-  assert.deepEqual(Object.keys(event).sort(), ['event', 'locale', 'version']);
+  const event = deviceEvent({ version: '1.12.2', locale: 'ar', age: '7-13' });
+  assert.deepEqual(event, { event: 'device', age: '7-13', version: '1.12.2', locale: 'ar' });
+  // The age is a range, not a date and not a key: nothing here joins two days.
+  assert.deepEqual(Object.keys(event).sort(), ['age', 'event', 'locale', 'version']);
 });
 
 test('the first play of the day says only that it played, and which build', () => {
@@ -149,7 +150,7 @@ test('a device event is batched like any other, and dropped when the switch is o
   const sent: TelemetryEvent[][] = [];
   const telemetry = createTelemetry({ enabled: () => true, send: async (batch) => void sent.push(batch) });
 
-  telemetry.record(deviceEvent({ version: '1.12.2', locale: 'en' }));
+  telemetry.record(deviceEvent({ version: '1.12.2', locale: 'en', age: 'new' }));
   await telemetry.flush();
 
   assert.equal(sent.length, 1);

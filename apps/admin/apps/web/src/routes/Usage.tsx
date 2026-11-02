@@ -8,7 +8,7 @@ import { Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
-import { funnelRows, playedShare } from '../lib/usage-funnel';
+import { funnelRows, playedShare, returningDevices } from '../lib/usage-funnel';
 import { readFolded, writeFolded, type Folded, type UsagePanel } from '../lib/usage-fold';
 import {
   nextSort,
@@ -40,6 +40,7 @@ type Summary = {
   };
   devices: { day: string; devices: number }[];
   listeners: { day: string; listeners: number }[];
+  deviceAges: { day: string; age: string; devices: number }[];
   lastPrunedAt: string | null;
 };
 
@@ -267,6 +268,7 @@ export function Usage(): ReactElement {
   // The newest row can be yesterday's if nobody has reported today; the header
   // claims "today", so it must read today or say nothing.
   const today = new Date().toISOString().slice(0, 10);
+  const returning = useMemo(() => returningDevices(summary?.deviceAges ?? []), [summary]);
   const todayRow = funnel.find((row) => row.day === today);
   const reportedToday = todayRow?.devices ?? 0;
   const listenedToday = todayRow?.listeners ?? 0;
@@ -510,6 +512,18 @@ export function Usage(): ReactElement {
           >
             <p>{t('usage.devicesToday', { count: String(reportedToday) })}</p>
             <p>{t('usage.listeners', { count: String(listenedToday) })}</p>
+            {returning ? (
+              <>
+                <p>
+                  {t('usage.returning')}:{' '}
+                  {t('usage.returningOf', {
+                    returning: String(returning.returning),
+                    known: String(returning.known),
+                  })}
+                </p>
+                <p className="muted">{t('usage.returningNote')}</p>
+              </>
+            ) : null}
             <TrendBars rows={funnel} />
             <div className="table-scroll">
               <table className="table">

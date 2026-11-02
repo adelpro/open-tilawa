@@ -46,3 +46,31 @@ export function playedShare(listeners: number, devices: number): number | null {
   if (!Number.isFinite(devices) || devices <= 0) return null;
   return Math.min(1, Math.max(0, listeners / devices));
 }
+
+export type AgeRow = { day: string; age: string; devices: number };
+
+/** The buckets that count as "came back a week later". Mirrors the client's. */
+const RETURNING = new Set(['7-13', '14-29', '30+']);
+
+/**
+ * The returning share of the latest day that reported an age.
+ *
+ * `deviceAges` counts devices by range; a device that reported before the age
+ * shipped has no row, so the denominator is the devices that did report one —
+ * never `device_days`, which would silently treat "not reported" as "new".
+ * Returns null on a day with no known age, so the screen can say nothing rather
+ * than 0%.
+ */
+export function returningDevices(
+  rows: readonly AgeRow[],
+): { day: string; returning: number; known: number } | null {
+  if (rows.length === 0) return null;
+  const latest = rows.reduce((max, row) => (row.day > max ? row.day : max), '');
+  const dayRows = rows.filter((row) => row.day === latest);
+  const known = dayRows.reduce((sum, row) => sum + Math.max(0, row.devices), 0);
+  if (known <= 0) return null;
+  const returning = dayRows
+    .filter((row) => RETURNING.has(row.age))
+    .reduce((sum, row) => sum + Math.max(0, row.devices), 0);
+  return { day: latest, returning, known };
+}
