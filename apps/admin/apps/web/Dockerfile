@@ -9,8 +9,13 @@ COPY apps/web/package.json ./apps/web/package.json
 COPY libs/core/package.json ./libs/core/package.json
 RUN yarn install
 COPY tsconfig.base.json ./
+# The root ESLint config is not otherwise in the build context, so a lint step
+# here would fail with "couldn't find eslint.config" (v9 does not fall back to
+# .eslintrc). Keep it next to the workspaces it lints.
+COPY eslint.config.mjs ./eslint.config.mjs
 COPY libs/core ./libs/core
 COPY apps/web ./apps/web
+RUN yarn workspace @tilawa-admin/web lint
 RUN yarn workspace @tilawa-admin/core build && yarn workspace @tilawa-admin/web build
 
 FROM nginx:alpine

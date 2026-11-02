@@ -10,12 +10,18 @@ COPY apps/api/package.json ./apps/api/package.json
 COPY libs/core/package.json ./libs/core/package.json
 RUN yarn install
 COPY tsconfig.base.json ./
+COPY eslint.config.mjs ./eslint.config.mjs
 COPY libs/core ./libs/core
 COPY apps/api ./apps/api
+# test/openapi.spec.ts compares the live document with the committed contract.
+# Without this copy the spec ENOENTs inside the image even though the file is
+# tracked in git.
+COPY docs ./docs
 # A stale *.tsbuildinfo shipped in the context makes tsc emit a PARTIAL dist
 # (only the files it thinks changed), which then fails to resolve. .dockerignore
 # excludes them; this is the belt to that braces.
 RUN rm -f libs/core/*.tsbuildinfo apps/api/*.tsbuildinfo
+RUN yarn workspace @tilawa-admin/core lint && yarn workspace @tilawa-admin/api lint
 # The api imports @tilawa-admin/core, so the shared library is built first — at runtime
 # the workspace dependency resolves to libs/core/dist, migrations included.
 RUN yarn workspace @tilawa-admin/core build && yarn workspace @tilawa-admin/api build

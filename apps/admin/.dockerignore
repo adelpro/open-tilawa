@@ -7,7 +7,10 @@ dist
 **/dist
 data
 backup
-docs
+# docs/ is not needed at runtime, but the API's openapi.spec compares the live
+# contract with the committed docs/openapi.json; ship only that file.
+docs/*
+!docs/openapi.json
 coverage
 *.tsbuildinfo
 .git
