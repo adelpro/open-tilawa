@@ -207,7 +207,12 @@ def main() -> None:
     # has to stay well inside it.
     square(mark, 512, 0.50, WHITE).save(PUBLIC / 'icons' / 'maskable-512.png')
 
-    share_card(mark).save(PUBLIC / 'og.png')
+    card = share_card(mark)
+    # Link previews are cached immutably for a year at the edge, so a deploy
+    # does not replace an old card. Ship a versioned name and bump it whenever
+    # the artwork or the domain changes; keep og.png for links already shared.
+    card.save(PUBLIC / 'og.png')
+    card.save(PUBLIC / 'og-2026-11.png')
 
 
 if __name__ == '__main__':

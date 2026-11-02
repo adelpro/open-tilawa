@@ -109,7 +109,7 @@ function page({ locale, path, title, description, index, body, jsonLd, canonical
     <meta property="og:url" content="${url}" />
     <meta property="og:title" content="${escape(title)}" />
     <meta property="og:description" content="${escape(description)}" />
-    <meta property="og:image" content="${SITE}/og.png" />
+    <meta property="og:image" content="${SITE}/og-2026-11.png" />
     <meta name="twitter:card" content="summary_large_image" />
     ${shellHead}
     ${assets.join('\n    ')}
