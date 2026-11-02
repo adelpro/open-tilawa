@@ -25,7 +25,7 @@ import { ensureAnalyser } from '@/utils/audio-analyser';
 import { APP_VERSION } from '@/constants/version';
 import { errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
 import { streamSourceFor, telemetrySource } from '@/utils/stream-source';
-import { mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
+import { choosePlaybackSource, mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
 import { sameRelease } from '@/utils/release';
 import { surahIdOf } from '@/utils/surah-id';
 
@@ -213,6 +213,12 @@ export default function AudioEngine({
 
     const file = liveTrack.file;
     const streamURL = getStreamURL(file);
+    const directURL = mediaUrlForFile(window.location.origin, torrentInfo?.name, file);
+    const chosen = choosePlaybackSource({
+      streaming: torrentInfo?.streaming !== false,
+      streamURL,
+      directURL,
+    });
 
     // One surah in flight: the previous file stops competing for pieces.
     if (file !== selectedFileRef.current) {
@@ -224,17 +230,21 @@ export default function AudioEngine({
       selectedFileRef.current = null;
     }
 
-    if (streamURL) {
+    if (!chosen) return;
+    if (chosen.direct) {
+      // No streaming server (in-app browsers): play the node's own file.
+      setDirectFallback(true);
+    } else {
       try {
         file?.select?.();
       } catch {
         // ignore
       }
       selectedFileRef.current = file;
-      audio.src = streamURL;
-      audio.load();
     }
-  }, [surahId, liveTrack, reciter]);
+    audio.src = chosen.url;
+    audio.load();
+  }, [surahId, liveTrack, reciter, torrentInfo?.name, torrentInfo?.streaming]);
 
   /** Play / pause. Deliberately does not re-assign src. */
   useEffect(() => {
@@ -436,6 +446,7 @@ export default function AudioEngine({
         // element refuses it outright, the node still has the same file over
         // HTTP. One retry per surah, and only for a source-level failure.
         if (
+          !directFallback &&
           direct &&
           shouldRetryDirect({ code, alreadyTried: retriedRef.current === retryKey })
         ) {

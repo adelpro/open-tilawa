@@ -12,5 +12,7 @@ export type TorrentInfo = {
   peers: number;
   /** `active` once this torrent also pulls from the `/media` web seed. */
   webSeed: 'off' | 'active';
+  /** True when `file.streamURL` can answer: the service worker created a server. */
+  streaming: boolean;
   ready: boolean;
 };

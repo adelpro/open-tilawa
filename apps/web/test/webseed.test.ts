@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
+  choosePlaybackSource,
   mediaBase,
   mediaFileUrl,
   mediaUrlForFile,
@@ -89,4 +90,31 @@ test('only a source-level failure is retried against the direct file', () => {
   assert.equal(shouldRetryDirect({ ...base, code: undefined }), false);
   // One retry per surah: a second failure is the real error.
   assert.equal(shouldRetryDirect({ ...base, alreadyTried: true }), false);
+});
+
+test('the direct file is the source when the streaming server is missing', () => {
+  const streamURL = 'https://tilawah.cc/webtorrent/hash/Folder/002.mp3';
+  const directURL = 'https://tilawah.cc/media/Folder/002.mp3';
+
+  // Normal browser: the service worker owns the stream.
+  assert.deepEqual(
+    choosePlaybackSource({ streaming: true, streamURL, directURL }),
+    { url: streamURL, direct: false },
+  );
+  // In-app browser with no service worker: never leave the element empty. The
+  // node's own file is the same audio, over plain HTTP.
+  assert.deepEqual(
+    choosePlaybackSource({ streaming: false, streamURL, directURL }),
+    { url: directURL, direct: true },
+  );
+  // A stream URL that exists while the server does not is not usable.
+  assert.deepEqual(
+    choosePlaybackSource({ streaming: false, streamURL }),
+    null,
+  );
+  assert.deepEqual(
+    choosePlaybackSource({ streaming: true, directURL }),
+    { url: directURL, direct: true },
+  );
+  assert.equal(choosePlaybackSource({ streaming: true }), null);
 });

@@ -76,6 +76,30 @@ export function mediaUrlForFile(
 }
 
 /**
+ * The source the audio element should point at.
+ *
+ * The service-worker stream is the fast path, but it only exists when a worker
+ * controls the page. Facebook and Instagram in-app browsers on iOS often start
+ * without one; refusing to play there is what made the app look unreachable.
+ * `directURL` is the same file over plain HTTP, so it can carry the first listen
+ * while the worker settles — or forever, if the browser never gives it one.
+ */
+export function choosePlaybackSource(input: {
+  streaming: boolean;
+  streamURL?: string;
+  directURL?: string;
+}): { url: string; direct: boolean } | null {
+  if (input.streaming && input.streamURL) {
+    return { url: input.streamURL, direct: false };
+  }
+  if (input.directURL) {
+    return { url: input.directURL, direct: true };
+  }
+  // A stream URL without the server that answers it is not a source.
+  return null;
+}
+
+/**
  * When the element refuses the service-worker stream, is the direct file worth
  * one try?
  *

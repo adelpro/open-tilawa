@@ -69,12 +69,10 @@ export default function useTorrent() {
       const localClient = await getWebTorrentClient();
       if (cancelled) return;
 
-      if (!hasStreamingServer(localClient)) {
-        setError(
-          "Streaming is unavailable: the service worker could not start (needs HTTPS or localhost).",
-        );
-        return;
-      }
+      // The streaming server is an optimization, not a requirement: without a
+      // worker the same file is still available over HTTP. Keep the torrent so
+      // the file list and web seed exist; the audio engine chooses the source.
+      const streaming = hasStreamingServer(localClient);
 
       // The session owns the torrent. Three components call this hook and the
       // WebTorrent client is a singleton, so adding here per component is what
@@ -125,6 +123,7 @@ export default function useTorrent() {
           progress: torrent.progress,
           peers: realPeers(),
           webSeed: webSeedAdded ? 'active' : 'off',
+          streaming,
           files,
           ready: true,
         });
