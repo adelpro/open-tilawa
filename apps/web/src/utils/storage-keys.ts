@@ -34,6 +34,8 @@ export const STORAGE_KEYS = {
   telemetryFirstSeen: `${NS}:telemetry-first-seen`,
   /** `on` | `off` — whether this device shares pieces with other listeners. */
   seed: `${NS}:seed`,
+  /** Output level 0–1. Device-local: the room, not the account, sets it. */
+  volume: `${NS}:volume`,
 } as const;
 
 /**
