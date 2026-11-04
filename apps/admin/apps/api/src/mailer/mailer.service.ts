@@ -114,8 +114,14 @@ export class MailerService {
     return this.configService.get<string>('WEBSITE') ?? 'http://localhost:9320';
   }
 
+  /** The public site, where the logo and the brand link in every mail point. */
+  private get publicSite(): string {
+    return this.configService.get<string>('PUBLIC_SITE') ?? 'https://tilawah.cc';
+  }
+
   private fill(template: string, values: Record<string, string>): string {
-    return Object.entries(values).reduce(
+    // `PUBLIC_SITE` is the same for every mail, so a template cannot forget it.
+    return Object.entries({ PUBLIC_SITE: this.publicSite, ...values }).reduce(
       (html, [key, value]) => html.split(`{{${key}}}`).join(value),
       template,
     );
