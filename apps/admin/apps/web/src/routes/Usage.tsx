@@ -9,6 +9,7 @@ import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
 import { funnelRows, playedShare, returningDevices } from '../lib/usage-funnel';
+import { periodStats } from '../lib/usage-period';
 import { readFolded, writeFolded, type Folded, type UsagePanel } from '../lib/usage-fold';
 import {
   nextSort,
@@ -269,6 +270,28 @@ export function Usage(): ReactElement {
   // claims "today", so it must read today or say nothing.
   const today = new Date().toISOString().slice(0, 10);
   const returning = useMemo(() => returningDevices(summary?.deviceAges ?? []), [summary]);
+
+  /**
+   * The window, not only today. Two separate series, so two separate read-outs:
+   * the days each one reported, its busiest day, its average over the days that
+   * did report, and the newest report — which can be yesterday or older.
+   *
+   * Never a total: a daily row counts devices, not days, so adding the rows
+   * would report one phone once for every day it opened the app.
+   */
+  const openedPeriod = useMemo(
+    () =>
+      periodStats((summary?.devices ?? []).map((row) => ({ day: row.day, count: row.devices }))),
+    [summary],
+  );
+  const playedPeriod = useMemo(
+    () =>
+      periodStats(
+        (summary?.listeners ?? []).map((row) => ({ day: row.day, count: row.listeners })),
+      ),
+    [summary],
+  );
+
   const todayRow = funnel.find((row) => row.day === today);
   const reportedToday = todayRow?.devices ?? 0;
   const listenedToday = todayRow?.listeners ?? 0;
@@ -524,6 +547,40 @@ export function Usage(): ReactElement {
                 <p className="muted">{t('usage.returningNote')}</p>
               </>
             ) : null}
+
+            <p className="muted">{t('usage.periodNote')}</p>
+            <div className="table-scroll">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('usage.periodMeasure')}</th>
+                    <th scope="col">{t('usage.periodDays')}</th>
+                    <th scope="col">{t('usage.periodBest')}</th>
+                    <th scope="col">{t('usage.periodAverage')}</th>
+                    <th scope="col">{t('usage.periodLast')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: t('usage.periodOpened'), stats: openedPeriod },
+                    { label: t('usage.periodPlayed'), stats: playedPeriod },
+                  ].map(({ label, stats }) => (
+                    <tr key={label}>
+                      <td>{label}</td>
+                      <td className="num">{stats.days}</td>
+                      <td>
+                        {stats.best
+                          ? `${stats.best.count} · ${shortDate(stats.best.day, locale)}`
+                          : '—'}
+                      </td>
+                      <td className="num">{stats.days === 0 ? '—' : stats.average}</td>
+                      <td>{stats.latest ? shortDate(stats.latest.day, locale) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
             <TrendBars rows={funnel} />
             <div className="table-scroll">
               <table className="table">

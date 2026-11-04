@@ -13,6 +13,7 @@ import { Modal } from '../components/Modal';
 import { Panel } from '../components/Panel';
 import { SkeletonRows } from '../components/Skeleton';
 import { Tabs } from '../components/Tabs';
+import { readTab, writeTab } from '../lib/tab-memory';
 
 type Tab = 'users' | 'audit';
 
@@ -43,7 +44,13 @@ const STATUS_KEY = {
 export function AdminConsole({ isSuper }: { isSuper: boolean }): ReactElement {
   const { t, locale } = useI18n();
   const { user: currentUser } = useSession();
-  const [tab, setTab] = useState<Tab>('users');
+  const [tab, setTabState] = useState<Tab>(() =>
+    readTab('admin-console', ['users', 'audit'], 'users'),
+  );
+  const setTab = (id: Tab): void => {
+    setTabState(id);
+    writeTab('admin-console', id);
+  };
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'admin' | 'super_admin'>('all');

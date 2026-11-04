@@ -3,7 +3,8 @@ import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { SessionProvider, useSession } from './lib/session';
 import { LocaleProvider, useI18n } from './lib/i18n';
 import { ThemeProvider } from './lib/theme.tsx';
-import { navigate, useRouter } from './lib/router';
+import { navigate, BASE, useRouter } from './lib/router';
+import { readLastPath, rememberablePath, restorablePath, writeLastPath } from './lib/last-route';
 import { navItemsFor, consolePathFor } from './lib/nav';
 import type { AppRole } from './lib/nav';
 import { readFolded, writeFolded } from './lib/nav-fold';
@@ -70,6 +71,7 @@ function Screens(): ReactElement {
   const menuButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const restoredPath = useRef(false);
   const closeMenu = (): void => setMenuOpen(false);
 
   // A provider sign-in ends with a redirect carrying `?auth=<provider>`. Record it
@@ -117,6 +119,25 @@ function Screens(): ReactElement {
   useEffect(() => {
     setMenuOpen(false);
   }, [path]);
+
+  // Remember the screen, so the next open lands where this one left off. The
+  // bare /console is a door, not a destination, so it is never remembered.
+  useEffect(() => {
+    const next = rememberablePath(path);
+    if (next) writeLastPath(next);
+  }, [path]);
+
+  // The other half: an installed app and a bookmark both open the bare
+  // /console, which used to mean Seeders. Restore once per load, at the first
+  // moment the role is known, so a later click on the brand still goes home.
+  // An explicit URL is left alone — the address always wins over storage.
+  useEffect(() => {
+    if (restoredPath.current || !user) return;
+    restoredPath.current = true;
+    if (path !== BASE) return;
+    const target = restorablePath(readLastPath(), user.role);
+    if (target) navigate(target, { replace: true });
+  }, [path, user]);
 
   // A super admin and an admin each have one console. A stale URL for the other one
   // is sent to the correct screen rather than rendering the wrong verb set.

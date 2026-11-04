@@ -9,8 +9,10 @@ import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Tabs } from '../components/Tabs';
+import { readTab, writeTab } from '../lib/tab-memory';
 
 type Tls = 'ssl' | 'starttls' | 'none';
+type SettingsTab = 'mail' | 'alerts';
 type AlertKind = 'service.down' | 'seeder.offline' | 'seeder.disk' | 'seeder.update_failed';
 
 interface MailState {
@@ -94,7 +96,13 @@ export function Settings(): ReactElement {
   const [message, setMessage] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [skipVerify, setSkipVerify] = useState(false);
-  const [tab, setTab] = useState<'mail' | 'alerts'>('mail');
+  const [tab, setTabState] = useState<SettingsTab>(() =>
+    readTab('settings', ['mail', 'alerts'], 'mail'),
+  );
+  const setTab = (id: SettingsTab): void => {
+    setTabState(id);
+    writeTab('settings', id);
+  };
 
   const load = useCallback(async () => {
     try {

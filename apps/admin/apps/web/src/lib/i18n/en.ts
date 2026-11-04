@@ -61,6 +61,15 @@ export const en = {
     'The event carries no reciter and no source, so these numbers do not change with the filters.',
   'usage.devicesNote':
     'Each device reports at most once a day, with no identifier — the age range it carries is computed on the device and cannot join two days. The count is a floor, not a total — a device that switched statistics off is not in it — and it counts devices, never people.',
+  'usage.periodMeasure': 'Measure',
+  'usage.periodDays': 'Days reported',
+  'usage.periodBest': 'Busiest day',
+  'usage.periodAverage': 'Average on reporting days',
+  'usage.periodLast': 'Last report',
+  'usage.periodOpened': 'Opened the app',
+  'usage.periodPlayed': 'Started a play',
+  'usage.periodNote':
+    'The selected window, not only today. Each day is its own count of devices, so a device that opened on ten days is one device on each of them. The days are never added into a range total.',
   'usage.listeners': 'Devices that played today: {count}',
   'usage.listenersCount': 'Played',
   'usage.returning': 'Returning devices (7+ days)',

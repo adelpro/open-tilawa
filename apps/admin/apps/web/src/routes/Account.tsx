@@ -19,6 +19,10 @@ import { Chip, Notice } from '../components/Chip';
 import { GoogleMark, GitHubMark } from '../components/icons';
 import { Panel } from '../components/Panel';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { readTab, writeTab } from '../lib/tab-memory';
+
+const ACCOUNT_TABS = ['profile', 'photo', 'password'] as const;
+type AccountTab = (typeof ACCOUNT_TABS)[number];
 
 /**
  * The account itself: language, name, photo, password, the second factor, the
@@ -31,8 +35,15 @@ export function Account(): ReactElement {
   const { user, refresh, signOut } = useSession();
   const { t, locale, setLocale, saving } = useI18n();
   const [name, setName] = useState(user?.name ?? '');
-  type AccountTab = 'profile' | 'photo' | 'password';
-  const [tab, setTab] = useState<AccountTab>('profile');
+  const [tab, setTabState] = useState<AccountTab>(() =>
+    readTab('account', ACCOUNT_TABS, 'profile'),
+  );
+  // The tab is a preference: moving writes it, so a reload lands on the same
+  // panel instead of the first one.
+  const setTab = (id: AccountTab): void => {
+    setTabState(id);
+    writeTab('account', id);
+  };
   const [about, setAbout] = useState(user?.about ?? '');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
