@@ -236,10 +236,15 @@ addPage('/reciters', (locale, copy) => ({
   body:
     `<h1>${escape(copy.recitersPage.title)}</h1><p>${escape(copy.recitersPage.lede)}</p><ul>` +
     catalogue
-      .map(
-        (release) =>
-          `<li>${escape(release.nameAr ?? release.name)} — ${escape(riwayaLabel(release.riwaya))}</li>`,
-      )
+      .map((release) => {
+        const label = `${escape(release.nameAr ?? release.name)} — ${escape(riwayaLabel(release.riwaya))}`;
+        // The roster is the crawl path to every reciter page: a row without an anchor
+        // was invisible to Googlebot unless the sitemap had been processed, which is
+        // how one reciter got indexed and the other nine stayed unknown.
+        return release.slug
+          ? `<li><a href="${escape(urlFor(`/reciters/${release.slug}`, locale))}">${label}</a></li>`
+          : `<li>${label}</li>`;
+      })
       .join('') +
     '</ul>',
 }));

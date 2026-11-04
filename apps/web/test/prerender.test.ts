@@ -33,6 +33,19 @@ test('the sitemap lists the pages the table calls indexable', () => {
 });
 
 /**
+ * The roster is the crawl path. A reciter row that is not an anchor makes every page
+ * behind it depend on the sitemap being processed, which is how one got indexed and
+ * nine stayed "URL is unknown to Google".
+ */
+test('the roster links to every reciter page it lists', () => {
+  assert.match(
+    SOURCE,
+    /<li><a href="\$\{escape\(urlFor\(`\/reciters\/\$\{release\.slug\}`,\s*locale\)\)\}">/,
+    'a roster row without an anchor hides its reciter page from crawlers',
+  );
+});
+
+/**
  * Two languages, one page. The pair a crawler needs is the pair the router already
  * knows how to build — the build must not carry a second copy of the prefix rule.
  */
