@@ -156,13 +156,21 @@ async function checkSitemap(catalogue) {
   if (urls.length === 0) return fail('sitemap lists nothing');
   if (!xml.includes('xmlns:xhtml=')) fail('sitemap has no xhtml namespace, so alternates are invisible');
 
+  const isReciterDetail = (url) => /^\/reciters\/[^/]+$/.test(url.slice(SITE.length));
   const alternates = [...xml.matchAll(/<xhtml:link[^>]*hreflang="([a-z-]+)"[^>]*href="([^"]+)"/g)];
-  if (alternates.length !== urls.length * 3) {
-    fail(`${urls.length} URLs carry ${alternates.length} alternates, expected ${urls.length * 3}`);
-  } else pass(`${urls.length} URLs, 3 alternates each`);
+  const arabicOnly = urls.filter(isReciterDetail);
+  const paired = urls.length - arabicOnly.length;
+  if (alternates.length !== paired * 3) {
+    fail(
+      `${urls.length} URLs carry ${alternates.length} alternates, expected ${paired * 3} ` +
+        `(${arabicOnly.length} reciter pages are Arabic-only)`,
+    );
+  } else pass(`${paired} paired URLs, 3 alternates each; ${arabicOnly.length} reciter pages Arabic-only`);
 
   // Both languages of every page, and each one pointing at the same pair. The home
-  // page is the exception that proves the rule: its twin is `/en`, not `/en/`.
+  // page is the exception that proves the rule: its twin is `/en`, not `/en/`. A
+  // reciter page is the other exception: the English URL canonicalises to Arabic,
+  // so it is deliberately absent from the sitemap.
   const set = new Set(urls);
   const twinOf = (url) => {
     const path = url.slice(SITE.length) || '/';
@@ -170,17 +178,20 @@ async function checkSitemap(catalogue) {
   };
   const missingTwin = urls
     .filter((url) => !(url === `${SITE}/en` || url.startsWith(`${SITE}/en/`)))
+    .filter((url) => !isReciterDetail(url))
     .map(twinOf)
     .filter((twin) => !set.has(twin));
   if (missingTwin.length > 0) fail(`${missingTwin.length} Arabic URLs have no English twin, e.g. ${missingTwin[0]}`);
-  else pass('every Arabic URL has its English twin');
+  else pass('every paired Arabic URL has its English twin');
 
   // The pages the release is about, named explicitly: a sitemap can be well formed and
   // still be the one from three releases ago.
   const hubs = ['/', '/about', '/privacy', '/reciters', `/reciters/${catalogue[0].slug}`];
   for (const path of hubs) {
     if (!set.has(`${SITE}${path}`)) fail(`missing ${path} in the sitemap`);
-    if (!set.has(twinOf(`${SITE}${path}`))) fail(`missing the English twin of ${path} in the sitemap`);
+    if (!isReciterDetail(`${SITE}${path}`) && !set.has(twinOf(`${SITE}${path}`))) {
+      fail(`missing the English twin of ${path} in the sitemap`);
+    }
   }
 
   // A sitemap that lists a 404 is worse than a short one. Sample rather than hammer:
@@ -188,7 +199,11 @@ async function checkSitemap(catalogue) {
   const sample = [
     ...new Set([
       ...urls.filter((_, index) => index % 8 === 0),
-      ...hubs.flatMap((path) => [`${SITE}${path}`, twinOf(`${SITE}${path}`)]),
+      ...hubs.flatMap((path) =>
+        isReciterDetail(`${SITE}${path}`)
+          ? [`${SITE}${path}`]
+          : [`${SITE}${path}`, twinOf(`${SITE}${path}`)],
+      ),
     ]),
   ];
   let broken = 0;

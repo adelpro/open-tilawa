@@ -107,7 +107,20 @@ def main():
 
     check("no duplicate <loc>", len(locs) == len(set(locs)), f"{len(locs) - len(set(locs))} duplicate(s)")
     check("every <loc> is absolute https on this host", all(l.startswith(SITE + "/") or l == SITE + "/" for l in locs))
-    check("every URL lists itself as an alternate", all(groups[l].get("ar") == l or groups[l].get("en") == l for l in locs))
+    def is_reciter_detail(loc):
+        # Arabic is the indexed document; the English twin canonicalises to it and is
+        # deliberately absent, so this family carries no alternate group.
+        return re.fullmatch(re.escape(SITE) + r"/reciters/[^/]+", loc) is not None
+
+    paired = [l for l in locs if not is_reciter_detail(l)]
+    check(
+        "every paired URL lists itself as an alternate",
+        all(groups[l].get("ar") == l or groups[l].get("en") == l for l in paired),
+    )
+    check(
+        "reciter pages carry no alternate group",
+        all(not groups[l] for l in locs if is_reciter_detail(l)),
+    )
 
     # Reciprocal: the group each URL belongs to must be identical from every member.
     bad_reciprocal = []
