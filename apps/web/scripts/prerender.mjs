@@ -71,18 +71,34 @@ const urlFor = (path, locale) => `${SITE}${toUrl(parse(path), locale)}`;
 /** The name the page shows for the site, not a second spelling invented here. */
 const siteName = (locale) => (locale === 'ar' ? 'تلاوة' : 'Tilawah');
 
-function page({ locale, path, title, description, index, body, jsonLd, canonical = true }) {
+function page({
+  locale,
+  path,
+  title,
+  description,
+  index,
+  body,
+  jsonLd,
+  canonical = true,
+  canonicalUrl,
+  pair = true,
+}) {
   // One form per page, and it is the path the table declares — `/about`, not `/about/`.
   // The sitemap writes the same string, and nginx redirects the trailing-slash form to it.
   // A page with no canonical (the 404) has no language twin, so it names its own path.
   const url = canonical ? urlFor(path, locale) : `${SITE}${path}`;
+  // `og:url` stays the page's own address even when the canonical points at its twin:
+  // a share of the English page must land on the English page, not silently switch language.
+  const canonicalHref = canonicalUrl ?? url;
   const robots = index ? 'index, follow' : 'noindex, follow';
   // The pair, in the form Google reads: each language, plus the page a visitor with no
   // preference should land on. Arabic is x-default because it is the site's own language.
-  const alternates = canonical
+  // A pair is omitted when the two URLs are not equivalents; a canonicalised twin is not
+  // an alternate, and hreflang that names one contradicts the canonical.
+  const alternates = canonical && pair
     ? (() => {
-        const pair = alternatesFor(path);
-        return [['ar', pair.ar], ['en', pair.en], ['x-default', pair.ar]]
+        const targets = alternatesFor(path);
+        return [['ar', targets.ar], ['en', targets.en], ['x-default', targets.ar]]
           .map(([lang, target]) => `<link rel="alternate" hreflang="${lang}" href="${SITE}${target}" />`)
           .join('\n    ');
       })()
@@ -99,7 +115,7 @@ function page({ locale, path, title, description, index, body, jsonLd, canonical
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>${escape(title)}</title>
     <meta name="description" content="${escape(description)}" />
-    ${canonical ? `<link rel="canonical" href="${url}" />` : ''}
+    ${canonical ? `<link rel="canonical" href="${canonicalHref}" />` : ''}
     ${alternates}
     <meta name="robots" content="${robots}" />
     ${structuredData}
@@ -256,6 +272,7 @@ for (const release of catalogue) {
   if (!release.slug) continue;
   addPage(`/reciters/${release.slug}`, (locale, copy) => {
     const name = release.nameAr ?? release.name;
+    const arabicUrl = urlFor(`/reciters/${release.slug}`, 'ar');
     const rows = SURAHS.map(
       (surah) =>
         `<li><a href="${toUrl(
@@ -272,10 +289,19 @@ for (const release of catalogue) {
       title: `${name} — Tilawah`,
       description: copy.reciterPage.lede(name),
       index: indexable('reciter'),
+      // The English page translates the chrome, not the reciter's name and not the
+      // 114 links, so Google reads it as a thin twin of the Arabic page and served it
+      // as a soft 404. Arabic is the document; the English twin canonicalises to it and
+      // stays out of the sitemap until Phase 5 gives the English pages content of their own.
+      canonicalUrl: locale === 'en' ? arabicUrl : undefined,
+      sitemap: locale === 'ar',
+      // Not a language pair: one of the two URLs is a canonicalised twin, and hreflang
+      // naming it would contradict the canonical on the page.
+      pair: false,
       jsonLd: breadcrumbTrail([
         { name: siteName(locale), url: urlFor('/', locale) },
         { name: copy.recitersPage.title, url: urlFor('/reciters', locale) },
-        { name, url: urlFor(`/reciters/${release.slug}`, locale) },
+        { name, url: arabicUrl },
       ]),
       body:
         `<h1>${escape(name)}</h1>` +
@@ -309,7 +335,9 @@ for (const release of catalogue) {
   }
 }
 
-const listed = pages.filter((entry) => entry.index);
+// `sitemap: false` drops a page that is still crawlable and still index-eligible but
+// canonically points at another URL: listing it would ask Google to index the twin.
+const listed = pages.filter((entry) => entry.index && entry.sitemap !== false);
 writeFileSync(
   join(DIST, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
@@ -318,14 +346,18 @@ ${listed
   .map((entry) => {
     // Both languages, each with the pair spelled out: this is the half of hreflang a
     // crawler can read without loading either page, and the only place it can learn
-    // that `/about` and `/en/about` are one document in two languages.
-    const pair = alternatesFor(entry.path);
-    return `  <url>
-    <loc>${urlFor(entry.path, entry.locale)}</loc>
-    <lastmod>${TODAY}</lastmod>
+    // that `/about` and `/en/about` are one document in two languages. A page whose
+    // twin canonicalises to it (the reciter family) has no pair to declare.
+    const pair = entry.pair === false ? null : alternatesFor(entry.path);
+    const alternates = pair
+      ? `
     <xhtml:link rel="alternate" hreflang="ar" href="${SITE}${pair.ar}" />
     <xhtml:link rel="alternate" hreflang="en" href="${SITE}${pair.en}" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${pair.ar}" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${pair.ar}" />`
+      : '';
+    return `  <url>
+    <loc>${urlFor(entry.path, entry.locale)}</loc>
+    <lastmod>${TODAY}</lastmod>${alternates}
   </url>`;
   })
   .join('\n')}

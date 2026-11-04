@@ -27,9 +27,26 @@ test('indexability is read from the route table, never written into the build', 
 });
 
 test('the sitemap lists the pages the table calls indexable', () => {
-  // The sitemap is `pages.filter(entry => entry.index)` and every entry's `index` comes
-  // from the helper above, so the filter is the table. Asserted on the filter's shape.
-  assert.match(SOURCE, /pages\.filter\(\(entry\) => entry\.index\)/);
+  // The sitemap is the table's `index`, minus pages that canonicalise elsewhere. Every
+  // entry's `index` still comes from the helper above, so the filter is the table plus
+  // the one legitimate exception: a crawlable page that is not a document of its own.
+  assert.match(SOURCE, /pages\.filter\(\(entry\) => entry\.index && entry\.sitemap !== false\)/);
+});
+
+/**
+ * The English reciter page is a translation of the chrome around the same Arabic name
+ * and the same 114 links. Google read it as a thin twin and served a soft 404; the
+ * Arabic page is the document, so the English URL canonicalises to it and the pair is
+ * not declared. Revisit in Phase 5, when the English pages get content of their own.
+ */
+test('the English reciter page canonicalises to Arabic and leaves the sitemap', () => {
+  assert.match(SOURCE, /canonicalUrl: locale === 'en' \? arabicUrl : undefined/);
+  assert.match(SOURCE, /sitemap: locale === 'ar'/);
+  assert.match(SOURCE, /pair: false/);
+  // The canonical tag is the override, not the page's own address.
+  assert.match(SOURCE, /<link rel="canonical" href="\$\{canonicalHref\}" \/>/);
+  // A canonicalised twin is not an alternate; the sitemap omits its xhtml links.
+  assert.match(SOURCE, /entry\.pair === false \? null : alternatesFor\(entry\.path\)/);
 });
 
 /**
