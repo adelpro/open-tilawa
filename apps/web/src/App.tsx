@@ -18,6 +18,7 @@ import { useReciters } from './hooks/use-reciters';
 import { resolveDeepLink } from './utils/deep-link';
 import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
+import { useTheatre } from './hooks/use-theatre';
 import { useSleepTimer } from './hooks/use-sleep-timer';
 import { useLocale } from './hooks/use-locale';
 import { useTheme } from './hooks/use-theme';
@@ -78,7 +79,14 @@ export default function App() {
     openKeys,
     close,
   } = useSheet();
+  const theatre = useTheatre();
   const setIsPlaying = useSetAtom(isPlayingAtom);
+
+  /** The overlay belongs to the player screen; leaving it must not strand the chrome. */
+  const playerRoute = route.name === 'home' || route.name === 'listen';
+  useEffect(() => {
+    if (!playerRoute) theatre.exit();
+  }, [playerRoute, theatre.exit]);
 
   /**
    * A `/listen/<release>/<surah>` link opens that recitation, paused.
@@ -287,17 +295,22 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="app-shell" data-panel={sheet ? 'open' : 'closed'}>
-        <TopBar
-          isHome={route.name === 'home'}
-          menuOpen={menuOpen}
-          onToggleMenu={() => setMenuOpen((open) => !open)}
-          onOpenSurahs={openSurahs}
-          onOpenReciters={openReciters}
-          onOpenKeys={openKeys}
-          onOpenAccount={() => setAccountOpen(true)}
-        />
-
+      <div
+        className="app-shell"
+        data-panel={sheet ? 'open' : 'closed'}
+        data-theatre={theatre.active ? 'on' : 'off'}
+      >
+        {theatre.active ? null : (
+          <TopBar
+            isHome={route.name === 'home'}
+            menuOpen={menuOpen}
+            onToggleMenu={() => setMenuOpen((open) => !open)}
+            onOpenSurahs={openSurahs}
+            onOpenReciters={openReciters}
+            onOpenKeys={openKeys}
+            onOpenAccount={() => setAccountOpen(true)}
+          />
+        )}
         {route.name === 'reciters' ? (
           <RecitersPage />
         ) : route.name === 'reciter' ? (
@@ -337,6 +350,9 @@ export default function App() {
             close={close}
             onOpenMenu={() => setMenuOpen(true)}
             route={route}
+            theatre={theatre.active}
+            onToggleTheatre={theatre.toggle}
+            onExitTheatre={theatre.exit}
           />
         )}
 

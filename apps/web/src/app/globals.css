@@ -492,6 +492,158 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
+/* ---------- theatre (fullscreen) ---------- */
+
+/*
+ * The listener asked for the recitation alone: the bar and the mini-player are
+ * the two things that leave. The desk keeps the surah, the reciter, the
+ * spectrum and the transport, and centres in the screen that is left. The
+ * top padding clears the floating exit control, which stays put when a short
+ * landscape screen has to scroll.
+ */
+.app-shell[data-theatre='on'] {
+  height: 100dvh;
+}
+
+.app-shell[data-theatre='on'] .desk {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Keep the first/last child reachable on a short landscape screen: plain
+     centring shifts the top out of the scroll box, where scrollTop cannot go. */
+  justify-content: safe center;
+  min-height: 0;
+  padding-top: calc(64px + env(safe-area-inset-top));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+/* Fixed to the viewport, clear of the notch on whichever side it sits. */
+.theatre-exit {
+  position: fixed;
+  top: calc(1rem + env(safe-area-inset-top));
+  inset-inline-end: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right));
+  z-index: 50;
+}
+
+/* ---------- volume gauge ---------- */
+
+/*
+ * A hold must be a hold, not a text selection or a phone's "save image" menu.
+ * The gauge itself is a native range rotated upright: the platform keeps the
+ * keyboard and the thumb, we keep the rail on the app's two values.
+ */
+.volume-button {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.volume-popover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.volume-value {
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.volume-rail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 96px;
+}
+
+.volume-track {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  height: 96px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.volume-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--ink);
+}
+
+.volume-range {
+  position: relative;
+  width: 96px;
+  height: 24px;
+  margin: 0;
+  /* The fill is bottom-anchored. An inherited RTL range puts 100 at the left,
+     which the rotation sends to the bottom: the gauge would read upside down. */
+  direction: ltr;
+  transform: rotate(-90deg);
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+
+.volume-range::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 999px;
+  background: var(--ink);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-range::-moz-range-track {
+  height: 4px;
+  background: transparent;
+}
+
+.volume-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+}
+
+.volume-range:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
 /* ---------- theme switch ---------- */
 
 /*

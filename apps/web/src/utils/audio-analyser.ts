@@ -23,6 +23,30 @@ type AudioContextCtor = typeof AudioContext;
 let context: AudioContext | null = null;
 let analyser: AnalyserNode | null = null;
 let elementSource: MediaElementAudioSourceNode | null = null;
+let outputGain: GainNode | null = null;
+let desiredGain = 1;
+
+/**
+ * iOS Safari (and WKWebView) implements `HTMLMediaElement.volume` as read-only:
+ * the assignment is ignored and the element always plays at 1. A probe is the
+ * only honest test; on every other platform we leave the element's own volume
+ * alone and keep the graph at unity so the two do not multiply.
+ */
+export function canSetElementVolume(): boolean {
+  try {
+    const probe = document.createElement('audio');
+    probe.volume = 0.5;
+    return Math.abs(probe.volume - 0.5) < 0.01;
+  } catch {
+    return true;
+  }
+}
+
+/** The output gain of the same-origin graph, used where `volume` is read-only. */
+export function setOutputGain(value: number): void {
+  desiredGain = Math.min(1, Math.max(0, value));
+  if (outputGain) outputGain.gain.value = desiredGain;
+}
 
 function isSameOrigin(audio: HTMLAudioElement): boolean {
   const src = audio.currentSrc || audio.src;
@@ -64,8 +88,14 @@ export function ensureAnalyser(audio: HTMLAudioElement): AnalyserNode | null {
     // connected to the destination to remain audible.
     if (isSameOrigin(audio) && !elementSource) {
       elementSource = ctx.createMediaElementSource(audio);
-      elementSource.connect(ctx.destination);
+      // The analyser taps the full signal; the gain is what the listener hears.
+      // Keeping them separate means a quiet gauge does not flatten the spectrum.
+      outputGain = ctx.createGain();
+      outputGain.gain.value = desiredGain;
+      elementSource.connect(outputGain);
+      outputGain.connect(ctx.destination);
       source = elementSource;
+      (window as unknown as { __outputGain?: GainNode }).__outputGain = outputGain;
     }
 
     if (!source) return null;

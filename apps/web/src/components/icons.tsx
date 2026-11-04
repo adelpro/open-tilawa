@@ -5,6 +5,8 @@ import {
   CaretLeft,
   CaretRight,
   Check,
+  CornersIn,
+  CornersOut,
   DownloadSimple,
   DotsThreeVertical,
   File,
@@ -80,6 +82,8 @@ export type IconName =
   | 'close'
   | 'volume'
   | 'volume-x'
+  | 'fullscreen'
+  | 'fullscreen-exit'
   | 'users'
   | 'download'
   | 'upload'
@@ -122,6 +126,8 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
   close: X,
   volume: SpeakerHigh,
   'volume-x': SpeakerSlash,
+  fullscreen: CornersOut,
+  'fullscreen-exit': CornersIn,
   users: Users,
   download: DownloadSimple,
   upload: UploadSimple,

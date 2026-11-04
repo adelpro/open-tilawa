@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 
 import type { TorrentInfo } from '@/types';
+import { DEFAULT_VOLUME, readVolume, toggleVolume } from '@/utils/volume';
 import type { Visualiser } from '@/utils/visualiser-models';
 
 /**
@@ -18,8 +19,22 @@ export const positionAtom = atom(0);
 export const durationAtom = atom(0);
 /** Playback speed. A listener preference, so it outlives the surah. */
 export const rateAtom = atom(1);
-/** In-session only: a muted start would look like a broken player tomorrow. */
-export const mutedAtom = atom(false);
+
+/**
+ * Output level, 0–1. 0 **is** mute: the long press and the gauge's floor agree
+ * because they write the same number. The initial read happens once, at module
+ * load, and is guarded for the prerender (no window).
+ */
+const initialVolume = readVolume();
+export const volumeAtom = atom(initialVolume);
+/** What a mute restores. In-session: a silent start still looks broken. */
+export const lastVolumeAtom = atom(initialVolume > 0 ? initialVolume : DEFAULT_VOLUME);
+/** Mute keeps the level it silenced; the second press restores it. */
+export const toggleMuteAtom = atom(null, (get, set) => {
+  const next = toggleVolume(get(volumeAtom), get(lastVolumeAtom));
+  set(lastVolumeAtom, next.lastVolume);
+  set(volumeAtom, next.volume);
+});
 /** Which shape the spectrum takes; a taste, so it is remembered. */
 /** Waves is the default shape: it reads as audio, not as a level meter. */
 export const visualiserAtom = atom<Visualiser>('ribbon');

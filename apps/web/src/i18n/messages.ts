@@ -42,7 +42,7 @@ const ar = {
     mute: 'كتم الصوت',
     help: 'هذه القائمة',
     close: 'إغلاق اللوحة',
-    hint: 'Space للتشغيل · ←/→ 15 ثانية · ؟ للمزيد',
+    hint: 'Space للتشغيل · ←/→ 15 ثانية · اضغط مع الاستمرار على أيقونة الصوت للكتم · ؟ للمزيد',
     dismiss: 'إخفاء',
   },
   routes: {
@@ -177,8 +177,12 @@ const ar = {
   footer: {
     list: 'قائمة السور',
     reciter: 'اختيار القارئ',
-    mute: 'كتم الصوت',
-    unmute: 'إلغاء كتم الصوت',
+    volume: 'مستوى الصوت',
+    volumeMuted: 'مستوى الصوت، مكتوم',
+    muted: 'مكتوم',
+    unmuted: 'غير مكتوم',
+    fullscreen: 'ملء الشاشة',
+    exitFullscreen: 'إنهاء ملء الشاشة',
     speedChange: (rate: string) => `السرعة ${rate}، تغيير السرعة`,
   },
   source: {
@@ -362,7 +366,7 @@ const en: typeof ar = {
     mute: 'Mute',
     help: 'This list',
     close: 'Close the panel',
-    hint: 'Space to play · ←/→ 15 seconds · ? for more',
+    hint: 'Space to play · ←/→ 15 seconds · hold the speaker to mute · ? for more',
     dismiss: 'Dismiss',
   },
   routes: {
@@ -497,8 +501,12 @@ const en: typeof ar = {
   footer: {
     list: 'Surah list',
     reciter: 'Choose reciter',
-    mute: 'Mute',
-    unmute: 'Unmute',
+    volume: 'Volume',
+    volumeMuted: 'Volume, muted',
+    muted: 'Muted',
+    unmuted: 'Unmuted',
+    fullscreen: 'Fullscreen',
+    exitFullscreen: 'Exit fullscreen',
     speedChange: (rate: string) => `Speed ${rate}, change speed`,
   },
   source: {
