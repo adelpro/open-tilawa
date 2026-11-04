@@ -30,7 +30,7 @@ export default function Scrubber({
 
   return (
     <div className={cn('flex w-full items-center gap-3', className)}>
-      <span className="tnum w-11 shrink-0 text-xs text-muted">
+      <span className="tnum w-12 shrink-0 text-[0.8125rem] text-muted">
         <span dir="ltr" className="inline-block">
           {formatTime(position)}
         </span>
@@ -39,11 +39,11 @@ export default function Scrubber({
       <div className="group relative flex h-11 flex-1 items-center">
         <div className="relative h-[3px] w-full rounded-full bg-line">
           <div
-            className="absolute inset-y-0 right-0 rounded-full bg-ink"
+            className="absolute inset-y-0 right-0 rounded-full bg-[var(--wave-front)]"
             style={{ width: `${progress}%` }}
           />
           <div
-            className="absolute top-1/2 h-2.5 w-2.5 rounded-full bg-ink opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 group-active:opacity-100"
+            className="absolute top-1/2 h-2.5 w-2.5 rounded-full bg-[var(--wave-front)] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 group-active:opacity-100"
             style={{ right: `${progress}%`, transform: 'translate(50%, -50%)' }}
           />
         </div>
@@ -64,7 +64,7 @@ export default function Scrubber({
         />
       </div>
 
-      <span className="tnum w-11 shrink-0 text-xs text-muted">
+      <span className="tnum w-12 shrink-0 text-[0.8125rem] text-muted">
         <span dir="ltr" className="inline-block">
           {formatTime(safeDuration)}
         </span>

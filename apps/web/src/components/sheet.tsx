@@ -595,7 +595,7 @@ export function SurahSheet({
                   </span>
                   {sizes?.[surah.id] ? (
                     <span className="tnum shrink-0 text-[0.75rem] text-muted">
-                      {formatBytes(sizes[surah.id])}
+                      <bdi dir="ltr">{formatBytes(sizes[surah.id])}</bdi>
                     </span>
                   ) : null}
                 </button>

@@ -114,30 +114,24 @@ input[type='search']::-webkit-search-decoration {
   appearance: none;
 }
 
-/* Tall enough to breathe in the middle; short, it starts at the top and
-   scrolls instead of clipping the transport. */
+/* The shell is one column: a bar that stays, and the screen under it. */
 .app-shell {
   display: flex;
   min-height: 100dvh;
   flex-direction: column;
 }
 
-.player-screen {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 24px calc(32px + env(safe-area-inset-bottom));
-}
-
-/* Text pages share the player's measure, start at the top, and scroll. */
 /* The notch: on a phone the bar is the first thing under the status area, so it
    grows by the inset instead of painting the page underneath it. The inset is
-   0 on a desktop, which is why one rule covers both. */
+   0 on a desktop, which is why one rule covers both. Solid, never glass: the
+   screen behind it does not need to show through. */
 .top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   padding-top: env(safe-area-inset-top);
   height: calc(3.5rem + env(safe-area-inset-top));
+  background: var(--bg);
 }
 
 .page-screen {
@@ -158,27 +152,20 @@ input[type='search']::-webkit-search-decoration {
   margin-inline: auto;
 }
 
-/* The play button is the only thing on this page with depth. One bevel at rest,
-   a 1px lift on hover, a 1px sink on press — no gradient, no second shadow. */
+/* The play button is the one physical control: flat ink, no bevel. Depth was a
+   second idea the screen did not need — the press is the feedback. */
 .play-button {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 2px 0 rgba(17, 17, 17, 0.22);
   transition:
     transform 150ms cubic-bezier(0.2, 0, 0.2, 1),
-    box-shadow 150ms cubic-bezier(0.2, 0, 0.2, 1);
+    background-color 120ms ease;
 }
 
 .play-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 10px 18px -12px rgba(17, 17, 17, 0.5);
+  transform: scale(1.03);
 }
 
 .play-button:active:not(:disabled) {
-  transform: translateY(1px) scale(0.98);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+  transform: scale(0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -316,51 +303,185 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-/* Desktop theatre (path C, prototype): the spectrum is the floor, the names
-   sit above it, and the bar gets out of the way until you reach for it. */
+/* ---------- listening desk ---------- */
+
+/*
+ * One screen, one question: the recitation itself. The surah, who is reading
+ * it, where it sits in the mushaf, and the instrument that plays it. Blocks are
+ * separated by space and a change of scale — the page keeps one ground, no
+ * cards, no shadows.
+ */
+.desk {
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding: 24px 20px calc(40px + env(safe-area-inset-bottom));
+}
+
+.desk-grid {
+  display: grid;
+  gap: 40px;
+  /* One column, at the width the reading edge had when a list sat beside it:
+     the wave and the scrubber should not stretch to the window. */
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.now-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.now-heading {
+  min-width: 0;
+}
+
+.now-title {
+  margin: 0;
+  font-size: clamp(26px, 2.6vw, 32px);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.now-title-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 6px;
+  text-align: start;
+}
+
+.now-caret {
+  opacity: 0.4;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.now-caret--small {
+  width: 14px;
+}
+
+.now-title-btn:hover .now-caret,
+.now-reciter:hover .now-caret {
+  opacity: 1;
+}
+
+.now-caret.is-open {
+  opacity: 1;
+  transform: rotate(180deg);
+}
+
+.now-reciter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin-top: 2px;
+  border-radius: 6px;
+  font-size: 16px;
+  color: var(--muted);
+  transition: color 120ms ease;
+}
+
+.now-reciter:hover {
+  color: var(--ink);
+}
+
+.now-facts {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* The spectrum sits on the timeline, not in the middle of the screen: a quiet
+   band reads as air above the rail, never as a hole waiting for a picture. */
+.now-wave {
+  height: 64px;
+  margin-top: 20px;
+}
+
+.now-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.now-note,
+.now-hint {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  /* The two lines are the page speaking to the listener, not a left-aligned
+     paragraph in a document: they sit on the instrument's axis. */
+  text-align: center;
+}
+
+.now-note-action,
+.now-hint-action {
+  min-height: 36px;
+  padding-inline: 6px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.now-hint {
+  margin-top: 12px;
+}
+
+.now-hint-action {
+  margin-inline-start: 8px;
+}
+
+@media (min-width: 768px) {
+  .desk {
+    padding: 32px 32px calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .desk {
+    /* The shell's flex column gives the desk the height the bar and the
+       utility footer leave, so it only has to centre what is inside it. */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
 @media (min-width: 1024px) {
-  .theatre {
-    justify-content: flex-end;
-    padding-bottom: 32px;
+  .desk {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 40px;
   }
 
-  /* The spectrum sits above the transport, the way it does on a phone,
-     instead of lying on the floor of the screen behind it. */
-  .theatre-horizon {
-    position: static;
-    opacity: 1;
+  .now-wave {
+    height: 96px;
+    margin-top: 24px;
   }
+}
 
-  .top-bar {
-    position: fixed;
-    inset-inline: 0;
-    top: 0;
-    z-index: 20;
-    border-bottom-color: var(--line);
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px) saturate(1.8);
-    -webkit-backdrop-filter: blur(12px) saturate(1.8);
-    opacity: 1;
-    transition: background-color 200ms ease, border-color 200ms ease;
+/* A docked panel takes the start column, so the desk centres in what is left.
+   360px panel + 24px of air. */
+@media (min-width: 1024px) {
+  .app-shell[data-panel='open'] .desk {
+    max-width: none;
+    padding-inline-start: 384px;
   }
+}
 
-  [data-theme='dark'] .top-bar {
-    background: rgba(11, 11, 12, 0.85);
-  }
-
-  .top-bar:hover,
-  .top-bar:focus-within {
-    background: var(--bg);
-  }
-
-  /* The footer is part of the stack now, not a bar floating over the stage. */
-  .theatre-footer {
-    position: static;
-    border-top: 1px solid var(--line);
-    background: var(--bg);
-    z-index: auto;
-  }
-
+/* The footer is the thumb's edge, not a second title: on a desktop the page
+   already prints the surah and the reciter, so only the utilities remain; on a
+   phone the names stay where a thumb can reach them. The stream is a glyph
+   with a ring around it, never a caption. */
+@media (min-width: 1024px) {
   .theatre-footer > div {
     max-width: 560px;
     justify-content: center;
@@ -368,20 +489,6 @@ input[type='search']::-webkit-search-decoration {
 
   .theatre-names {
     display: none;
-  }
-
-  /* Split view: while a panel is docked, the stage centres in what is left
-     instead of sliding under it. 360px is the panel's width. */
-  .app-shell[data-panel='open'] .theatre {
-    padding-inline-start: 384px;
-  }
-
-  .app-shell[data-panel='open'] .theatre-footer {
-    padding-inline-start: 384px;
-  }
-
-  .app-shell[data-panel='open'] .theatre-title {
-    inset-inline-start: 360px;
   }
 }
 

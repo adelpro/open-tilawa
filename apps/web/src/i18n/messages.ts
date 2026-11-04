@@ -243,6 +243,9 @@ const ar = {
     retry: 'إعادة المحاولة',
     surah: (n: number) => `سورة ${n}`,
   },
+  home: {
+    page: (n: number) => `الصفحة ${n}`,
+  },
   about: {
     title: 'تلاوة | القرآن أقرب إليك',
     lede: 'تلاوة مشغّل قرآن مجاني، بلا إعلانات ولا اشتراكات ولا حساب تسجيل. اختر قارئك وسورتك، ثم استمع.',
@@ -558,6 +561,9 @@ const en: typeof ar = {
     noReciters: 'No reciter is published yet.',
     retry: 'Try again',
     surah: (n: number) => `Surah ${n}`,
+  },
+  home: {
+    page: (n: number) => `Page ${n}`,
   },
   about: {
     title: 'Tilawah | the Quran, closer',

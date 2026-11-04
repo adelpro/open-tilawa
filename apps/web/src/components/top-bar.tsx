@@ -58,7 +58,7 @@ export default function TopBar({
           aria-label that left the visible "1.8.3" out failed WCAG 2.5.3. */}
       <Link to={{ name: 'home' }} className="flex items-center gap-2">
         <img src="/images/icon.png" alt={t.brand} className="brand-mark h-6 w-auto" />
-        <span aria-hidden="true" className="tnum text-[0.75rem] leading-none text-muted">
+        <span aria-hidden="true" className="tnum text-[0.8125rem] leading-none text-muted">
           {APP_VERSION}
         </span>
       </Link>

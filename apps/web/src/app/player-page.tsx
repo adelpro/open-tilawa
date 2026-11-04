@@ -1,8 +1,8 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import PlayerFooter from '@/components/player-footer';
 import Icon from '@/components/icons';
+import PlayerFooter from '@/components/player-footer';
 import Scrubber from '@/components/scrubber';
 import Sheet, { ReciterSheet, SurahSheet, type ReciterScope } from '@/components/sheet';
 import StreamSheet from '@/components/stream-sheet';
@@ -11,7 +11,7 @@ import Visualiser from '@/components/visualiser';
 import { surahById } from '@/constants/surah';
 import { useLocale } from '@/hooks/use-locale';
 import { usePlayerNav } from '@/hooks/use-player-nav';
-import { getPosition, loadState, saveState, setLastSurah } from '@/hooks/use-persistence';
+import { getPosition, loadState, saveState } from '@/hooks/use-persistence';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useReciters } from '@/hooks/use-reciters';
 import { useShortcuts } from '@/hooks/use-shortcuts';
@@ -29,6 +29,7 @@ import {
 import type { Reciter } from '@/types';
 import type { Parsed } from '@/routes';
 import { seekBy } from '@/utils/clamp';
+import { audioRef } from '@/utils/audio-ref';
 import { cn } from '@/utils/cn';
 import type { StreamSource } from '@/utils/stream-source';
 import { streamSourceFor } from '@/utils/stream-source';
@@ -56,8 +57,9 @@ function wantsKeyboardHint(enabled: boolean): boolean {
 }
 
 /**
- * The site is this screen. There is no navigation: the two lists are the only
- * way out of the player, and they close back onto it.
+ * The site is this screen. The surah being read is the title, the recitation is
+ * the instrument, and the two lists beside it are the history of where the
+ * listener stopped and who else can read to them.
  */
 export default function PlayerPage({
   sheet,
@@ -150,6 +152,10 @@ export default function PlayerPage({
   }, [route, reciters, selectSurah, setReciter]);
 
   const pickReciter = (picked: Reciter) => {
+    // Stop the old element before the atoms move: its clock is the outgoing
+    // reciter's, and a timeupdate that lands after the switch would write those
+    // seconds under the incoming one.
+    audioRef.current?.pause();
     setReciter(picked);
     saveState({ ...loadState(), reciterId: picked.id });
     setIsPlaying(false);
@@ -247,92 +253,65 @@ export default function PlayerPage({
 
   return (
     <>
-      <main className="player-screen theatre">
-        <div className="w-full max-w-[520px]">
-          {/* The colophon: the name, the recording it is heard in, and the
-              surah's own facts underneath. One fixed block, so the docked panel
-              only has one thing to move (`.theatre-title`). On a phone the
-              footer carries the names and this whole block stays out of the
-              way. */}
-          <div className="theatre-title lg:fixed lg:inset-x-0 lg:top-[18vh] lg:flex lg:flex-col lg:items-center lg:text-center">
-            <h1 className="sr-only lg:not-sr-only lg:text-[clamp(32px,3.4vw,52px)] lg:font-semibold lg:leading-[1.3] lg:tracking-normal lg:text-ink">
-              {wide ? (
-                <button
-                  type="button"
-                  onClick={() => (surahsOpen ? close() : openSurahs())}
-                  aria-haspopup="dialog"
-                  aria-expanded={surahsOpen}
-                  className="group inline-flex items-center gap-3 rounded-md"
-                >
-                  {/* A spacer the size of the icon keeps the name itself on the
-                      centre line; the chevron grows into it on hover without
-                      moving what the eye is reading. */}
-                  <span aria-hidden="true" className="w-5 shrink-0" />
-                  <span className="underline-offset-[6px] group-hover:underline group-focus-visible:underline">
-                    {surah?.name ?? `سورة ${surahId}`}
-                  </span>
-                  <Icon
-                    name="expand"
-                    size={20}
-                    className={cn(
-                      'w-5 shrink-0 text-muted transition-[opacity,transform] group-hover:opacity-100 group-focus-visible:opacity-100',
-                      surahsOpen ? 'rotate-180 opacity-100' : 'opacity-45',
-                    )}
-                  />
-                </button>
-              ) : (
-                surah?.name ?? `سورة ${surahId}`
-              )}
-            </h1>
+      <main className="desk">
+        <div className="desk-grid">
+          {/* The recitation: the name, who is reading it, where it sits in the
+              mushaf, and the instrument that plays it. */}
+          <section className="now" aria-labelledby="now-title">
+            <div className="now-head">
+              <div className="now-heading">
+                <h1 id="now-title" className="now-title">
+                  <button
+                    type="button"
+                    onClick={() => (surahsOpen ? close() : openSurahs())}
+                    aria-haspopup="dialog"
+                    aria-expanded={surahsOpen}
+                    className="now-title-btn"
+                  >
+                    <span>{surah?.name ?? t.player.surah(surahId)}</span>
+                    <Icon
+                      name="expand"
+                      size={20}
+                      className={cn('now-caret', surahsOpen && 'is-open')}
+                    />
+                  </button>
+                </h1>
 
-            {/* The reciter is a control, not a caption: the pill reads as one at
-                rest, and the riwaya rides along when the catalogue knows it.
-                With no roster there is no pill to open — not an empty one. */}
-            {reciter ? (
-              <p className="hidden lg:mt-4 lg:flex lg:justify-center">
-                <button
-                  type="button"
-                  onClick={() => (recitersOpen ? close() : openReciters())}
-                  aria-haspopup="dialog"
-                  aria-expanded={recitersOpen}
-                  className="group flex min-h-9 max-w-[520px] items-center gap-2 rounded-full px-3 text-[1rem] text-muted transition-colors hover:bg-line hover:text-ink focus-visible:bg-line focus-visible:text-ink"
-                >
-                  <Icon name="mic" className="shrink-0" />
-                  <span className="min-w-0 truncate">
-                    {reciter.name}
-                    {riwaya ? ` · ${riwaya}` : ''}
-                  </span>
-                  <Icon
-                    name="expand"
-                    size={16}
-                    className={cn(
-                      'shrink-0 transition-[opacity,transform] group-hover:opacity-100 group-focus-visible:opacity-100',
-                      recitersOpen ? 'rotate-180 opacity-100' : 'opacity-0',
-                    )}
-                  />
-                </button>
-              </p>
-            ) : null}
+                {reciter ? (
+                  <button
+                    type="button"
+                    onClick={() => (recitersOpen ? close() : openReciters())}
+                    aria-haspopup="dialog"
+                    aria-expanded={recitersOpen}
+                    className="now-reciter"
+                  >
+                    <Icon name="mic" size={16} className="shrink-0" />
+                    <span className="min-w-0 truncate">
+                      {reciter.name}
+                      {riwaya ? ` · ${riwaya}` : ''}
+                    </span>
+                    <Icon
+                      name="expand"
+                      size={16}
+                      className={cn('now-caret now-caret--small', recitersOpen && 'is-open')}
+                    />
+                  </button>
+                ) : null}
 
-            {/* The surah's number belongs to its facts, not to the title: one
-                line, one type size, the seal reduced to match. */}
-            <p className="mt-2 hidden items-center justify-center gap-2 text-[0.75rem] text-muted tnum lg:flex">
-              <span
-                aria-hidden="true"
-                className="flex h-5 w-5 items-center justify-center rounded-full border border-line"
-              >
-                {surahId}
-              </span>
-              {surah ? (
-                <span>{`${t.sheets.verses(surah.ayahCount)} · ${t.sheets.juz(surah.juz)}`}</span>
-              ) : null}
-            </p>
-          </div>
-          <div className="theatre-horizon mb-4 flex justify-center">
-            <Visualiser playing={isPlaying} model={visualiser} height={wide ? 160 : 96} />
-          </div>
+                {surah ? (
+                  <p className="now-facts tnum">
+                    {`${t.sheets.verses(surah.ayahCount)} · ${t.sheets.juz(surah.juz)} · ${t.home.page(surah.page)}`}
+                  </p>
+                ) : null}
+              </div>
+            </div>
 
-          <div className="mt-10 lg:mx-auto lg:mt-0 lg:w-[560px]">
+            {/* The spectrum is the instrument's face: it sits directly on the
+                timeline, so a quiet band is a rest, never a hole. */}
+            <div className="now-wave">
+              <Visualiser playing={isPlaying} model={visualiser} height={wide ? 96 : 64} />
+            </div>
+
             <Scrubber
               position={position}
               duration={duration}
@@ -340,56 +319,49 @@ export default function PlayerPage({
                 if (duration > 0) seekTo(seconds);
               }}
             />
-          </div>
 
-          <Transport
-            className="mt-4"
-            canPlay={ready}
-            isPlaying={isPlaying}
-            onPlayPause={() => setIsPlaying(!isPlaying)}
-            onPrevious={previous}
-            onNext={next}
-            onSeekDelta={(delta) => {
-              if (duration > 0) seekTo(seekBy(position, delta, duration));
-            }}
-          />
-
-          {reciters.length === 0 ? (
-            <div className="mt-6 text-center text-[0.875rem] text-muted">
-              <p>{recitersError ? t.sheets.recitersError : t.player.noReciters}</p>
-              <button
-                type="button"
-                onClick={retryReciters}
-                className="mt-1 min-h-11 px-3 font-semibold text-ink underline underline-offset-4"
-              >
-                {t.player.retry}
-              </button>
+            <div className="now-controls">
+              <Transport
+                canPlay={ready}
+                isPlaying={isPlaying}
+                onPlayPause={() => setIsPlaying(!isPlaying)}
+                onPrevious={previous}
+                onNext={next}
+                onSeekDelta={(delta) => {
+                  if (duration > 0) seekTo(seekBy(position, delta, duration));
+                }}
+              />
             </div>
-          ) : error ? (
-            <div className="mt-6 text-center text-[0.875rem] text-muted">
-              <p title={error}>{t.player.error}</p>
-              <button
-                type="button"
-                onClick={() => setRetrySignal((count) => count + 1)}
-                className="mt-1 min-h-11 px-3 font-semibold text-ink underline underline-offset-4"
-              >
-                {t.player.retry}
-              </button>
-            </div>
-          ) : null}
 
-          {hint && keyboard ? (
-            <p className="mt-6 text-center text-[0.75rem] text-muted lg:mt-4">
-              {t.keys.hint}
-              <button
-                type="button"
-                onClick={dismissHint}
-                className="ms-2 underline underline-offset-4 hover:text-ink"
-              >
-                {t.keys.dismiss}
-              </button>
-            </p>
-          ) : null}
+            {reciters.length === 0 ? (
+              <div className="now-note">
+                <p>{recitersError ? t.sheets.recitersError : t.player.noReciters}</p>
+                <button type="button" onClick={retryReciters} className="now-note-action">
+                  {t.player.retry}
+                </button>
+              </div>
+            ) : error ? (
+              <div className="now-note">
+                <p title={error}>{t.player.error}</p>
+                <button
+                  type="button"
+                  onClick={() => setRetrySignal((count) => count + 1)}
+                  className="now-note-action"
+                >
+                  {t.player.retry}
+                </button>
+              </div>
+            ) : null}
+
+            {hint && keyboard ? (
+              <p className="now-hint">
+                {t.keys.hint}
+                <button type="button" onClick={dismissHint} className="now-hint-action">
+                  {t.keys.dismiss}
+                </button>
+              </p>
+            ) : null}
+          </section>
         </div>
       </main>
 
@@ -449,7 +421,7 @@ export default function PlayerPage({
           ].map((row) => (
             <div key={row.key} className="flex items-baseline justify-between gap-6">
               <dt className="text-[0.875rem] text-muted">{row.value}</dt>
-              <dd className="rounded-md border border-line px-2 py-1 font-mono text-[0.75rem] text-ink">
+              <dd className="rounded-md border border-line px-2 py-1 text-[0.8125rem] text-ink">
                 {row.key}
               </dd>
             </div>
