@@ -18,13 +18,14 @@ import { useShortcuts } from '@/hooks/use-shortcuts';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
   isPlayingAtom,
-  mutedAtom,
   positionAtom,
+  toggleMuteAtom,
   visualiserAtom,
   rateAtom,
   retrySignalAtom,
   torrentAtom,
   torrentErrorAtom,
+  volumeAtom,
 } from '@/jotai/player';
 import type { Reciter } from '@/types';
 import type { Parsed } from '@/routes';
@@ -39,6 +40,7 @@ import { normaliseVisualiser } from '@/utils/visualiser-models';
 import { riwayaLabel } from '@/utils/riwaya';
 import { reciterName } from '@/utils/reciter-name';
 import { surahName } from '@/utils/surah-name';
+import { writeVolume } from '@/utils/volume';
 
 /** Set once the one-time shortcut hint has been dismissed. */
 const KEYS_HINT_KEY = 'tilawa.keys.v1';
@@ -75,6 +77,9 @@ export default function PlayerPage({
   close,
   onOpenMenu,
   route,
+  theatre,
+  onToggleTheatre,
+  onExitTheatre,
 }: {
   sheet: 'surahs' | 'reciters' | 'stream' | 'keys' | null;
   pinned: boolean;
@@ -88,6 +93,10 @@ export default function PlayerPage({
   onOpenMenu: () => void;
   /** What the address says, so boot knows whether it is allowed to restore anything. */
   route: Parsed;
+  /** Fullscreen (or its in-app fallback): the shell keeps only the player. */
+  theatre: boolean;
+  onToggleTheatre: () => void;
+  onExitTheatre: () => void;
 }) {
   const { t, locale } = useLocale();
   const {
@@ -109,7 +118,8 @@ export default function PlayerPage({
 
   const position = useAtomValue(positionAtom);
   const [rate, setRate] = useAtom(rateAtom);
-  const [muted, setMuted] = useAtom(mutedAtom);
+  const [volume, setVolume] = useAtom(volumeAtom);
+  const toggleMute = useSetAtom(toggleMuteAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const torrent = useAtomValue(torrentAtom);
   const { surahId, duration, ready, track, selectSurah, playSurah, seekTo, next, previous } =
@@ -190,6 +200,34 @@ export default function PlayerPage({
    * with a Bluetooth keyboard keeps its media keys and nothing else.
    */
   const [hint, setHint] = useState(() => wantsKeyboardHint(keyboard));
+  const exitRef = useRef<HTMLButtonElement>(null);
+  const wasTheatre = useRef(false);
+
+  /**
+   * The theatre is one screen: an open panel would sit above the player it
+   * hides. Focus goes to the exit and comes back to the footer control, so a
+   * keyboard listener is never dropped at the document body.
+   */
+  useEffect(() => {
+    if (theatre) {
+      wasTheatre.current = true;
+      close();
+      exitRef.current?.focus();
+      return;
+    }
+    if (!wasTheatre.current) return;
+    wasTheatre.current = false;
+    document.getElementById('footer-fullscreen')?.focus();
+  }, [theatre, close]);
+
+  /**
+   * The level is a device preference; the write is tiny and only on change.
+   * Zero is not written: a mute must not greet the listener silent tomorrow,
+   * which is why the last audible level is what survives a reload.
+   */
+  useEffect(() => {
+    if (volume > 0) writeVolume(volume);
+  }, [volume]);
 
   // The initial read covers the first paint; this covers a resize into or out
   // of the wide layout. A dismissed hint stays dismissed.
@@ -214,7 +252,7 @@ export default function PlayerPage({
     onNext: next,
     onReciters: openReciters,
     onSurahs: openSurahs,
-    onMute: () => setMuted((value) => !value),
+    onMute: () => toggleMute(),
     onHelp: () => {
       openKeys();
       dismissHint();
@@ -255,6 +293,17 @@ export default function PlayerPage({
 
   return (
     <>
+      {theatre && (
+        <button
+          ref={exitRef}
+          type="button"
+          onClick={onExitTheatre}
+          aria-label={t.footer.exitFullscreen}
+          className="press fixed top-[calc(1rem+env(safe-area-inset-top))] end-4 z-50 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink"
+        >
+          <Icon name="fullscreen-exit" size={20} />
+        </button>
+      )}
       <main className="desk">
         <div className="desk-grid">
           {/* The recitation: the name, who is reading it, where it sits in the
@@ -355,7 +404,7 @@ export default function PlayerPage({
               </div>
             ) : null}
 
-            {hint && keyboard ? (
+            {hint && keyboard && !theatre ? (
               <p className="now-hint">
                 {t.keys.hint}
                 <button type="button" onClick={dismissHint} className="now-hint-action">
@@ -367,19 +416,23 @@ export default function PlayerPage({
         </div>
       </main>
 
-      <PlayerFooter
-        surahName={surah ? surahName(surah.id, locale) : t.player.surah(surahId)}
-        reciterName={reciter ? reciterName(reciter, locale) : 'اختر قارئاً'}
-        source={source}
-        progress={progress}
-        onOpenSurahs={openSurahs}
-        onOpenReciters={openReciters}
-        onOpenStream={openStream}
-        rate={rate}
-        onOpenRate={onOpenMenu}
-        muted={muted}
-        onToggleMute={() => setMuted((value) => !value)}
-      />
+      {theatre ? null : (
+        <PlayerFooter
+          surahName={surah ? surahName(surah.id, locale) : t.player.surah(surahId)}
+          reciterName={reciter ? reciterName(reciter, locale) : 'اختر قارئاً'}
+          source={source}
+          progress={progress}
+          onOpenSurahs={openSurahs}
+          onOpenReciters={openReciters}
+          onOpenStream={openStream}
+          rate={rate}
+          onOpenRate={onOpenMenu}
+          volume={volume}
+          onVolume={setVolume}
+          onToggleMute={toggleMute}
+          onToggleFullscreen={onToggleTheatre}
+        />
+      )}
 
       <StreamSheet open={sheet === 'stream'} onClose={close} source={source} torrent={torrent} surahId={surahId} />
 

@@ -10,10 +10,10 @@ import {
   durationAtom,
   isPlayingAtom,
   positionAtom,
-  mutedAtom,
   rateAtom,
   torrentAtom,
   torrentErrorAtom,
+  volumeAtom,
 } from '@/jotai/player';
 import { surahById } from '@/constants/surah';
 import type { Parsed } from '@/routes';
@@ -95,7 +95,7 @@ export default function AudioEngine({
   const surahId = useAtomValue(currentSurahIdAtom);
   const { t, locale } = useLocale();
   const rate = useAtomValue(rateAtom);
-  const muted = useAtomValue(mutedAtom);
+  const volume = useAtomValue(volumeAtom);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
@@ -275,8 +275,8 @@ export default function AudioEngine({
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio) audio.muted = muted;
-  }, [muted, surahId]);
+    if (audio) audio.volume = volume;
+  }, [volume, surahId]);
 
   /** Speed survives a surah change; it is the listener's, not the track's. */
   useEffect(() => {
