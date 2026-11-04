@@ -42,9 +42,13 @@ export function toReciters(rows: CatalogueRow[]): Reciter[] {
       seen.add(hash);
     }
 
+    const nameAr = row.nameAr?.trim() ?? '';
+    const nameEn = cleanTorrentName(row.name ?? '') || nameAr;
+
     list.push({
       id: row.id,
-      name: row.nameAr?.trim() || cleanTorrentName(row.name ?? ''),
+      name: nameAr || nameEn,
+      nameEn,
       magnet,
       riwaya: row.riwaya?.trim() || 'unknown',
       complet: (row.fileCount ?? 0) >= FULL_QURAN,

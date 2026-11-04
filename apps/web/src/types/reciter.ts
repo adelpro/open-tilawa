@@ -8,7 +8,14 @@
  */
 export type Reciter = {
   id: number;
+  /** The name the Arabic screen shows: the catalogue's `nameAr`. */
   name: string;
+  /**
+   * The name the English screen shows, from the release's own latin name. Kept beside
+   * the Arabic one instead of replacing it: sorting, search and the saved-position key
+   * are Arabic-first, and only the rendered label changes with the language.
+   */
+  nameEn: string;
   magnet: string;
   riwaya: string;
   complet: boolean;

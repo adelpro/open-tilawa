@@ -33,12 +33,13 @@ test('surah search finds by name, without hamza, and by number', () => {
 
 test('reciter search covers the name and the reading', () => {
   const reciters: Reciter[] = [
-    { id: 1, name: 'ماهر المعيقلي', magnet: 'magnet:?xt=urn:btih:aa', riwaya: 'Hafs', complet: true },
-    { id: 2, name: 'ياسين الجزائري', magnet: 'magnet:?xt=urn:btih:bb', riwaya: 'Warsh', complet: true },
+    { id: 1, name: 'ماهر المعيقلي', nameEn: 'Maher Al Muaiqly', magnet: 'magnet:?xt=urn:btih:aa', riwaya: 'Hafs', complet: true },
+    { id: 2, name: 'ياسين الجزائري', nameEn: 'Yassine El Jazairi', magnet: 'magnet:?xt=urn:btih:bb', riwaya: 'Warsh', complet: true },
   ];
 
   assert.deepEqual(filterReciters('ماهر', reciters).map((r) => r.id), [1]);
   assert.deepEqual(filterReciters('warsh', reciters).map((r) => r.id), [2]);
+  assert.deepEqual(filterReciters('Yassine', reciters).map((r) => r.id), [2]);
   assert.deepEqual(filterReciters('Hafs', reciters).map((r) => r.id), [1]);
   assert.equal(filterReciters('', reciters).length, 2);
 });

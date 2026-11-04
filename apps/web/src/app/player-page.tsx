@@ -37,6 +37,8 @@ import { surahIdOf } from '@/utils/surah-id';
 import { bootSelection } from '@/utils/boot-selection';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
 import { riwayaLabel } from '@/utils/riwaya';
+import { reciterName } from '@/utils/reciter-name';
+import { surahName } from '@/utils/surah-name';
 
 /** Set once the one-time shortcut hint has been dismissed. */
 const KEYS_HINT_KEY = 'tilawa.keys.v1';
@@ -87,7 +89,7 @@ export default function PlayerPage({
   /** What the address says, so boot knows whether it is allowed to restore anything. */
   route: Parsed;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const {
     reciters,
     error: recitersError,
@@ -268,7 +270,7 @@ export default function PlayerPage({
                     aria-expanded={surahsOpen}
                     className="now-title-btn"
                   >
-                    <span>{surah?.name ?? t.player.surah(surahId)}</span>
+                    <span>{surah ? surahName(surah.id, locale) : t.player.surah(surahId)}</span>
                     <Icon
                       name="expand"
                       size={20}
@@ -287,7 +289,7 @@ export default function PlayerPage({
                   >
                     <Icon name="mic" size={16} className="shrink-0" />
                     <span className="min-w-0 truncate">
-                      {reciter.name}
+                      {reciterName(reciter, locale)}
                       {riwaya ? ` · ${riwaya}` : ''}
                     </span>
                     <Icon
@@ -366,8 +368,8 @@ export default function PlayerPage({
       </main>
 
       <PlayerFooter
-        surahName={surah?.name ?? `سورة ${surahId}`}
-        reciterName={reciter?.name ?? 'اختر قارئاً'}
+        surahName={surah ? surahName(surah.id, locale) : t.player.surah(surahId)}
+        reciterName={reciter ? reciterName(reciter, locale) : 'اختر قارئاً'}
         source={source}
         progress={progress}
         onOpenSurahs={openSurahs}

@@ -11,6 +11,7 @@ import { useLocale } from '@/hooks/use-locale';
 import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { formatBytes } from '@/utils/format-bytes';
 import { riwayaLabel } from '@/utils/riwaya';
+import { reciterName } from '@/utils/reciter-name';
 import { filterReciters, filterSurahs } from '@/utils/search';
 import { DRAG_THRESHOLD, dragOffset, shouldDismiss, springStep } from '@/utils/sheet-drag';
 import { createSheetLayer } from '@/utils/sheet-layer';
@@ -639,7 +640,7 @@ export function ReciterSheet({
   /** The chip the panel opens on — how `?view=favorites` lands on your list. */
   initialScope?: ReciterScope;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [scope, setScope] = useState<ReciterScope>('default');
@@ -792,7 +793,7 @@ export function ReciterSheet({
                   >
                     <span className="min-w-0 flex-1">
                       <span className={cn('block truncate', isCurrent && 'font-semibold')}>
-                        {reciter.name}
+                        {reciterName(reciter, locale)}
                       </span>
                       <span className="mt-1 flex items-center gap-2 text-[0.75rem] text-muted">
                         <span>{reciter.complet ? t.sheets.complete : t.sheets.partial}</span>
