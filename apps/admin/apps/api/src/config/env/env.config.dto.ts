@@ -32,6 +32,11 @@ export class EnvConfigDTO {
   @IsOptional()
   WEBSITE = 'http://localhost:9320';
 
+  /** The public site: the logo and brand link in every transactional mail. */
+  @IsString()
+  @IsOptional()
+  PUBLIC_SITE = 'https://tilawah.cc';
+
   /** Optional at every layer: compose, the app default and the edge all agree (T1.12). */
   @IsNumberString()
   @IsOptional()

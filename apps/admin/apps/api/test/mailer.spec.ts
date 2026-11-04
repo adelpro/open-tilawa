@@ -49,6 +49,9 @@ describe('mailer templates', () => {
     expect(sent[0].subject).toBe('Activate your Tilawah.cc account');
     expect(sent[0].html).toContain('https://console.tilawah.cc/activate/');
     expect(sent[0].html).not.toContain('/me/account-activation/');
+    // Every mail links the public site: the logo and the brand line are the way back.
+    expect(sent[0].html).toContain('https://tilawah.cc/images/logo.png');
+    expect(sent[0].html).toContain('href="https://tilawah.cc"');
   });
 
   it('sends the Arabic activation link to the same router path', async () => {

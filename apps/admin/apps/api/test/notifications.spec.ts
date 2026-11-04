@@ -170,7 +170,8 @@ describe('operator alerts', () => {
 
     expect(h.mail.sent).toHaveLength(1);
     expect(h.mail.last().html).toContain('&lt;img');
-    expect(h.mail.last().html).not.toContain('<img');
+    // The template itself carries the logo <img>; what must not survive is the payload.
+    expect(h.mail.last().html).not.toContain('<img src=x');
   });
 
   it('sends the Arabic template to an Arabic admin', async () => {
