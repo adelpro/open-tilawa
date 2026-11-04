@@ -9,6 +9,7 @@ import { navigate } from '@/hooks/use-route';
 import { isPlayingAtom } from '@/jotai/player';
 import type { Reciter } from '@/types';
 import { riwayaLabel } from '@/utils/riwaya';
+import { reciterName } from '@/utils/reciter-name';
 
 /**
  * The roster as a page, for the listener who arrives without a reciter in mind.
@@ -22,7 +23,7 @@ import { riwayaLabel } from '@/utils/riwaya';
  * without running the app and the page is worth a sitemap row.
  */
 export default function RecitersPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { reciters, error } = useReciters();
   const setIsPlaying = useSetAtom(isPlayingAtom);
   const copy = t.recitersPage;
@@ -56,7 +57,7 @@ export default function RecitersPage() {
               const row = (
                 <>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[1rem] text-ink">{reciter.name}</span>
+                    <span className="block truncate text-[1rem] text-ink">{reciterName(reciter, locale)}</span>
                     <span className="mt-1 block text-[0.75rem] text-muted">
                       {reciter.complet ? t.sheets.complete : t.sheets.partial}
                     </span>

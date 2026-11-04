@@ -62,3 +62,14 @@ test('the catalogue publishes the slug it was given, and never invents one', () 
   // web deploy that lands before the admin one does not empty the list.
   assert.equal(toReciters([row({ slug: undefined })])[0].slug, '');
 });
+
+test('the English label is the release name, kept beside the Arabic one', () => {
+  const reciter = toReciters([row({ name: 'Yassine_El_Jazairi_Warsh', nameAr: 'ياسين الجزائري' })])[0];
+  assert.equal(reciter.name, 'ياسين الجزائري');
+  assert.equal(reciter.nameEn, 'Yassine El Jazairi Warsh');
+});
+
+test('a row with no latin name falls back to the Arabic name', () => {
+  const reciter = toReciters([row({ name: '', nameAr: 'ياسين الجزائري' })])[0];
+  assert.equal(reciter.nameEn, 'ياسين الجزائري');
+});

@@ -7,6 +7,7 @@ import { useLocale } from '@/hooks/use-locale';
 import { useReciters } from '@/hooks/use-reciters';
 import { surahSlug } from '@/routes';
 import { riwayaLabel } from '@/utils/riwaya';
+import { reciterName } from '@/utils/reciter-name';
 import { surahName } from '@/utils/surah-name';
 
 /**
@@ -25,7 +26,7 @@ export default function ReciterPage({ slug }: { slug: string }) {
   const copy = t.reciterPage;
 
   const reciter = reciters.find((candidate) => candidate.slug === slug);
-  const name = reciter ? reciter.name : slug;
+  const name = reciter ? reciterName(reciter, locale) : slug;
 
   /**
    * The tab names the reciter, and the player's own title logic steps aside for this

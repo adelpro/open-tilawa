@@ -20,6 +20,7 @@ import type { Parsed } from '@/routes';
 import { documentTitle } from '@/utils/page-title';
 import { useLocale } from '@/hooks/use-locale';
 import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
+import { reciterName } from '@/utils/reciter-name';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
 import { ensureAnalyser } from '@/utils/audio-analyser';
 import { APP_VERSION } from '@/constants/version';
@@ -364,7 +365,7 @@ export default function AudioEngine({
           ? `سورة ${surah.name}`
           : SURAH_NAMES_EN[surah.id] ?? surah.name
         : t.player.surah(surahId),
-      artist: reciter?.name || 'Tilawah',
+      artist: reciter ? reciterName(reciter, locale) : 'Tilawah',
       album: 'Tilawah',
       // The lock screen and the media notification use the square mark, not the
       // wide wordmark raster: at thumbnail size the wordmark is a smudge.
