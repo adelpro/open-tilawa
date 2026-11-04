@@ -33,7 +33,9 @@ export function readVolume(storage: VolumeStorage | null = defaultStorage()): nu
     const raw = storage.getItem(STORAGE_KEYS.volume);
     if (raw === null) return DEFAULT_VOLUME;
     const value = Number(raw);
-    return Number.isFinite(value) ? clampVolume(value) : DEFAULT_VOLUME;
+    // A zero would greet the listener silent, which is never a stored choice:
+    // the page does not write zero, and a hand-edited one is not a preference.
+    return Number.isFinite(value) && value > 0 ? clampVolume(value) : DEFAULT_VOLUME;
   } catch {
     return DEFAULT_VOLUME;
   }

@@ -22,7 +22,7 @@ import { useLocale } from '@/hooks/use-locale';
 import { SURAH_NAMES_EN } from '@/i18n/surah-names-en';
 import { reciterName } from '@/utils/reciter-name';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
-import { ensureAnalyser } from '@/utils/audio-analyser';
+import { canSetElementVolume, ensureAnalyser, setOutputGain } from '@/utils/audio-analyser';
 import { APP_VERSION } from '@/constants/version';
 import { errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
 import { streamSourceFor, telemetrySource } from '@/utils/stream-source';
@@ -96,6 +96,8 @@ export default function AudioEngine({
   const { t, locale } = useLocale();
   const rate = useAtomValue(rateAtom);
   const volume = useAtomValue(volumeAtom);
+  /** Null until the first effect: the probe needs a document. */
+  const volumeSettable = useRef<boolean | null>(null);
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
@@ -274,8 +276,14 @@ export default function AudioEngine({
   }, [isPlaying, surahId, liveTrack, setIsPlaying]);
 
   useEffect(() => {
+    if (volumeSettable.current === null) volumeSettable.current = canSetElementVolume();
     const audio = audioRef.current;
-    if (audio) audio.volume = volume;
+    if (audio) {
+      // `muted` is the one half iOS honours; the gain below is the other.
+      audio.muted = volume === 0;
+      if (volumeSettable.current) audio.volume = volume;
+    }
+    setOutputGain(volumeSettable.current ? 1 : volume);
   }, [volume, surahId]);
 
   /** Speed survives a surah change; it is the listener's, not the track's. */

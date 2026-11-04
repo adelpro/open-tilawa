@@ -18,6 +18,7 @@ import { useShortcuts } from '@/hooks/use-shortcuts';
 import { selectedReciterAtom } from '@/jotai/atom';
 import {
   isPlayingAtom,
+  lastVolumeAtom,
   positionAtom,
   toggleMuteAtom,
   visualiserAtom,
@@ -119,6 +120,7 @@ export default function PlayerPage({
   const position = useAtomValue(positionAtom);
   const [rate, setRate] = useAtom(rateAtom);
   const [volume, setVolume] = useAtom(volumeAtom);
+  const setLastVolume = useSetAtom(lastVolumeAtom);
   const toggleMute = useSetAtom(toggleMuteAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const torrent = useAtomValue(torrentAtom);
@@ -229,6 +231,15 @@ export default function PlayerPage({
     if (volume > 0) writeVolume(volume);
   }, [volume]);
 
+  /**
+   * The gauge's audible level is the mute memory: dragging 1 → 0.3 → 0 and
+   * pressing M should come back to 0.3, not to where the session started.
+   */
+  const chooseVolume = (next: number) => {
+    setVolume(next);
+    if (next > 0) setLastVolume(next);
+  };
+
   // The initial read covers the first paint; this covers a resize into or out
   // of the wide layout. A dismissed hint stays dismissed.
   useEffect(() => {
@@ -293,13 +304,18 @@ export default function PlayerPage({
 
   return (
     <>
+      {/* A hold changes the icon but not focus, so the state is announced. It
+          stays outside the footer: the theatre unmounts the footer, not the M key. */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {volume === 0 ? t.footer.muted : t.footer.unmuted}
+      </span>
       {theatre && (
         <button
           ref={exitRef}
           type="button"
           onClick={onExitTheatre}
           aria-label={t.footer.exitFullscreen}
-          className="press fixed top-[calc(1rem+env(safe-area-inset-top))] end-4 z-50 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink"
+          className="theatre-exit press flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink"
         >
           <Icon name="fullscreen-exit" size={20} />
         </button>
@@ -428,7 +444,7 @@ export default function PlayerPage({
           rate={rate}
           onOpenRate={onOpenMenu}
           volume={volume}
-          onVolume={setVolume}
+          onVolume={chooseVolume}
           onToggleMute={toggleMute}
           onToggleFullscreen={onToggleTheatre}
         />

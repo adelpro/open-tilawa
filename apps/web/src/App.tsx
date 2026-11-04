@@ -82,6 +82,12 @@ export default function App() {
   const theatre = useTheatre();
   const setIsPlaying = useSetAtom(isPlayingAtom);
 
+  /** The overlay belongs to the player screen; leaving it must not strand the chrome. */
+  const playerRoute = route.name === 'home' || route.name === 'listen';
+  useEffect(() => {
+    if (!playerRoute) theatre.exit();
+  }, [playerRoute, theatre.exit]);
+
   /**
    * A `/listen/<release>/<surah>` link opens that recitation, paused.
    *

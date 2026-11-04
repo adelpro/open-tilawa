@@ -43,12 +43,12 @@ export function useTheatre(): {
   }, []);
 
   const exit = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {
-        // Nothing to do; the overlay state below still closes the shell.
-      });
+    if (!document.fullscreenElement) {
+      setActive(false);
+      return;
     }
-    setActive(false);
+    // The event is the source of truth; only a refusal forces the shell back.
+    document.exitFullscreen().catch(() => setActive(false));
   }, []);
 
   useEffect(() => {

@@ -108,7 +108,8 @@ export default function PlayerFooter({
    * click that follows the release is swallowed once. A pointer that leaves or
    * is cancelled before the timer is a scroll, not a hold.
    */
-  const startHold = () => {
+  const startHold = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0) return;
     clearHold();
     firedRef.current = false;
     holdRef.current = window.setTimeout(() => {
@@ -121,6 +122,12 @@ export default function PlayerFooter({
 
   const endHold = () => {
     clearHold();
+  };
+
+  /** A pointer that left or was cancelled cannot produce a click on us. */
+  const cancelHold = () => {
+    clearHold();
+    firedRef.current = false;
   };
 
   const handleClick = () => {
@@ -170,12 +177,11 @@ export default function PlayerFooter({
             onClick={handleClick}
             onPointerDown={startHold}
             onPointerUp={endHold}
-            onPointerLeave={endHold}
-            onPointerCancel={endHold}
+            onPointerLeave={cancelHold}
+            onPointerCancel={cancelHold}
             onContextMenu={(event) => event.preventDefault()}
-            aria-label={t.footer.volume}
+            aria-label={muted ? t.footer.volumeMuted : t.footer.volume}
             aria-expanded={open}
-            aria-haspopup="dialog"
             className={cn(
               'volume-button press flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-line active:bg-line',
               muted ? 'text-ink' : 'text-muted',
@@ -185,7 +191,7 @@ export default function PlayerFooter({
           </button>
 
           {open && (
-            <div className="volume-popover" role="dialog" aria-label={t.footer.volume}>
+            <div className="volume-popover" onContextMenu={(event) => event.preventDefault()}>
               <span className="volume-value tnum" aria-hidden="true">
                 {level}%
               </span>

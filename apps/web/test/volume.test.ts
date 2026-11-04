@@ -35,6 +35,11 @@ test('an absent or unreadable store reads as full volume', () => {
   assert.equal(readVolume(fakeStorage({ 'tilawah:volume': '1.7' })), 1);
 });
 
+test('a stored zero or negative level reads as full volume, never a silent start', () => {
+  assert.equal(readVolume(fakeStorage({ 'tilawah:volume': '0' })), DEFAULT_VOLUME);
+  assert.equal(readVolume(fakeStorage({ 'tilawah:volume': '-1' })), DEFAULT_VOLUME);
+});
+
 test('a stored level is read and written back', () => {
   const storage = fakeStorage({ 'tilawah:volume': '0.4' });
   assert.equal(readVolume(storage), 0.4);
