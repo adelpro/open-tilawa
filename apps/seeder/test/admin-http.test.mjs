@@ -326,7 +326,7 @@ test('POST /api/import requires the node credentials', async () => {
   assert.equal(res.status, 401);
 });
 
-test('POST /api/import refuses a release that is not 114 tracks', async () => {
+test('POST /api/import refuses a release with no tracks', async () => {
   const base = `http://127.0.0.1:${port}`;
   const res = await fetch(`${base}/api/import`, {
     method: 'POST',
@@ -334,11 +334,11 @@ test('POST /api/import refuses a release that is not 114 tracks', async () => {
     body: JSON.stringify({
       folderName: 'Short',
       name: 'Short',
-      tracks: [{ surah: 1, url: `${base}/health`, sizeBytes: null }],
+      tracks: [],
     }),
   });
   assert.equal(res.status, 400);
-  assert.match((await res.json()).error, /114/);
+  assert.match((await res.json()).error, /1 to 114/);
 });
 
 test('POST /api/import downloads and seeds, and the job reports the torrent', async () => {
