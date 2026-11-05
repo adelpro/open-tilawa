@@ -9,8 +9,8 @@ const FULL_QURAN = 114;
 
 /** Every import is a whole mushaf: 114 distinct surahs, each an http(s) URL. */
 export function validateTracks(tracks) {
-  if (!Array.isArray(tracks) || tracks.length !== FULL_QURAN) {
-    return { ok: false, error: `expected ${FULL_QURAN} tracks` };
+  if (!Array.isArray(tracks) || tracks.length < 1 || tracks.length > FULL_QURAN) {
+    return { ok: false, error: `expected 1 to ${FULL_QURAN} tracks` };
   }
   const seen = new Set();
   for (const track of tracks) {

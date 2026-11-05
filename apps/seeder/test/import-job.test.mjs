@@ -14,6 +14,11 @@ describe('import job input', () => {
     assert.deepEqual(validateTracks(tracks), { ok: true });
   });
 
+  it('accepts a partial recitation, because providers carry them', () => {
+    const tracks = Array.from({ length: 16 }, (_, index) => track(index + 1));
+    assert.deepEqual(validateTracks(tracks), { ok: true });
+  });
+
   it('refuses a missing or duplicated surah', () => {
     assert.equal(validateTracks([track(1), track(1)]).ok, false);
     assert.equal(validateTracks([track(0)]).ok, false);
