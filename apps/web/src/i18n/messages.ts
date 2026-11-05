@@ -346,7 +346,7 @@ const ar = {
     lede: 'احتفظ بنسخة من مكتبة التلاوات، وساهم في توزيعها على المستمعين. بأمر واحد، يمكنك تحديد مساحة التخزين وسرعة الرفع، لتصبح التلاوات أقرب إلى المستمعين حول العالم.',
     why: {
       title: 'لماذا تشغّل عقدة؟',
-      p1: 'لا تخزّن لوحة التحكم الملفات الصوتية بنفسها. تتولى كل عقدة الاحتفاظ بنسخة من المكتبة ومشاركة أجزائها مع المستمعين عبر BitTorrent. وتعمل عُقَد مشاركة الآن.',
+      p1: 'لا تخزّن لوحة التحكم الملفات الصوتية بنفسها. تتولى كل عقدة الاحتفاظ بنسخة من المكتبة ومشاركة أجزائها مع المستمعين عبر WebTorrent. وتعمل عُقَد مشاركة الآن.',
       p2: 'وجود عقدة على شبكة مختلفة يساعد على تقريب التلاوات من المستمعين الذين يصعب عليهم الوصول إلى خوادمنا بسرعة.',
     },
     supported: {
@@ -368,6 +368,8 @@ const ar = {
       commandHint: '50 غيغابايت من التخزين و20 ميغابت في الثانية للرفع. أخفض سرعة الرفع على اتصال منزلي؛ العقدة لا تتجاوز الحدّ.',
       portTitle: 'افتح منفذ المشاركة',
       portHint: 'هذا هو المنفذ الوحيد الذي تحتاج إلى إتاحته عبر الإنترنت. لا تفتح 8085: فهو يستقبل بيانات الدخول ويبقى على الشبكة المحلية أو Tailscale.',
+      terminalAlt: 'الأمران كما يُكتبان في طرفية لينكس: أمر التثبيت وأمر فتح المنفذ.',
+      terminalCaption: 'الأمران كما يُكتبان في طرفية لينكس.',
       afterTitle: 'المعلومات التي يعرضها المثبّت',
       afterBody: 'الاسم والعنوان واسم المستخدم وكلمة المرور. أرسلها إلى المسؤول، أو أضف العقدة بنفسك من لوحة التحكم.',
       commandsAlt: 'نافذة إضافة عقدة في لوحة التحكم: أمر التثبيت وأمر فتح المنفذ، وزر نسخ لكل منهما.',
@@ -756,7 +758,7 @@ const en: typeof ar = {
     lede: 'Keep a copy of the catalogue and help distribute it to listeners. One command sets the storage and upload caps, so the recitations are closer to listeners around the world.',
     why: {
       title: 'Why run a node?',
-      p1: 'The console does not store the audio itself. Each node keeps a copy of the catalogue and shares its pieces with listeners over BitTorrent. Nodes are running now.',
+      p1: 'The console does not store the audio itself. Each node keeps a copy of the catalogue and shares its pieces with listeners over WebTorrent. Nodes are running now.',
       p2: 'A node on a different network helps bring the recitations closer to listeners who cannot reach our servers quickly.',
     },
     supported: {
@@ -778,6 +780,8 @@ const en: typeof ar = {
       commandHint: '50 GB of disk and 20 Mbps of upload. Lower the upload speed on a home connection; the node never uses more than the cap.',
       portTitle: 'Open the peer port',
       portHint: 'This is the only port the internet needs. Do not open 8085: it answers admin credentials and stays on the LAN or tailnet.',
+      terminalAlt: 'The two commands as written in a Linux terminal: the install command and the port command.',
+      terminalCaption: 'The two commands as written in a Linux terminal.',
       afterTitle: 'What the installer prints',
       afterBody: 'Name, URL, user and password. Send them to the operator, or add the node yourself from the console.',
       commandsAlt: 'The Add seeder dialog: the install command and the port command, each with a copy button.',

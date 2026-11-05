@@ -97,6 +97,19 @@ export default function SeedPage() {
             failedLabel={copy.copyFailed}
           />
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">{copy.linux.portHint}</p>
+          <figure className="mt-6">
+            <img
+              src="/images/seeders-terminal.png"
+              alt={copy.linux.terminalAlt}
+              width={1200}
+              height={420}
+              loading="lazy"
+              className="h-auto w-full"
+            />
+            <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
+              {copy.linux.terminalCaption}
+            </figcaption>
+          </figure>
           <h3 className="mt-6 text-[1rem] font-semibold text-ink">{copy.linux.afterTitle}</h3>
           <p className="mt-2 text-[1rem] leading-relaxed text-ink">{copy.linux.afterBody}</p>
           <figure className="mt-6">
