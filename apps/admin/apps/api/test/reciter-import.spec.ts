@@ -152,6 +152,50 @@ describe('reciter provider import', () => {
     expect(row.importSeederId).toBe(7);
   });
 
+  it('imports into a linked draft instead of creating a second row', async () => {
+    const imports = h.app.get(ReciterImportService);
+    const reciters = h.app.get(RecitersService);
+    const seeders = h.app.get(SeedersService);
+    const registry = h.app.get(ProviderRegistry);
+
+    const draft = reciters.add({
+      name: 'Draft',
+      nameAr: 'بدر التركي',
+      riwaya: 'Hafs',
+      fileCount: 114,
+      provider: 'itqan',
+      reciterId: '5',
+      releaseId: '15',
+      variant: 'default',
+      published: false,
+    });
+    jest.spyOn(registry, 'get').mockReturnValue({
+      id: 'itqan',
+      label: 'Itqan',
+      search: async () => [],
+      release: async () => release('5', '15'),
+    });
+    const started = jest.spyOn(seeders, 'importRelease');
+    started.mockReset();
+    started.mockResolvedValue({ jobId: 'job-draft' });
+
+    const row = await imports.start({
+      provider: 'itqan',
+      reciterId: '5',
+      releaseId: '15',
+      variant: 'default',
+      seederIds: [7],
+      folderName: 'Draft_Hafs',
+      publish: true,
+    });
+
+    expect(row.id).toBe(draft.id);
+    expect(row.importState).toBe('downloading');
+    expect(
+      reciters.list().filter((entry) => entry.provider === 'itqan' && entry.releaseId === '15'),
+    ).toHaveLength(1);
+  });
+
   it('refuses a duplicate provider release', async () => {
     const imports = h.app.get(ReciterImportService);
     const registry = h.app.get(ProviderRegistry);

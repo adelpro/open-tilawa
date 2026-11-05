@@ -82,7 +82,14 @@ export class ReciterImportService {
           (row.variant ?? '') === variant,
       );
     if (existing) {
-      throw new ConflictException(`this release is already linked to row ${existing.id}`);
+      if (existing.importState === 'downloading' || existing.importState === 'seeding') {
+        throw new ConflictException(`an import is already running for reciter ${existing.id}`);
+      }
+      // A row linked before it had a torrent is the same release, not a second
+      // one. Import into it instead of refusing the operator's own link.
+      if (existing.magnet || existing.infohash) {
+        throw new ConflictException(`this release is already linked to reciter ${existing.id}`);
+      }
     }
 
     const folder = input.folderName?.trim() || folderFromRelease(release.name, release.riwaya);
@@ -92,18 +99,30 @@ export class ReciterImportService {
       );
     }
 
-    const row = this.reciters.add({
-      name: release.name,
-      nameAr: release.nameAr,
-      riwaya: release.riwaya,
-      fileCount: release.surahCount,
-      sizeBytes: release.sizeBytes,
-      published: false,
-      provider: release.provider,
-      reciterId: release.reciterId,
-      releaseId: release.releaseId,
-      variant,
-    });
+    const row = existing
+      ? this.reciters.update(existing.id, {
+          name: release.name,
+          nameAr: release.nameAr,
+          riwaya: release.riwaya,
+          fileCount: release.surahCount,
+          sizeBytes: release.sizeBytes,
+          provider: release.provider,
+          reciterId: release.reciterId,
+          releaseId: release.releaseId,
+          variant,
+        })!
+      : this.reciters.add({
+          name: release.name,
+          nameAr: release.nameAr,
+          riwaya: release.riwaya,
+          fileCount: release.surahCount,
+          sizeBytes: release.sizeBytes,
+          published: false,
+          provider: release.provider,
+          reciterId: release.reciterId,
+          releaseId: release.releaseId,
+          variant,
+        });
 
     let primary: { seederId: number; jobId: string } | null = null;
     let lastError: unknown = null;
@@ -124,9 +143,9 @@ export class ReciterImportService {
       }
     }
     if (!primary) {
-      // No node accepted the job, so the draft would be a row with no torrent
-      // and no future. Remove it rather than leave a dead row.
-      this.reciters.remove(row.id);
+      // Remove a row created for this attempt; a pre-existing linked draft is
+      // the operator's row and stays.
+      if (!existing) this.reciters.remove(row.id);
       throw lastError ?? new BadGatewayException('no node accepted the import');
     }
     return this.reciters.markImport(row.id, {

@@ -1018,7 +1018,10 @@ export function Reciters(): ReactElement {
                   </Chip>
                 </p>
                 {row.candidates.length === 0 ? (
-                  <p className="body muted">{t('reciters.linkNoMatch')}</p>
+                  <>
+                    <p className="body muted">{t('reciters.linkNoMatch')}</p>
+                    <p className="row__meta">{t('reciters.linkNoMatchHint')}</p>
+                  </>
                 ) : (
                   row.candidates.map((candidate) => (
                     <div
@@ -1027,8 +1030,15 @@ export function Reciters(): ReactElement {
                     >
                       <span className="body">
                         {candidate.nameAr ?? candidate.name} —{' '}
-                        {riwayaLabel(candidate.riwaya, locale)} ·{' '}
-                        {providerLabel(candidate.provider)} · {candidate.score}
+                        {riwayaLabel(candidate.riwaya, locale)}
+                        {candidate.style
+                          ? ` · ${
+                              candidate.style === 'Mujawwad'
+                                ? t('reciters.mujawwad')
+                                : t('reciters.murattal')
+                            }`
+                          : ''}{' '}
+                        · {providerLabel(candidate.provider)}
                       </span>
                       <Button
                         small
@@ -1164,8 +1174,15 @@ export function Reciters(): ReactElement {
                             key={`${row.provider}-${row.reciterId}-${row.releaseId}-${row.variant}`}
                             value={index}
                           >
-                            {row.nameAr ?? row.name} — {riwayaLabel(row.riwaya, locale)} (
-                            {row.surahCount})
+                            {row.nameAr ?? row.name} — {riwayaLabel(row.riwaya, locale)}
+                            {row.style
+                              ? ` · ${t(
+                                  row.style === 'Mujawwad'
+                                    ? 'reciters.mujawwad'
+                                    : 'reciters.murattal',
+                                )}`
+                              : ''}{' '}
+                            ({row.surahCount})
                           </option>
                         ))}
                       </select>
@@ -1176,7 +1193,16 @@ export function Reciters(): ReactElement {
                   <p className="body muted">
                     {providerRelease.nameAr ?? providerRelease.name} · {providerRelease.provider}{' '}
                     {providerRelease.reciterId}/{providerRelease.releaseId}
-                    {providerRelease.variant ? ` · ${providerRelease.variant}` : ''}
+                    {providerRelease.style
+                      ? ` · ${
+                          providerRelease.style === 'Mujawwad'
+                            ? t('reciters.mujawwad')
+                            : t('reciters.murattal')
+                        }`
+                      : ''}
+                    {providerRelease.variant && providerRelease.variant !== 'default'
+                      ? ` · ${providerRelease.variant}`
+                      : ''}
                   </p>
                 ) : null}
               </>
