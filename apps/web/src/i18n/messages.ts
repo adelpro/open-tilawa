@@ -348,8 +348,8 @@ const ar = {
       title: 'لماذا عقدة؟',
       p1: 'لوحة التحكم لا تحفظ صوتاً. كل عقدة تحتفظ بالمكتبة وتبثّ أجزاءها إلى المستمعين عبر BitTorrent؛ وهناك عقدتان تعملان الآن.',
       p2: 'عقدة على شبكة أخرى أثمن من مئة تنزيل: تقرّب الصوت من مستمعين لا يصلهم خادمنا بسرعة.',
-      trackerAlt: 'إحصاءات الشبكة: عشرة تورنتات، وقرينان متصلان، وقرين واحد يبثّ.',
-      trackerCaption: 'الشبكة الآن: عشرة تورنتات، وقرينان متصلان، وقرين واحد يبثّ.',
+      nodeAlt: 'شاشة العقدة: عشر تلاوات، و44 قريناً، وحدود الرفع والتحميل.',
+      nodeCaption: 'شاشة العقدة نفسها: عشر تلاوات، و44 قريناً، وحدود الرفع والتحميل.',
     },
     supported: {
       title: 'ما المدعوم؟',
@@ -758,8 +758,8 @@ const en: typeof ar = {
       title: 'Why a node?',
       p1: 'The console stores no audio. Each node keeps the catalogue and serves pieces to listeners over BitTorrent; two nodes already run.',
       p2: 'A node on another network is worth more than a hundred downloads: it shortens the path for listeners your server cannot reach quickly.',
-      trackerAlt: 'Network statistics: ten torrents, two connected peers, one seeding.',
-      trackerCaption: 'The network now: ten torrents, two connected peers, one seeding.',
+      nodeAlt: 'The node\'s own screen: ten recitations, 44 peers, and the upload and download caps.',
+      nodeCaption: 'The node\'s own screen: ten recitations, 44 peers, and the upload and download caps.',
     },
     supported: {
       title: 'What is supported?',

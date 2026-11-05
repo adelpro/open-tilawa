@@ -22,7 +22,7 @@ export default function SeedPage() {
     <main className="page-screen">
       <div className="w-full max-w-[520px] lg:max-w-[700px]">
         <div className="seed-hero">
-          <h1 className="text-[2rem] font-semibold leading-tight text-ink lg:text-[3.5rem]">
+          <h1 className="text-[3rem] font-semibold leading-[1.05] text-ink lg:text-[6rem]">
             {copy.title}
           </h1>
           <p className="mt-5 text-[1.125rem] leading-relaxed text-ink lg:text-[1.25rem]">
@@ -39,19 +39,19 @@ export default function SeedPage() {
 
         <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.why.title}</h2>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.why.p1}</p>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.why.p2}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.why.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.why.p2}</p>
           <figure className="mt-6">
             <img
-              src="/images/seeders-tracker.png"
-              alt={copy.why.trackerAlt}
-              width={900}
-              height={720}
+              src="/images/seeders-node.png"
+              alt={copy.why.nodeAlt}
+              width={1100}
+              height={285}
               loading="lazy"
               className="h-auto w-full bg-line/20"
             />
             <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
-              {copy.why.trackerCaption}
+              {copy.why.nodeCaption}
             </figcaption>
           </figure>
         </section>
@@ -88,8 +88,8 @@ export default function SeedPage() {
 
         <section id="linux" className="seed-section mt-14 scroll-mt-8">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.linux.title}</h2>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.linux.intro}</p>
-          <ul className="mt-4 list-disc space-y-2 ps-5 text-[0.9375rem] leading-relaxed text-muted">
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.linux.intro}</p>
+          <ul className="mt-4 list-disc space-y-2 ps-5 text-[0.9375rem] leading-relaxed text-ink">
             {copy.linux.requirements.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -111,7 +111,7 @@ export default function SeedPage() {
           />
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">{copy.linux.portHint}</p>
           <h3 className="mt-6 text-[1rem] font-semibold text-ink">{copy.linux.afterTitle}</h3>
-          <p className="mt-2 text-[1rem] leading-relaxed text-muted">{copy.linux.afterBody}</p>
+          <p className="mt-2 text-[1rem] leading-relaxed text-ink">{copy.linux.afterBody}</p>
           <figure className="mt-6">
             <img
               src="/images/seeders-commands.png"
@@ -146,7 +146,7 @@ export default function SeedPage() {
           </p>
           <ol className="mt-5 list-decimal space-y-4 ps-5">
             {copy.windows.steps.map((step) => (
-              <li key={step.title} className="text-[0.9375rem] leading-relaxed text-muted">
+              <li key={step.title} className="text-[0.9375rem] leading-relaxed text-ink">
                 <span className="font-semibold text-ink">{step.title}</span> {step.body}
               </li>
             ))}
@@ -156,8 +156,8 @@ export default function SeedPage() {
 
         <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.console.title}</h2>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.console.p1}</p>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.console.p2}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.console.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.console.p2}</p>
           <a
             href={CONSOLE_SEEDERS_URL}
             target="_blank"
@@ -201,7 +201,7 @@ export default function SeedPage() {
             {copy.limits.items.map((item) => (
               <div key={item.title}>
                 <dt className="text-[0.9375rem] font-semibold text-ink">{item.title}</dt>
-                <dd className="mt-1 text-[0.9375rem] leading-relaxed text-muted">{item.body}</dd>
+                <dd className="mt-1 text-[0.9375rem] leading-relaxed text-ink">{item.body}</dd>
               </div>
             ))}
           </dl>
@@ -213,7 +213,7 @@ export default function SeedPage() {
             {copy.faq.items.map((item) => (
               <div key={item.q}>
                 <dt className="text-[1rem] font-semibold leading-snug text-ink">{item.q}</dt>
-                <dd className="mt-1 text-[1rem] leading-relaxed text-muted">{item.a}</dd>
+                <dd className="mt-1 text-[1rem] leading-relaxed text-ink">{item.a}</dd>
               </div>
             ))}
           </dl>
