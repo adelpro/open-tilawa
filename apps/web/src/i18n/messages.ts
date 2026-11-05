@@ -346,7 +346,7 @@ const ar = {
     lede: 'احتفظ بنسخة من مكتبة التلاوات، وساهم في توزيعها على المستمعين. بأمر واحد، يمكنك تحديد مساحة التخزين وسرعة الرفع، لتصبح التلاوات أقرب إلى المستمعين حول العالم.',
     why: {
       title: 'لماذا تشغّل عقدة؟',
-      p1: 'لا تخزّن لوحة التحكم الملفات الصوتية بنفسها. تتولى كل عقدة الاحتفاظ بنسخة من المكتبة ومشاركة أجزائها مع المستمعين عبر WebTorrent. وتعمل عُقَد مشاركة الآن.',
+      p1: 'لا تخزّن تلاوة الملفات الصوتية بنفسها. تتولى كل عقدة الاحتفاظ بنسخة من المكتبة ومشاركة أجزائها مع المستمعين عبر WebTorrent.',
       p2: 'وجود عقدة على شبكة مختلفة يساعد على تقريب التلاوات من المستمعين الذين يصعب عليهم الوصول إلى خوادمنا بسرعة.',
     },
     supported: {
@@ -357,27 +357,27 @@ const ar = {
     },
     linux: {
       title: 'على لينكس',
-      intro: 'ثبّت Docker ثم شغّل الأمر. يثبّت العقدة في /opt ويعرض المعلومات الأربع التي تطلبها لوحة التحكم.',
+      intro: 'ثبّت Docker ثم شغّل الأمر. وسيتم تثبيت العقدة في /opt، وسيعرض المثبّت المعلومات الأربع التي تطلبها لوحة التحكم.',
       requirements: [
-        'جهاز يبقى يعمل، وفيه نحو 20 غيغابايت حرة.',
+        'الجهاز يجب أن يبقى في وضع التشغيل، وفيه نحو 20 غيغابايت حرة.',
         'Docker وصلاحية sudo.',
         'المنفذ 6881 مفتوح على الموجّه.',
-        'اختياري: Tailscale على الجهاز وعلى مضيف لوحة التحكم، لعنوان لا يتغيّر مع تغيّر IP.',
+        'يُستحسن توفير اتصال ثابت باستعمال Tailscale لتجنّب مشاكل تغيّر IP.',
       ],
-      commandTitle: 'ثبّت وشغّل',
-      commandHint: '50 غيغابايت من التخزين و20 ميغابت في الثانية للرفع. أخفض سرعة الرفع على اتصال منزلي؛ العقدة لا تتجاوز الحدّ.',
-      portTitle: 'افتح منفذ المشاركة',
+      commandTitle: 'أمر التشغيل',
+      commandHint: '50 غيغابايت من التخزين و20 ميغابت في الثانية للرفع. أخفض سرعة الرفع على الاتصال المنزلي (العقدة لن تتجاوز الحدّ).',
+      portTitle: 'فتح منفذ المشاركة',
       portHint: 'هذا هو المنفذ الوحيد الذي تحتاج إلى إتاحته عبر الإنترنت. لا تفتح 8085: فهو يستقبل بيانات الدخول ويبقى على الشبكة المحلية أو Tailscale.',
       terminalAlt: 'الأمران كما يُكتبان في طرفية لينكس: أمر التثبيت وأمر فتح المنفذ.',
       terminalCaption: 'الأمران كما يُكتبان في طرفية لينكس.',
-      afterTitle: 'المعلومات التي يعرضها المثبّت',
+      afterTitle: 'ما يعرضه أمر التثبيت',
       afterBody: 'الاسم والعنوان واسم المستخدم وكلمة المرور. أرسلها إلى المسؤول، أو أضف العقدة بنفسك من لوحة التحكم.',
       commandsAlt: 'نافذة إضافة عقدة في لوحة التحكم: أمر التثبيت وأمر فتح المنفذ، وزر نسخ لكل منهما.',
       commandsCaption: 'لوحة التحكم تعرض الأمرين جاهزين للنسخ، ثم الحقول الأربع.',
     },
     windows: {
-      title: 'ويندوز عبر WSL2',
-      warning: 'تجريبي. يفتح Docker Desktop منفذ المشاركة، لكن شبكة WSL قد تمنع لوحة التحكم من الوصول إلى 8085. إن لم تستجب، فاستخدم جهاز لينكس.',
+      title: 'ويندوز عبر WSL2 (تجريبي)',
+      warning: 'يفتح Docker Desktop منفذ المشاركة، لكن شبكة WSL قد تمنع لوحة التحكم من الوصول إلى 8085. إن لم تستجب، فاستخدم جهاز لينكس.',
       command: 'wsl --install -d Ubuntu',
       commandTitle: 'ثبّت WSL2 وأوبنتو',
       commandHint: 'في PowerShell بصلاحية مسؤول، ثم أعد التشغيل.',
@@ -389,7 +389,6 @@ const ar = {
         { title: 'شغّل أمر التثبيت أدناه.', body: 'من طرفية أوبنتو، بعد تثبيت Docker.' },
         { title: 'افتح المنفذ.', body: 'افتح 6881 TCP وUDP في جدار ويندوز، ومرّره على الموجّه. أبقِ 8085 على Tailscale أو الشبكة المحلية.' },
       ],
-      note: 'ماك غير مدعوم: المثبّت يفترض لينكس.',
     },
     console: {
       title: 'أضف العقدة إلى لوحة التحكم',
@@ -413,7 +412,7 @@ const ar = {
     faq: {
       title: 'أسئلة متكررة',
       items: [
-        { q: 'هل أحتاج خادماً؟', a: 'جهاز لينكس مخصّص أو خادم صغير. الاتصال المنزلي يعمل مع الحدود.' },
+        { q: 'هل أحتاج خادماً؟', a: 'جهاز لينكس مخصّص أو خادم صغير. الاتصال المنزلي يعمل بشكل محدود.' },
         { q: 'ما مقدار استهلاك سرعة الرفع؟', a: 'ابدأ بـ20 ميغابت في الثانية، وأخفضه إن تأثر الاتصال.' },
         { q: 'هل يبطئ حاسوبي؟', a: 'لا تستهلك العقدة كامل مواردها باستمرار؛ فهي تنشط عند الحاجة إلى مشاركة التلاوات.' },
         { q: 'كيف أزيلها؟', a: 'احذف العقدة من لوحة التحكم، ثم docker compose down في مجلد التثبيت.' },
@@ -422,7 +421,6 @@ const ar = {
     copy: 'انسخ',
     copied: 'نُسخ',
     copyFailed: 'تعذّر النسخ',
-    closing: 'مثبّت لينكس هو الطريق المدعوم اليوم. العميل المكتبي مخطط بعد المرحلة التجريبية، بلا موعد.',
   },
   telemetry: {
     title: 'إحصاءات الاستخدام',
@@ -758,7 +756,7 @@ const en: typeof ar = {
     lede: 'Keep a copy of the catalogue and help distribute it to listeners. One command sets the storage and upload caps, so the recitations are closer to listeners around the world.',
     why: {
       title: 'Why run a node?',
-      p1: 'The console does not store the audio itself. Each node keeps a copy of the catalogue and shares its pieces with listeners over WebTorrent. Nodes are running now.',
+      p1: 'Tilawah does not store the audio itself. Each node keeps a copy of the catalogue and shares its pieces with listeners over WebTorrent.',
       p2: 'A node on a different network helps bring the recitations closer to listeners who cannot reach our servers quickly.',
     },
     supported: {
@@ -769,27 +767,27 @@ const en: typeof ar = {
     },
     linux: {
       title: 'On Linux',
-      intro: 'Install Docker, then run this. The installer installs to /opt and prints the four values the console asks for.',
+      intro: 'Install Docker, then run this. The node will be installed in /opt, and the installer will show the four values the console asks for.',
       requirements: [
-        'A machine that stays on, with about 20 GB free.',
+        'The machine must stay powered on, with about 20 GB free.',
         'Docker, and root (sudo).',
         'Port 6881 open on the router.',
-        'Optional: Tailscale on this machine and the console host, for an address that survives an IP change.',
+        'A stable connection through Tailscale is recommended, to avoid IP-change problems.',
       ],
-      commandTitle: 'Install and start',
-      commandHint: '50 GB of disk and 20 Mbps of upload. Lower the upload speed on a home connection; the node never uses more than the cap.',
-      portTitle: 'Open the peer port',
+      commandTitle: 'Run command',
+      commandHint: '50 GB of disk and 20 Mbps of upload. Lower the upload speed on a home connection (the node will not exceed the cap).',
+      portTitle: 'Open peer port',
       portHint: 'This is the only port the internet needs. Do not open 8085: it answers admin credentials and stays on the LAN or tailnet.',
       terminalAlt: 'The two commands as written in a Linux terminal: the install command and the port command.',
       terminalCaption: 'The two commands as written in a Linux terminal.',
-      afterTitle: 'What the installer prints',
+      afterTitle: 'What the install command shows',
       afterBody: 'Name, URL, user and password. Send them to the operator, or add the node yourself from the console.',
       commandsAlt: 'The Add seeder dialog: the install command and the port command, each with a copy button.',
       commandsCaption: 'The console offers both commands ready to copy, then the four fields.',
     },
     windows: {
-      title: 'Windows through WSL2',
-      warning: 'Experimental. Docker Desktop publishes the peer port, but WSL’s network can stop the console reaching 8085. If it does not answer, use a Linux machine.',
+      title: 'Windows through WSL2 (experimental)',
+      warning: 'Docker Desktop publishes the peer port, but WSL’s network can stop the console reaching 8085. If it does not answer, use a Linux machine.',
       command: 'wsl --install -d Ubuntu',
       commandTitle: 'Install WSL2 and Ubuntu',
       commandHint: 'In an elevated PowerShell, then reboot.',
@@ -801,7 +799,6 @@ const en: typeof ar = {
         { title: 'Run the install command below.', body: 'From the Ubuntu terminal, after Docker is installed.' },
         { title: 'Open the port.', body: 'Allow 6881 TCP and UDP in Windows Defender Firewall, and forward it on the router. Keep 8085 on the tailnet or LAN.' },
       ],
-      note: 'macOS is not supported: the installer assumes Linux.',
     },
     console: {
       title: 'Add the node to the console',
@@ -825,7 +822,7 @@ const en: typeof ar = {
     faq: {
       title: 'Questions',
       items: [
-        { q: 'Do I need a server?', a: 'A spare Linux machine or a small VPS. A home connection works with the caps.' },
+        { q: 'Do I need a server?', a: 'A dedicated Linux machine or a small VPS. A home connection works within limits.' },
         { q: 'How much upload bandwidth does it use?', a: 'Start at 20 Mbps and lower it if the connection suffers.' },
         { q: 'Will it slow my computer?', a: 'The node does not use its full resources all the time; it becomes active when there are recitations to share.' },
         { q: 'How do I remove it?', a: 'Remove the node in the console, then run docker compose down in the install directory.' },
@@ -834,7 +831,6 @@ const en: typeof ar = {
     copy: 'Copy',
     copied: 'Copied',
     copyFailed: 'Copy failed',
-    closing: 'The Linux installer is the supported path today. A desktop client is planned after the alpha; there is no date.',
   },
   telemetry: {
     title: 'Usage statistics',

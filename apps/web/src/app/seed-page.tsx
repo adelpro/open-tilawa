@@ -161,7 +161,6 @@ export default function SeedPage() {
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
             {copy.windows.installHint}
           </p>
-          <p className="mt-4 text-[0.8125rem] leading-relaxed text-muted">{copy.windows.note}</p>
         </section>
 
         <section className="seed-section mt-14">
@@ -228,8 +227,6 @@ export default function SeedPage() {
             ))}
           </dl>
         </section>
-
-        <p className="seed-section mt-14 text-[1rem] leading-relaxed text-ink">{copy.closing}</p>
       </div>
     </main>
   );
