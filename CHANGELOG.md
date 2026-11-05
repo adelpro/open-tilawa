@@ -28,7 +28,9 @@ Admin release. App versions: **web 1.13.23**, **admin 1.33.9**, **seeder 1.5.7**
   seeder confirms. Unchecking it leaves a draft.
 - **Link existing rows.** The console suggests links by name, riwaya and style,
   excludes releases another row already carries, and shows the style and variant.
-  Ten live rows are linked; ياسين الجزائري has no provider match and stays unlinked.
+  All eleven live rows are linked. ياسين الجزائري was matched by hand to MP3Quran
+  (reciter 14): the provider lists him as القارئ ياسين, so the name matcher offered
+  nothing, and Itqan does not carry him at all.
 
 ### Fixed
 
