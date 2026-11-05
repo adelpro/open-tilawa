@@ -147,6 +147,15 @@ export default function TopBar({
                 <Icon name="shield" />
                 {t.routes.privacy}
               </Link>
+              <Link
+                to={{ name: 'seed' }}
+                role="menuitem"
+                onClick={() => setMoreOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
+              >
+                <Icon name="server" />
+                {t.routes.seed}
+              </Link>
             </div>
           )}
         </div>
