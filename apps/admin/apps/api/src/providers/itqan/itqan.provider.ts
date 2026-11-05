@@ -40,16 +40,23 @@ export class ItqanProvider implements ReciterProvider {
   private async list(): Promise<ProviderReleaseSummary[]> {
     if (this.cache && Date.now() - this.cache.at < CACHE_MS) return this.cache.items;
 
-    const [ar, en] = await Promise.all([
-      fetchJson<ItqanListResponse>(`${API}/recitations/?page_size=1000`, {
+    const [ar, en, arabicReciters] = await Promise.all([
+      fetchJson<ItqanListResponse>(`${API}/recitations/?page_size=100`, {
         headers: this.headers('ar'),
       }),
-      fetchJson<ItqanListResponse>(`${API}/recitations/?page_size=1000`, {
+      fetchJson<ItqanListResponse>(`${API}/recitations/?page_size=100`, {
         headers: this.headers('en'),
       }),
+      fetchJson<{ results: { id: number; name: string }[] }>(
+        `${API}/reciters/?page_size=100`,
+        { headers: this.headers('ar') },
+      ),
     ]);
 
     const english = new Map<number, ItqanRecitation>(en.results.map((row) => [row.id, row]));
+    const arabicNames = new Map<number, string>(
+      (arabicReciters.results ?? []).map((row) => [row.id, row.name]),
+    );
     const items: ProviderReleaseSummary[] = [];
 
     for (const row of ar.results) {
@@ -67,7 +74,7 @@ export class ItqanProvider implements ReciterProvider {
           releaseId: String(row.id),
           variant: folder.slug,
           name: latin.reciter.name,
-          nameAr: row.reciter.name,
+          nameAr: arabicNames.get(row.reciter.id) ?? row.reciter.name,
           riwaya,
           style: null,
           surahCount: row.surahs_count,

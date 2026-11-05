@@ -44,6 +44,11 @@ const en = {
   ],
 };
 
+const recitersAr = {
+  count: 1,
+  results: [{ id: 2, name: 'بدر التركي' }],
+};
+
 const detail = {
   count: 2,
   results: [
@@ -58,7 +63,9 @@ describe('ItqanProvider', () => {
   });
 
   it('joins the two locales and lists one summary per folder', async () => {
-    jest.spyOn(global, 'fetch').mockImplementation(async (_input, init) => {
+    jest.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.includes('/reciters/')) return response(recitersAr) as unknown as Response;
       const language = new Headers(init?.headers as Record<string, string>).get('Accept-Language');
       if (language === 'ar') return response(ar) as unknown as Response;
       if (language === 'en') return response(en) as unknown as Response;
@@ -84,6 +91,7 @@ describe('ItqanProvider', () => {
   it('resolves a release into tracks and sums the sizes', async () => {
     jest.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
       const url = String(input);
+      if (url.includes('/reciters/')) return response(recitersAr) as unknown as Response;
       const language = new Headers(init?.headers as Record<string, string>).get('Accept-Language');
       if (url.includes('/recitations/11/')) {
         if (url.includes('folder=default')) return response(detail) as unknown as Response;
