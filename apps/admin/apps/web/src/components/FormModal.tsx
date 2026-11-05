@@ -58,7 +58,7 @@ export function FormModal({
         }}
       >
         {children}
-        <div className="cluster cluster--end">
+        <div className="cluster cluster--end modal__footer">
           {extra}
           <Button variant="tertiary" onClick={onClose}>
             {t('common.cancel')}

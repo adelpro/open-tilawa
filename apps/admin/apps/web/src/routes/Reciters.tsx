@@ -215,6 +215,7 @@ export function Reciters(): ReactElement {
           magnet: newMagnet.trim(),
           fileCount: Number(newFileCount) || 0,
           sizeBytes: newSizeGb.trim() ? Math.round(Number(newSizeGb) * 1024 ** 3) : null,
+          published: newPublish,
         },
       });
       setNewName('');
@@ -1053,6 +1054,18 @@ export function Reciters(): ReactElement {
           onSubmit={() => void (addMode === 'provider' ? importFromProvider() : add())}
           onClose={() => setShowAdd(false)}
           busy={busy === 'add'}
+          extra={
+            addMode === 'provider' ? (
+              <Button
+                variant="tertiary"
+                small
+                onClick={() => void saveProviderDraft()}
+                busy={busy === 'add'}
+              >
+                {t('reciters.saveDraft')}
+              </Button>
+            ) : null
+          }
           disabled={
             addMode === 'manual'
               ? !newName.trim() || !newInfohash.trim()
@@ -1266,48 +1279,68 @@ export function Reciters(): ReactElement {
                     />
                   )}
                 </Field>
-                <div className="stack stack--tight" role="group" aria-label={t('reciters.targetNodes')}>
-                  <p className="row__meta">{t('reciters.targetNodesHint')}</p>
-                  {(nodes ?? []).map((node) => (
-                    <label className="cluster" key={node.id}>
-                      <input
-                        type="checkbox"
-                        checked={newSeederIds.includes(node.id)}
-                        onChange={(event) =>
-                          setNewSeederIds((current) =>
-                            event.target.checked
-                              ? [...current, node.id]
-                              : current.filter((id) => id !== node.id),
-                          )
-                        }
-                      />
-                      <span>
-                        {node.name} — {node.status}
-                      </span>
-                    </label>
-                  ))}
+                <div className="node-picker" role="group" aria-label={t('reciters.targetNodes')}>
+                  <div className="node-picker__head">
+                    <span className="row__label">{t('reciters.targetNodes')}</span>
+                    <div className="cluster">
+                      <Button
+                        small
+                        variant="tertiary"
+                        onClick={() => setNewSeederIds((nodes ?? []).map((node) => node.id))}
+                      >
+                        {t('reciters.selectAll')}
+                      </Button>
+                      <Button small variant="tertiary" onClick={() => setNewSeederIds([])}>
+                        {t('reciters.selectNone')}
+                      </Button>
+                    </div>
+                  </div>
+                  {(nodes ?? []).length === 0 ? (
+                    <p className="node-picker__empty">{t('reciters.noNodes')}</p>
+                  ) : (
+                    (nodes ?? []).map((node) => (
+                      <label className="node-picker__row" key={node.id}>
+                        <input
+                          type="checkbox"
+                          checked={newSeederIds.includes(node.id)}
+                          onChange={(event) =>
+                            setNewSeederIds((current) =>
+                              event.target.checked
+                                ? [...current, node.id]
+                                : current.filter((id) => id !== node.id),
+                            )
+                          }
+                        />
+                        <span className="node-picker__name">{node.name}</span>
+                        <Chip tone={node.status === 'online' ? 'ok' : 'notice'}>
+                          {t(
+                            node.status === 'online'
+                              ? 'seeders.statusOnline'
+                              : 'seeders.statusOffline',
+                          )}
+                        </Chip>
+                        <span className="node-picker__free">
+                          {node.freeBytes === null ? '—' : bytes(node.freeBytes, locale)}
+                        </span>
+                      </label>
+                    ))
+                  )}
                 </div>
-                <label className="cluster">
-                  <input
-                    type="checkbox"
-                    checked={newPublish}
-                    onChange={(event) => setNewPublish(event.target.checked)}
-                  />
-                  <span>{t('reciters.publishWhenDone')}</span>
-                </label>
-                <div className="cluster">
-                  <Button
-                    small
-                    variant="tertiary"
-                    onClick={() => void saveProviderDraft()}
-                    busy={busy === 'add'}
-                  >
-                    {t('reciters.saveDraft')}
-                  </Button>
-                  <span className="row__meta">{t('reciters.draftHint')}</span>
-                </div>
+                <p className="row__meta">{t('reciters.targetNodesHint')}</p>
               </>
             )}
+
+            <div className="autopublish">
+              <label className="cluster">
+                <input
+                  type="checkbox"
+                  checked={newPublish}
+                  onChange={(event) => setNewPublish(event.target.checked)}
+                />
+                <span>{t('reciters.autoPublish')}</span>
+              </label>
+              <p className="row__meta">{t('reciters.autoPublishHint')}</p>
+            </div>
 
             <Field label={t('reciters.fileCount')}>
               {(id) => (

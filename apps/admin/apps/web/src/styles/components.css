@@ -2311,6 +2311,91 @@ button.chip[aria-pressed='true'] {
   opacity: 1;
 }
 
+/* The footer stays reachable while a long form scrolls — the Add-node modal
+   carries deploy instructions, and Cancel must not be below the fold. */
+.modal__footer {
+  position: sticky;
+  bottom: calc(var(--space-8) * -1);
+  z-index: 1;
+  margin: 0 calc(var(--space-8) * -1) calc(var(--space-8) * -1);
+  padding: var(--space-4) var(--space-8);
+  background: var(--canvas);
+  border-top: 1px solid var(--hairline);
+}
+
+/* A provider release can be seeded on more than one node. The picker is a
+   bordered list, not a row of loose checkboxes, and the bulk actions live in
+   its header. */
+.node-picker {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.node-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--canvas-parchment);
+}
+
+.node-picker__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.node-picker__row + .node-picker__row {
+  border-top: 1px solid var(--hairline);
+}
+
+.node-picker__row:hover {
+  background: var(--canvas-parchment);
+}
+
+.node-picker__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-picker__free {
+  color: var(--ink-secondary);
+  font: var(--fine-print);
+  white-space: nowrap;
+}
+
+.node-picker__empty {
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--ink-secondary);
+}
+
+.autopublish {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--canvas-parchment);
+  border-radius: var(--radius-sm);
+}
+
+.autopublish .cluster {
+  cursor: pointer;
+}
+
+.autopublish .row__meta {
+  margin: 0;
+}
+
+input[type='checkbox'] {
+  accent-color: var(--primary);
+}
+
 @keyframes modal-in {
   from {
     opacity: 0;

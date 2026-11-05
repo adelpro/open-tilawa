@@ -433,7 +433,7 @@ export function Seeders(): ReactElement {
               />
             )}
           </Field>
-          <div className="stack">
+          <div className="autopublish">
             <label className="cluster">
               <input
                 type="checkbox"
@@ -442,7 +442,7 @@ export function Seeders(): ReactElement {
               />
               <span>{t('seeders.fillOnAdd')}</span>
             </label>
-            <p className="fine-print">{t('seeders.fillOnAddHint')}</p>
+            <p className="row__meta">{t('seeders.fillOnAddHint')}</p>
           </div>
 
           {/* The same disclosure TURN uses, because "install it first" is the same
