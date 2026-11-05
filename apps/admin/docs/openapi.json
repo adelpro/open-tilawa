@@ -1393,6 +1393,94 @@
         ]
       }
     },
+    "/api/reciters/link-suggestions": {
+      "get": {
+        "operationId": "RecitersController_linkSuggestions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reciters"
+        ]
+      }
+    },
+    "/api/reciters/link": {
+      "post": {
+        "operationId": "RecitersController_link",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reciters"
+        ]
+      }
+    },
+    "/api/reciters/import-release": {
+      "post": {
+        "operationId": "RecitersController_importRelease",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reciters"
+        ]
+      }
+    },
+    "/api/reciters/{id}/import/retry": {
+      "post": {
+        "operationId": "RecitersController_retryImport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reciters"
+        ]
+      }
+    },
+    "/api/reciters/{id}/import": {
+      "delete": {
+        "operationId": "RecitersController_cancelImport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reciters"
+        ]
+      }
+    },
     "/api/reciters/import": {
       "post": {
         "operationId": "RecitersController_importFrom",
@@ -1618,6 +1706,98 @@
         },
         "tags": [
           "PublicReciters"
+        ]
+      }
+    },
+    "/api/providers": {
+      "get": {
+        "operationId": "ProvidersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Providers"
+        ]
+      }
+    },
+    "/api/providers/{provider}/search": {
+      "get": {
+        "operationId": "ProvidersController_search",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Providers"
+        ]
+      }
+    },
+    "/api/providers/{provider}/releases/{reciterId}/{releaseId}": {
+      "get": {
+        "operationId": "ProvidersController_release",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reciterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "releaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "variant",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Providers"
         ]
       }
     },
@@ -2044,7 +2224,7 @@
   "info": {
     "title": "Tilawa Admin API",
     "description": "",
-    "version": "1.33.3",
+    "version": "1.33.9",
     "contact": {}
   },
   "tags": [],

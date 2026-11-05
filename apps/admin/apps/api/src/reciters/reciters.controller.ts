@@ -20,6 +20,9 @@ import { RecitersService } from './reciters.service';
 import { CataloguePushService } from './catalogue-push.service';
 import { SettingsService } from '../settings/settings.service';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import type { ProviderId } from '../providers/provider.types';
+import { LinkSuggestionsService } from '../providers/link-suggestions.service';
+import { ReciterImportService } from './reciter-import.service';
 
 @UseGuards(JWTAuthGuard, RoleGuard)
 @Roles('admin')
@@ -29,6 +32,8 @@ export class RecitersController {
     private readonly service: RecitersService,
     private readonly push: CataloguePushService,
     private readonly settings: SettingsService,
+    private readonly links: LinkSuggestionsService,
+    private readonly imports: ReciterImportService,
   ) {}
 
   /**
@@ -55,6 +60,62 @@ export class RecitersController {
     // Coverage, not just the rows: which nodes report each reciter, what was
     // asked of them, and the state that follows.
     return this.service.listWithPlacement();
+  }
+
+  /** Proposals for linking rows that have no provider yet; never writes. */
+  @Get('link-suggestions')
+  async linkSuggestions() {
+    return { rows: await this.links.suggestions() };
+  }
+
+  /** Apply one reviewed link. */
+  @Post('link')
+  @HttpCode(HttpStatus.OK)
+  link(
+    @Body()
+    body: {
+      rowId: number;
+      provider: ProviderId;
+      reciterId: string;
+      releaseId: string;
+      variant?: string;
+    },
+  ) {
+    try {
+      return this.links.link(body);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+  }
+
+  /** Create a draft and ask a node to download and seed the provider release. */
+  @Post('import-release')
+  @HttpCode(HttpStatus.CREATED)
+  importRelease(
+    @Body()
+    body: {
+      provider: ProviderId;
+      reciterId: string;
+      releaseId: string;
+      variant?: string;
+      seederId: number;
+      folderName?: string;
+      publish?: boolean;
+    },
+  ) {
+    return this.imports.start({ ...body, seederId: Number(body?.seederId) });
+  }
+
+  @Post(':id/import/retry')
+  @HttpCode(HttpStatus.ACCEPTED)
+  retryImport(@Param('id') id: string) {
+    return this.imports.retry(Number(id));
+  }
+
+  @Delete(':id/import')
+  @HttpCode(HttpStatus.OK)
+  cancelImport(@Param('id') id: string) {
+    return this.imports.cancel(Number(id));
   }
 
   /** Fill the catalogue from a node's own inventory (sizes included). */
@@ -84,23 +145,33 @@ export class RecitersController {
     @Body()
     body: {
       name: string;
+      nameAr?: string | null;
       riwaya: string;
-      infohash: string;
-      magnet: string;
+      infohash?: string;
+      magnet?: string;
       fileCount?: number;
       sizeBytes?: number | null;
       published?: boolean;
+      provider?: ProviderId | null;
+      reciterId?: string | null;
+      releaseId?: string | null;
+      variant?: string | null;
     },
   ) {
     try {
       return this.service.add({
         name: body.name,
+        nameAr: body.nameAr,
         riwaya: body.riwaya,
-        infohash: body.infohash,
-        magnet: this.normalised(body.magnet, body.infohash, body.name),
+        infohash: body.infohash ?? '',
+        magnet: this.normalised(body.magnet ?? '', body.infohash ?? '', body.name),
         fileCount: body.fileCount ?? 0,
         sizeBytes: body.sizeBytes ?? null,
         published: body.published,
+        provider: body.provider ?? null,
+        reciterId: body.reciterId ?? null,
+        releaseId: body.releaseId ?? null,
+        variant: body.variant ?? '',
       });
     } catch (err) {
       throw new BadRequestException((err as Error).message);
@@ -120,6 +191,10 @@ export class RecitersController {
       fileCount?: number;
       sizeBytes?: number | null;
       published?: boolean;
+      provider?: ProviderId | null;
+      reciterId?: string | null;
+      releaseId?: string | null;
+      variant?: string | null;
     },
   ) {
     let updated;

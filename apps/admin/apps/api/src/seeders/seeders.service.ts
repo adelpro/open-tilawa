@@ -900,6 +900,70 @@ export class SeedersService {
     return this.json(res);
   }
 
+  /** Ask a node to download and seed a provider release. */
+  async importRelease(
+    id: number,
+    payload: {
+      folderName: string;
+      name: string;
+      tracks: { surah: number; url: string; sizeBytes: number | null }[];
+    },
+  ): Promise<{ jobId: string }> {
+    const seeder = await this.requireSeeder(id);
+    const res = await this.call(
+      seeder,
+      '/api/import',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+      30_000,
+    );
+    if (res.status === 404) {
+      throw new BadGatewayException('this seeder does not support imports — update the node first');
+    }
+    return this.json<{ jobId: string }>(res);
+  }
+
+  async importStatus(
+    id: number,
+    jobId: string,
+  ): Promise<{
+    state: 'downloading' | 'seeding' | 'done' | 'failed';
+    done: number;
+    total: number;
+    bytes: number;
+    error: string | null;
+    result: {
+      infohash: string;
+      magnet: string;
+      sizeBytes: number;
+      fileCount: number;
+    } | null;
+  }> {
+    const seeder = await this.requireSeeder(id);
+    const res = await this.call(
+      seeder,
+      `/api/import/${encodeURIComponent(jobId)}`,
+      { method: 'GET' },
+      15_000,
+    );
+    if (res.status === 404) throw new NotFoundException('the seeder lost the import job');
+    return this.json(res);
+  }
+
+  async cancelImport(id: number, jobId: string): Promise<void> {
+    const seeder = await this.requireSeeder(id);
+    const res = await this.call(
+      seeder,
+      `/api/import/${encodeURIComponent(jobId)}`,
+      { method: 'DELETE' },
+      15_000,
+    );
+    if (res.status === 404) return;
+  }
+
   async files(id: number): Promise<string[]> {
     const seeder = await this.requireSeeder(id);
     const res = await this.call(seeder, '/api/files', { method: 'GET' });

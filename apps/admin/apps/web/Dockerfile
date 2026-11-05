@@ -2,7 +2,6 @@
 
 FROM node:22-alpine AS build
 WORKDIR /app
-RUN apk add --no-cache python3 make g++
 RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY apps/web/package.json ./apps/web/package.json

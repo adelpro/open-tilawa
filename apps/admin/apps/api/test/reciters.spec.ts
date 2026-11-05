@@ -88,4 +88,64 @@ describe('public reciter catalogue', () => {
     const res = await request(h.app.getHttpServer()).get('/api/public/reciters').expect(200);
     expect(res.body.reciters.some((r: { id: number }) => r.id === row.id)).toBe(false);
   });
+
+  it('round-trips provider ids and never publishes a draft without a magnet', () => {
+    const service = h.app.get(RecitersService);
+    const row = service.add({
+      name: 'Badr_Al-Turki_Hafs',
+      nameAr: 'بدر التركي',
+      riwaya: 'Hafs',
+      fileCount: 114,
+      provider: 'itqan',
+      reciterId: '2',
+      releaseId: '11',
+      variant: 'default',
+      published: true,
+    });
+
+    expect(row.provider).toBe('itqan');
+    expect(row.reciterId).toBe('2');
+    expect(row.releaseId).toBe('11');
+    expect(row.variant).toBe('default');
+    expect(row.published).toBe(false);
+    expect(service.listPublished().some((r) => r.id === row.id)).toBe(false);
+  });
+
+  it('unpublishes a row when its magnet is cleared', () => {
+    const service = h.app.get(RecitersService);
+    const hash = 'b'.repeat(40);
+    const row = service.add({
+      name: 'Filled',
+      riwaya: 'Hafs',
+      infohash: hash,
+      magnet: magnet(hash),
+      fileCount: 114,
+    });
+    expect(row.published).toBe(true);
+    const cleared = service.update(row.id, { magnet: '' });
+    expect(cleared?.published).toBe(false);
+  });
+
+  it('clears import state when the provider link changes', () => {
+    const service = h.app.get(RecitersService);
+    const row = service.add({
+      name: 'Draft',
+      riwaya: 'Hafs',
+      fileCount: 114,
+      provider: 'itqan',
+      reciterId: '2',
+      releaseId: '13',
+      variant: 'default',
+    });
+    service.markImport(row.id, { jobId: 'job-1', seederId: 1, folder: 'Draft_Hafs' });
+    const linked = service.linkProvider(row.id, {
+      provider: 'mp3quran',
+      reciterId: '1',
+      releaseId: '1',
+      variant: '',
+    });
+    expect(linked?.importState).toBeNull();
+    expect(linked?.importProgress).toBe(0);
+    expect(linked?.provider).toBe('mp3quran');
+  });
 });

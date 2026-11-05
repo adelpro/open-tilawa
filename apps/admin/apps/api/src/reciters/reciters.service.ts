@@ -4,6 +4,8 @@ import { SQLITE_DB } from '../store/store.module';
 import { deriveReciterState, type Db, type ReciterState } from '@tilawa-admin/core';
 import { RECITER_NAMES_AR, RETIRED_RECITER_NAMES_AR } from './reciter-names';
 import { assignSlug, slugify } from './slug';
+import type { ProviderId } from '../providers/provider.types';
+import { isProviderId } from '../providers/provider.types';
 
 export interface Reciter {
   id: number;
@@ -21,6 +23,20 @@ export interface Reciter {
   /** The public face of the infohash; assigned once, frozen after that. */
   slug: string;
   createdAt: string;
+  /** Where the release came from; null for a torrent entered by hand. */
+  provider: ProviderId | null;
+  /** The provider's id for the person, not the release. */
+  reciterId: string | null;
+  /** The provider's release id (moshaf / recitation / chapter reciter). */
+  releaseId: string | null;
+  /** Itqan folder slug; '' when the provider has no variants. */
+  variant: string | null;
+  importState: 'downloading' | 'seeding' | 'failed' | null;
+  importProgress: number;
+  importError: string | null;
+  importPublish: boolean;
+  importSeederId: number | null;
+  importFolder: string | null;
 }
 
 /** One node's answer about one reciter. */
@@ -209,7 +225,9 @@ export class RecitersService {
   /** What the public player may show: curated, not merely present. */
   listPublished(): Reciter[] {
     return this.db
-      .prepare('SELECT * FROM reciters WHERE published = 1 ORDER BY id')
+      .prepare(
+        "SELECT * FROM reciters WHERE published = 1 AND infohash <> '' AND magnet <> '' ORDER BY id",
+      )
       .all()
       .map((r: any) => this.mapRow(r));
   }
@@ -219,10 +237,14 @@ export class RecitersService {
     limit: number,
   ): { reciters: Reciter[]; total: number } {
     const totalRow = this.db
-      .prepare('SELECT COUNT(*) as count FROM reciters WHERE published = 1')
+      .prepare(
+        "SELECT COUNT(*) as count FROM reciters WHERE published = 1 AND infohash <> '' AND magnet <> ''",
+      )
       .get() as { count: number };
     const reciters = this.db
-      .prepare('SELECT * FROM reciters WHERE published = 1 ORDER BY id LIMIT ? OFFSET ?')
+      .prepare(
+        "SELECT * FROM reciters WHERE published = 1 AND infohash <> '' AND magnet <> '' ORDER BY id LIMIT ? OFFSET ?",
+      )
       .all(limit, offset)
       .map((r: any) => this.mapRow(r));
     return { reciters, total: totalRow.count };
@@ -241,6 +263,16 @@ export class RecitersService {
       published: r.published !== 0,
       slug: (r.slug as string | null) ?? '',
       createdAt: r.created_at,
+      provider: (r.provider as ProviderId | null) ?? null,
+      reciterId: (r.provider_reciter_id as string | null) ?? null,
+      releaseId: (r.provider_release_id as string | null) ?? null,
+      variant: (r.provider_variant as string | null) || null,
+      importState: (r.import_state as Reciter['importState']) ?? null,
+      importProgress: (r.import_progress as number | null) ?? 0,
+      importError: (r.import_error as string | null) ?? null,
+      importPublish: r.import_publish !== 0,
+      importSeederId: (r.import_seeder_id as number | null) ?? null,
+      importFolder: (r.import_folder as string | null) ?? null,
     };
   }
 
@@ -248,37 +280,56 @@ export class RecitersService {
     name: string;
     nameAr?: string | null;
     riwaya: string;
-    infohash: string;
-    magnet: string;
-    fileCount: number;
+    infohash?: string;
+    magnet?: string;
+    fileCount?: number;
     sizeBytes?: number | null;
     published?: boolean;
+    provider?: ProviderId | null;
+    reciterId?: string | null;
+    releaseId?: string | null;
+    variant?: string | null;
   }): Reciter {
+    const infohash = (input.infohash ?? '').trim();
+    const magnet = (input.magnet ?? '').trim();
+    if (input.provider != null && !isProviderId(input.provider)) {
+      throw new Error(`unknown provider: ${String(input.provider)}`);
+    }
     const taken = new Set(
       (this.db.prepare('SELECT slug FROM reciters WHERE slug IS NOT NULL').all() as {
         slug: string;
       }[]).map((row) => row.slug),
     );
-    const slug = assignSlug(slugify(input.name), input.riwaya, input.infohash, taken);
+    const slug = assignSlug(slugify(input.name), input.riwaya, infohash, taken);
+    const publishable = infohash !== '' && magnet !== '';
 
     const info = this.db
       .prepare(
-        'INSERT INTO reciters (name, name_ar, riwaya, infohash, magnet, file_count, size_bytes, published, slug) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        `INSERT INTO reciters
+           (name, name_ar, riwaya, infohash, magnet, file_count, size_bytes, published, slug,
+            provider, provider_reciter_id, provider_release_id, provider_variant)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         input.name,
         input.nameAr?.trim() || null,
         input.riwaya,
-        input.infohash,
-        input.magnet,
-        input.fileCount,
+        infohash,
+        magnet,
+        input.fileCount ?? 0,
         input.sizeBytes ?? null,
-        input.published === false ? 0 : 1,
+        publishable && input.published !== false ? 1 : 0,
         slug,
+        input.provider ?? null,
+        input.reciterId ?? null,
+        input.releaseId ?? null,
+        input.variant ?? '',
       );
-    this.db
-      .prepare('INSERT OR IGNORE INTO reciter_slugs (slug, infohash) VALUES (?, ?)')
-      .run(slug, input.infohash.toLowerCase());
+    if (infohash) {
+      this.db
+        .prepare('INSERT OR IGNORE INTO reciter_slugs (slug, infohash) VALUES (?, ?)')
+        .run(slug, infohash.toLowerCase());
+    }
     return this.get(Number(info.lastInsertRowid))!;
   }
 
@@ -298,9 +349,14 @@ export class RecitersService {
       fileCount?: number;
       sizeBytes?: number | null;
       published?: boolean;
+      provider?: ProviderId | null;
+      reciterId?: string | null;
+      releaseId?: string | null;
+      variant?: string | null;
     },
   ): Reciter | null {
-    if (!this.get(id)) return null;
+    const current = this.get(id);
+    if (!current) return null;
     const sets: string[] = [];
     const values: unknown[] = [];
     const put = (column: string, value: unknown): void => {
@@ -322,12 +378,190 @@ export class RecitersService {
     if (input.magnet !== undefined) put('magnet', input.magnet.trim());
     if (input.fileCount !== undefined) put('file_count', input.fileCount);
     if (input.sizeBytes !== undefined) put('size_bytes', input.sizeBytes);
+
+    const providerTouched =
+      input.provider !== undefined ||
+      input.reciterId !== undefined ||
+      input.releaseId !== undefined ||
+      input.variant !== undefined;
+    if (input.provider !== undefined) {
+      if (input.provider !== null && !isProviderId(input.provider)) {
+        throw new Error(`unknown provider: ${String(input.provider)}`);
+      }
+      put('provider', input.provider);
+    }
+    if (input.reciterId !== undefined) put('provider_reciter_id', input.reciterId?.trim() || null);
+    if (input.releaseId !== undefined) put('provider_release_id', input.releaseId?.trim() || null);
+    if (input.variant !== undefined) put('provider_variant', input.variant?.trim() || '');
+
+    // A form save that repeats the same ids must not cancel an import that is
+    // already running. Clear the job only when the link actually changes.
+    const nextProvider = input.provider !== undefined ? input.provider : current.provider;
+    const nextReciterId =
+      input.reciterId !== undefined ? input.reciterId?.trim() || null : current.reciterId;
+    const nextReleaseId =
+      input.releaseId !== undefined ? input.releaseId?.trim() || null : current.releaseId;
+    const nextVariant =
+      input.variant !== undefined ? input.variant?.trim() || '' : current.variant ?? '';
+    const providerChanged =
+      providerTouched &&
+      (nextProvider !== current.provider ||
+        nextReciterId !== current.reciterId ||
+        nextReleaseId !== current.releaseId ||
+        nextVariant !== (current.variant ?? ''));
+    if (providerChanged) {
+      for (const column of [
+        'import_job',
+        'import_state',
+        'import_progress',
+        'import_error',
+        'import_seeder_id',
+        'import_folder',
+        'import_publish',
+      ]) {
+        put(column, column === 'import_progress' || column === 'import_publish' ? 0 : null);
+      }
+    }
+
+    const nextMagnet = input.magnet !== undefined ? input.magnet.trim() : current.magnet;
     if (input.published !== undefined) put('published', input.published ? 1 : 0);
+    // Publishing without a magnet would hand the player a dead row.
+    if (nextMagnet === '') put('published', 0);
+
     if (sets.length > 0) {
       this.db.prepare(`UPDATE reciters SET ${sets.join(', ')} WHERE id = ?`).run(...values, id);
     }
     return this.get(id);
   }
+
+  /** Record a provider link without starting an import. */
+  linkProvider(
+    id: number,
+    input: {
+      provider: ProviderId;
+      reciterId: string | null;
+      releaseId: string | null;
+      variant?: string | null;
+    },
+  ): Reciter | null {
+    return this.update(id, {
+      provider: input.provider,
+      reciterId: input.reciterId,
+      releaseId: input.releaseId,
+      variant: input.variant ?? '',
+    });
+  }
+
+  /** Store the job the seeder accepted. */
+  markImport(
+    id: number,
+    input: { jobId: string; seederId: number; folder: string; publish?: boolean },
+  ): Reciter | null {
+    this.db
+      .prepare(
+        `UPDATE reciters
+            SET import_job = ?, import_state = 'downloading', import_progress = 0,
+                import_error = NULL, import_seeder_id = ?, import_folder = ?, import_publish = ?
+          WHERE id = ?`,
+      )
+      .run(input.jobId, input.seederId, input.folder, input.publish ? 1 : 0, id);
+    return this.get(id);
+  }
+
+  /** The rows a scheduler still has to poll, with the fields it needs. */
+  listActiveImports(): {
+    id: number;
+    job: string;
+    seederId: number;
+    folder: string;
+    publish: boolean;
+  }[] {
+    return (
+      this.db
+        .prepare(
+          `SELECT id, import_job, import_seeder_id, import_folder, import_publish
+             FROM reciters
+            WHERE import_job IS NOT NULL
+              AND import_state IN ('downloading', 'seeding')
+              AND import_seeder_id IS NOT NULL`,
+        )
+        .all() as {
+        id: number;
+        import_job: string;
+        import_seeder_id: number;
+        import_folder: string;
+        import_publish: number;
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      job: row.import_job,
+      seederId: row.import_seeder_id,
+      folder: row.import_folder,
+      publish: row.import_publish !== 0,
+    }));
+  }
+
+  setImportProgress(id: number, state: 'downloading' | 'seeding', progress: number): void {
+    this.db
+      .prepare(
+        'UPDATE reciters SET import_state = ?, import_progress = ?, import_error = NULL WHERE id = ?',
+      )
+      .run(state, Math.max(0, Math.min(100, Math.round(progress))), id);
+  }
+
+  /** The job finished: write the torrent identity and record the placement. */
+  completeImport(
+    id: number,
+    result: { infohash: string; magnet: string; sizeBytes: number; fileCount: number },
+    publish: boolean,
+  ): Reciter | null {
+    const current = this.get(id);
+    if (!current) return null;
+    const magnet = result.magnet.trim();
+    const infohash = result.infohash.trim();
+    const published = publish && magnet !== '' && infohash !== '';
+    this.db
+      .prepare(
+        `UPDATE reciters
+            SET infohash = ?, magnet = ?, size_bytes = ?, file_count = ?, published = ?,
+                import_job = NULL, import_state = NULL, import_progress = 0, import_error = NULL
+          WHERE id = ?`,
+      )
+      .run(infohash, magnet, result.sizeBytes, result.fileCount, published ? 1 : 0, id);
+    if (infohash) {
+      this.db
+        .prepare('INSERT OR IGNORE INTO reciter_slugs (slug, infohash) VALUES (?, ?)')
+        .run(current.slug, infohash.toLowerCase());
+    }
+    const seederId = (
+      this.db.prepare('SELECT import_seeder_id FROM reciters WHERE id = ?').get(id) as {
+        import_seeder_id: number | null;
+      }
+    ).import_seeder_id;
+    if (seederId !== null) {
+      this.db
+        .prepare(
+          `INSERT INTO placements (reciter_id, seeder_id, state, verified_at)
+           VALUES (?, ?, 'placed', strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+           ON CONFLICT(reciter_id, seeder_id)
+           DO UPDATE SET state = 'placed', verified_at = excluded.verified_at, error = NULL`,
+        )
+        .run(id, seederId);
+    }
+    return this.get(id);
+  }
+
+  failImport(id: number, error: string): Reciter | null {
+    this.db
+      .prepare(
+        `UPDATE reciters
+            SET import_job = NULL, import_state = 'failed', import_progress = 0, import_error = ?
+          WHERE id = ?`,
+      )
+      .run(error.slice(0, 500), id);
+    return this.get(id);
+  }
+
 
   get(id: number): Reciter | null {
     const r = this.db.prepare('SELECT * FROM reciters WHERE id = ?').get(id) as any;

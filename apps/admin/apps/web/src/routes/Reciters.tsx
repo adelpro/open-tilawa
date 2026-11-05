@@ -14,6 +14,12 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { FormModal } from '../components/FormModal';
 import { bytes } from '../lib/format';
 import { isUnclassified, riwayaLabel, riwayaOptions, riwayaValue } from '../lib/riwaya';
+import {
+  applyProviderRelease,
+  folderFromRelease,
+  importPayload,
+  type ProviderSummary,
+} from '../lib/provider-import';
 import type { Seeder } from '../lib/types-seeders';
 
 interface PushNodePlan {
@@ -55,11 +61,32 @@ interface Reciter {
   sizeBytes: number | null;
   published: boolean;
   createdAt: string;
+  /** Where the release came from; null for a torrent entered by hand. */
+  provider: 'itqan' | 'mp3quran' | 'quranfoundation' | null;
+  reciterId: string | null;
+  releaseId: string | null;
+  variant: string | null;
+  importState: 'downloading' | 'seeding' | 'failed' | null;
+  importProgress: number;
+  importError: string | null;
   /** Nodes whose last report says they hold this — observation, not intent. */
   heldBy: { seederId: number; name: string }[];
   /** What we asked of each node, and what came of it. */
   placements: ReciterPlacement[];
   state: 'healthy' | 'unseeded' | 'stale' | 'dormant';
+}
+
+interface ProviderOption {
+  id: string;
+  label: string;
+}
+
+interface LinkSuggestion {
+  rowId: number;
+  name: string;
+  nameAr: string | null;
+  riwaya: string;
+  candidates: (ProviderSummary & { score: number })[];
 }
 
 /**
@@ -75,6 +102,20 @@ export function Reciters(): ReactElement {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [addMode, setAddMode] = useState<'manual' | 'provider'>('manual');
+  const [providers, setProviders] = useState<ProviderOption[]>([]);
+  const [providerId, setProviderId] = useState('itqan');
+  const [providerQuery, setProviderQuery] = useState('');
+  const [providerResults, setProviderResults] = useState<ProviderSummary[] | null>(null);
+  const [providerRelease, setProviderRelease] = useState<ProviderSummary | null>(null);
+  const [providerBusy, setProviderBusy] = useState(false);
+  const [providerError, setProviderError] = useState<string | null>(null);
+  const [newFolder, setNewFolder] = useState('');
+  const [newSeederId, setNewSeederId] = useState<number | null>(null);
+  const [newPublish, setNewPublish] = useState(true);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkRows, setLinkRows] = useState<LinkSuggestion[] | null>(null);
+  const [linkBusy, setLinkBusy] = useState(false);
   const [newName, setNewName] = useState('');
   const [newNameAr, setNewNameAr] = useState('');
   // Unclassified is the honest default: a reading is a fact about the recording,
@@ -92,6 +133,9 @@ export function Reciters(): ReactElement {
   const [editMagnet, setEditMagnet] = useState('');
   const [editSizeGb, setEditSizeGb] = useState('');
   const [editPublished, setEditPublished] = useState(true);
+  const [editProvider, setEditProvider] = useState('');
+  const [editReciterId, setEditReciterId] = useState('');
+  const [editReleaseId, setEditReleaseId] = useState('');
   const [deleting, setDeleting] = useState<Reciter | null>(null);
   /** Nodes to purge when deleting: unticked unless the operator asks. */
   const [purgeIds, setPurgeIds] = useState<number[]>([]);
@@ -195,6 +239,9 @@ export function Reciters(): ReactElement {
     setEditMagnet(reciter.magnet);
     setEditSizeGb(reciter.sizeBytes === null ? '' : (reciter.sizeBytes / 1024 ** 3).toFixed(2));
     setEditPublished(reciter.published);
+    setEditProvider(reciter.provider ?? '');
+    setEditReciterId(reciter.reciterId ?? '');
+    setEditReleaseId(reciter.releaseId ?? '');
     setError(null);
   }
 
@@ -213,6 +260,9 @@ export function Reciters(): ReactElement {
           magnet: editMagnet.trim(),
           sizeBytes: editSizeGb.trim() ? Math.round(Number(editSizeGb) * 1024 ** 3) : null,
           published: editPublished,
+          provider: editProvider || null,
+          reciterId: editReciterId.trim() || null,
+          releaseId: editReleaseId.trim() || null,
         },
       });
       setEditing(null);
@@ -471,6 +521,182 @@ export function Reciters(): ReactElement {
     }
   }
 
+  useEffect(() => {
+    let live = true;
+    api<{ providers: ProviderOption[] }>('/providers')
+      .then((body) => {
+        if (live) setProviders(body.providers ?? []);
+      })
+      .catch(() => {
+        if (live) setProviders([]);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  async function searchProvider(): Promise<void> {
+    setProviderBusy(true);
+    setProviderError(null);
+    try {
+      const body = await api<{ results: ProviderSummary[] }>(
+        `/providers/${providerId}/search?q=${encodeURIComponent(providerQuery.trim())}`,
+      );
+      setProviderResults(body.results ?? []);
+    } catch (caught) {
+      setProviderResults([]);
+      setProviderError(
+        caught instanceof Error ? caught.message : t('reciters.providerSearchFailed'),
+      );
+    } finally {
+      setProviderBusy(false);
+    }
+  }
+
+  function chooseRelease(release: ProviderSummary): void {
+    const filled = applyProviderRelease(release);
+    setProviderRelease(release);
+    setNewName(filled.name);
+    setNewNameAr(filled.nameAr);
+    setNewRiwaya(filled.riwaya);
+    setNewFileCount(filled.fileCount);
+    setNewSizeGb(filled.sizeGb);
+    setNewFolder(folderFromRelease(release));
+    if (newSeederId === null) {
+      setNewSeederId(nodes?.find((node) => node.hasCredentials)?.id ?? nodes?.[0]?.id ?? null);
+    }
+  }
+
+  function providerBody(release: ProviderSummary) {
+    return {
+      name: newName.trim() || release.name,
+      nameAr: newNameAr.trim() || null,
+      riwaya: newRiwaya,
+      infohash: '',
+      magnet: '',
+      fileCount: Number(newFileCount) || release.surahCount,
+      sizeBytes: newSizeGb.trim() ? Math.round(Number(newSizeGb) * 1024 ** 3) : release.sizeBytes,
+      published: false,
+      provider: release.provider,
+      reciterId: release.reciterId,
+      releaseId: release.releaseId,
+      variant: release.variant,
+    };
+  }
+
+  async function saveProviderDraft(): Promise<void> {
+    if (!providerRelease) return;
+    setBusy('add');
+    setError(null);
+    setProviderError(null);
+    try {
+      await api('/reciters', { method: 'POST', body: providerBody(providerRelease) });
+      setShowAdd(false);
+      setMessage(t('reciters.draftSaved'));
+      await load();
+    } catch (caught) {
+      setProviderError(caught instanceof Error ? caught.message : t('reciters.addFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function importFromProvider(): Promise<void> {
+    if (!providerRelease || newSeederId === null) return;
+    setBusy('add');
+    setError(null);
+    setProviderError(null);
+    try {
+      await api('/reciters/import-release', {
+        method: 'POST',
+        body: importPayload(
+          providerRelease,
+          newFolder.trim() || folderFromRelease(providerRelease),
+          newSeederId,
+          newPublish,
+        ),
+      });
+      setShowAdd(false);
+      setMessage(t('reciters.importStarted'));
+      await load();
+    } catch (caught) {
+      setProviderError(caught instanceof Error ? caught.message : t('reciters.importFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function openLinkSuggestions(): Promise<void> {
+    setLinkOpen(true);
+    setLinkBusy(true);
+    setLinkRows(null);
+    setError(null);
+    try {
+      const body = await api<{ rows: LinkSuggestion[] }>('/reciters/link-suggestions');
+      setLinkRows(body.rows ?? []);
+    } catch (caught) {
+      setLinkRows([]);
+      setError(caught instanceof Error ? caught.message : t('reciters.linkFailed'));
+    } finally {
+      setLinkBusy(false);
+    }
+  }
+
+  async function retryImport(id: number): Promise<void> {
+    setBusy(`retry-${id}`);
+    setError(null);
+    try {
+      await api(`/reciters/${id}/import/retry`, { method: 'POST' });
+      setMessage(t('reciters.importStarted'));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.importFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function cancelImport(id: number): Promise<void> {
+    setBusy(`cancel-${id}`);
+    setError(null);
+    try {
+      await api(`/reciters/${id}/import`, { method: 'DELETE' });
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.importFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function applyLink(row: LinkSuggestion, candidate: ProviderSummary): Promise<void> {
+    setLinkBusy(true);
+    setError(null);
+    try {
+      await api('/reciters/link', {
+        method: 'POST',
+        body: {
+          rowId: row.rowId,
+          provider: candidate.provider,
+          reciterId: candidate.reciterId,
+          releaseId: candidate.releaseId,
+          variant: candidate.variant,
+        },
+      });
+      setLinkRows((rows) => (rows ?? []).filter((entry) => entry.rowId !== row.rowId));
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('reciters.linkFailed'));
+    } finally {
+      setLinkBusy(false);
+    }
+  }
+
+  function providerLabel(id: string | null): string | null {
+    if (!id) return null;
+    return providers.find((provider) => provider.id === id)?.label ?? id;
+  }
+
   if (!user) return <p className="body muted">{t('reciters.signInRequired')}</p>;
 
   return (
@@ -483,6 +709,13 @@ export function Reciters(): ReactElement {
         <div className="cluster">
           <Button variant="tertiary" onClick={() => void openTrackers()} busy={busy === 'trackers'}>
             {t('reciters.trackers')}
+          </Button>
+          <Button
+            variant="tertiary"
+            onClick={() => void openLinkSuggestions()}
+            busy={linkBusy && linkOpen}
+          >
+            {t('reciters.linkExisting')}
           </Button>
           <Button variant="secondary" onClick={() => void openPush()} busy={pushBusy === 'load'}>
             {t('reciters.push')}
@@ -539,6 +772,50 @@ export function Reciters(): ReactElement {
                     </option>
                   ))}
                 </select>
+              )}
+            </Field>
+            <Field label={t('reciters.provider')} hint={t('reciters.providerHint')}>
+              {(id) => (
+                <select
+                  id={id}
+                  className="field__select"
+                  value={editProvider}
+                  disabled={Boolean(editing.importState)}
+                  onChange={(event) => {
+                    setEditProvider(event.target.value);
+                    if (!event.target.value) {
+                      setEditReciterId('');
+                      setEditReleaseId('');
+                    }
+                  }}
+                >
+                  <option value="">—</option>
+                  {providers.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Field>
+            <Field label={t('reciters.reciterId')} hint={t('reciters.reciterIdHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editReciterId}
+                  disabled={Boolean(editing.importState)}
+                  onChange={(event) => setEditReciterId(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t('reciters.releaseId')} hint={t('reciters.releaseIdHint')}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={editReleaseId}
+                  disabled={Boolean(editing.importState)}
+                  onChange={(event) => setEditReleaseId(event.target.value)}
+                />
               )}
             </Field>
             <Field label={t('reciters.infohash')} hint={t('reciters.infohashHint')}>
@@ -718,15 +995,177 @@ export function Reciters(): ReactElement {
         </Panel>
       ) : null}
 
+      {linkOpen ? (
+        <Modal title={t('reciters.linkTitle')} onClose={() => setLinkOpen(false)}>
+          <div className="stack">
+            <p className="body muted">{t('reciters.linkLede')}</p>
+            {linkBusy && linkRows === null ? (
+              <SkeletonRows rows={3} label={t('reciters.loading')} />
+            ) : null}
+            {linkRows && linkRows.length === 0 ? (
+              <p className="body muted">{t('reciters.linkNone')}</p>
+            ) : null}
+            {(linkRows ?? []).map((row) => (
+              <Panel key={row.rowId}>
+                <p className="body">
+                  <strong>{row.nameAr ?? row.name}</strong>{' '}
+                  <Chip tone={isUnclassified(row.riwaya) ? 'notice' : 'info'}>
+                    {riwayaLabel(row.riwaya, locale)}
+                  </Chip>
+                </p>
+                {row.candidates.length === 0 ? (
+                  <p className="body muted">{t('reciters.linkNoMatch')}</p>
+                ) : (
+                  row.candidates.map((candidate) => (
+                    <div
+                      className="spread"
+                      key={`${row.rowId}-${candidate.provider}-${candidate.reciterId}-${candidate.releaseId}-${candidate.variant}`}
+                    >
+                      <span className="body">
+                        {candidate.nameAr ?? candidate.name} —{' '}
+                        {riwayaLabel(candidate.riwaya, locale)} ·{' '}
+                        {providerLabel(candidate.provider)} · {candidate.score}
+                      </span>
+                      <Button
+                        small
+                        variant="secondary"
+                        busy={linkBusy}
+                        onClick={() => void applyLink(row, candidate)}
+                      >
+                        {t('reciters.linkApply')}
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </Panel>
+            ))}
+          </div>
+        </Modal>
+      ) : null}
+
       {showAdd ? (
         <FormModal
           title={t('reciters.add')}
-          submitLabel={t('reciters.addSubmit')}
-          onSubmit={() => void add()}
+          submitLabel={addMode === 'provider' ? t('reciters.importStart') : t('reciters.addSubmit')}
+          onSubmit={() => void (addMode === 'provider' ? importFromProvider() : add())}
           onClose={() => setShowAdd(false)}
           busy={busy === 'add'}
-          disabled={!newName.trim() || !newInfohash.trim()}
+          disabled={
+            addMode === 'manual'
+              ? !newName.trim() || !newInfohash.trim()
+              : !providerRelease || newSeederId === null || !newFolder.trim()
+          }
         >
+            <div className="cluster" role="group" aria-label={t('reciters.addMode')}>
+              <Button
+                small
+                variant={addMode === 'manual' ? 'primary' : 'tertiary'}
+                onClick={() => setAddMode('manual')}
+              >
+                {t('reciters.modeManual')}
+              </Button>
+              <Button
+                small
+                variant={addMode === 'provider' ? 'primary' : 'tertiary'}
+                onClick={() => setAddMode('provider')}
+              >
+                {t('reciters.modeProvider')}
+              </Button>
+            </div>
+
+            {addMode === 'provider' ? (
+              <>
+                {providers.length === 0 ? (
+                  <Notice tone="bad">{t('reciters.providersUnavailable')}</Notice>
+                ) : (
+                  <Field label={t('reciters.provider')}>
+                    {(id) => (
+                      <select
+                        id={id}
+                        className="field__select"
+                        value={providerId}
+                        onChange={(event) => {
+                          setProviderId(event.target.value);
+                          setProviderResults(null);
+                          setProviderRelease(null);
+                        }}
+                      >
+                        {providers.map((provider) => (
+                          <option key={provider.id} value={provider.id}>
+                            {provider.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </Field>
+                )}
+                <div className="cluster">
+                  <Input
+                    aria-label={t('reciters.providerSearch')}
+                    value={providerQuery}
+                    onChange={(event) => setProviderQuery(event.target.value)}
+                    placeholder={t('reciters.providerSearch')}
+                  />
+                  <Button
+                    small
+                    variant="secondary"
+                    onClick={() => void searchProvider()}
+                    busy={providerBusy}
+                  >
+                    {t('reciters.search')}
+                  </Button>
+                </div>
+                {providerError ? <Notice tone="bad">{providerError}</Notice> : null}
+                {providerResults === null ? null : providerResults.length === 0 ? (
+                  <p className="body muted">{t('reciters.noProviderResults')}</p>
+                ) : (
+                  <Field label={t('reciters.providerResults')}>
+                    {(id) => (
+                      <select
+                        id={id}
+                        className="field__select"
+                        value={
+                          providerRelease
+                            ? String(
+                                providerResults.findIndex(
+                                  (row) =>
+                                    row.provider === providerRelease.provider &&
+                                    row.reciterId === providerRelease.reciterId &&
+                                    row.releaseId === providerRelease.releaseId &&
+                                    row.variant === providerRelease.variant,
+                                ),
+                              )
+                            : ''
+                        }
+                        onChange={(event) => {
+                          const row = providerResults[Number(event.target.value)];
+                          if (row) chooseRelease(row);
+                        }}
+                      >
+                        <option value="">—</option>
+                        {providerResults.map((row, index) => (
+                          <option
+                            key={`${row.provider}-${row.reciterId}-${row.releaseId}-${row.variant}`}
+                            value={index}
+                          >
+                            {row.nameAr ?? row.name} — {riwayaLabel(row.riwaya, locale)} (
+                            {row.surahCount})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </Field>
+                )}
+                {providerRelease ? (
+                  <p className="body muted">
+                    {providerRelease.nameAr ?? providerRelease.name} · {providerRelease.provider}{' '}
+                    {providerRelease.reciterId}/{providerRelease.releaseId}
+                    {providerRelease.variant ? ` · ${providerRelease.variant}` : ''}
+                  </p>
+                ) : null}
+              </>
+            ) : null}
+
             <Field label={t('reciters.name')} hint={t('reciters.nameHint')}>
               {(id) => (
                 <Input
@@ -764,50 +1203,105 @@ export function Reciters(): ReactElement {
                 </select>
               )}
             </Field>
-            <Field label={t('reciters.infohash')} hint={t('reciters.infohashHint')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={newInfohash}
-                  onChange={(event) => setNewInfohash(event.target.value)}
-                />
-              )}
-            </Field>
-            <div className="cluster cluster--end">
-              <Button
-                variant="secondary"
-                small
-                onClick={() => void fetchMetadata()}
-                busy={busy === 'fetch'}
-                disabled={!newMagnet.trim() || fetchNode === null}
-              >
-                {t('reciters.fetch')}
-              </Button>
-              {nodes && nodes.length > 0 ? (
-                <select
-                  className="field__select"
-                  aria-label={t('reciters.fetchNode')}
-                  value={fetchNode ?? ''}
-                  onChange={(event) => setFetchNode(Number(event.target.value))}
-                >
-                  {nodes.map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.name}
-                    </option>
-                  ))}
-                </select>
-              ) : null}
-            </div>
-            <Field label={t('reciters.magnet')} hint={t('reciters.magnetHint')}>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={newMagnet}
-                  onChange={(event) => setNewMagnet(event.target.value)}
-                  placeholder="magnet:?xt=urn:btih:…"
-                />
-              )}
-            </Field>
+
+            {addMode === 'manual' ? (
+              <>
+                <Field label={t('reciters.infohash')} hint={t('reciters.infohashHint')}>
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={newInfohash}
+                      onChange={(event) => setNewInfohash(event.target.value)}
+                    />
+                  )}
+                </Field>
+                <div className="cluster cluster--end">
+                  <Button
+                    variant="secondary"
+                    small
+                    onClick={() => void fetchMetadata()}
+                    busy={busy === 'fetch'}
+                    disabled={!newMagnet.trim() || fetchNode === null}
+                  >
+                    {t('reciters.fetch')}
+                  </Button>
+                  {nodes && nodes.length > 0 ? (
+                    <select
+                      className="field__select"
+                      aria-label={t('reciters.fetchNode')}
+                      value={fetchNode ?? ''}
+                      onChange={(event) => setFetchNode(Number(event.target.value))}
+                    >
+                      {nodes.map((node) => (
+                        <option key={node.id} value={node.id}>
+                          {node.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                </div>
+                <Field label={t('reciters.magnet')} hint={t('reciters.magnetHint')}>
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={newMagnet}
+                      onChange={(event) => setNewMagnet(event.target.value)}
+                      placeholder="magnet:?xt=urn:btih:…"
+                    />
+                  )}
+                </Field>
+              </>
+            ) : (
+              <>
+                <Field label={t('reciters.folder')} hint={t('reciters.folderHint')}>
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={newFolder}
+                      onChange={(event) => setNewFolder(event.target.value)}
+                      dir="ltr"
+                    />
+                  )}
+                </Field>
+                <Field label={t('reciters.targetNode')}>
+                  {(id) => (
+                    <select
+                      id={id}
+                      className="field__select"
+                      value={newSeederId ?? ''}
+                      onChange={(event) => setNewSeederId(Number(event.target.value))}
+                    >
+                      <option value="">—</option>
+                      {(nodes ?? []).map((node) => (
+                        <option key={node.id} value={node.id}>
+                          {node.name} — {node.status}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </Field>
+                <label className="cluster">
+                  <input
+                    type="checkbox"
+                    checked={newPublish}
+                    onChange={(event) => setNewPublish(event.target.checked)}
+                  />
+                  <span>{t('reciters.publishWhenDone')}</span>
+                </label>
+                <div className="cluster">
+                  <Button
+                    small
+                    variant="tertiary"
+                    onClick={() => void saveProviderDraft()}
+                    busy={busy === 'add'}
+                  >
+                    {t('reciters.saveDraft')}
+                  </Button>
+                  <span className="row__meta">{t('reciters.draftHint')}</span>
+                </div>
+              </>
+            )}
+
             <Field label={t('reciters.fileCount')}>
               {(id) => (
                 <Input
@@ -891,6 +1385,7 @@ export function Reciters(): ReactElement {
                 <tr>
                   {sortHeader(t('reciters.name'), 'name')}
                   {sortHeader(t('reciters.riwaya'), 'riwaya')}
+                  <th scope="col">{t('reciters.source')}</th>
                   <th scope="col">{t('reciters.infohash')}</th>
                   <th scope="col">{t('reciters.fileCount')}</th>
                   {sortHeader(t('reciters.size'), 'size')}
@@ -916,7 +1411,52 @@ export function Reciters(): ReactElement {
                       </Chip>
                     </td>
                     <td>
-                      <span className="row__id">{reciter.infohash.slice(0, 16)}…</span>
+                      {reciter.provider ? (
+                        <div className="stack">
+                          <Chip tone="info">{providerLabel(reciter.provider)}</Chip>
+                          {reciter.importState ? (
+                            <Chip tone={reciter.importState === 'failed' ? 'bad' : 'notice'}>
+                              {reciter.importState === 'failed'
+                                ? t('reciters.importFailedShort')
+                                : t('reciters.importing', {
+                                    progress: String(reciter.importProgress),
+                                  })}
+                            </Chip>
+                          ) : null}
+                          {reciter.importError ? (
+                            <span className="row__meta">{reciter.importError}</span>
+                          ) : null}
+                          {reciter.importState === 'failed' ? (
+                            <Button
+                              small
+                              variant="tertiary"
+                              busy={busy === `retry-${reciter.id}`}
+                              onClick={() => void retryImport(reciter.id)}
+                            >
+                              {t('reciters.retryImport')}
+                            </Button>
+                          ) : null}
+                          {reciter.importState === 'downloading' || reciter.importState === 'seeding' ? (
+                            <Button
+                              small
+                              variant="tertiary"
+                              busy={busy === `cancel-${reciter.id}`}
+                              onClick={() => void cancelImport(reciter.id)}
+                            >
+                              {t('reciters.cancelImport')}
+                            </Button>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="body muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {reciter.infohash ? (
+                        <span className="row__id">{reciter.infohash.slice(0, 16)}…</span>
+                      ) : (
+                        <span className="body muted">{t('reciters.notSeededYet')}</span>
+                      )}
                     </td>
                     <td className="num">{reciter.fileCount}</td>
                     <td className="num">
