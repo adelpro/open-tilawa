@@ -41,19 +41,6 @@ export default function SeedPage() {
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.why.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.why.p1}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.why.p2}</p>
-          <figure className="mt-6">
-            <img
-              src="/images/seeders-node.png"
-              alt={copy.why.nodeAlt}
-              width={1100}
-              height={285}
-              loading="lazy"
-              className="h-auto w-full bg-line/20"
-            />
-            <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
-              {copy.why.nodeCaption}
-            </figcaption>
-          </figure>
         </section>
 
         <section className="seed-section mt-14">
@@ -151,6 +138,16 @@ export default function SeedPage() {
               </li>
             ))}
           </ol>
+          <CopyCode
+            value={command}
+            title={copy.windows.installTitle}
+            label={copy.copy}
+            copiedLabel={copy.copied}
+            failedLabel={copy.copyFailed}
+          />
+          <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
+            {copy.windows.installHint}
+          </p>
           <p className="mt-4 text-[0.8125rem] leading-relaxed text-muted">{copy.windows.note}</p>
         </section>
 
@@ -172,7 +169,7 @@ export default function SeedPage() {
               src="/images/seeders-console.png"
               alt={copy.console.imageAlt}
               width={979}
-              height={899}
+              height={380}
               loading="lazy"
               className="h-auto w-full bg-line/20"
             />
