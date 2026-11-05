@@ -394,6 +394,8 @@ export const ar: Catalogue = {
   'reciters.notSeededYet': 'لم يُوزّع بعد',
   'reciters.folder': 'اسم المجلّد',
   'reciters.folderHint': 'مجلّد الملفات على الخادم. حروف وأرقام وشرطة فقط.',
+  'reciters.targetNodes': 'الخوادم',
+  'reciters.targetNodesHint': 'كل الخوادم مختارة حتى تغيّرها.',
   'reciters.targetNode': 'الخادم',
   'reciters.publishWhenDone': 'انشره عند اكتمال التوزيع',
   'reciters.saveDraft': 'احفظ مسودة',
@@ -935,6 +937,7 @@ export const ar: Catalogue = {
   'account.delete.action': 'حذف الحساب نهائياً',
 
   'common.save': 'حفظ',
+  'common.close': 'إغلاق',
   'common.cancel': 'إلغاء',
   'admin.title': 'الإدارة',
   'admin.owner': 'المالك',

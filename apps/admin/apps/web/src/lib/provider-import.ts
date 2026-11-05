@@ -60,7 +60,7 @@ export function folderFromRelease(release: ProviderSummary): string {
 export function importPayload(
   release: ProviderSummary,
   folderName: string,
-  seederId: number,
+  seederIds: number[],
   publish: boolean,
 ) {
   return {
@@ -68,7 +68,7 @@ export function importPayload(
     reciterId: release.reciterId,
     releaseId: release.releaseId,
     variant: release.variant,
-    seederId,
+    seederIds,
     folderName,
     publish,
   };

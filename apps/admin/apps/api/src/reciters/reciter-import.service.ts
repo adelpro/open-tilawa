@@ -26,6 +26,8 @@ const FULL_QURAN = 114;
 @Injectable()
 export class ReciterImportService {
   private readonly logger = new Logger(ReciterImportService.name);
+  /** Jobs on the other selected nodes; the row tracks only the primary one. */
+  private readonly extras = new Map<string, { rowId: number; seederId: number }>();
 
   constructor(
     private readonly reciters: RecitersService,
@@ -38,13 +40,19 @@ export class ReciterImportService {
     reciterId: string;
     releaseId: string;
     variant?: string;
-    seederId: number;
+    seederIds?: number[];
+    seederId?: number;
     folderName?: string;
     publish?: boolean;
   }): Promise<Reciter> {
-    if (!Number.isInteger(input.seederId) || input.seederId <= 0) {
-      throw new BadRequestException('choose a seeder node');
-    }
+    const seederIds = [
+      ...new Set(
+        (input.seederIds ?? (input.seederId === undefined ? [] : [input.seederId])).map((id) =>
+          Number(id),
+        ),
+      ),
+    ].filter((id) => Number.isInteger(id) && id > 0);
+    if (seederIds.length === 0) throw new BadRequestException('choose a seeder node');
     const provider = this.registry.get(input.provider);
     let release;
     try {
@@ -55,9 +63,12 @@ export class ReciterImportService {
       );
     }
 
-    if (release.tracks.length !== FULL_QURAN) {
+    // A provider may carry a partial recitation (16 surahs, say). The catalogue
+    // stores the real file count and the player offers what is there; the
+    // torrent is not required to be the whole mushaf.
+    if (release.tracks.length < 1 || release.tracks.length > FULL_QURAN) {
       throw new BadRequestException(
-        `this release has ${release.tracks.length} tracks; a torrent needs ${FULL_QURAN}`,
+        `this release has ${release.tracks.length} tracks; a torrent needs 1 to ${FULL_QURAN}`,
       );
     }
 
@@ -94,24 +105,36 @@ export class ReciterImportService {
       variant,
     });
 
-    try {
-      const job = await this.seeders.importRelease(input.seederId, {
-        folderName: folder,
-        name: folder,
-        tracks: release.tracks,
-      });
-      return this.reciters.markImport(row.id, {
-        jobId: job.jobId,
-        seederId: input.seederId,
-        folder,
-        publish: input.publish !== false,
-      })!;
-    } catch (err) {
-      // The node never accepted the job, so the draft would be a row with no
-      // torrent and no future. Remove it rather than leave a dead row.
-      this.reciters.remove(row.id);
-      throw err;
+    let primary: { seederId: number; jobId: string } | null = null;
+    let lastError: unknown = null;
+    for (const seederId of seederIds) {
+      try {
+        const job = await this.seeders.importRelease(seederId, {
+          folderName: folder,
+          name: folder,
+          tracks: release.tracks,
+        });
+        if (!primary) primary = { seederId, jobId: job.jobId };
+        else this.extras.set(job.jobId, { rowId: row.id, seederId });
+      } catch (err) {
+        lastError = err;
+        this.logger.warn(
+          `import ${row.id} on node ${seederId}: ${err instanceof Error ? err.message : err}`,
+        );
+      }
     }
+    if (!primary) {
+      // No node accepted the job, so the draft would be a row with no torrent
+      // and no future. Remove it rather than leave a dead row.
+      this.reciters.remove(row.id);
+      throw lastError ?? new BadGatewayException('no node accepted the import');
+    }
+    return this.reciters.markImport(row.id, {
+      jobId: primary.jobId,
+      seederId: primary.seederId,
+      folder,
+      publish: input.publish !== false,
+    })!;
   }
 
   async retry(id: number): Promise<Reciter> {
@@ -137,7 +160,7 @@ export class ReciterImportService {
         `the provider could not resolve this release: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
-    if (release.tracks.length !== FULL_QURAN) {
+    if (release.tracks.length < 1 || release.tracks.length > FULL_QURAN) {
       throw new BadRequestException(`this release has ${release.tracks.length} tracks`);
     }
 
@@ -198,6 +221,27 @@ export class ReciterImportService {
           active.id,
           err instanceof Error ? err.message : 'the node could not be reached',
         );
+      }
+    }
+
+    // The extra nodes do not own the row; they only need a placement once done.
+    for (const [jobId, extra] of [...this.extras]) {
+      try {
+        const status = await this.seeders.importStatus(extra.seederId, jobId);
+        if (status.state === 'done') {
+          this.reciters.recordPlacement(extra.rowId, extra.seederId);
+          this.extras.delete(jobId);
+        } else if (status.state === 'failed') {
+          this.logger.warn(
+            `import ${extra.rowId} on node ${extra.seederId} failed: ${status.error ?? 'unknown'}`,
+          );
+          this.extras.delete(jobId);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `import ${extra.rowId} on node ${extra.seederId}: ${err instanceof Error ? err.message : err}`,
+        );
+        this.extras.delete(jobId);
       }
     }
   }

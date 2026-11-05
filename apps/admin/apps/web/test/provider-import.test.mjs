@@ -46,12 +46,12 @@ describe('provider import form', () => {
   });
 
   it('builds the import payload without torrent fields', () => {
-    assert.deepEqual(importPayload(release, 'Badr_Al-Turki_Hafs', 3, true), {
+    assert.deepEqual(importPayload(release, 'Badr_Al-Turki_Hafs', [3, 4], true), {
       provider: 'itqan',
       reciterId: '2',
       releaseId: '11',
       variant: 'default',
-      seederId: 3,
+      seederIds: [3, 4],
       folderName: 'Badr_Al-Turki_Hafs',
       publish: true,
     });

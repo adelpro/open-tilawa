@@ -71,7 +71,7 @@ describe('reciter provider import', () => {
       provider: 'itqan',
       reciterId: '2',
       releaseId: '11',
-      seederId: 7,
+      seederIds: [7],
       folderName: 'Badr_Al-Turki_Hafs',
       publish: true,
     });
@@ -95,11 +95,12 @@ describe('reciter provider import', () => {
     expect(done.fileCount).toBe(114);
   });
 
-  it('refuses a release that is not 114 tracks', async () => {
+  it('accepts a partial release, keeping its real track count', async () => {
     const imports = h.app.get(ReciterImportService);
     const registry = h.app.get(ProviderRegistry);
     const short = release('3', '12');
-    short.tracks = short.tracks.slice(0, 2);
+    short.tracks = short.tracks.slice(0, 16);
+    short.surahCount = 16;
     jest.spyOn(registry, 'get').mockReturnValue({
       id: 'itqan',
       label: 'Itqan',
@@ -107,15 +108,48 @@ describe('reciter provider import', () => {
       release: async () => short,
     });
 
-    await expect(
-      imports.start({
-        provider: 'itqan',
-        reciterId: '3',
-        releaseId: '12',
-        seederId: 7,
-        folderName: 'Short_Hafs',
-      }),
-    ).rejects.toThrow(/114/);
+    const row = await imports.start({
+      provider: 'itqan',
+      reciterId: '3',
+      releaseId: '12',
+      seederIds: [7],
+      folderName: 'Short_Hafs',
+      publish: false,
+    });
+
+    expect(row.fileCount).toBe(16);
+    expect(row.importState).toBe('downloading');
+  });
+
+  it('starts the import on every selected node and tracks the first success', async () => {
+    const imports = h.app.get(ReciterImportService);
+    const seeders = h.app.get(SeedersService);
+    const registry = h.app.get(ProviderRegistry);
+    jest.spyOn(registry, 'get').mockReturnValue({
+      id: 'itqan',
+      label: 'Itqan',
+      search: async () => [],
+      release: async () => release('4', '14'),
+    });
+    const started = jest.spyOn(seeders, 'importRelease');
+    started.mockReset();
+    started
+      .mockResolvedValueOnce({ jobId: 'job-a' })
+      .mockResolvedValueOnce({ jobId: 'job-b' });
+
+    const row = await imports.start({
+      provider: 'itqan',
+      reciterId: '4',
+      releaseId: '14',
+      seederIds: [7, 8],
+      folderName: 'Multi_Hafs',
+      publish: false,
+    });
+
+    expect(started).toHaveBeenCalledTimes(2);
+    expect(started).toHaveBeenNthCalledWith(1, 7, expect.any(Object));
+    expect(started).toHaveBeenNthCalledWith(2, 8, expect.any(Object));
+    expect(row.importSeederId).toBe(7);
   });
 
   it('refuses a duplicate provider release', async () => {

@@ -395,6 +395,8 @@ export const en = {
   'reciters.notSeededYet': 'Not seeded yet',
   'reciters.folder': 'Folder name',
   'reciters.folderHint': 'The files folder on the node. Letters, digits and hyphens only.',
+  'reciters.targetNodes': 'Nodes',
+  'reciters.targetNodesHint': 'Every node is selected until you uncheck it.',
   'reciters.targetNode': 'Node',
   'reciters.publishWhenDone': 'Publish when seeding finishes',
   'reciters.saveDraft': 'Save draft',
@@ -948,6 +950,7 @@ export const en = {
   'account.delete.action': 'Delete account permanently',
 
   'common.save': 'Save',
+  'common.close': 'Close',
   'common.cancel': 'Cancel',
   'admin.title': 'Admin',
   'admin.owner': 'Owner',

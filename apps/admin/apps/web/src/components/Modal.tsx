@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import { useI18n } from '../lib/i18n';
+import { Icon } from './icons';
 
 /** The same duration the stylesheet uses for `.modal`; the exit has to match the enter. */
 const EXIT_MS = 180;
@@ -31,6 +33,7 @@ export function Modal({
   const timer = useRef<number | undefined>(undefined);
   const [closing, setClosing] = useState(false);
   const [origin, setOrigin] = useState('50% 50%');
+  const { t } = useI18n();
 
   // Anchor the scale to whatever had focus when the dialog opened — the button, in every
   // current use. Measured before the panel is transformed, so the origin is in the
@@ -138,9 +141,21 @@ export function Modal({
         ref={panel}
         onClick={(event) => event.stopPropagation()}
       >
-        <h2 id="modal-title" className="panel__title" style={{ marginBottom: 'var(--space-4)' }}>
-          {title}
-        </h2>
+        <div className="modal__head">
+          <h2 id="modal-title" className="panel__title">
+            {title}
+          </h2>
+          {dismissible ? (
+            <button
+              type="button"
+              className="modal__close"
+              onClick={close}
+              aria-label={t('common.close')}
+            >
+              <Icon name="close" />
+            </button>
+          ) : null}
+        </div>
         {children}
       </div>
     </div>

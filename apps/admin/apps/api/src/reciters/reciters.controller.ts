@@ -98,12 +98,20 @@ export class RecitersController {
       reciterId: string;
       releaseId: string;
       variant?: string;
-      seederId: number;
+      seederIds?: number[];
+      seederId?: number;
       folderName?: string;
       publish?: boolean;
     },
   ) {
-    return this.imports.start({ ...body, seederId: Number(body?.seederId) });
+    return this.imports.start({
+      ...body,
+      seederIds: Array.isArray(body.seederIds)
+        ? body.seederIds.map((id) => Number(id))
+        : body.seederId
+          ? [Number(body.seederId)]
+          : [],
+    });
   }
 
   @Post(':id/import/retry')

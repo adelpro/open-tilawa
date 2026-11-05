@@ -2282,6 +2282,35 @@ button.chip[aria-pressed='true'] {
   animation: modal-out var(--motion-enter) both;
 }
 
+.modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.modal__head .panel__title {
+  margin: 0;
+}
+
+.modal__close {
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  margin: calc(var(--space-2) * -1);
+  opacity: 0.6;
+  padding: var(--space-2);
+}
+
+.modal__close:hover {
+  background: var(--hairline);
+  opacity: 1;
+}
+
 @keyframes modal-in {
   from {
     opacity: 0;

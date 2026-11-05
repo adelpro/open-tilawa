@@ -111,7 +111,7 @@ export function Reciters(): ReactElement {
   const [providerBusy, setProviderBusy] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
   const [newFolder, setNewFolder] = useState('');
-  const [newSeederId, setNewSeederId] = useState<number | null>(null);
+  const [newSeederIds, setNewSeederIds] = useState<number[]>([]);
   const [newPublish, setNewPublish] = useState(true);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkRows, setLinkRows] = useState<LinkSuggestion[] | null>(null);
@@ -188,6 +188,9 @@ export function Reciters(): ReactElement {
         setFetchNode(
           (current) => current ?? rows.find((row) => row.hasCredentials)?.id ?? rows[0]?.id ?? null,
         );
+        // The import defaults to every node, so a release is seeded fleet-wide
+        // unless the operator deliberately narrows it.
+        setNewSeederIds(rows.map((row) => row.id));
       })
       .catch(() => {
         if (live) setNodes([]);
@@ -562,8 +565,8 @@ export function Reciters(): ReactElement {
     setNewFileCount(filled.fileCount);
     setNewSizeGb(filled.sizeGb);
     setNewFolder(folderFromRelease(release));
-    if (newSeederId === null) {
-      setNewSeederId(nodes?.find((node) => node.hasCredentials)?.id ?? nodes?.[0]?.id ?? null);
+    if (newSeederIds.length === 0) {
+      setNewSeederIds((nodes ?? []).map((node) => node.id));
     }
   }
 
@@ -602,7 +605,7 @@ export function Reciters(): ReactElement {
   }
 
   async function importFromProvider(): Promise<void> {
-    if (!providerRelease || newSeederId === null) return;
+    if (!providerRelease || newSeederIds.length === 0) return;
     setBusy('add');
     setError(null);
     setProviderError(null);
@@ -612,7 +615,7 @@ export function Reciters(): ReactElement {
         body: importPayload(
           providerRelease,
           newFolder.trim() || folderFromRelease(providerRelease),
-          newSeederId,
+          newSeederIds,
           newPublish,
         ),
       });
@@ -1053,7 +1056,7 @@ export function Reciters(): ReactElement {
           disabled={
             addMode === 'manual'
               ? !newName.trim() || !newInfohash.trim()
-              : !providerRelease || newSeederId === null || !newFolder.trim()
+              : !providerRelease || newSeederIds.length === 0 || !newFolder.trim()
           }
         >
             <div className="cluster" role="group" aria-label={t('reciters.addMode')}>
@@ -1263,23 +1266,27 @@ export function Reciters(): ReactElement {
                     />
                   )}
                 </Field>
-                <Field label={t('reciters.targetNode')}>
-                  {(id) => (
-                    <select
-                      id={id}
-                      className="field__select"
-                      value={newSeederId ?? ''}
-                      onChange={(event) => setNewSeederId(Number(event.target.value))}
-                    >
-                      <option value="">—</option>
-                      {(nodes ?? []).map((node) => (
-                        <option key={node.id} value={node.id}>
-                          {node.name} — {node.status}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </Field>
+                <div className="stack stack--tight" role="group" aria-label={t('reciters.targetNodes')}>
+                  <p className="row__meta">{t('reciters.targetNodesHint')}</p>
+                  {(nodes ?? []).map((node) => (
+                    <label className="cluster" key={node.id}>
+                      <input
+                        type="checkbox"
+                        checked={newSeederIds.includes(node.id)}
+                        onChange={(event) =>
+                          setNewSeederIds((current) =>
+                            event.target.checked
+                              ? [...current, node.id]
+                              : current.filter((id) => id !== node.id),
+                          )
+                        }
+                      />
+                      <span>
+                        {node.name} — {node.status}
+                      </span>
+                    </label>
+                  ))}
+                </div>
                 <label className="cluster">
                   <input
                     type="checkbox"

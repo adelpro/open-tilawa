@@ -538,17 +538,20 @@ export class RecitersService {
         import_seeder_id: number | null;
       }
     ).import_seeder_id;
-    if (seederId !== null) {
-      this.db
-        .prepare(
-          `INSERT INTO placements (reciter_id, seeder_id, state, verified_at)
-           VALUES (?, ?, 'placed', strftime('%Y-%m-%dT%H:%M:%fZ','now'))
-           ON CONFLICT(reciter_id, seeder_id)
-           DO UPDATE SET state = 'placed', verified_at = excluded.verified_at, error = NULL`,
-        )
-        .run(id, seederId);
-    }
+    if (seederId !== null) this.recordPlacement(id, seederId);
     return this.get(id);
+  }
+
+  /** Mark a node as carrying this release. Safe to call twice. */
+  recordPlacement(id: number, seederId: number): void {
+    this.db
+      .prepare(
+        `INSERT INTO placements (reciter_id, seeder_id, state, verified_at)
+         VALUES (?, ?, 'placed', strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+         ON CONFLICT(reciter_id, seeder_id)
+         DO UPDATE SET state = 'placed', verified_at = excluded.verified_at, error = NULL`,
+      )
+      .run(id, seederId);
   }
 
   failImport(id: number, error: string): Reciter | null {
