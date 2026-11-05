@@ -24,6 +24,7 @@ test('the surah name segment is optional decoration', () => {
 test('static paths parse by name', () => {
   assert.deepEqual(parse('/'), { name: 'home' });
   assert.deepEqual(parse('/about'), { name: 'about' });
+  assert.deepEqual(parse('/seed'), { name: 'seed' });
   assert.deepEqual(parse('/settings'), { name: 'settings' });
 });
 
@@ -38,6 +39,7 @@ test('toPath round-trips every canonical path', () => {
     '/',
     '/about',
     '/privacy',
+    '/seed',
     '/settings',
     '/account',
     '/favorites',
@@ -167,4 +169,11 @@ test('alternatesFor gives the pair a crawler has to choose between', () => {
   assert.deepEqual(alternatesFor('/en/about'), { ar: '/about', en: '/en/about' });
   assert.deepEqual(alternatesFor('/'), { ar: '/', en: '/en' });
   assert.deepEqual(alternatesFor('/en'), { ar: '/', en: '/en' });
+});
+
+
+test('the seeder page is a static route in both languages', () => {
+  assert.equal(toUrl({ name: 'seed' }, 'ar'), '/seed');
+  assert.equal(toUrl({ name: 'seed' }, 'en'), '/en/seed');
+  assert.deepEqual(alternatesFor('/seed'), { ar: '/seed', en: '/en/seed' });
 });

@@ -29,6 +29,7 @@ export type RouteName =
   | 'reciters'
   | 'about'
   | 'privacy'
+  | 'seed'
   | 'account'
   | 'settings'
   | 'favorites'
@@ -66,6 +67,7 @@ export const ROUTE_TABLE: readonly RouteRow[] = [
   { name: 'reciters', pattern: '/reciters', index: true, sitemap: true, prerender: true },
   { name: 'about', pattern: '/about', index: true, sitemap: true, prerender: true },
   { name: 'privacy', pattern: '/privacy', index: true, sitemap: true, prerender: true },
+  { name: 'seed', pattern: '/seed', index: true, sitemap: true, prerender: true },
   { name: 'account', pattern: '/account', index: false, sitemap: false, prerender: false },
   { name: 'settings', pattern: '/settings', index: false, sitemap: false, prerender: false },
   { name: 'favorites', pattern: '/favorites', index: false, sitemap: false, prerender: false },
