@@ -1,5 +1,48 @@
 # Changelog
 
+## admin 1.33.9 — 2026-11-05
+
+Admin release. App versions: **web 1.13.23**, **admin 1.33.9**, **seeder 1.5.7**.
+
+### Added
+
+- **The catalogue knows where a release came from.** A reciter row now carries
+  `provider`, the provider's person id (`reciterId`), the provider's release id
+  (`releaseId`) and the Itqan folder variant. Migration 026 adds the columns and
+  a partial unique index on `(provider, release_id, variant)`, so one provider
+  release cannot be claimed twice.
+- **Add a reciter from Itqan, MP3Quran or Quran Foundation.** The console searches
+  the provider catalogue, fills the name, Arabic name, riwaya, file count and size,
+  and keeps the torrent fields out of the way. Provider keys stay in the admin API;
+  the browser never sees them.
+- **Background import on the seeders.** `POST /api/import` on a node downloads the
+  release, seeds it with the running WebTorrent client and writes its `.torrent`.
+  The console polls the job and fills the infohash, magnet, size and file count.
+  Every selected node is used by default; the first accepted job owns the row and
+  the others record their placements.
+- **Partial recitations.** A provider release may hold fewer than 114 surahs
+  (Sahim's Warsh release is 16). The importer accepts 1–114 tracks and stores the
+  real file count.
+- **Auto-publish.** The Add form offers “auto-publish when the torrent is ready”,
+  on by default. A manual row publishes on save; an import publishes only after the
+  seeder confirms. Unchecking it leaves a draft.
+- **Link existing rows.** The console suggests links by name, riwaya and style,
+  excludes releases another row already carries, and shows the style and variant.
+  Ten live rows are linked; ياسين الجزائري has no provider match and stays unlinked.
+
+### Fixed
+
+- Itqan's recitation list localises names to Arabic at `page_size=1000`; the
+  importer now reads 100 rows and takes Arabic names from `/reciters/`.
+- MP3Quran's “Almusshaf Al Mojawwad” is recognised as Mujawwad, so a Mujawwad row
+  no longer suggests the Murattal release.
+- A duplicate provider link returns a readable message instead of a raw SQLite
+  constraint. Importing a release already linked as an unseeded draft imports into
+  that row instead of refusing it.
+- Modal footers stay visible while a long form scrolls, every modal has a visible
+  close button, and the node picker groups the checkboxes with All/None, status and
+  free space.
+
 ## 1.13.27 — 2026-10-31
 
 Patch. App versions: **web 1.13.10**, **admin 1.32.13**, **seeder 1.5.7**.
