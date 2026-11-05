@@ -18,16 +18,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import WebTorrent from 'webtorrent';
 
-import Semaphore from './utils/semaphore.js';
-import TRACKERS from './constants/TRACKERS.js';
 import { fits, quotaFromEnv } from './lib/policy.mjs';
-import { importDecision, shouldSkip, totalBytes, trackFileName, validFolderName } from './lib/itqan.mjs';
+import { importDecision, totalBytes, validFolderName } from './lib/itqan.mjs';
+import { downloadTracks, seedDirectory } from './lib/import.mjs';
 
 const API = 'https://api.cms.itqan.dev';
 const DOWNLOAD_PATH = process.env.DOWNLOAD_PATH || '/app/downloads';
 const TORRENT_DIR = process.env.TORRENT_DIR || '/data/torrents';
 const RESERVE_BYTES = Math.floor(Number(process.env.DISK_RESERVE_GB || 1) * 1024 ** 3);
-const CONCURRENCY = 3;
 const FULL_QURAN = 114;
 
 /** Read at runtime: one version string, the package's. */
@@ -98,80 +96,10 @@ async function fetchTracks(assetId) {
     .slice()
     .sort((a, b) => a.surah_number - b.surah_number)
     .map((track) => ({
-      surahNumber: track.surah_number,
+      surah: track.surah_number,
       url: track.audio_url,
       sizeBytes: Number(track.size_bytes) || 0,
     }));
-}
-
-async function download(tracks, folderName) {
-  const dir = path.join(DOWNLOAD_PATH, folderName);
-  fs.mkdirSync(dir, { recursive: true });
-
-  const semaphore = new Semaphore(CONCURRENCY);
-  let done = 0;
-
-  await Promise.all(
-    tracks.map(async (track) => {
-      const file = path.join(dir, trackFileName(track.surahNumber));
-      const existing = fs.existsSync(file) ? fs.statSync(file).size : null;
-      if (shouldSkip(existing, track.sizeBytes)) {
-        done += 1;
-        return;
-      }
-
-      await semaphore.acquire();
-      try {
-        for (let attempt = 1; attempt <= 3; attempt += 1) {
-          try {
-            const response = await fetch(track.url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const bytes = Buffer.from(await response.arrayBuffer());
-            if (track.sizeBytes && bytes.length !== track.sizeBytes) {
-              throw new Error(`got ${bytes.length} bytes, declared ${track.sizeBytes}`);
-            }
-            fs.writeFileSync(file, bytes);
-            done += 1;
-            if (done % 10 === 0) console.log(`  ${done}/${tracks.length} surahs`);
-            return;
-          } catch (err) {
-            if (attempt === 3) throw new Error(`${path.basename(file)}: ${err.message}`);
-            await new Promise((resolve) => setTimeout(resolve, attempt * 1_000));
-          }
-        }
-      } finally {
-        semaphore.release();
-      }
-    }),
-  );
-
-  return dir;
-}
-
-async function seed(dir, folderName) {
-  // A separate process from the running seeder: ask for an ephemeral port and
-  // leave DHT/uTP discovery to the node, or the two clients fight over 6881 and
-  // the import crashes before it can write the .torrent.
-  const client = new WebTorrent({ torrentPort: 0, maxConns: 10, dht: false, lsd: false, ut_pex: false });
-  client.on('error', (err) => console.warn(`webtorrent: ${err.message}`));
-  const torrent = await new Promise((resolve, reject) => {
-    const pending = client.seed(
-      dir,
-      { name: folderName, pieceLength: 2 * 1024 * 1024, announce: TRACKERS },
-      () => resolve(pending),
-    );
-    pending.on('error', reject);
-  });
-
-  fs.mkdirSync(TORRENT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(TORRENT_DIR, `${torrent.infoHash}.torrent`), torrent.torrentFile);
-
-  console.log(
-    `name=${torrent.name} files=${torrent.files.length} size=${torrent.length} ` +
-      `infohash=${torrent.infoHash} magnet=${torrent.magnetURI}`,
-  );
-
-  await new Promise((resolve) => client.destroy(resolve));
 }
 
 const argv = process.argv.slice(2).filter((arg) => arg !== '--resume');
@@ -220,6 +148,26 @@ if (!room.ok) {
 console.log(
   `itqan asset ${assetId}: ${tracks.length} tracks, ${(incoming / 1024 ** 3).toFixed(2)} GiB → ${folderName} (${riwaya}${decision === 'resume' ? ', resuming' : ''})`,
 );
-const dir = await download(tracks, folderName);
-await seed(dir, folderName);
+const dir = path.join(DOWNLOAD_PATH, folderName);
+await downloadTracks({
+  dir,
+  tracks,
+  freeBytes,
+  reserveBytes: RESERVE_BYTES,
+  onProgress: (done, total) => {
+    if (done % 10 === 0) console.log(`  ${done}/${total} surahs`);
+  },
+});
+
+// A separate process from the running seeder: ask for an ephemeral port and
+// leave DHT/uTP discovery to the node, or the two clients fight over 6881 and
+// the import crashes before it can write the .torrent.
+const client = new WebTorrent({ torrentPort: 0, maxConns: 10, dht: false, lsd: false, ut_pex: false });
+client.on('error', (err) => console.warn(`webtorrent: ${err.message}`));
+const result = await seedDirectory({ client, dir, name: folderName, torrentDir: TORRENT_DIR });
+console.log(
+  `name=${folderName} files=${result.fileCount} size=${result.sizeBytes} ` +
+    `infohash=${result.infohash} magnet=${result.magnet}`,
+);
+await new Promise((resolve) => client.destroy(resolve));
 console.log('restart the seeder so it loads the new .torrent: docker compose restart seeder');

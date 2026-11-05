@@ -9,6 +9,8 @@ import { describePeers, liveWires } from './lib/peers.mjs';
 import { composeSteps, restartSteps, selfUpdateConfig } from './lib/self-update.mjs';
 import getInfoHashFromMagnetLink from './utils/getInfoHashFromMagnetLink.js';
 import { saveMissingTorrents } from './lib/torrent-store.mjs';
+import { downloadTracks, estimateBytes, seedDirectory, validateTracks } from './lib/import.mjs';
+import { validFolderName } from './lib/itqan.mjs';
 import { spawn } from 'node:child_process';
 import TRACKERS from './constants/TRACKERS.js';
 import parseTorrent from 'parse-torrent';
@@ -59,6 +61,14 @@ const ADMIN_PORT = process.env.ADMIN_PORT || 8085;
 /** 0 = unlimited. Enforced here, on the node, because a console-side cap is a promise. */
 const QUOTA_BYTES = quotaFromEnv();
 const DISK_RESERVE_BYTES = Math.floor(Number(process.env.DISK_RESERVE_GB || 1) * 1024 ** 3);
+const IMPORT_ESTIMATE_BYTES = Math.max(
+  0,
+  Number(process.env.MP3QURAN_ESTIMATE_BYTES) || 1.5 * 1024 ** 3,
+);
+
+/** One import at a time per node; the state is in memory and lives one hour. */
+const importJobs = new Map();
+const IMPORT_JOB_TTL_MS = 60 * 60 * 1000;
 /** A community node can keep the API and hide the browsable UI. */
 const SERVE_ADMIN_UI = process.env.ADMIN_UI !== '0';
 const MAX_CONNS = 100;
@@ -727,6 +737,146 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  /**
+   * POST /api/import { folderName, name, tracks } -> 202 { jobId }
+   *
+   * The admin resolves the provider and sends the exact track list; this node
+   * only downloads and seeds. Keeping provider keys in one service means no
+   * second copy of the adapters here.
+   */
+  if (url.pathname === '/api/import' && req.method === 'POST') {
+    let body = '';
+    let answered = false;
+    const answer = (status, payload) => {
+      if (answered) return;
+      answered = true;
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(payload));
+    };
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 2_000_000) {
+        answer(413, { error: 'the import payload is too large' });
+        req.destroy();
+      }
+    });
+    req.on('end', () => {
+      let input;
+      try {
+        input = JSON.parse(body);
+      } catch {
+        answer(400, { error: 'invalid JSON' });
+        return;
+      }
+      if (!validFolderName(input?.folderName)) {
+        answer(400, { error: 'the folder name may only contain letters, digits, "_" and "-"' });
+        return;
+      }
+      const check = validateTracks(input?.tracks);
+      if (!check.ok) {
+        answer(400, { error: check.error });
+        return;
+      }
+      const active = [...importJobs.values()].find(
+        (job) => job.state === 'downloading' || job.state === 'seeding',
+      );
+      if (active) {
+        answer(409, { error: 'an import is already running on this node' });
+        return;
+      }
+      const incoming = estimateBytes(input.tracks, IMPORT_ESTIMATE_BYTES);
+      const room = fits({
+        quotaBytes: QUOTA_BYTES,
+        usedBytes: usedBytes(),
+        incomingBytes: incoming,
+        freeBytes: diskUsage()?.free,
+        reserveBytes: DISK_RESERVE_BYTES,
+      });
+      if (!room.ok) {
+        answer(507, {
+          error: `not enough space: need ${(incoming / 1024 ** 3).toFixed(2)} GiB (${room.reason})`,
+        });
+        return;
+      }
+
+      const id = crypto.randomUUID();
+      const job = {
+        id,
+        state: 'downloading',
+        done: 0,
+        total: input.tracks.length,
+        bytes: 0,
+        error: null,
+        result: null,
+        cancelled: false,
+        startedAt: Date.now(),
+      };
+      importJobs.set(id, job);
+      answer(202, { jobId: id });
+
+      void (async () => {
+        try {
+          const dir = path.join(DOWNLOAD_PATH, input.folderName);
+          await downloadTracks({
+            dir,
+            tracks: input.tracks,
+            freeBytes: () => diskUsage()?.free,
+            reserveBytes: DISK_RESERVE_BYTES,
+            isCancelled: () => job.cancelled,
+            onProgress: (done, total, bytes) => {
+              job.done = done;
+              job.total = total;
+              job.bytes = bytes;
+            },
+          });
+          if (job.cancelled) throw new Error('cancelled');
+          job.state = 'seeding';
+          job.result = await seedDirectory({
+            client,
+            dir,
+            name: input.name || input.folderName,
+            torrentDir: TORRENT_DIR,
+          });
+          job.state = 'done';
+        } catch (err) {
+          job.state = 'failed';
+          job.error = err instanceof Error ? err.message : String(err);
+        }
+      })();
+    });
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/import/')) {
+    const id = url.pathname.split('/').pop();
+    const job = importJobs.get(id);
+    if (!job) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'no such import job' }));
+      return;
+    }
+    if (req.method === 'DELETE') {
+      job.cancelled = true;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ cancelled: true }));
+      return;
+    }
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          state: job.state,
+          done: job.done,
+          total: job.total,
+          bytes: job.bytes,
+          error: job.error,
+          result: job.result,
+        }),
+      );
+      return;
+    }
+  }
+
   res.writeHead(404);
   res.end('Not found');
 });
@@ -735,6 +885,17 @@ server.listen(ADMIN_PORT, () => {
   log.success(`Admin UI running on port ${ADMIN_PORT}`);
   log.info(`Peer port ${TORRENT_PORT} (TCP+UDP) — publish it in the compose file to accept inbound peers`);
 });
+
+// Finished jobs stay readable for an hour, then the map forgets them. An active
+// job is never removed, even if it runs longer than that.
+setInterval(() => {
+  const cutoff = Date.now() - IMPORT_JOB_TTL_MS;
+  for (const [id, job] of importJobs) {
+    if (job.startedAt < cutoff && job.state !== 'downloading' && job.state !== 'seeding') {
+      importJobs.delete(id);
+    }
+  }
+}, 10 * 60 * 1000).unref();
 
 // Stats logging
 setInterval(() => {

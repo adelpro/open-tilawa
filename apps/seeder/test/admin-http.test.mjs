@@ -316,3 +316,60 @@ test('GET /api/peers lists a seeded torrent even with nobody connected', async (
   assert.equal(report.total, report.torrents.reduce((sum, entry) => sum + entry.total, 0));
 });
 
+test('POST /api/import requires the node credentials', async () => {
+  const base = `http://127.0.0.1:${port}`;
+  const res = await fetch(`${base}/api/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folderName: 'X', name: 'X', tracks: [] }),
+  });
+  assert.equal(res.status, 401);
+});
+
+test('POST /api/import refuses a release that is not 114 tracks', async () => {
+  const base = `http://127.0.0.1:${port}`;
+  const res = await fetch(`${base}/api/import`, {
+    method: 'POST',
+    headers: { Authorization: auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      folderName: 'Short',
+      name: 'Short',
+      tracks: [{ surah: 1, url: `${base}/health`, sizeBytes: null }],
+    }),
+  });
+  assert.equal(res.status, 400);
+  assert.match((await res.json()).error, /114/);
+});
+
+test('POST /api/import downloads and seeds, and the job reports the torrent', async () => {
+  const base = `http://127.0.0.1:${port}`;
+  const tracks = Array.from({ length: 114 }, (_, index) => ({
+    surah: index + 1,
+    url: `${base}/health`,
+    sizeBytes: null,
+  }));
+
+  const started = await fetch(`${base}/api/import`, {
+    method: 'POST',
+    headers: { Authorization: auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folderName: 'Imported_Test', name: 'Imported_Test', tracks }),
+  });
+  assert.equal(started.status, 202);
+  const { jobId } = await started.json();
+
+  let job;
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    job = await (
+      await fetch(`${base}/api/import/${jobId}`, { headers: { Authorization: auth } })
+    ).json();
+    if (job.state === 'done' || job.state === 'failed') break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+
+  assert.equal(job.state, 'done', job.error ?? 'the import never finished');
+  assert.match(job.result.infohash, /^[a-f0-9]{40}$/);
+  assert.match(job.result.magnet, /^magnet:\?xt=urn:btih:/);
+  assert.equal(job.result.fileCount, 114);
+  assert.ok(job.result.sizeBytes > 0);
+});
+
