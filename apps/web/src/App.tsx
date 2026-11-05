@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import AboutPage from './app/about-page';
+import SeedPage from './app/seed-page';
 import RecitersPage from './app/reciters-page';
 import ReciterPage from './app/reciter-page';
 import PlayerPage from './app/player-page';
@@ -317,6 +318,8 @@ export default function App() {
           <ReciterPage slug={route.slug} />
         ) : route.name === 'about' ? (
           <AboutPage />
+        ) : route.name === 'seed' ? (
+          <SeedPage />
         ) : route.name === 'privacy' ? (
           <PrivacyPage />
         ) : route.name === 'notFound' || deepLinkMissing ? (

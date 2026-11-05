@@ -10,6 +10,7 @@ test('a page that is not the player names itself in the tab', () => {
   assert.equal(pageTitle({ name: 'reciters' }, ar), `${ar.routes.reciters} — Tilawah`);
   assert.equal(pageTitle({ name: 'about' }, ar), `${ar.routes.about} — Tilawah`);
   assert.equal(pageTitle({ name: 'privacy' }, ar), `${ar.routes.privacy} — Tilawah`);
+  assert.equal(pageTitle({ name: 'seed' }, ar), `${ar.routes.seed} — Tilawah`);
   assert.equal(pageTitle({ name: 'settings' }, ar), `${ar.routes.settings} — Tilawah`);
   assert.equal(pageTitle({ name: 'notFound' }, ar), `${ar.notFound.title} — Tilawah`);
 });

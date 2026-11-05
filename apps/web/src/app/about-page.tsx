@@ -119,6 +119,19 @@ export default function AboutPage() {
           </div>
         </section>
 
+        <section className="mt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">
+            {about.contribute.title}
+          </h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.contribute.body}</p>
+          <Link
+            to={{ name: 'seed' }}
+            className="mt-3 inline-flex min-h-11 items-center text-[1rem] text-ink underline underline-offset-4"
+          >
+            {about.contribute.link}
+          </Link>
+        </section>
+
         <p className="mt-10 text-[1rem] leading-relaxed text-ink">{about.closing}</p>
 
         <p className="mt-8 text-[0.75rem] leading-relaxed text-muted">

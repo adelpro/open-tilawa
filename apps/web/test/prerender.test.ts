@@ -159,3 +159,8 @@ test('the about page carries its FAQ in words and in JSON-LD', () => {
   assert.match(SOURCE, /copy\.about\.faq\.items/);
   assert.match(SOURCE, /<h3>\$\{escape\(item\.q\)\}<\/h3>/);
 });
+
+test('the seeder page is prerendered from the route table', () => {
+  assert.match(SOURCE, /addPage\('\/seed'/);
+  assert.match(SOURCE, /index: indexable\('seed'\)/);
+});

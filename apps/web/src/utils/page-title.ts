@@ -21,6 +21,8 @@ export function pageTitle(route: Parsed, t: Messages): string | null {
       return `${t.routes.about} — Tilawah`;
     case 'privacy':
       return `${t.routes.privacy} — Tilawah`;
+    case 'seed':
+      return `${t.routes.seed} — Tilawah`;
     case 'settings':
       return `${t.routes.settings} — Tilawah`;
     case 'notFound':

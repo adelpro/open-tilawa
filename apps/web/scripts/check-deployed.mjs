@@ -186,7 +186,7 @@ async function checkSitemap(catalogue) {
 
   // The pages the release is about, named explicitly: a sitemap can be well formed and
   // still be the one from three releases ago.
-  const hubs = ['/', '/about', '/privacy', '/reciters', `/reciters/${catalogue[0].slug}`];
+  const hubs = ['/', '/about', '/privacy', '/seed', '/reciters', `/reciters/${catalogue[0].slug}`];
   for (const path of hubs) {
     if (!set.has(`${SITE}${path}`)) fail(`missing ${path} in the sitemap`);
     if (!isReciterDetail(`${SITE}${path}`) && !set.has(twinOf(`${SITE}${path}`))) {
