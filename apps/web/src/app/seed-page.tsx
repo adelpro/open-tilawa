@@ -2,6 +2,7 @@ import CopyCode from '@/components/copy-code';
 import Icon from '@/components/icons';
 import {
   CONSOLE_SEEDERS_URL,
+  INSTALLER_OUTPUT,
   PEER_PORT_COMMAND,
   installCommand,
 } from '@/constants/seeder';
@@ -112,6 +113,11 @@ export default function SeedPage() {
           </figure>
           <h3 className="mt-6 text-[1rem] font-semibold text-ink">{copy.linux.afterTitle}</h3>
           <p className="mt-2 text-[1rem] leading-relaxed text-ink">{copy.linux.afterBody}</p>
+          <h3 className="mt-6 text-[1rem] font-semibold text-ink">{copy.linux.exampleTitle}</h3>
+          <pre dir="ltr" className="mt-3 overflow-x-auto bg-line/30 p-4 text-left font-mono text-[0.75rem] leading-relaxed text-ink">
+            <code className="whitespace-pre-wrap break-words">{INSTALLER_OUTPUT}</code>
+          </pre>
+          <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">{copy.linux.exampleHint}</p>
           <figure className="mt-6">
             <img
               src="/images/seeders-commands.png"

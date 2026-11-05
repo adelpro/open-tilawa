@@ -24,3 +24,26 @@ export function installCommand({ diskGb, uploadKbps }: { diskGb: number; uploadK
     `--disk ${diskGb} --upload-kbps ${uploadKbps}`
   );
 }
+
+
+/**
+ * What the installer prints, as an example.
+ *
+ * The password is masked: the script generates one and prints it once, and a page
+ * that shows a real-looking secret teaches the wrong thing. The tailnet name is
+ * the address the console should receive.
+ */
+export const INSTALLER_OUTPUT = `=== Seeder deployed ===
+Admin UI:  http://192.168.1.10:8085
+Health:    http://192.168.1.10:8085/health  (answering)
+Username:  admin
+Password:  ********
+
+=== Add to the console ===
+Name:      node-1
+URL:       http://node-1.tailnet.ts.net:8085   (tailnet — survives IP changes)
+LAN only:  http://192.168.1.10:8085
+User:      admin
+Password:  ********
+
+Tailscale: install it on the node and on the console host, then use the MagicDNS name.`;
