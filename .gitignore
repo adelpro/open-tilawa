@@ -48,3 +48,6 @@ docs/superpowers/
 # Python bytecode from the asset scripts
 __pycache__/
 *.pyc
+
+# Design-tool artifacts (tasteskill), never source
+.taste-skill/
