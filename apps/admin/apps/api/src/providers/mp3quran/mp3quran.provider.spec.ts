@@ -87,4 +87,48 @@ describe('Mp3QuranProvider', () => {
       { surah: 3, url: 'https://cdn.test/maher/003.mp3', sizeBytes: null },
     ]);
   });
+
+  it('recognises the Mojawwad spelling MP3Quran uses', async () => {
+    const ar2 = {
+      reciters: [
+        {
+          id: 51,
+          name: 'عبد الباسط عبد الصمد',
+          moshaf: [
+            {
+              id: 51,
+              name: 'حفص عن عاصم - المصحف المجود',
+              server: 'https://cdn.test/basit/',
+              surah_total: 1,
+              surah_list: '1',
+            },
+          ],
+        },
+      ],
+    };
+    const en2 = {
+      reciters: [
+        {
+          id: 51,
+          name: 'Abdulbasit Abdulsamad',
+          moshaf: [
+            {
+              id: 51,
+              name: "Rewayat Hafs A'n Assem - Almusshaf Al Mojawwad",
+              server: 'https://cdn.test/basit/',
+              surah_total: 1,
+              surah_list: '1',
+            },
+          ],
+        },
+      ],
+    };
+    jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = String(input);
+      return response(url.includes('language=ar') ? ar2 : en2) as unknown as Response;
+    });
+
+    const results = await new Mp3QuranProvider().search('');
+    expect(results[0].style).toBe('Mujawwad');
+  });
 });

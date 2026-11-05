@@ -12,7 +12,7 @@ const API = 'https://www.mp3quran.net/api/v3';
 const CACHE_MS = 10 * 60 * 1000;
 
 function styleOf(name: string): string | null {
-  if (/mujawwad|مجوّد|مجود/i.test(name)) return 'Mujawwad';
+  if (/mujawwad|mojawwad|مجوّد|مجود/i.test(name)) return 'Mujawwad';
   if (/murattal|مرتل/i.test(name)) return 'Murattal';
   return null;
 }
