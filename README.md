@@ -9,6 +9,8 @@ with the operator's own node as the HTTP safety net.
 Playback, cold starts and the no-peer path are documented in
 **[docs/STREAMING.md](docs/STREAMING.md)**.
 
+Store listing artwork and large-screen shots live in **[store/](store/)**.
+
 ## High-level architecture
 
 ```
