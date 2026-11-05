@@ -751,7 +751,7 @@ const en: typeof ar = {
     ],
   },
   seedPage: {
-    title: 'Run a node and share the recitations',
+    title: 'Run a node',
     cta: 'Start on Linux',
     lede: 'Keep a copy of the catalogue and help distribute it to listeners. One command sets the storage and upload caps, so the recitations are closer to listeners around the world.',
     why: {
