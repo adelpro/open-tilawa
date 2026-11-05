@@ -342,11 +342,14 @@ const ar = {
   },
   seedPage: {
     title: 'شغّل عقدة',
+    cta: 'ابدأ على لينكس',
     lede: 'احتفظ بنسخة من التلاوات وابثّها للمستمعين. أمر واحد، وحدّ للتخزين، وحدّ للرفع، فتصبح الشبكة أقرب إلى من يحتاجها.',
     why: {
       title: 'لماذا عقدة؟',
       p1: 'لوحة التحكم لا تحفظ صوتاً. كل عقدة تحتفظ بالمكتبة وتبثّ أجزاءها إلى المستمعين عبر BitTorrent؛ وهناك عقدتان تعملان الآن.',
       p2: 'عقدة على شبكة أخرى أثمن من مئة تنزيل: تقرّب الصوت من مستمعين لا يصلهم خادمنا بسرعة.',
+      trackerAlt: 'إحصاءات الشبكة: عشرة تورنتات، وقرينان متصلان، وقرين واحد يبثّ.',
+      trackerCaption: 'الشبكة الآن: عشرة تورنتات، وقرينان متصلان، وقرين واحد يبثّ.',
     },
     supported: {
       title: 'ما المدعوم؟',
@@ -369,6 +372,8 @@ const ar = {
       portHint: 'هذا المنفذ الوحيد الذي يجب فتحه على الإنترنت. لا تفتح 8085: فهو يستقبل بيانات الدخول ويبقى على الشبكة المحلية أو Tailscale.',
       afterTitle: 'ما يطبعه المثبّت',
       afterBody: 'الاسم والعنوان واسم المستخدم وكلمة المرور. أرسلها إلى المسؤول، أو أضفها بنفسك من اللوحة.',
+      commandsAlt: 'نافذة إضافة عقدة في اللوحة: أمر التثبيت وأمر فتح المنفذ، وزر نسخ لكل منهما.',
+      commandsCaption: 'اللوحة تعرض الأمرين جاهزين للنسخ، ثم الحقول الأربع.',
     },
     windows: {
       title: 'ويندوز عبر WSL2',
@@ -391,6 +396,8 @@ const ar = {
       link: 'افتح Seeders',
       imageAlt: 'صفحة Seeders في لوحة التحكم: عقدتان متصلتان، لكل منهما عشر تلاوات، وأعداد الأقران.',
       imageCaption: 'صفحة Seeders: العقدتان متصلتان، ولكل عقدة عشر تلاوات وأعداد الأقران.',
+      formAlt: 'نموذج إضافة عقدة: الاسم والعنوان واسم المستخدم وكلمة المرور، وخيار إضافة تلاوات المكتبة.',
+      formCaption: 'ألصق القيم الأربع، واختر إضافة تلاوات المكتبة إن أردت.',
     },
     limits: {
       title: 'الحدود والسلامة',
@@ -745,11 +752,14 @@ const en: typeof ar = {
   },
   seedPage: {
     title: 'Run a node',
+    cta: 'Start on Linux',
     lede: 'Keep a copy of the recitations and stream it to listeners. One command, a disk cap, an upload cap — and the network is closer to the people who need it.',
     why: {
       title: 'Why a node?',
       p1: 'The console stores no audio. Each node keeps the catalogue and serves pieces to listeners over BitTorrent; two nodes already run.',
       p2: 'A node on another network is worth more than a hundred downloads: it shortens the path for listeners your server cannot reach quickly.',
+      trackerAlt: 'Network statistics: ten torrents, two connected peers, one seeding.',
+      trackerCaption: 'The network now: ten torrents, two connected peers, one seeding.',
     },
     supported: {
       title: 'What is supported?',
@@ -772,6 +782,8 @@ const en: typeof ar = {
       portHint: 'This is the only port the internet needs. Do not open 8085: it answers admin credentials and stays on the LAN or tailnet.',
       afterTitle: 'What the installer prints',
       afterBody: 'Name, URL, user and password. Send them to the operator, or add them yourself in the console.',
+      commandsAlt: 'The Add seeder dialog: the install command and the port command, each with a copy button.',
+      commandsCaption: 'The console offers both commands ready to copy, then the four fields.',
     },
     windows: {
       title: 'Windows through WSL2',
@@ -794,6 +806,8 @@ const en: typeof ar = {
       link: 'Open Seeders',
       imageAlt: 'The Seeders page in the console: two nodes online, ten recitations each, with peer counts.',
       imageCaption: 'The Seeders page: two nodes online, ten recitations each, with peer counts.',
+      formAlt: 'The Add seeder form: name, URL, admin user and password, and the option to add the catalogue.',
+      formCaption: 'Paste the four values, and add the catalogue if you want it.',
     },
     limits: {
       title: 'Limits and safety',

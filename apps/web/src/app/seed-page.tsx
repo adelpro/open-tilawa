@@ -1,6 +1,5 @@
 import CopyCode from '@/components/copy-code';
 import Icon from '@/components/icons';
-import Link from '@/components/link';
 import {
   CONSOLE_SEEDERS_URL,
   PEER_PORT_COMMAND,
@@ -22,56 +21,72 @@ export default function SeedPage() {
   return (
     <main className="page-screen">
       <div className="w-full max-w-[520px] lg:max-w-[700px]">
-        <Link
-          to={{ name: 'home' }}
-          className="inline-flex min-h-11 items-center gap-2 text-[0.875rem] text-muted transition-colors hover:text-ink"
-        >
-          <Icon name="back" className="text-muted" />
-          {t.routes.listen}
-        </Link>
+        <div className="seed-hero">
+          <h1 className="text-[2rem] font-semibold leading-tight text-ink lg:text-[3.5rem]">
+            {copy.title}
+          </h1>
+          <p className="mt-5 text-[1.125rem] leading-relaxed text-ink lg:text-[1.25rem]">
+            {copy.lede}
+          </p>
+          <a
+            href="#linux"
+            className="press mt-6 inline-flex min-h-11 items-center gap-2 bg-ink px-5 text-[0.9375rem] font-semibold text-invert"
+          >
+            {copy.cta}
+            <Icon name="forward" size={16} className="icon-dir" />
+          </a>
+        </div>
 
-        <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">
-          {copy.title}
-        </h1>
-        <p className="mt-6 text-[1rem] leading-relaxed text-ink">{copy.lede}</p>
-
-        <section className="mt-12">
+        <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.why.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.why.p1}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.why.p2}</p>
+          <figure className="mt-6">
+            <img
+              src="/images/seeders-tracker.png"
+              alt={copy.why.trackerAlt}
+              width={900}
+              height={720}
+              loading="lazy"
+              className="h-auto w-full bg-line/20"
+            />
+            <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
+              {copy.why.trackerCaption}
+            </figcaption>
+          </figure>
         </section>
 
-        <section className="mt-12">
+        <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">
             {copy.supported.title}
           </h2>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full border-collapse text-start text-[0.9375rem] leading-relaxed">
               <tbody>
-                <tr className="border-t border-line">
-                  <th scope="row" className="py-3 pe-4 text-start font-semibold text-ink">
+                <tr className="odd:bg-line/20">
+                  <th scope="row" className="py-3 pe-4 text-start align-top font-semibold text-ink">
                     Linux
                   </th>
-                  <td className="py-3 text-muted">{copy.supported.linux}</td>
+                  <td className="py-3 align-top text-muted">{copy.supported.linux}</td>
                 </tr>
-                <tr className="border-t border-line">
-                  <th scope="row" className="py-3 pe-4 text-start font-semibold text-ink">
+                <tr className="odd:bg-line/20">
+                  <th scope="row" className="py-3 pe-4 text-start align-top font-semibold text-ink">
                     Windows
                   </th>
-                  <td className="py-3 text-muted">{copy.supported.windows}</td>
+                  <td className="py-3 align-top text-muted">{copy.supported.windows}</td>
                 </tr>
-                <tr className="border-t border-line">
-                  <th scope="row" className="py-3 pe-4 text-start font-semibold text-ink">
+                <tr className="odd:bg-line/20">
+                  <th scope="row" className="py-3 pe-4 text-start align-top font-semibold text-ink">
                     macOS
                   </th>
-                  <td className="py-3 text-muted">{copy.supported.mac}</td>
+                  <td className="py-3 align-top text-muted">{copy.supported.mac}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <section className="mt-12">
+        <section id="linux" className="seed-section mt-14 scroll-mt-8">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.linux.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.linux.intro}</p>
           <ul className="mt-4 list-disc space-y-2 ps-5 text-[0.9375rem] leading-relaxed text-muted">
@@ -97,9 +112,22 @@ export default function SeedPage() {
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">{copy.linux.portHint}</p>
           <h3 className="mt-6 text-[1rem] font-semibold text-ink">{copy.linux.afterTitle}</h3>
           <p className="mt-2 text-[1rem] leading-relaxed text-muted">{copy.linux.afterBody}</p>
+          <figure className="mt-6">
+            <img
+              src="/images/seeders-commands.png"
+              alt={copy.linux.commandsAlt}
+              width={616}
+              height={700}
+              loading="lazy"
+              className="h-auto w-full bg-line/20"
+            />
+            <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
+              {copy.linux.commandsCaption}
+            </figcaption>
+          </figure>
         </section>
 
-        <section className="mt-12">
+        <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">
             {copy.windows.title}
           </h2>
@@ -126,7 +154,7 @@ export default function SeedPage() {
           <p className="mt-4 text-[0.8125rem] leading-relaxed text-muted">{copy.windows.note}</p>
         </section>
 
-        <section className="mt-12">
+        <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.console.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.console.p1}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{copy.console.p2}</p>
@@ -146,15 +174,28 @@ export default function SeedPage() {
               width={979}
               height={899}
               loading="lazy"
-              className="w-full bg-line/20"
+              className="h-auto w-full bg-line/20"
             />
-            <figcaption className="mt-2 text-[0.75rem] leading-relaxed text-muted">
+            <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
               {copy.console.imageCaption}
+            </figcaption>
+          </figure>
+          <figure className="mt-6">
+            <img
+              src="/images/seeders-add-form.png"
+              alt={copy.console.formAlt}
+              width={616}
+              height={700}
+              loading="lazy"
+              className="h-auto w-full bg-line/20"
+            />
+            <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
+              {copy.console.formCaption}
             </figcaption>
           </figure>
         </section>
 
-        <section className="mt-12">
+        <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.limits.title}</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             {copy.limits.items.map((item) => (
@@ -166,7 +207,7 @@ export default function SeedPage() {
           </dl>
         </section>
 
-        <section className="mt-12">
+        <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.faq.title}</h2>
           <dl className="mt-4 space-y-5">
             {copy.faq.items.map((item) => (
@@ -178,7 +219,7 @@ export default function SeedPage() {
           </dl>
         </section>
 
-        <p className="mt-12 text-[1rem] leading-relaxed text-ink">{copy.closing}</p>
+        <p className="seed-section mt-14 text-[1rem] leading-relaxed text-ink">{copy.closing}</p>
       </div>
     </main>
   );
