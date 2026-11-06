@@ -163,7 +163,8 @@ export class RecitersController {
   /**
    * Rebuild the public site. Fire-and-forget: a build takes minutes, so the row
    * (and this response) says "started" and the console polls the status above.
-   * Opt-in per deployment — the command drives the host daemon.
+   * Admin-only and fixed to the web service; the clean-tree gate is what stops a
+   * build from shipping code nobody committed.
    */
   @Post('site/rebuild')
   @HttpCode(HttpStatus.ACCEPTED)

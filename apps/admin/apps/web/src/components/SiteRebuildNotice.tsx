@@ -43,13 +43,11 @@ export function SiteRebuildNotice({
     .join(locale === 'ar' ? '، ' : ', ');
 
   const blockedHint =
-    status.blockedBy === 'disabled'
-      ? t('reciters.site.disabled')
-      : status.blockedBy === 'dirty-tree'
-        ? t('reciters.site.dirty', { files: status.dirtyFiles.join(', ') })
-        : status.blockedBy === 'unsupported'
-          ? (status.treeError ?? t('reciters.site.unsupported'))
-          : null;
+    status.blockedBy === 'dirty-tree'
+      ? t('reciters.site.dirty', { files: status.dirtyFiles.join(', ') })
+      : status.blockedBy === 'unsupported'
+        ? (status.treeError ?? t('reciters.site.unsupported'))
+        : null;
 
   const tone = status.state === 'failed' ? 'bad' : 'warn';
   const title =

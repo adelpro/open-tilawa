@@ -19,7 +19,6 @@ export interface SiteBuild {
 
 export interface SiteStatus {
   state: 'in-sync' | 'drift' | 'unknown' | 'building' | 'failed';
-  enabled: boolean;
   deployedAt: string | null;
   deployedCount: number | null;
   added: SiteRelease[];
@@ -27,7 +26,7 @@ export interface SiteStatus {
   renamed: { slug: string; from: SiteRelease; to: SiteRelease }[];
   building: boolean;
   lastBuild: SiteBuild | null;
-  blockedBy: 'disabled' | 'dirty-tree' | 'building' | 'unsupported' | null;
+  blockedBy: 'dirty-tree' | 'building' | 'unsupported' | null;
   dirtyFiles: string[];
   treeError: string | null;
   manifestError: string | null;

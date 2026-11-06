@@ -350,8 +350,6 @@ export const en = {
   'reciters.site.build': 'Rebuild site',
   'reciters.site.building': 'Rebuilding the site… started {time}',
   'reciters.site.deployed': 'Deployed: {count} reciters, built {time}',
-  'reciters.site.disabled':
-    'Site rebuilds are disabled on this deployment until you set SITE_REBUILD=1.',
   'reciters.site.dirty':
     'The build will not start while apps/web has uncommitted changes: {files}',
   'reciters.site.unsupported':

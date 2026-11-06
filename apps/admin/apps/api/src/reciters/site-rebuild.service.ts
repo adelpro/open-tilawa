@@ -32,8 +32,6 @@ export interface SiteBuildRow {
 
 export interface SiteStatus {
   state: 'in-sync' | 'drift' | 'unknown' | 'building' | 'failed';
-  /** The deployment opt-in (`SITE_REBUILD=1`); off unless the host says otherwise. */
-  enabled: boolean;
   deployedAt: string | null;
   deployedCount: number | null;
   added: SiteRelease[];
@@ -42,7 +40,7 @@ export interface SiteStatus {
   building: boolean;
   lastBuild: SiteBuildRow | null;
   /** Why the action is unavailable; `null` when it is available. */
-  blockedBy: 'disabled' | 'dirty-tree' | 'building' | 'unsupported' | null;
+  blockedBy: 'dirty-tree' | 'building' | 'unsupported' | null;
   dirtyFiles: string[];
   /** Why the clean-tree check itself failed, when it did. */
   treeError: string | null;
@@ -57,9 +55,9 @@ export interface SiteStatus {
  * HTML — which is why publishing a reciter does not start a build by itself.
  *
  * The decision is a diff, not a flag: the build stamps `/site-version.json`, and
- * a manual deploy clears the notice exactly like one started here. Rebuilding is
- * opt-in per deployment because it drives the host's Docker daemon, which is
- * root-equivalent.
+ * a manual deploy clears the notice exactly like one started here. The action
+ * drives the host's Docker daemon, so it stays admin-only, audited, fixed to the
+ * web service, and gated on a clean `apps/web` tree.
  */
 @Injectable()
 export class SiteRebuildService implements OnModuleInit {
@@ -88,10 +86,6 @@ export class SiteRebuildService implements OnModuleInit {
 
   private get publicSite(): string {
     return (this.config.get<string>('PUBLIC_SITE') ?? 'https://tilawah.cc').replace(/\/+$/, '');
-  }
-
-  private get enabled(): boolean {
-    return this.config.get<string>('SITE_REBUILD') === '1';
   }
 
   private get settings() {
@@ -128,19 +122,16 @@ export class SiteRebuildService implements OnModuleInit {
     else if (diff.changed) state = lastBuild?.status === 'failed' ? 'failed' : 'drift';
     else state = 'in-sync';
 
-    const blockedBy: SiteStatus['blockedBy'] = !this.enabled
-      ? 'disabled'
-      : building
-        ? 'building'
-        : treeError
-          ? 'unsupported'
-          : dirtyFiles.length > 0
-            ? 'dirty-tree'
-            : null;
+    const blockedBy: SiteStatus['blockedBy'] = building
+      ? 'building'
+      : treeError
+        ? 'unsupported'
+        : dirtyFiles.length > 0
+          ? 'dirty-tree'
+          : null;
 
     return {
       state,
-      enabled: this.enabled,
       deployedAt: manifest?.builtAt ?? null,
       deployedCount: manifest?.releases.length ?? null,
       added: diff.added,
@@ -165,14 +156,6 @@ export class SiteRebuildService implements OnModuleInit {
     actorId?: number | null,
     force = false,
   ): Promise<{ started: true; id: number }> {
-    // Check the deployment switch before touching the network or the host: a
-    // disabled deployment must answer immediately, not wait on a manifest fetch.
-    if (!this.enabled) {
-      throw new ServiceUnavailableException(
-        'site rebuilds are disabled on this deployment (set SITE_REBUILD=1 and mount the Docker socket)',
-      );
-    }
-
     const status = await this.status();
     if (status.building) throw new ConflictException('a site rebuild is already running');
     if (status.treeError) {

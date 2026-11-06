@@ -350,8 +350,6 @@ export const ar: Catalogue = {
   'reciters.site.build': 'أعد بناء الموقع',
   'reciters.site.building': 'جارٍ بناء الموقع… بدأ {time}',
   'reciters.site.deployed': 'المنشور: {count} قارئًا، بُني {time}',
-  'reciters.site.disabled':
-    'إعادة بناء الموقع معطّلة على هذا النشر حتى تشغّلها بمتغيّر SITE_REBUILD=1.',
   'reciters.site.dirty':
     'لن يبدأ البناء إن كانت في apps/web تغييرات غير محفوظة: {files}',
   'reciters.site.unsupported': 'تعذّر فحص شجرة العمل، والبناء موقوف حتى تُصلح.',
