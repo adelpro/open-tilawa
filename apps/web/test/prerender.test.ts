@@ -156,8 +156,8 @@ test('the graph comes from the schema module and is escaped', () => {
  */
 test('the about page carries its FAQ in words and in JSON-LD', () => {
   assert.match(SOURCE, /jsonLd: faqPage\(/);
-  assert.match(SOURCE, /copy\.about\.faq\.items/);
-  assert.match(SOURCE, /<h3>\$\{escape\(item\.q\)\}<\/h3>/);
+  assert.match(SOURCE, /about\.faq\.items/);
+  assert.match(SOURCE, /<dt>\$\{escape\(item\.q\)\}<\/dt>/);
 });
 
 test('the seeder page is prerendered from the route table', () => {

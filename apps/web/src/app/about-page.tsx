@@ -3,7 +3,7 @@ import Link from '@/components/link';
 import { APP_VERSION } from '@/constants/version';
 import { useLocale } from '@/hooks/use-locale';
 
-/** A page, not a sheet: it has a URL (`#/about`), so it can be linked and reloaded. */
+/** A page, not a sheet: it has a URL, so it can be linked and reloaded. */
 export default function AboutPage() {
   const { t } = useLocale();
   const about = t.about;
@@ -19,15 +19,18 @@ export default function AboutPage() {
           {t.routes.listen}
         </Link>
 
-        {/* No second logo here: the header already carries the mark. */}
-        <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">{about.title}</h1>
+        <h1 className="mt-6 text-[1.625rem] font-semibold leading-tight text-ink lg:text-[2rem]">
+          {about.title}
+        </h1>
 
         <p className="mt-6 text-[1rem] leading-relaxed text-ink">{about.lede}</p>
+        <p className="mt-3 text-[1rem] leading-relaxed text-ink">{about.lede2}</p>
 
         <section className="mt-10">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.how.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.how.p1}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.how.p2}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.how.p3}</p>
         </section>
 
         <section className="mt-10">
@@ -40,18 +43,19 @@ export default function AboutPage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.ring.title}</h2>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.ring.p1}</p>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.ring.p2}</p>
-        </section>
-
-        <section className="mt-10">
-          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.know.title}</h2>
-          <ul className="mt-3 space-y-3 text-[1rem] leading-relaxed text-muted">
-            {about.know.items.map((item) => (
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">
+            {about.sync.title}
+          </h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sync.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sync.p2}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sync.p3}</p>
+          <h3 className="mt-6 text-[1rem] font-semibold text-ink">{about.sync.what.title}</h3>
+          <ul className="mt-3 space-y-2 text-[1rem] leading-relaxed text-muted">
+            {about.sync.what.items.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
+          <p className="mt-4 text-[1rem] leading-relaxed text-muted">{about.sync.position}</p>
         </section>
 
         <section className="mt-10">
@@ -60,8 +64,7 @@ export default function AboutPage() {
           </h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p1}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p2}</p>
-          {/* The catalogue is a community project, so the credit is a link and not
-              a line of text: whoever reads it can go and see the source itself. */}
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p3}</p>
           <a
             href="https://itqan.dev"
             target="_blank"
@@ -69,11 +72,8 @@ export default function AboutPage() {
             className="group mt-4 inline-flex min-h-11 items-center gap-3"
           >
             <img src="/images/itqan.png" alt="" aria-hidden="true" className="itqan-mark h-12 w-auto" />
-            <span
-              dir="ltr"
-              className="text-[0.875rem] text-muted underline underline-offset-4 transition-colors group-hover:text-ink"
-            >
-              itqan.dev
+            <span className="text-[0.875rem] text-muted underline underline-offset-4 transition-colors group-hover:text-ink">
+              {about.sources.link}
             </span>
           </a>
         </section>
@@ -88,47 +88,43 @@ export default function AboutPage() {
               </div>
             ))}
           </dl>
+          <p className="mt-4 text-[1rem] leading-relaxed">
+            <a
+              href={`mailto:${about.faq.contact}`}
+              dir="ltr"
+              className="inline-block text-ink underline underline-offset-4"
+            >
+              {about.faq.contact}
+            </a>
+          </p>
         </section>
 
         <section className="mt-10">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.open.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.open.p1}</p>
-          <div className="mt-4 flex flex-col gap-2 text-[1rem] leading-relaxed">
-            <p className="text-muted">
-              {about.open.source}{' '}
-              <a
-                href="https://github.com/adelpro/open-tilawa"
-                target="_blank"
-                rel="noreferrer"
-                dir="ltr"
-                className="inline-block text-ink underline underline-offset-4"
-              >
-                github.com/adelpro/open-tilawa
-              </a>
-            </p>
-            <p className="text-muted">
-              {about.open.report}{' '}
-              <a
-                href="mailto:contact@tilawah.cc"
-                dir="ltr"
-                className="inline-block text-ink underline underline-offset-4"
-              >
-                contact@tilawah.cc
-              </a>
-            </p>
-          </div>
+          <p className="mt-4 text-[1rem] leading-relaxed text-muted">
+            {about.open.source}{' '}
+            <a
+              href="https://github.com/adelpro/open-tilawa"
+              target="_blank"
+              rel="noreferrer"
+              dir="ltr"
+              className="inline-block text-ink underline underline-offset-4"
+            >
+              github.com/adelpro/open-tilawa
+            </a>
+          </p>
         </section>
 
         <section className="mt-10">
-          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">
-            {about.contribute.title}
-          </h2>
-          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.contribute.body}</p>
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{about.node.title}</h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.node.p1}</p>
+          <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.node.p2}</p>
           <Link
             to={{ name: 'seed' }}
-            className="mt-3 inline-flex min-h-11 items-center text-[1rem] text-ink underline underline-offset-4"
+            className="mt-4 inline-flex min-h-11 items-center text-[1rem] text-ink underline underline-offset-4"
           >
-            {about.contribute.link}
+            {about.node.link}
           </Link>
         </section>
 

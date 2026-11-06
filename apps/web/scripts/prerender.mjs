@@ -188,24 +188,33 @@ addPage('/', (locale, copy) => ({
   body: `<h1>${escape(copy.about.title)}</h1><p>${escape(copy.about.lede)}</p>`,
 }));
 
-addPage('/about', (_locale, copy) => ({
-  title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة — Tilawah',
-  description: copy.about.lede,
-  index: indexable('about'),
-  // The visible questions and the markup are one list; a page that answers in
-  // words and tells a crawler something else is cloaking.
-  jsonLd: faqPage(
-    copy.about.faq.items.map((item) => ({ question: item.q, answer: item.a })),
-  ),
-  body: `<h1>${escape(copy.about.title)}</h1>` +
-    [copy.about.how, copy.about.noPeers, copy.about.ring, copy.about.sources, copy.about.open]
-      .map((section) => `<h2>${escape(section.title)}</h2><p>${escape(section.p1)}</p>`)
-      .join('') +
-    `<h2>${escape(copy.about.faq.title)}</h2>` +
-    copy.about.faq.items
-      .map((item) => `<h3>${escape(item.q)}</h3><p>${escape(item.a)}</p>`)
-      .join(''),
-}));
+addPage('/about', (locale, copy) => {
+  const about = copy.about;
+  const seedUrl = urlFor('/seed', locale);
+  return {
+    title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة — Tilawah',
+    description: about.lede,
+    index: indexable('about'),
+    // The visible questions and the markup are one list; a page that answers in
+    // words and tells a crawler something else is cloaking.
+    jsonLd: faqPage(
+      about.faq.items.map((item) => ({ question: item.q, answer: item.a })),
+    ),
+    body:
+      `<h1>${escape(about.title)}</h1><p>${escape(about.lede)}</p><p>${escape(about.lede2)}</p>` +
+      `<h2>${escape(about.how.title)}</h2><p>${escape(about.how.p1)}</p><p>${escape(about.how.p2)}</p><p>${escape(about.how.p3)}</p>` +
+      `<h2>${escape(about.noPeers.title)}</h2><p>${escape(about.noPeers.p1)}</p><p>${escape(about.noPeers.p2)}</p><p>${escape(about.noPeers.p3)}</p>` +
+      `<h2>${escape(about.sync.title)}</h2><p>${escape(about.sync.p1)}</p><p>${escape(about.sync.p2)}</p><p>${escape(about.sync.p3)}</p>` +
+      `<h3>${escape(about.sync.what.title)}</h3><ul>${about.sync.what.items.map((item) => `<li>${escape(item)}</li>`).join('')}</ul><p>${escape(about.sync.position)}</p>` +
+      `<h2>${escape(about.sources.title)}</h2><p>${escape(about.sources.p1)}</p><p>${escape(about.sources.p2)}</p><p>${escape(about.sources.p3)}</p>` +
+      `<p><a href="https://itqan.dev">${escape(about.sources.link)}</a></p>` +
+      `<h2>${escape(about.faq.title)}</h2><dl>${about.faq.items.map((item) => `<dt>${escape(item.q)}</dt><dd>${escape(item.a)}</dd>`).join('')}</dl>` +
+      `<p><a href="mailto:${escape(about.faq.contact)}">${escape(about.faq.contact)}</a></p>` +
+      `<h2>${escape(about.open.title)}</h2><p>${escape(about.open.p1)}</p><p>${escape(about.open.source)} <a href="https://github.com/adelpro/open-tilawa">github.com/adelpro/open-tilawa</a></p>` +
+      `<h2>${escape(about.node.title)}</h2><p>${escape(about.node.p1)}</p><p>${escape(about.node.p2)}</p><p><a href="${seedUrl}">${escape(about.node.link)}</a></p>` +
+      `<p>${escape(about.closing)}</p>`,
+  };
+});
 
 addPage('/privacy', (_locale, copy) => ({
   title: pageTitle({ name: 'privacy' }, copy) ?? 'الخصوصية — Tilawah',
