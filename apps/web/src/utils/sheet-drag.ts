@@ -63,6 +63,28 @@ export function shouldDismiss({
   return offset + project(Math.max(0, velocity)) > height * DISMISS_FRACTION;
 }
 
+/**
+ * How long the sheet takes to leave once the finger is up.
+ *
+ * Dismissal is a timed move, not a settling spring. The spring was tuned for
+ * the entrance (0.3s response) and had to cross the whole panel height before
+ * it counted as done, so the panel sat invisible for another quarter second —
+ * a tap read as a two-stage exit. A flick may take 20ms off; the range stays
+ * 200–220ms.
+ */
+export const EXIT_MS = 220;
+
+export function exitDuration(velocity: number): number {
+  const speed = Math.min(Math.abs(velocity), 4000);
+  return Math.round(EXIT_MS - (speed / 4000) * 20);
+}
+
+/** The exit curve: most of the distance is spent early, the last pixels settle. */
+export function easeOutCubic(t: number): number {
+  const progress = Math.min(1, Math.max(0, t));
+  return 1 - (1 - progress) ** 3;
+}
+
 export type SpringState = { value: number; velocity: number };
 
 export type SpringOptions = {

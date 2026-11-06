@@ -13,7 +13,7 @@ import { formatBytes } from '@/utils/format-bytes';
 import { riwayaLabel } from '@/utils/riwaya';
 import { reciterName } from '@/utils/reciter-name';
 import { filterReciters, filterSurahs } from '@/utils/search';
-import { DRAG_THRESHOLD, dragOffset, shouldDismiss, springStep } from '@/utils/sheet-drag';
+import { DRAG_THRESHOLD, dragOffset, easeOutCubic, exitDuration, shouldDismiss, springStep } from '@/utils/sheet-drag';
 import { createSheetLayer } from '@/utils/sheet-layer';
 import FavoriteButton from '@/components/favorite-button';
 import { useGlobalCounts } from '@/hooks/use-global-counts';
@@ -54,6 +54,45 @@ const sheetLayer = createSheetLayer({
   // handover rather than a plain close.
   schedule: (run) => requestAnimationFrame(() => run()),
 });
+
+/**
+ * Document scroll locks, ref-counted.
+ *
+ * A handover mounts the next sheet before the previous one finishes leaving.
+ * If each sheet restored the values it found on mount, the one leaving would
+ * unlock the page under the one arriving; the count keeps the lock until the
+ * last owner is gone. The saved values are the ones from before the first lock.
+ */
+let scrollLocks = 0;
+let scrollValues: { root: string; body: string; padding: string } | null = null;
+
+function lockDocumentScroll(): () => void {
+  if (scrollLocks === 0) {
+    const root = document.documentElement;
+    const body = document.body;
+    scrollValues = {
+      root: root.style.overflow,
+      body: body.style.overflow,
+      padding: body.style.paddingInlineEnd,
+    };
+    const gutter = window.innerWidth - root.clientWidth;
+    root.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    if (gutter > 0) body.style.paddingInlineEnd = `${gutter}px`;
+  }
+  scrollLocks += 1;
+
+  return () => {
+    scrollLocks -= 1;
+    if (scrollLocks > 0 || !scrollValues) return;
+    const root = document.documentElement;
+    const body = document.body;
+    root.style.overflow = scrollValues.root;
+    body.style.overflow = scrollValues.body;
+    body.style.paddingInlineEnd = scrollValues.padding;
+    scrollValues = null;
+  };
+}
 
 function PinGlyph({ filled }: { filled: boolean }) {
   return <Icon name="pin" weight={filled ? 'fill' : 'regular'} />;
@@ -141,15 +180,15 @@ export default function Sheet({
   };
 
   /**
-   * Spring from the presentation value, carrying the finger's velocity. This is
-   * the only way the panel moves: a CSS transition cannot be grabbed halfway.
+   * The entrance spring: from the presentation value, carrying the finger's
+   * velocity, so re-grabbing the sheet mid-rise has no seam. A CSS transition
+   * cannot be grabbed halfway.
    */
-  const animate = (target: number, velocity: number, done?: () => void) => {
+  const animate = (target: number, velocity: number) => {
     stop();
     if (!panelRef.current || reduceMotion()) {
       offset.current = target;
       apply(target);
-      done?.();
       return;
     }
 
@@ -172,7 +211,47 @@ export default function Sheet({
       offset.current = target;
       apply(target);
       if (panelRef.current) panelRef.current.style.willChange = '';
-      done?.();
+    };
+
+    frame.current = requestAnimationFrame(step);
+  };
+
+  /**
+   * Leave on a short, timed curve instead of the entrance spring.
+   *
+   * The spring was tuned to arrive, not to depart: it needed ~450ms to cross the
+   * full panel height and the dialog then waited for |value − target| ≤ 0.5
+   * before closing, leaving the sheet off-screen and still alive for another
+   * quarter second — a tap read as a two-stage exit. This closes on the frame
+   * the panel clears the viewport, and the scrim fades on the same clock because
+   * `apply` reads the same value.
+   */
+  const animateOut = (velocity: number, done: () => void) => {
+    stop();
+    if (!panelRef.current || reduceMotion()) {
+      done();
+      return;
+    }
+
+    panelRef.current.style.willChange = 'transform';
+    const token = generation.current;
+    const from = offset.current;
+    const target = height();
+    const started = performance.now();
+    const duration = exitDuration(velocity);
+
+    const step = (now: number) => {
+      if (token !== generation.current) return;
+      const progress = Math.min(1, (now - started) / duration);
+      offset.current = from + (target - from) * easeOutCubic(progress);
+      apply(offset.current);
+      if (progress < 1) {
+        frame.current = requestAnimationFrame(step);
+        return;
+      }
+      frame.current = 0;
+      if (panelRef.current) panelRef.current.style.willChange = '';
+      done();
     };
 
     frame.current = requestAnimationFrame(step);
@@ -204,14 +283,25 @@ export default function Sheet({
 
     const velocity = releaseVelocity.current;
     releaseVelocity.current = 0;
-    // Out along the same path it came in, then out of the top layer.
-    animate(height(), velocity, () => {
+    // Out along the same path it came in, then out of the top layer on the
+    // frame it clears the viewport — not after the spring settles.
+    animateOut(velocity, () => {
       dialog.close();
       offset.current = 0;
       panelHeight.current = 0;
       apply(0);
     });
   }, [open]);
+
+  /**
+   * A modal dialog is not a scroll lock on every engine: the page behind it can
+   * still move under the finger. Lock the document while the phone sheet is
+   * open and give the desktop scrollbar's width back so nothing shifts.
+   */
+  useEffect(() => {
+    if (!open || wide) return;
+    return lockDocumentScroll();
+  }, [open, wide]);
 
   /**
    * Back closes the sheet instead of leaving the site. The entry is the layer's,
@@ -386,19 +476,22 @@ export default function Sheet({
       }}
       className="sheet fixed inset-x-0 bottom-0 top-auto m-0 mx-auto w-full max-w-[520px] rounded-t-2xl border-t border-line bg-surface p-0 text-ink"
     >
-      {/* The handle is the affordance: a sheet you can see you can grab. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[6px] flex justify-center"
-      >
-        <span className="h-1 w-9 rounded-full bg-ink/20" />
-      </span>
+      {/* The handle is the affordance: a sheet you can see you can grab. It sits
+          inside the panel so it leaves with it instead of hanging in mid-air. */}
       <div
         ref={panelRef}
         className={
-          size === 'full' ? 'flex h-[90dvh] flex-col' : 'flex max-h-[90dvh] flex-col'
+          size === 'full'
+            ? 'relative flex h-[90dvh] flex-col'
+            : 'relative flex max-h-[90dvh] flex-col'
         }
       >
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-[6px] z-10 flex justify-center"
+        >
+          <span className="h-1 w-9 rounded-full bg-ink/20" />
+        </span>
         <div
           className="sheet-handle flex h-[52px] shrink-0 select-none items-center justify-between border-b border-line px-4"
           onPointerDown={onDragStart}

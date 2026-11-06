@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import {
   dragOffset,
+  easeOutCubic,
+  exitDuration,
   project,
   rubberband,
   shouldDismiss,
@@ -82,4 +84,21 @@ test('an unborn frame cannot explode the spring', () => {
   assert.equal(state.value, 0);
   const late = springStep({ value: 0, velocity: 0 }, { target: 100, dt: 0.25 });
   assert.ok(Number.isFinite(late.value) && late.value <= 100);
+});
+
+test('a dismissal is timed, not a settling spring: 200-220ms whatever the height', () => {
+  assert.equal(exitDuration(0), 220);
+  assert.equal(exitDuration(1000), 215);
+  assert.equal(exitDuration(4000), 200);
+  assert.equal(exitDuration(-4000), 200);
+  assert.equal(exitDuration(100000), 200);
+});
+
+test('the exit curve is at rest at both ends and spends its distance early', () => {
+  assert.equal(easeOutCubic(0), 0);
+  assert.equal(easeOutCubic(1), 1);
+  assert.ok(easeOutCubic(0.5) > 0.5, 'half the clock, most of the distance');
+  assert.ok(easeOutCubic(0.5) < 1);
+  assert.equal(easeOutCubic(-1), 0, 'a negative progress cannot rewind');
+  assert.equal(easeOutCubic(2), 1, 'an overrun cannot overshoot the target');
 });
