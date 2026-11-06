@@ -133,6 +133,11 @@ curl -fsSL https://raw.githubusercontent.com/adelpro/open-tilawa/main/deploy-nod
   | sudo bash -s -- --type seeder --disk 500 --upload-kbps 20000 --watchtower
 ```
 
+`--upnp` is opt-in and off by default. It tries to map **6881/tcp and 6881/udp**
+on the router with miniupnpc; it never maps the admin port. If the router has no
+UPnP IGD, the script falls back to the manual forward instruction.
+
+
 Without `--disk` the node reports its free space and accepts anything that fits;
 with it, the node refuses a magnet whose length would cross the cap. The script
 refuses a cap larger than the disk it is installing onto, refuses to start when

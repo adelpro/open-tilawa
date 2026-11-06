@@ -4,6 +4,7 @@
 #   or:  bash deploy-node.sh --type turn --port 3478
 #   or:  bash deploy-node.sh --type seeder --disk 500 --upload-kbps 20000 --watchtower
 #   or:  bash deploy-node.sh --type seeder --no-self-update  # refuse console updates
+#   or:  bash deploy-node.sh --type seeder --upnp            # try UPnP mapping for 6881
 set -euo pipefail
 
 # Defaults
@@ -20,6 +21,8 @@ DISK_GB="${DISK_GB:-}"
 UPLOAD_KBPS="${UPLOAD_KBPS:-0}"
 DOWNLOAD_KBPS="${DOWNLOAD_KBPS:-0}"
 ADMIN_UI="${ADMIN_UI:-1}"
+# Off by default: opening a router port is a network change the operator must ask for.
+UPNP="${UPNP:-0}"
 # Inbound peer port. Published because a node that only dials out is invisible
 # to peers that cannot reach it.
 PEER_PORT="${PEER_PORT:-6881}"
@@ -49,6 +52,7 @@ while [[ $# -gt 0 ]]; do
     --download-kbps) DOWNLOAD_KBPS="$2"; shift 2 ;;
     --admin-ui) ADMIN_UI="$2"; shift 2 ;;
     --peer-port) PEER_PORT="$2"; shift 2 ;;
+    --upnp|-upnp) UPNP=1; shift ;;
     --watchtower) WATCHTOWER=1; shift ;;
     --self-update) SELF_UPDATE=1; shift ;;
     --no-self-update) SELF_UPDATE=0; shift ;;
@@ -175,6 +179,42 @@ if ! docker compose version &>/dev/null; then
   echo "Installing docker-compose plugin..."
   sudo apt-get update && sudo apt-get install -y docker-compose-plugin
 fi
+
+
+# Optional UPnP mapping. Only the peer port is mapped; the admin port is never
+# opened. Off unless the operator passed --upnp, and a failure falls back to the
+# manual router instruction instead of aborting the install.
+UPNP_OK=0
+upnp_map() {
+  if [[ "$TYPE" != "seeder" ]]; then
+    echo "--upnp applies only to --type seeder; ignoring it." >&2
+    return 0
+  fi
+  if ! command -v upnpc >/dev/null 2>&1; then
+    if command -v apt-get >/dev/null 2>&1; then
+      echo "Installing miniupnpc for UPnP..."
+      apt-get update >/dev/null 2>&1 && apt-get install -y miniupnpc >/dev/null 2>&1 || true
+    fi
+  fi
+  if ! command -v upnpc >/dev/null 2>&1; then
+    echo "UPnP requested, but upnpc is unavailable; forward the port manually." >&2
+    return 0
+  fi
+  if upnpc -l 2>&1 | grep -qi "No IGD"; then
+    echo "UPnP requested, but no UPnP router was found; forward the port manually." >&2
+    return 0
+  fi
+  local tcp=0 udp=0
+  if upnpc -a "$HOST_IP" "$PEER_PORT" "$PEER_PORT" TCP "tilawah-seeder" 0 >/dev/null 2>&1; then tcp=1; fi
+  if upnpc -a "$HOST_IP" "$PEER_PORT" "$PEER_PORT" UDP "tilawah-seeder" 0 >/dev/null 2>&1; then udp=1; fi
+  if (( tcp == 1 && udp == 1 )); then
+    UPNP_OK=1
+    echo "UPnP: mapped ${PEER_PORT}/tcp and ${PEER_PORT}/udp to ${HOST_IP}."
+    echo "Remove with: upnpc -d ${PEER_PORT} TCP && upnpc -d ${PEER_PORT} UDP"
+  else
+    echo "UPnP mapping incomplete (tcp=${tcp} udp=${udp}); forward the port manually." >&2
+  fi
+}
 
 # --- Deploy based on type ---
 case "$TYPE" in
@@ -326,7 +366,12 @@ fi
       echo "Note: with no firewall, ${PORT}/tcp is reachable from anywhere that can route"
       echo "here. Put the node on the tailnet, or firewall that port to the console."
     fi
-    echo "On the router: forward ${PEER_PORT}/tcp and ${PEER_PORT}/udp to ${HOST_IP}."
+    if (( UPNP == 1 )); then
+      upnp_map
+    fi
+    if (( UPNP_OK == 0 )); then
+      echo "On the router: forward ${PEER_PORT}/tcp and ${PEER_PORT}/udp to ${HOST_IP}."
+    fi
     echo ""
     echo "=== Test it ==="
     echo "Local (must answer):"

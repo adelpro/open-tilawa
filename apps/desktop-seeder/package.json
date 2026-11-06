@@ -1,0 +1,16 @@
+{
+  "name": "tilawa-desktop-seeder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tilawah desktop seeder — first slice: port checks and opt-in UPnP",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "nat-upnp": "^1.1.1"
+  },
+  "devDependencies": {
+    "electron": "45.2.3"
+  }
+}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tilawah Seeder</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171717;
+      --muted: #666;
+      --line: #dedbd4;
+      --ground: #f7f5f0;
+      --card: #fff;
+      --accent: #1c4d78;
+      --danger: #a1261d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      background: var(--ground);
+      color: var(--ink);
+      font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { max-width: 540px; margin: 0 auto; }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+    .lede { margin: 8px 0 28px; color: var(--muted); }
+    section {
+      margin-top: 18px;
+      padding: 18px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    h2 { margin: 0 0 12px; font-size: 14px; text-transform: none; letter-spacing: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 5px 0; vertical-align: top; }
+    td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    .ok { color: var(--accent); font-weight: 600; }
+    .busy { color: var(--danger); font-weight: 600; }
+    label.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+    label.check input { margin-top: 4px; width: 18px; height: 18px; }
+    .hint { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+    .status { margin: 12px 0 0; font-size: 13px; min-height: 20px; }
+    .status.error { color: var(--danger); }
+    button {
+      margin-top: 12px;
+      min-height: 40px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--ink);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .55; cursor: progress; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Tilawah Seeder</h1>
+    <p class="lede">First slice: port checks and opt-in UPnP. The WebTorrent seeder is the next step.</p>
+
+    <section>
+      <h2>Ports</h2>
+      <table>
+        <tr><td>6881 TCP — peers</td><td id="tcp6881">checking…</td></tr>
+        <tr><td>6881 UDP — peers</td><td id="udp6881">checking…</td></tr>
+        <tr><td>8085 TCP — admin</td><td id="tcp8085">checking…</td></tr>
+      </table>
+      <button id="refresh" type="button">Check ports again</button>
+    </section>
+
+    <section>
+      <h2>Router</h2>
+      <label class="check">
+        <input id="upnp" type="checkbox" />
+        <span>Try to open port 6881 automatically (UPnP)</span>
+      </label>
+      <p class="hint">Off by default. Maps only 6881 TCP and UDP; never 8085. If the router has no UPnP support, forward the port manually.</p>
+      <p id="upnp-status" class="status">Off</p>
+    </section>
+  </main>
+  <script src="renderer.js"></script>
+</body>
+</html>

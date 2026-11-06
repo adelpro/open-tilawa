@@ -185,9 +185,11 @@ Root `.env` (seeder + tracker + turn): `ADMIN_USER`, `ADMIN_PASS`,
 - **New node:** run it as root, or it exits before writing anything:
   `curl -fsSL …/deploy-node.sh | sudo bash -s -- --type seeder [--disk GB]
   [--upload-kbps N] [--download-kbps N] [--port N] [--peer-port N] [--admin-ui 0]
-  [--watchtower]`. No cap is the default; a cap larger than the free disk is
+  [--watchtower] [--upnp]`. No cap is the default; a cap larger than the free disk is
   refused. The script stops when its admin or peer port is already published,
-  and names the container holding it — one node per host. Order of operations is
+  and names the container holding it — one node per host. `--upnp` is off by
+default; when passed it tries to map only 6881/tcp and 6881/udp with miniupnpc,
+and falls back to the manual forward instructions if no IGD answers. Order of operations is
   written, pulled, started, then `/health` polled for 30 s; a node that never
   answers exits non-zero with its log tail.
 - **Node addresses:** prefer the node's Tailscale MagicDNS name
