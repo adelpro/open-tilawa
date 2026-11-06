@@ -65,17 +65,24 @@ export default function AboutPage() {
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p1}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p2}</p>
           <p className="mt-3 text-[1rem] leading-relaxed text-muted">{about.sources.p3}</p>
-          <a
-            href="https://itqan.dev"
-            target="_blank"
-            rel="noreferrer"
-            className="group mt-4 inline-flex min-h-11 items-center gap-3"
-          >
-            <img src="/images/itqan.png" alt="" aria-hidden="true" className="itqan-mark h-12 w-auto" />
-            <span className="text-[0.875rem] text-muted underline underline-offset-4 transition-colors group-hover:text-ink">
-              {about.sources.link}
-            </span>
-          </a>
+          <div className="mt-4 flex flex-wrap items-center gap-6">
+            <a
+              href="https://itqan.dev"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center"
+            >
+              <img src="/images/itqan.png" alt="Itqan" className="source-mark h-10 w-auto" />
+            </a>
+            <a
+              href="https://mp3quran.net"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center"
+            >
+              <img src="/images/mp3quran.png" alt="MP3Quran" className="source-mark h-10 w-auto" />
+            </a>
+          </div>
         </section>
 
         <section className="mt-10">

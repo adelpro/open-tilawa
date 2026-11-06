@@ -93,12 +93,12 @@ select {
 
 /* A partner's mark, drained the same way: it is attribution, not a second brand,
    so it sits a step below the page's own mark in weight. */
-.itqan-mark {
+.source-mark {
   filter: grayscale(1) brightness(0.25);
   opacity: 0.7;
 }
 
-[data-theme='dark'] .itqan-mark {
+[data-theme='dark'] .source-mark {
   filter: grayscale(1) brightness(0) invert(1);
   opacity: 0.75;
 }

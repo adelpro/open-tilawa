@@ -207,7 +207,7 @@ addPage('/about', (locale, copy) => {
       `<h2>${escape(about.sync.title)}</h2><p>${escape(about.sync.p1)}</p><p>${escape(about.sync.p2)}</p><p>${escape(about.sync.p3)}</p>` +
       `<h3>${escape(about.sync.what.title)}</h3><ul>${about.sync.what.items.map((item) => `<li>${escape(item)}</li>`).join('')}</ul><p>${escape(about.sync.position)}</p>` +
       `<h2>${escape(about.sources.title)}</h2><p>${escape(about.sources.p1)}</p><p>${escape(about.sources.p2)}</p><p>${escape(about.sources.p3)}</p>` +
-      `<p><a href="https://itqan.dev">${escape(about.sources.link)}</a></p>` +
+      `<p><a href="https://itqan.dev" aria-label="Itqan"><img src="${SITE}/images/itqan.png" alt="Itqan" height="40" /></a> <a href="https://mp3quran.net" aria-label="MP3Quran"><img src="${SITE}/images/mp3quran.png" alt="MP3Quran" height="40" /></a></p>` +
       `<h2>${escape(about.faq.title)}</h2><dl>${about.faq.items.map((item) => `<dt>${escape(item.q)}</dt><dd>${escape(item.a)}</dd>`).join('')}</dl>` +
       `<p><a href="mailto:${escape(about.faq.contact)}">${escape(about.faq.contact)}</a></p>` +
       `<h2>${escape(about.open.title)}</h2><p>${escape(about.open.p1)}</p><p>${escape(about.open.source)} <a href="https://github.com/adelpro/open-tilawa">github.com/adelpro/open-tilawa</a></p>` +
@@ -246,7 +246,7 @@ addPage('/seed', (_locale, copy) => {
       `<h3>${escape(page.linux.afterTitle)}</h3><p>${escape(page.linux.afterBody)}</p>` +
       `<h2>${escape(page.windows.title)}</h2><p>${escape(page.windows.warning)}</p><ol>` +
       page.windows.steps.map((step) => `<li>${escape(step.title)} ${escape(step.body)}</li>`).join('') +
-      `</ol><p>${escape(page.windows.note)}</p>` +
+      `</ol>` +
       `<h2>${escape(page.console.title)}</h2><p>${escape(page.console.p1)}</p><p>${escape(page.console.p2)}</p>` +
       `<h2>${escape(page.limits.title)}</h2><dl>` +
       page.limits.items
@@ -256,7 +256,7 @@ addPage('/seed', (_locale, copy) => {
       page.faq.items
         .map((item) => `<dt>${escape(item.q)}</dt><dd>${escape(item.a)}</dd>`)
         .join('') +
-      `</dl><p>${escape(page.closing)}</p>`,
+      `</dl>`,
   };
 });
 

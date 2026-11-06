@@ -281,17 +281,16 @@ const ar = {
     },
     sources: {
       title: 'التسجيلات والروايات',
-      p1: 'يعتمد تلاوة على كتالوج مجتمع إتقان (itqan.dev)، من خلال منصّة «فنار» لنشر المحتوى القرآني.',
+      p1: 'يعتمد تلاوة على كتالوج مجتمع إتقان (itqan.dev)، عبر منصّة «فنار» لنشر المحتوى القرآني، وعلى مكتبة MP3Quran (mp3quran.net).',
       p2: 'تعود حقوق التسجيلات إلى أصحابها من القرّاء والناشرين.',
       p3: 'ويعرض تلاوة الرواية بجانب اسم القارئ، مثل حفص أو ورش أو قالون، متى توفرت معلومات موثوقة عنها. ولا ينسب التسجيل إلى رواية غير معروفة دون دليل.',
-      link: 'زيارة مجتمع إتقان',
     },
     faq: {
       title: 'أسئلة شائعة',
       items: [
         { q: 'هل تلاوة مجاني؟', a: 'نعم، تلاوة مجاني، دون إعلانات أو اشتراكات.' },
         { q: 'هل أحتاج إلى إنشاء حساب؟', a: 'لا. يمكنك الاستماع مباشرةً دون تسجيل. وإذا أردت مزامنة المفضّلة والإعدادات بين أجهزتك، يمكنك إنشاء حلقة ونقل مفتاحها باستخدام رمز QR.' },
-        { q: 'من أين تأتي التسجيلات؟', a: 'من كتالوج مجتمع إتقان (itqan.dev)، عبر منصّة «فنار» لنشر المحتوى القرآني. وتعود حقوق التسجيلات إلى أصحابها من القرّاء والناشرين.' },
+        { q: 'من أين تأتي التسجيلات؟', a: 'من كتالوج مجتمع إتقان (itqan.dev)، عبر منصّة «فنار» لنشر المحتوى القرآني، ومن مكتبة MP3Quran (mp3quran.net). وتعود حقوق التسجيلات إلى أصحابها من القرّاء والناشرين.' },
         { q: 'ماذا لو لم يكن هناك مستمعون آخرون؟', a: 'يجلب تلاوة الأجزاء المطلوبة من خادم المشروع إذا لم يعثر على أجهزة مشاركة خلال 8 ثوانٍ، بحد أقصى يبلغ 1 ميغابايت في الثانية لكل اتصال.' },
         { q: 'هل يعمل تلاوة على الهواتف؟', a: 'نعم، يمكنك استخدامه من متصفح الهاتف، كما يمكنك تثبيته كتطبيق على أندرويد وiOS.' },
         { q: 'كيف أبلّغ عن مشكلة أو أقترح إضافة؟', a: 'إذا وجدت تسجيلاً لا يعمل أو لاحظت نقصاً في قائمة القرّاء، يمكنك التواصل معنا عبر:' },
@@ -679,17 +678,16 @@ const en: typeof ar = {
     },
     sources: {
       title: 'Recitations and Narrations',
-      p1: 'Tilawah sources its recitations from the Itqan community catalogue (itqan.dev), through Fanar, a platform for publishing Quranic content.',
+      p1: 'Tilawah sources its recitations from the Itqan community catalogue (itqan.dev), through Fanar, a platform for publishing Quranic content, and from the MP3Quran library (mp3quran.net).',
       p2: 'Recording rights remain with their respective reciters and publishers.',
       p3: "Tilawah displays the narration (riwayah) alongside a reciter's name, such as Hafs, Warsh, or Qalun, whenever reliable information is available. It does not assign a narration when it is unknown.",
-      link: 'Visit the Itqan Community',
     },
     faq: {
       title: 'Frequently Asked Questions',
       items: [
         { q: 'Is Tilawah free?', a: 'Yes. Tilawah is free, with no ads or subscriptions.' },
         { q: 'Do I need an account?', a: 'No. You can start listening immediately without signing up. If you want to sync your favorites and settings across devices, you can create a sync circle and transfer its key using a QR code.' },
-        { q: 'Where do the recitations come from?', a: 'They come from the Itqan community catalogue (itqan.dev), through Fanar, a platform for publishing Quranic content. Recording rights remain with their respective reciters and publishers.' },
+        { q: 'Where do the recitations come from?', a: 'They come from the Itqan community catalogue (itqan.dev), through Fanar, a platform for publishing Quranic content, and from the MP3Quran library (mp3quran.net). Recording rights remain with their respective reciters and publishers.' },
         { q: 'What if no other listeners are available?', a: "If Tilawah cannot find peers within 8 seconds, it retrieves the required audio segments from the project's server, with a maximum transfer rate of 1 MB/s per connection." },
         { q: 'Does Tilawah work on mobile devices?', a: 'Yes. You can use Tilawah directly in your mobile browser or install it as an app on Android and iOS.' },
         { q: 'How can I report an issue or suggest an improvement?', a: 'If you find a recording that does not work or notice a missing reciter, get in touch:' },
