@@ -342,9 +342,63 @@
   padding-block: 8px;
 }
 
-/* On a phone the name search is the point of the row, so it takes the line.
- * The two selects then share the line below it instead of forcing the group
- * wider than the panel. */
+/*
+ * A control shaped like the selects beside it but holding several sources.
+ * The closed button keeps the select's metrics and chevron; the panel under it
+ * is a plain checkbox list, not a second kind of menu.
+ */
+.multi-select {
+  position: relative;
+}
+.multi-select__button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: auto;
+  min-width: 12rem;
+  cursor: pointer;
+  text-align: start;
+}
+.multi-select__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.multi-select__panel {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(100% + var(--space-1));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-glass);
+}
+.multi-select__panel[hidden] {
+  display: none;
+}
+.multi-select__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.multi-select__option:hover {
+  background: var(--hairline);
+}
+.multi-select__option input {
+  accent-color: var(--primary);
+}
+
+/* On a phone every control in the row takes the line: the name search first,
+ * then the reading and the sources, instead of two narrow selects sharing it. */
 @media (max-width: 760px) {
   .reciter-filters {
     width: 100%;
@@ -352,6 +406,11 @@
   .reciter-filters .field__input--toolbar {
     width: 100%;
     flex: 1 1 100%;
+  }
+  .reciter-filters .field__select,
+  .reciter-filters .multi-select,
+  .reciter-filters .multi-select__button {
+    width: 100%;
   }
 }
 

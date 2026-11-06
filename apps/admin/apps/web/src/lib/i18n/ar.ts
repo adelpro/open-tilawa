@@ -346,6 +346,8 @@ export const ar: Catalogue = {
   'reciters.filters': 'المرشّحات',
   'reciters.searchName': 'ابحث بالاسم',
   'reciters.allProviders': 'كل المزوّدين',
+  'reciters.providerCount': 'المزوّدون ({count})',
+  'reciters.clearProviders': 'إزالة المزوّدين',
   'reciters.noProvider': 'بلا مزوّد',
   'reciters.clearFilters': 'إزالة المرشّحات',
   'reciters.noMatches': 'لا قرّاء يطابقون هذه المرشّحات.',

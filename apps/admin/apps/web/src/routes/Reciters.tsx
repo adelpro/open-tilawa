@@ -12,6 +12,7 @@ import { SkeletonRows } from '../components/Skeleton';
 import { Modal } from '../components/Modal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { FormModal } from '../components/FormModal';
+import { MultiSelect } from '../components/MultiSelect';
 import { bytes } from '../lib/format';
 import { isUnclassified, riwayaLabel, riwayaOptions, riwayaValue } from '../lib/riwaya';
 import {
@@ -439,6 +440,16 @@ export function Reciters(): ReactElement {
     }
     return options;
   }, [providerOptions, filters.providers, hasUnprovided, t]);
+
+  /** The closed control: every source, the one chosen, or how many are chosen. */
+  const providerSummary = useMemo(() => {
+    if (filters.providers.length === 0) return t('reciters.allProviders');
+    if (filters.providers.length === 1) {
+      const id = filters.providers[0];
+      return providerFilterOptions.find((provider) => provider.id === id)?.label ?? id;
+    }
+    return t('reciters.providerCount', { count: String(filters.providers.length) });
+  }, [filters.providers, providerFilterOptions, t]);
 
   const filtered = hasActiveFilters(filters);
 
@@ -1477,40 +1488,22 @@ export function Reciters(): ReactElement {
                   <option value={filters.riwaya}>{riwayaLabel(filters.riwaya, locale)}</option>
                 ) : null}
               </select>
-              <div
-                className="cluster"
-                role="group"
-                aria-label={t('reciters.provider')}
-              >
-                <span className="row__label">{t('reciters.provider')}</span>
-                <Button
-                  small
-                  variant={filters.providers.length === 0 ? 'primary' : 'tertiary'}
-                  onClick={() =>
-                    setFilters((current) => ({ ...current, providers: [] }))
-                  }
-                >
-                  {t('reciters.allProviders')}
-                </Button>
-                {providerFilterOptions.map((provider) => (
-                  <Button
-                    key={provider.id}
-                    small
-                    variant={
-                      filters.providers.includes(provider.id) ? 'primary' : 'tertiary'
-                    }
-                    aria-pressed={filters.providers.includes(provider.id)}
-                    onClick={() =>
-                      setFilters((current) => ({
-                        ...current,
-                        providers: toggleProvider(current.providers, provider.id),
-                      }))
-                    }
-                  >
-                    {provider.label}
-                  </Button>
-                ))}
-              </div>
+              <MultiSelect
+                label={t('reciters.provider')}
+                summary={providerSummary}
+                options={providerFilterOptions}
+                selected={filters.providers}
+                onToggle={(id) =>
+                  setFilters((current) => ({
+                    ...current,
+                    providers: toggleProvider(current.providers, id),
+                  }))
+                }
+                onClear={() =>
+                  setFilters((current) => ({ ...current, providers: [] }))
+                }
+                clearLabel={t('reciters.clearProviders')}
+              />
               {filtered ? (
                 <Button small variant="tertiary" onClick={clearFilters}>
                   {t('reciters.clearFilters')}

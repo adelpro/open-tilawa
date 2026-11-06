@@ -346,6 +346,8 @@ export const en = {
   'reciters.filters': 'Filters',
   'reciters.searchName': 'Search by name',
   'reciters.allProviders': 'All providers',
+  'reciters.providerCount': 'Providers ({count})',
+  'reciters.clearProviders': 'Clear providers',
   'reciters.noProvider': 'No provider',
   'reciters.clearFilters': 'Clear filters',
   'reciters.noMatches': 'No reciters match these filters.',
