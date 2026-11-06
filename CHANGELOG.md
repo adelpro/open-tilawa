@@ -1,5 +1,16 @@
 # Changelog
 
+## admin 1.33.12 — 2026-11-06
+
+Admin release. App versions: **web 1.13.24**, **admin 1.33.12**, **seeder 1.5.7**.
+
+### Changed
+
+- The scope tabs (**Published (12)**, **Drafts**, **All**) always take their own
+  line under the filters, at every width. On a wide screen they used to share the
+  row with the search, reading and source controls, which put “Published” in the
+  far corner from the table it scopes.
+
 ## admin 1.33.11 — 2026-11-06
 
 Admin release. App versions: **web 1.13.24**, **admin 1.33.11**, **seeder 1.5.7**.
