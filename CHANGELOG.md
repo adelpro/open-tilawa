@@ -1,5 +1,27 @@
 # Changelog
 
+## web 1.13.25 + admin 1.33.13 — 2026-11-06
+
+Web and admin release. App versions: **web 1.13.25**, **admin 1.33.13**, **seeder 1.5.7**.
+
+### Added
+
+- **The console can tell when the public site is stale.** The web build writes
+  `/site-version.json` with the releases it prerendered, and the Reciters screen
+  compares it with the published catalogue. The notice names what is missing,
+  removed or renamed, explains why a reciter page and its sitemap row do not exist
+  yet, and rebuilds the site after a confirmation. The action is opt-in
+  (`SITE_REBUILD=1`), refuses an uncommitted `apps/web`, and is audited.
+
+### Fixed
+
+- **`/reciters` loads the next page as it scrolls** instead of stopping at the
+  first ten rows.
+- **Boot, `/listen` deep links, and the reciter page read the full roster.** A
+  listener on a reciter past row ten reopened to the first one, and a shared link
+  to it could not resolve. The picker also searches every reciter, not only the
+  loaded page.
+
 ## admin 1.33.12 — 2026-11-06
 
 Admin release. App versions: **web 1.13.24**, **admin 1.33.12**, **seeder 1.5.7**.
