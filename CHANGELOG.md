@@ -1,5 +1,44 @@
 # Changelog
 
+## admin 1.33.10 — 2026-11-06
+
+Admin and web release. App versions: **web 1.13.24**, **admin 1.33.10**, **seeder 1.5.7**.
+
+### Added
+
+- **The catalogue can be narrowed without leaving it.** The reciters table has a
+  name search, a riwaya select and a multi-select source filter, in the same order
+  as the columns. The search folds case, Latin accents, Arabic diacritics, hamza
+  and alef variants, `ى`/`ي`, `ة`/`ه` and tatweel, so `احمد` finds `أحمد` and
+  `تلاوه` finds `تلاوة`.
+- **Sources are toggles, not one choice.** Itqan and MP3Quran can be on together,
+  hand-entered rows have their own “No provider” toggle, and “All providers”
+  clears the group. A selected source that disappeared from the catalogue stays
+  visible so it can be taken back off.
+- The toolbar ends with a result count and the scope hint, and a filtered-empty
+  table says so instead of rendering an empty body.
+
+### Fixed
+
+- **The phone sheet left in two stages.** Its exit reused the entrance spring
+  tuned to arrive, so the panel crossed the screen in ~450ms and then sat
+  invisible in the top layer for another quarter second. The exit is now a timed
+  200–220ms `easeOutCubic` move that closes the dialog on the frame the panel
+  clears the viewport; the handle travels with the panel and the page behind it
+  is scroll-locked while the sheet is open.
+- **Console dialogs sit above the console.** The scrim is portaled to `<body>`, so
+  a transformed route cannot trap it under the topbar or a page notice; it covers
+  the sticky bar and respects the phone's safe areas with `dvh` sizing.
+- Escape, the close button and the scrim no longer discard a half-filled form
+  silently: a dirty form asks first, in the dialog. A refused submit is shown
+  inside the dialog instead of behind it.
+- A destructive confirm is announced as an `alertdialog` and reads its body and
+  hint, not just its title. Dialogs cannot be dismissed while their request is in
+  flight, and “Clear credentials” now asks before it removes the saved admin user
+  and password.
+- On a phone the reciter name search takes the full toolbar width, with the
+  riwaya and source controls wrapping below it.
+
 ## admin 1.33.9 — 2026-11-05
 
 Admin release. App versions: **web 1.13.23**, **admin 1.33.9**, **seeder 1.5.7**.
