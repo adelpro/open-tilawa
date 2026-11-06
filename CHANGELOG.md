@@ -1,5 +1,20 @@
 # Changelog
 
+## admin 1.33.11 — 2026-11-06
+
+Admin release. App versions: **web 1.13.24**, **admin 1.33.11**, **seeder 1.5.7**.
+
+### Changed
+
+- **The source filter reads as a select and opens as a checklist.** The toolbar
+  no longer grows a row of provider buttons: the closed control keeps the height,
+  border, type and chevron of the reading select beside it, reads “All providers”,
+  the chosen name, or a count, and opens a checkbox per source. Ticking one adds
+  it to the selection instead of replacing it, and “Clear providers” appears once
+  something is ticked.
+- On a phone the name search, the reading and the sources each take the full
+  toolbar width instead of two narrow controls sharing a line.
+
 ## admin 1.33.10 — 2026-11-06
 
 Admin and web release. App versions: **web 1.13.24**, **admin 1.33.10**, **seeder 1.5.7**.
