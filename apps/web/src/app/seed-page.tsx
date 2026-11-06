@@ -104,7 +104,6 @@ export default function SeedPage() {
               alt={copy.linux.terminalAlt}
               width={1200}
               height={420}
-              loading="lazy"
               className="h-auto w-full"
             />
             <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
@@ -123,8 +122,7 @@ export default function SeedPage() {
               src="/images/seeders-commands.png"
               alt={copy.linux.commandsAlt}
               width={616}
-              height={700}
-              loading="lazy"
+              height={748}
               className="h-auto w-full bg-line/20"
             />
             <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
@@ -188,7 +186,6 @@ export default function SeedPage() {
               alt={copy.console.imageAlt}
               width={979}
               height={380}
-              loading="lazy"
               className="h-auto w-full bg-line/20"
             />
             <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
@@ -200,8 +197,7 @@ export default function SeedPage() {
               src="/images/seeders-add-form.png"
               alt={copy.console.formAlt}
               width={616}
-              height={700}
-              loading="lazy"
+              height={748}
               className="h-auto w-full bg-line/20"
             />
             <figcaption className="mt-2 text-[0.8125rem] leading-relaxed text-muted">
