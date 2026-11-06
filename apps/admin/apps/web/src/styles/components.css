@@ -334,6 +334,27 @@
   min-width: 12rem;
 }
 
+/* A toolbar search: wide enough for a name, not the whole panel. */
+.field__input--toolbar {
+  width: 18rem;
+  max-width: 100%;
+  min-height: 40px;
+  padding-block: 8px;
+}
+
+/* On a phone the name search is the point of the row, so it takes the line.
+ * The two selects then share the line below it instead of forcing the group
+ * wider than the panel. */
+@media (max-width: 760px) {
+  .reciter-filters {
+    width: 100%;
+  }
+  .reciter-filters .field__input--toolbar {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
 .field__input:focus-visible,
 .field__textarea:focus-visible,
 .field__select:focus-visible {
@@ -2250,7 +2271,11 @@ button.chip[aria-pressed='true'] {
   align-items: center;
   justify-content: center;
   padding: var(--space-6);
-  z-index: 10;
+  /* The dialog is modal: it covers the sticky topbar (z 30) and the drawer,
+     and stays clear of the phone's notch and home indicator. */
+  padding-top: max(var(--space-6), env(safe-area-inset-top));
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+  z-index: 100;
 }
 
 .scrim {
@@ -2275,7 +2300,9 @@ button.chip[aria-pressed='true'] {
   width: 100%;
   max-width: 560px;
   max-height: 85vh;
+  max-height: 85dvh;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .modal--closing {
@@ -2309,6 +2336,13 @@ button.chip[aria-pressed='true'] {
 .modal__close:hover {
   background: var(--hairline);
   opacity: 1;
+}
+
+/* The unsaved-text prompt is part of the dialog, not a second overlay behind
+   it: answering it must not move focus out from under the form. */
+.modal__guard {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--space-3);
 }
 
 /* The footer stays reachable while a long form scrolls — the Add-node modal

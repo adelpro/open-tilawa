@@ -81,6 +81,8 @@ export function Seeders(): ReactElement {
   const [editUrl, setEditUrl] = useState('');
   const [editUser, setEditUser] = useState('');
   const [editPass, setEditPass] = useState('');
+  /** Clearing credentials is destructive: ask once, inside the edit dialog. */
+  const [confirmClear, setConfirmClear] = useState(false);
   /** The node whose removal is waiting for confirmation. */
   const [removing, setRemoving] = useState<Seeder | null>(null);
 
@@ -184,6 +186,7 @@ export function Seeders(): ReactElement {
     setEditUser('');
     setEditPass('');
     setError(null);
+    setConfirmClear(false);
   }
 
   async function saveEdit(): Promise<void> {
@@ -213,6 +216,7 @@ export function Seeders(): ReactElement {
     try {
       await api(`/seeders/${id}`, { method: 'PATCH', body: { adminUser: null, adminPass: null } });
       setMessage(t('seeders.credentialsCleared'));
+      setConfirmClear(false);
       await load();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('seeders.updateFailed'));
@@ -401,6 +405,7 @@ export function Seeders(): ReactElement {
           onSubmit={() => void add()}
           onClose={() => setShowAdd(false)}
           busy={busy === 'add'}
+          error={error}
           disabled={!newName.trim() || !newUrl.trim() || Boolean(urlProblem)}
         >
           <Field label={t('seeders.name')}>
@@ -490,11 +495,34 @@ export function Seeders(): ReactElement {
           onSubmit={() => void saveEdit()}
           onClose={() => setEditing(null)}
           busy={busy === 'edit'}
+          error={error}
           extra={
             editing.hasCredentials ? (
-              <Button variant="destructive" onClick={() => void clearCredentials(editing.id)}>
-                {t('seeders.clearCredentials')}
-              </Button>
+              confirmClear ? (
+                <div className="cluster" role="group" aria-label={t('seeders.clearCredentials')}>
+                  <span className="fine-print">{t('seeders.clearCredentialsConfirm')}</span>
+                  <Button
+                    small
+                    variant="tertiary"
+                    onClick={() => setConfirmClear(false)}
+                    disabled={busy === `clear-${editing.id}`}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button
+                    small
+                    variant="destructive"
+                    busy={busy === `clear-${editing.id}`}
+                    onClick={() => void clearCredentials(editing.id)}
+                  >
+                    {t('seeders.clearCredentials')}
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="destructive" onClick={() => setConfirmClear(true)}>
+                  {t('seeders.clearCredentials')}
+                </Button>
+              )
             ) : null
           }
         >

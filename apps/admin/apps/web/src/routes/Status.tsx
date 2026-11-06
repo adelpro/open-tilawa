@@ -164,6 +164,7 @@ export function Status(): ReactElement {
           onSubmit={() => void addService()}
           onClose={() => setShowAdd(false)}
           busy={busy === 'add'}
+          error={error}
           disabled={!name.trim() || !url.trim()}
         >
           <Field label={t('status.name')}>

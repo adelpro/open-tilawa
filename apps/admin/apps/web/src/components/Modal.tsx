@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useI18n } from '../lib/i18n';
 import { Icon } from './icons';
 
@@ -22,17 +23,31 @@ export function Modal({
   children,
   onClose,
   dismissible = true,
+  alert = false,
+  describedBy,
+  beforeClose,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   dismissible?: boolean;
+  /** An urgent confirmation: `alertdialog` makes a screen reader announce it as one. */
+  alert?: boolean;
+  /** Ids of the text that explains the dialog, not just its title. */
+  describedBy?: string;
+  /**
+   * A veto the dialog asks before it starts leaving. A form with unsaved text
+   * returns false and shows its own prompt — the check must run before the exit
+   * begins, or a veto leaves an invisible panel in the top layer.
+   */
+  beforeClose?: () => boolean;
 }): ReactElement {
   const panel = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const [closing, setClosing] = useState(false);
   const [origin, setOrigin] = useState('50% 50%');
+  const titleId = useId();
   const { t } = useI18n();
 
   // Anchor the scale to whatever had focus when the dialog opened — the button, in every
@@ -50,11 +65,12 @@ export function Modal({
 
   const close = useCallback((): void => {
     if (closing) return;
+    if (beforeClose && !beforeClose()) return;
     setClosing(true);
     // The exit is a scale under normal motion and a cross-fade under reduced motion, but it
     // is an exit either way — so the wait is the same and the caller is told once, after it.
     timer.current = window.setTimeout(onClose, EXIT_MS);
-  }, [closing, onClose]);
+  }, [closing, onClose, beforeClose]);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -125,7 +141,7 @@ export function Modal({
     return () => window.removeEventListener('keydown', onKey);
   }, [dismissible]);
 
-  return (
+  const dialog = (
     <div
       className={`scrim${closing ? ' scrim--closing' : ''}`}
       onClick={dismissible ? close : undefined}
@@ -134,15 +150,16 @@ export function Modal({
       <div
         className={`modal${closing ? ' modal--closing' : ''}`}
         style={{ transformOrigin: origin }}
-        role="dialog"
+        role={alert ? 'alertdialog' : 'dialog'}
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
+        aria-describedby={describedBy}
         tabIndex={-1}
         ref={panel}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="modal__head">
-          <h2 id="modal-title" className="panel__title">
+          <h2 id={titleId} className="panel__title">
             {title}
           </h2>
           {dismissible ? (
@@ -160,4 +177,11 @@ export function Modal({
       </div>
     </div>
   );
+
+  /*
+   * The scrim belongs to <body>, not to whichever route opened it. A transformed
+   * ancestor would otherwise trap the fixed overlay in that route's stacking
+   * context — behind the topbar and the page notices it is meant to cover.
+   */
+  return createPortal(dialog, document.body);
 }

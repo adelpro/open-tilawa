@@ -20,6 +20,15 @@ import {
   importPayload,
   type ProviderSummary,
 } from '../lib/provider-import';
+import {
+  EMPTY_RECITER_FILTERS,
+  NO_PROVIDER,
+  filterReciters,
+  hasActiveFilters,
+  providerChoices,
+  toggleProvider,
+  type ReciterFilterState,
+} from '../lib/reciter-filters';
 import type { Seeder } from '../lib/types-seeders';
 
 interface PushNodePlan {
@@ -149,13 +158,13 @@ export function Reciters(): ReactElement {
   });
   const [confirmPush, setConfirmPush] = useState<PushPlan | null>(null);
   /**
-   * Which half of the catalogue is on screen. Defaults to published: those are
-   * the reciters the site offers, and the nineteen drafts made the table read as
-   * two dozen releases when three are live.
+   * Which half of the catalogue is on screen, and what narrows it. The scope
+   * defaults to published: those are the reciters the site offers, and the
+   * nineteen drafts made the table read as two dozen releases when three are
+   * live. The three filters share an object because they narrow the same list
+   * and are cleared together.
    */
-  const [scope, setScope] = useState<'published' | 'drafts' | 'all'>('published');
-  /** '' means every riwaya; otherwise an exact value as stored in the catalogue. */
-  const [riwayaFilter, setRiwayaFilter] = useState('');
+  const [filters, setFilters] = useState<ReciterFilterState>(EMPTY_RECITER_FILTERS);
   const [nodes, setNodes] = useState<Seeder[] | null>(null);
   const [fetchNode, setFetchNode] = useState<number | null>(null);
   const [trackersOpen, setTrackersOpen] = useState(false);
@@ -403,13 +412,38 @@ export function Reciters(): ReactElement {
     [reciters],
   );
 
+  /** The sources that hold a row, labelled the way the API labels them. */
+  const providerOptions = useMemo(
+    () => providerChoices(reciters ?? [], providers),
+    [reciters, providers],
+  );
+
+  /** A hand-entered row exists, so "no provider" is a real answer, not a dead end. */
+  const hasUnprovided = useMemo(
+    () => (reciters ?? []).some((row) => row.provider === null),
+    [reciters],
+  );
+
+  /**
+   * The sources offered as toggles: the ones holding a row, plus any id still
+   * selected from before a reload so a stale choice can be taken back off.
+   */
+  const providerFilterOptions = useMemo(() => {
+    const options = [...providerOptions];
+    for (const id of filters.providers) {
+      if (id === NO_PROVIDER) continue;
+      if (!options.some((provider) => provider.id === id)) options.push({ id, label: id });
+    }
+    if (hasUnprovided || filters.providers.includes(NO_PROVIDER)) {
+      options.push({ id: NO_PROVIDER, label: t('reciters.noProvider') });
+    }
+    return options;
+  }, [providerOptions, filters.providers, hasUnprovided, t]);
+
+  const filtered = hasActiveFilters(filters);
+
   const sorted = useMemo(() => {
-    const rows = (reciters ?? []).filter((row) => {
-      const inScope =
-        scope === 'all' ? true : scope === 'published' ? row.published : !row.published;
-      const inRiwaya = riwayaFilter === '' || row.riwaya === riwayaFilter;
-      return inScope && inRiwaya;
-    });
+    const rows = filterReciters(reciters ?? [], filters);
     const dir = sort.dir === 'asc' ? 1 : -1;
     rows.sort((a, b) => {
       switch (sort.key) {
@@ -426,7 +460,12 @@ export function Reciters(): ReactElement {
       }
     });
     return rows;
-  }, [reciters, sort, locale, scope, riwayaFilter]);
+  }, [reciters, filters, sort, locale]);
+
+  /** Narrowing the list is not the same as changing which half it shows. */
+  function clearFilters(): void {
+    setFilters((current) => ({ ...current, query: '', riwaya: '', providers: [] }));
+  }
 
   function toggleSort(key: SortKey): void {
     setSort((current) =>
@@ -740,6 +779,7 @@ export function Reciters(): ReactElement {
           onSubmit={() => void saveEdit()}
           onClose={() => setEditing(null)}
           busy={busy === 'edit'}
+          error={error}
         >
             <Field label={t('reciters.nameAr')} hint={t('reciters.nameArHint')}>
               {(id) => (
@@ -1064,6 +1104,7 @@ export function Reciters(): ReactElement {
           onSubmit={() => void (addMode === 'provider' ? importFromProvider() : add())}
           onClose={() => setShowAdd(false)}
           busy={busy === 'add'}
+          error={error}
           extra={
             addMode === 'provider' ? (
               <Button
@@ -1401,17 +1442,28 @@ export function Reciters(): ReactElement {
       ) : (
         <Panel>
           <div className="spread" style={{ marginBottom: 'var(--space-3)' }}>
-            <p className="body muted">
-              {scope === 'published'
-                ? t('reciters.scopePublishedHint', { count: String(counts.drafts) })
-                : t('reciters.scopeDraftsHint')}
-            </p>
-            <div className="cluster">
+            <div
+              className="cluster reciter-filters"
+              role="group"
+              aria-label={t('reciters.filters')}
+            >
+              <Input
+                type="search"
+                className="field__input--toolbar"
+                aria-label={t('reciters.searchName')}
+                placeholder={t('reciters.searchName')}
+                value={filters.query}
+                onChange={(event) =>
+                  setFilters((current) => ({ ...current, query: event.target.value }))
+                }
+              />
               <select
-                className="field__select"
+                className="field__select field__select--auto"
                 aria-label={t('reciters.riwayaFilter')}
-                value={riwayaFilter}
-                onChange={(event) => setRiwayaFilter(event.target.value)}
+                value={filters.riwaya}
+                onChange={(event) =>
+                  setFilters((current) => ({ ...current, riwaya: event.target.value }))
+                }
               >
                 <option value="">{t('reciters.allRiwayas')}</option>
                 {riwayas.map((row) => (
@@ -1419,33 +1471,92 @@ export function Reciters(): ReactElement {
                     {riwayaLabel(row, locale)}
                   </option>
                 ))}
+                {/* A reading the current rows no longer hold: keep it selected
+                    rather than letting the control fall back to "all" silently. */}
+                {filters.riwaya !== '' && !riwayas.includes(filters.riwaya) ? (
+                  <option value={filters.riwaya}>{riwayaLabel(filters.riwaya, locale)}</option>
+                ) : null}
               </select>
-              <div className="cluster" role="group" aria-label={t('reciters.scope')}>
+              <div
+                className="cluster"
+                role="group"
+                aria-label={t('reciters.provider')}
+              >
+                <span className="row__label">{t('reciters.provider')}</span>
+                <Button
+                  small
+                  variant={filters.providers.length === 0 ? 'primary' : 'tertiary'}
+                  onClick={() =>
+                    setFilters((current) => ({ ...current, providers: [] }))
+                  }
+                >
+                  {t('reciters.allProviders')}
+                </Button>
+                {providerFilterOptions.map((provider) => (
+                  <Button
+                    key={provider.id}
+                    small
+                    variant={
+                      filters.providers.includes(provider.id) ? 'primary' : 'tertiary'
+                    }
+                    aria-pressed={filters.providers.includes(provider.id)}
+                    onClick={() =>
+                      setFilters((current) => ({
+                        ...current,
+                        providers: toggleProvider(current.providers, provider.id),
+                      }))
+                    }
+                  >
+                    {provider.label}
+                  </Button>
+                ))}
+              </div>
+              {filtered ? (
+                <Button small variant="tertiary" onClick={clearFilters}>
+                  {t('reciters.clearFilters')}
+                </Button>
+              ) : null}
+            </div>
+            <div className="cluster" role="group" aria-label={t('reciters.scope')}>
               <Button
                 small
-                variant={scope === 'published' ? 'primary' : 'tertiary'}
-                onClick={() => setScope('published')}
+                variant={filters.scope === 'published' ? 'primary' : 'tertiary'}
+                onClick={() => setFilters((current) => ({ ...current, scope: 'published' }))}
               >
                 {t('reciters.scopePublished', { count: String(counts.published) })}
               </Button>
               <Button
                 small
-                variant={scope === 'drafts' ? 'primary' : 'tertiary'}
-                onClick={() => setScope('drafts')}
+                variant={filters.scope === 'drafts' ? 'primary' : 'tertiary'}
+                onClick={() => setFilters((current) => ({ ...current, scope: 'drafts' }))}
               >
                 {t('reciters.scopeDrafts', { count: String(counts.drafts) })}
               </Button>
               <Button
                 small
-                variant={scope === 'all' ? 'primary' : 'tertiary'}
-                onClick={() => setScope('all')}
+                variant={filters.scope === 'all' ? 'primary' : 'tertiary'}
+                onClick={() => setFilters((current) => ({ ...current, scope: 'all' }))}
               >
                 {t('reciters.scopeAll', { count: String(counts.all) })}
               </Button>
-              </div>
             </div>
           </div>
-          <div className="table-scroll">
+          <p className="body muted" style={{ marginBottom: 'var(--space-3)' }}>
+            {t('reciters.resultCount', {
+              shown: String(sorted.length),
+              total: String(reciters.length),
+            })}
+            {' · '}
+            {filters.scope === 'published'
+              ? t('reciters.scopePublishedHint', { count: String(counts.drafts) })
+              : filters.scope === 'drafts'
+                ? t('reciters.scopeDraftsHint')
+                : t('reciters.scopeAllHint')}
+          </p>
+          {sorted.length === 0 ? (
+            <Notice tone="info">{t('reciters.noMatches')}</Notice>
+          ) : (
+            <div className="table-scroll">
             <table className="table">
               <thead>
                 <tr>
@@ -1573,7 +1684,8 @@ export function Reciters(): ReactElement {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          )}
         </Panel>
       )}
       {trackersOpen ? (

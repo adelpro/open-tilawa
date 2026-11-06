@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Button } from './Button';
 import { Modal } from './Modal';
@@ -37,14 +38,34 @@ export function ConfirmModal({
   children?: ReactNode;
 }): ReactElement {
   const { t } = useI18n();
+  const bodyId = useId();
+  const hintId = useId();
+  // The title names the action; the body and the hint say what it does and what
+  // survives. A destructive dialog is announced as an alert, not a plain dialog.
+  const describedBy = [body ? bodyId : '', hint ? hintId : ''].filter(Boolean).join(' ') || undefined;
+
   return (
-    <Modal title={title} onClose={onClose}>
+    <Modal
+      title={title}
+      onClose={onClose}
+      dismissible={!busy}
+      alert={destructive}
+      describedBy={describedBy}
+    >
       <div className="stack">
-        {body ? <p className="body">{body}</p> : null}
+        {body ? (
+          <p className="body" id={bodyId}>
+            {body}
+          </p>
+        ) : null}
         {children}
-        {hint ? <p className="fine-print">{hint}</p> : null}
+        {hint ? (
+          <p className="fine-print" id={hintId}>
+            {hint}
+          </p>
+        ) : null}
         <div className="cluster cluster--end">
-          <Button variant="tertiary" onClick={onClose}>
+          <Button variant="tertiary" onClick={onClose} disabled={busy}>
             {t('common.cancel')}
           </Button>
           <Button

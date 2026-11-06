@@ -186,6 +186,7 @@ export function Turns(): ReactElement {
           onSubmit={() => void add()}
           onClose={() => setShowAdd(false)}
           busy={busy === 'add'}
+          error={error}
           disabled={!newName.trim() || !newHost.trim()}
         >
             <Field label={t('turns.name')}>
@@ -298,6 +299,7 @@ export function Turns(): ReactElement {
           onSubmit={() => void saveEdit()}
           onClose={() => setEditing(null)}
           busy={busy === 'edit'}
+          error={error}
         >
             <Field label={t('turns.name')}>
               {(id) => (

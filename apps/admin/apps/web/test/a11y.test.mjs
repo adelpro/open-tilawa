@@ -17,6 +17,7 @@ const strip = (source) => source.replace(/\/\*[\s\S]*?\*\//g, '');
 
 const app = read('App.tsx');
 const modal = read('components/Modal.tsx');
+const confirm = read('components/ConfirmModal.tsx');
 const chip = read('components/Chip.tsx');
 const account = read('routes/Account.tsx');
 const styles = ['tokens.css', 'components.css']
@@ -63,9 +64,17 @@ describe('the dialog keyboard contract (A3, A4)', () => {
   });
 
   it('points aria-labelledby at its own heading instead of duplicating the title', () => {
-    assert.match(modal, /aria-labelledby="modal-title"/);
-    assert.match(modal, /<h2 id="modal-title"/);
+    assert.match(modal, /aria-labelledby=\{titleId\}/);
+    assert.match(modal, /<h2 id=\{titleId\}/);
     assert.equal(/aria-label=\{title\}/.test(modal), false);
+  });
+
+  it('calls a destructive confirm an alert and reads its body', () => {
+    assert.match(modal, /role=\{alert \? 'alertdialog' : 'dialog'\}/);
+    assert.match(modal, /aria-describedby=\{describedBy\}/);
+    assert.match(confirm, /alert=\{destructive\}/);
+    assert.match(confirm, /describedBy=\{describedBy\}/);
+    assert.match(confirm, /id=\{bodyId\}/);
   });
 });
 

@@ -163,7 +163,7 @@ describe('buttons and dialogs', () => {
   it('anchors the dialog to its trigger and exits the way it entered', () => {
     assert.match(modal, /transformOrigin/);
     assert.match(modal, /modal--closing/);
-    assert.match(modal, /aria-labelledby="modal-title"/);
+    assert.match(modal, /aria-labelledby=\{titleId\}/);
     assert.match(all, /@keyframes modal-in/);
     assert.match(all, /@keyframes modal-out/);
   });
