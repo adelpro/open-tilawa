@@ -2,6 +2,9 @@ import type { ReactElement, ReactNode } from 'react';
 
 export type ChipTone = 'ok' | 'bad' | 'info' | 'notice';
 
+/** Callouts add "attention, not failure" to the chip vocabulary. */
+export type NoticeTone = ChipTone | 'warn';
+
 /**
  * A status chip always carries its word as well as its colour (§7 of the design):
  * a verdict that reads as "clean" must say "clean", and a tool error must never be
@@ -15,10 +18,17 @@ export function Notice({
   tone = 'notice',
   children,
 }: {
-  tone?: ChipTone;
+  tone?: NoticeTone;
   children: ReactNode;
 }): ReactElement {
-  const modifier = tone === 'ok' ? 'notice--ok' : tone === 'bad' ? 'notice--bad' : '';
+  const modifier =
+    tone === 'ok'
+      ? 'notice--ok'
+      : tone === 'bad'
+        ? 'notice--bad'
+        : tone === 'warn'
+          ? 'notice--warn'
+          : '';
   // A failure interrupts, so it is an alert; a confirmation waits its turn, so it is a
   // status. Both are announced — "Saved." was silent before this line existed.
   return (

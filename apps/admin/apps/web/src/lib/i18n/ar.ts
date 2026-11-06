@@ -340,6 +340,31 @@ export const ar: Catalogue = {
   'reciters.added': 'أُضيف القارئ.',
   'reciters.removed': 'أُزيل القارئ.',
   'reciters.loadFailed': 'تعذّر تحميل القرّاء.',
+  'reciters.site.title': 'الموقع يحتاج إعادة بناء',
+  'reciters.site.unknown': 'تعذّر التحقق من نسخة الموقع',
+  'reciters.site.failed': 'فشل آخر بناء للموقع',
+  'reciters.site.added': 'ناقص على الموقع: {count}',
+  'reciters.site.removed': 'يجب أن يختفي من الموقع: {count}',
+  'reciters.site.renamed': 'تغيّر: {count}',
+  'reciters.site.names': 'منها: {names}',
+  'reciters.site.build': 'أعد بناء الموقع',
+  'reciters.site.building': 'جارٍ بناء الموقع… بدأ {time}',
+  'reciters.site.deployed': 'المنشور: {count} قارئًا، بُني {time}',
+  'reciters.site.disabled':
+    'إعادة بناء الموقع معطّلة على هذا النشر حتى تشغّلها بمتغيّر SITE_REBUILD=1.',
+  'reciters.site.dirty':
+    'لن يبدأ البناء إن كانت في apps/web تغييرات غير محفوظة: {files}',
+  'reciters.site.unsupported': 'تعذّر فحص شجرة العمل، والبناء موقوف حتى تُصلح.',
+  'reciters.site.infoTitle': 'لماذا يحتاج الموقع إعادة بناء؟',
+  'reciters.site.infoBody':
+    'الموقع العام يُبنى مسبقًا: صفحات القرّاء وخريطة الموقع تُكتب وقت البناء. القائمة نفسها حيّة، فالقارئ الجديد يُتاح للاستماع والبحث فورًا، لكن صفحته لا توجد إلا بعد البناء التالي. يستغرق البناء دقيقتين إلى ثلاث، ويبقى الموقع الحالي يعمل حتى تجهز النسخة الجديدة.',
+  'reciters.site.infoList':
+    'البناء يأخذ شجرة apps/web المحفوظة على هذا الخادم. إن نشرت أو ألغيت نشر أو عدّلت اسمًا بعد بدء البناء، بقي التنبيه ظاهرًا، لأن الملف المنشور لن يطابق الفهرس.',
+  'reciters.site.confirmTitle': 'أعد بناء الموقع الآن؟',
+  'reciters.site.confirmBody':
+    'سيُبنى موقع الواجهة من apps/web وتُعاد تهيئة حاوية الويب. يبقى الموقع الحالي يعمل حتى تجهز النسخة الجديدة.',
+  'reciters.site.confirmHint': 'لن يبدأ إن كانت في apps/web تغييرات غير محفوظة.',
+  'reciters.site.startFailed': 'تعذّر بدء البناء.',
   'reciters.addFailed': 'تعذّرت إضافة القارئ.',
   'reciters.riwayaFilter': 'الرواية',
   'reciters.allRiwayas': 'كل الروايات',

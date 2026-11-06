@@ -18,6 +18,7 @@ import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RecitersService } from './reciters.service';
 import { CataloguePushService } from './catalogue-push.service';
+import { SiteRebuildService } from './site-rebuild.service';
 import { SettingsService } from '../settings/settings.service';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import type { ProviderId } from '../providers/provider.types';
@@ -34,6 +35,7 @@ export class RecitersController {
     private readonly settings: SettingsService,
     private readonly links: LinkSuggestionsService,
     private readonly imports: ReciterImportService,
+    private readonly site: SiteRebuildService,
   ) {}
 
   /**
@@ -145,6 +147,28 @@ export class RecitersController {
   @HttpCode(HttpStatus.ACCEPTED)
   apply(@Body() body: { nodeIds?: number[] }, @CurrentUser('id') actorId: string | number) {
     return this.push.apply(body?.nodeIds, Number(actorId));
+  }
+
+  /**
+   * Whether the deployed HTML still matches the catalogue, and why it does not.
+   *
+   * The comparison is against the build's own `/site-version.json`, not a flag:
+   * a deploy done on the host clears the notice exactly like one started here.
+   */
+  @Get('site')
+  siteStatus() {
+    return this.site.status();
+  }
+
+  /**
+   * Rebuild the public site. Fire-and-forget: a build takes minutes, so the row
+   * (and this response) says "started" and the console polls the status above.
+   * Opt-in per deployment — the command drives the host daemon.
+   */
+  @Post('site/rebuild')
+  @HttpCode(HttpStatus.ACCEPTED)
+  rebuildSite(@CurrentUser('id') actorId: string | number) {
+    return this.site.start(Number(actorId));
   }
 
   @Post()

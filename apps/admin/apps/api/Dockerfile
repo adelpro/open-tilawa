@@ -30,9 +30,12 @@ RUN yarn workspace @tilawa-admin/core build && yarn workspace @tilawa-admin/api 
 FROM node:22-alpine
 ENV NODE_ENV=production
 WORKDIR /app
-# The seeder update action shells out to the host daemon over its socket; the
-# CLI is the only thing that needs to live in the image for that.
-RUN apk add --no-cache docker-cli docker-cli-compose
+# The seeder and site-rebuild actions shell out to the host daemon over its
+# socket; the CLI is the only thing that needs to live in the image for that.
+# `git` is for the site rebuild's clean-tree gate: the web image is built from
+# the mounted working tree, so an uncommitted `apps/web` must be refused rather
+# than shipped.
+RUN apk add --no-cache docker-cli docker-cli-compose git
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/libs/core/package.json ./libs/core/package.json

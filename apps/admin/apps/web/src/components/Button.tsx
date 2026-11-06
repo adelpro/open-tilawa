@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactElement, ReactNode } from 'react';
 import { Spinner } from './icons';
 
-type Variant = 'primary' | 'secondary' | 'tertiary' | 'destructive';
+type Variant = 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'warning';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;

@@ -2,7 +2,7 @@ import { type PointerEvent as ReactPointerEvent, type ReactNode, useEffect, useI
 import { useAtomValue } from 'jotai';
 
 import type { IconName } from '@/components/icons';
-import Icon, { Spinner } from '@/components/icons';
+import Icon from '@/components/icons';
 import { SURAHS } from '@/constants/surah';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import type { Reciter } from '@/types';
@@ -713,9 +713,6 @@ export function ReciterSheet({
   onRetry,
   pinned,
   onTogglePin,
-  onLoadMore,
-  loading,
-  hasMore,
   initialScope = 'default',
 }: {
   open: boolean;
@@ -727,9 +724,6 @@ export function ReciterSheet({
   onRetry?: () => void;
   pinned?: boolean;
   onTogglePin?: () => void;
-  onLoadMore?: () => void;
-  loading?: boolean;
-  hasMore?: boolean;
   /** The chip the panel opens on — how `?view=favorites` lands on your list. */
   initialScope?: ReciterScope;
 }) {
@@ -737,7 +731,6 @@ export function ReciterSheet({
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [scope, setScope] = useState<ReciterScope>('default');
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const { viewCounts, favCounts } = useGlobalCounts();
   const favorites = useAtomValue(myFavoritesAtom);
   const recent = useAtomValue(myRecentAtom);
@@ -790,25 +783,6 @@ export function ReciterSheet({
   useEffect(() => {
     if (open) setScope(initialScope);
   }, [open, initialScope]);
-
-  useEffect(() => {
-    if (!open || !onLoadMore || !hasMore || loading || query || filter !== 'all') return;
-    if (scope !== 'default') return;
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          onLoadMore();
-        }
-      },
-      { rootMargin: '200px' },
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [open, onLoadMore, hasMore, loading, query, filter, scope]);
 
   return (
     <Sheet
@@ -909,18 +883,6 @@ export function ReciterSheet({
               </li>
             );
           })}
-          {!query && filter === 'all' && hasMore ? (
-            <li>
-              <div ref={sentinelRef} className="flex items-center justify-center py-4">
-                {loading ? (
-                  <div className="flex items-center gap-2 text-[0.875rem] text-muted">
-                    <Spinner size={16} />
-                    <span>جاري التحميل...</span>
-                  </div>
-                ) : null}
-              </div>
-            </li>
-          ) : null}
         </ul>
       )}
     </Sheet>

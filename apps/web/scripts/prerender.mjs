@@ -30,6 +30,7 @@ import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
 import { PEER_PORT_COMMAND, installCommand } from '../src/constants/seeder.ts';
+import { siteManifest } from '../src/utils/site-version.ts';
 import { shellHeadTags } from './head.mjs';
 
 const WEB = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -273,6 +274,16 @@ try {
   console.error('prerender: refusing to write a site with no catalogue');
   process.exit(1);
 }
+
+// The deployed site has to describe itself. A manual `docker compose up` leaves no
+// trace in the console's database, so the console cannot know whether the HTML is
+// current from its own rows alone; this file is the other side of that comparison.
+// It is written from the same `catalogue` the pages are built from, so the two
+// cannot disagree.
+writeFileSync(
+  join(DIST, 'site-version.json'),
+  `${JSON.stringify(siteManifest(catalogue), null, 2)}\n`,
+);
 
 // The roster, written down: the one hub with a screen behind it. The app renders the
 // same rows from the same catalogue, so the names a crawler reads are the names it can

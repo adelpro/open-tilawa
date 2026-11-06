@@ -1,10 +1,11 @@
 import { useSetAtom } from 'jotai';
 
-import Icon from '@/components/icons';
+import Icon, { Spinner } from '@/components/icons';
 import Link from '@/components/link';
 import { loadState, saveState } from '@/hooks/use-persistence';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 import { useLocale } from '@/hooks/use-locale';
-import { useReciters } from '@/hooks/use-reciters';
+import { useReciterPages } from '@/hooks/use-reciters';
 import { navigate } from '@/hooks/use-route';
 import { isPlayingAtom } from '@/jotai/player';
 import type { Reciter } from '@/types';
@@ -24,7 +25,14 @@ import { reciterName } from '@/utils/reciter-name';
  */
 export default function RecitersPage() {
   const { t, locale } = useLocale();
-  const { reciters, error } = useReciters();
+  const { reciters, error, loadMore, loading, hasMore } = useReciterPages();
+  // A browsing list arrives a page at a time: the end of the list is the cue, and
+  // the same hook drives the sheet's long roster. A page is never fetched while
+  // the previous one is in flight.
+  const sentinel = useInfiniteScroll({
+    enabled: hasMore && !loading,
+    onLoadMore: loadMore,
+  });
   const setIsPlaying = useSetAtom(isPlayingAtom);
   const copy = t.recitersPage;
 
@@ -95,6 +103,20 @@ export default function RecitersPage() {
             })}
           </ul>
         )}
+
+        {hasMore && !error ? (
+          <div
+            ref={sentinel}
+            className="flex items-center justify-center gap-2 py-4 text-[0.875rem] text-muted"
+          >
+            {loading ? (
+              <>
+                <Spinner size={16} />
+                <span>{t.sheets.loadingReciters}</span>
+              </>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </main>
   );

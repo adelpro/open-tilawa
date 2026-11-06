@@ -162,6 +162,15 @@ services:
       SEEDER_SERVICE: seeder
       # This host builds from the mounted tree; registry-based nodes use `pull`.
       SEEDER_UPDATE_MODE: build
+      # Rebuilding the public site from the console is opt-in: the action drives
+      # the host daemon, so a deployment that does not want that power leaves it
+      # at 0. The console still shows that the site is stale; only the button is
+      # unavailable. Set SITE_REBUILD=1 in .env to enable it.
+      SITE_REBUILD: ${SITE_REBUILD:-0}
+      SITE_COMPOSE_FILE: /host/docker-compose.yml
+      SITE_COMPOSE_PROJECT: open-tilawa
+      SITE_SERVICE: web
+      PUBLIC_SITE: ${PUBLIC_SITE:-https://tilawah.cc}
       MEDIA_LOG_DIR: /var/log/tilawa
     # The socket is owned by root:988; the container's `node` user only needs
     # to be in that group, not to run as root.

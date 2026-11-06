@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useI18n, type MessageKey } from '../lib/i18n';
 import { Button } from '../components/Button';
+import { SiteRebuildNotice } from '../components/SiteRebuildNotice';
 import { Icon } from '../components/icons';
 import { Field, Input, TextArea } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
@@ -15,6 +16,7 @@ import { FormModal } from '../components/FormModal';
 import { MultiSelect } from '../components/MultiSelect';
 import { bytes } from '../lib/format';
 import { isUnclassified, riwayaLabel, riwayaOptions, riwayaValue } from '../lib/riwaya';
+import { useSiteStatus } from '../lib/site-status';
 import {
   applyProviderRelease,
   folderFromRelease,
@@ -174,6 +176,10 @@ export function Reciters(): ReactElement {
   const [selected, setSelected] = useState<number[]>([]);
   const [plan, setPlan] = useState<PushPlan | null>(null);
   const [pushBusy, setPushBusy] = useState<string | null>(null);
+  // The catalogue array is the version: every save, publish, delete or import
+  // completion replaces it, and the drift check follows. Nothing is cached here —
+  // the deployed manifest is the server's answer, not this screen's.
+  const { status: siteStatus, refresh: refreshSite } = useSiteStatus(Boolean(user), reciters);
 
   const load = useCallback(async () => {
     setError(null);
@@ -782,6 +788,7 @@ export function Reciters(): ReactElement {
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {message ? <Notice tone="ok">{message}</Notice> : null}
+      <SiteRebuildNotice status={siteStatus} onRefresh={refreshSite} />
 
       {editing ? (
         <FormModal

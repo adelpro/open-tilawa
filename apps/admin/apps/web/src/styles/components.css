@@ -267,6 +267,18 @@
   background: var(--error-tint);
 }
 
+/* Attention, not failure: the site is stale, nothing is broken. A tinted ring
+   keeps it distinct from the accent primary without spending the error red. */
+.btn--warning {
+  background: var(--warning-surface);
+  color: var(--warning);
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+.btn--warning:hover:not(:disabled) {
+  background: var(--warning);
+  color: var(--canvas);
+}
+
 .btn--sm {
   min-height: 30px;
   padding: 6px 14px;
@@ -2580,6 +2592,39 @@ input[type='checkbox'] {
 .notice--ok {
   background: var(--success-tint);
   color: var(--success);
+}
+/* "Someone has to do this", not "something broke": the rebuild notice. */
+.notice--warn {
+  background: var(--warning-surface);
+  color: var(--warning);
+}
+
+.site-sync__head {
+  align-items: center;
+}
+/* The (i) is a real control, but it must not push the sentence off the line. */
+.site-sync__info {
+  appearance: none;
+  border: 0;
+  padding: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.site-sync__info:hover,
+.site-sync__info:focus-visible {
+  background: rgba(0, 0, 0, 0.08);
+}
+.site-sync__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .empty {

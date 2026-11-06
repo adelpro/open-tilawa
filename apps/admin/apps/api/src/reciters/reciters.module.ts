@@ -8,6 +8,7 @@ import { RecitersController } from './reciters.controller';
 import { RecitersService } from './reciters.service';
 import { ReciterImportService } from './reciter-import.service';
 import { CataloguePushService } from './catalogue-push.service';
+import { SiteRebuildService } from './site-rebuild.service';
 import { SettingsController } from '../settings/settings.controller';
 import { PublicRecitersController } from './public-reciters.controller';
 
@@ -19,7 +20,13 @@ import { PublicRecitersController } from './public-reciters.controller';
 @Module({
   imports: [UsersModule, SeedersModule, SettingsModule, ProvidersModule],
   controllers: [RecitersController, SettingsController, PublicRecitersController],
-  providers: [RecitersService, ReciterImportService, CataloguePushService, LinkSuggestionsService],
+  providers: [
+    RecitersService,
+    ReciterImportService,
+    CataloguePushService,
+    SiteRebuildService,
+    LinkSuggestionsService,
+  ],
   exports: [RecitersService],
 })
 export class RecitersModule {}

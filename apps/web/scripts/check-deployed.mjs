@@ -217,6 +217,37 @@ async function checkSitemap(catalogue) {
   if (broken === 0) pass(`${sample.length} sampled URLs answer 200`);
 }
 
+/**
+ * The deployed build says which releases it contains. This is the same comparison
+ * the console makes; running it after a deploy is what catches "the site was
+ * rebuilt from yesterday's catalogue".
+ */
+async function checkSiteVersion(catalogue) {
+  console.log('\nsite version');
+  const response = await fetch(`${SITE}/site-version.json?ts=${Date.now()}`, {
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) return fail(`site-version.json answered ${response.status}`);
+
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    return fail('site-version.json is not JSON');
+  }
+  if (!Array.isArray(body.releases)) return fail('site-version.json has no releases list');
+
+  const deployed = new Set(body.releases.map((release) => release.slug));
+  const missing = catalogue.filter((release) => !deployed.has(release.slug));
+  if (missing.length > 0) {
+    fail(
+      `${missing.length} published releases are not in the deployed build, e.g. ${missing[0].slug}`,
+    );
+  } else {
+    pass(`${body.releases.length} releases in the deployed build`);
+  }
+}
+
 const playwright = await loadPlaywright().catch((error) => {
   console.error(`Cannot load ${MODULE}: ${error.message}\n  npm i -g playwright && npx playwright install chromium`);
   process.exit(1);
@@ -239,6 +270,7 @@ const browser = await playwright.chromium.launch(executablePath ? { executablePa
 try {
   await checkListenLinks(browser, catalogue);
   await checkSitemap(catalogue);
+  await checkSiteVersion(catalogue);
 } finally {
   await browser.close();
 }

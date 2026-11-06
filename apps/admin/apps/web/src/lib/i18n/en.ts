@@ -340,6 +340,32 @@ export const en = {
   'reciters.added': 'Reciter added.',
   'reciters.removed': 'Reciter removed.',
   'reciters.loadFailed': 'Could not load the reciters.',
+  'reciters.site.title': 'The public site needs a rebuild',
+  'reciters.site.unknown': 'Could not verify the deployed site',
+  'reciters.site.failed': 'The last site rebuild failed',
+  'reciters.site.added': 'Missing from the site: {count}',
+  'reciters.site.removed': 'Should be removed: {count}',
+  'reciters.site.renamed': 'Changed: {count}',
+  'reciters.site.names': 'Including: {names}',
+  'reciters.site.build': 'Rebuild site',
+  'reciters.site.building': 'Rebuilding the site… started {time}',
+  'reciters.site.deployed': 'Deployed: {count} reciters, built {time}',
+  'reciters.site.disabled':
+    'Site rebuilds are disabled on this deployment until you set SITE_REBUILD=1.',
+  'reciters.site.dirty':
+    'The build will not start while apps/web has uncommitted changes: {files}',
+  'reciters.site.unsupported':
+    'The working-tree check failed, so the build is blocked until it is fixed.',
+  'reciters.site.infoTitle': 'Why does the site need a rebuild?',
+  'reciters.site.infoBody':
+    'The public site is prerendered: reciter pages and the sitemap are written at build time. The roster is live, so a new reciter is playable and searchable immediately, but its /reciters/{slug} page does not exist until the next build. A build takes two to three minutes and keeps the current site serving until the new one is ready.',
+  'reciters.site.infoList':
+    'The build uses the committed apps/web tree on this host. If you publish, unpublish, or rename after a build starts, the notice stays up, because the deployed file will no longer match the catalogue.',
+  'reciters.site.confirmTitle': 'Rebuild the public site now?',
+  'reciters.site.confirmBody':
+    'This builds the web image from apps/web and recreates the web container. Listeners keep the current site until the new one is ready.',
+  'reciters.site.confirmHint': 'It will not start while apps/web has uncommitted changes.',
+  'reciters.site.startFailed': 'Could not start the rebuild.',
   'reciters.addFailed': 'Could not add the reciter.',
   'reciters.riwayaFilter': 'Riwaya',
   'reciters.allRiwayas': 'All riwayas',
