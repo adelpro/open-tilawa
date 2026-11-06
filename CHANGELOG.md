@@ -1,5 +1,16 @@
 # Changelog
 
+## admin 1.33.14 — 2026-11-06
+
+Admin release. App versions: **web 1.13.25**, **admin 1.33.14**, **seeder 1.5.7**.
+
+### Changed
+
+- **The site rebuild action is available whenever the deployed page and the
+  catalogue disagree.** It is no longer behind a deployment switch: the drift
+  notice carries the button, and the clean `apps/web` tree and the "one build at
+  a time" rule remain the only guards.
+
 ## web 1.13.25 + admin 1.33.13 — 2026-11-06
 
 Web and admin release. App versions: **web 1.13.25**, **admin 1.33.13**, **seeder 1.5.7**.
