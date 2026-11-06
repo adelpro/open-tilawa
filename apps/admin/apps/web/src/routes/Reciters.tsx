@@ -1452,7 +1452,7 @@ export function Reciters(): ReactElement {
         </Panel>
       ) : (
         <Panel>
-          <div className="spread" style={{ marginBottom: 'var(--space-3)' }}>
+          <div className="stack stack--tight" style={{ marginBottom: 'var(--space-3)' }}>
             <div
               className="cluster reciter-filters"
               role="group"
