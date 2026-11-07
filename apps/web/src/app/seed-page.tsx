@@ -1,5 +1,6 @@
 import CopyCode from '@/components/copy-code';
 import Icon from '@/components/icons';
+import SeedMagnets from '@/components/seed-magnets';
 import {
   CONSOLE_SEEDERS_URL,
   INSTALLER_OUTPUT,
@@ -9,11 +10,19 @@ import {
 import { useLocale } from '@/hooks/use-locale';
 
 /**
- * The operator page: a machine, one command, and the four values the console asks for.
+ * Two ways to keep the library alive, in the order a visitor needs them.
  *
- * It is a page, not a sheet, because it is the thing sent to a stranger who offered a
- * server. The command is imported, never retyped; the console keeps its own copy.
+ * First: install a torrent app and copy one link — no account, no server of ours
+ * as a source. Second, for someone who has a machine to spare: run a node, which
+ * is what actually serves the player's swarm. The node instructions are imported
+ * from constants, never retyped, and the console keeps its own copy.
  */
+
+const CLIENTS = [
+  { name: 'qBittorrent', url: 'https://www.qbittorrent.org/download', key: 'qbittorrent' },
+  { name: 'Deluge', url: 'https://deluge-torrent.org/download/', key: 'deluge' },
+] as const;
+
 export default function SeedPage() {
   const { t } = useLocale();
   const copy = t.seedPage;
@@ -30,13 +39,47 @@ export default function SeedPage() {
             {copy.lede}
           </p>
           <a
-            href="#linux"
+            href="#magnets"
             className="press mt-6 inline-flex min-h-11 items-center gap-2 bg-ink px-5 text-[0.9375rem] font-semibold text-invert"
           >
             {copy.cta}
             <Icon name="forward" size={16} className="icon-dir" />
           </a>
         </div>
+
+        <section id="clients" className="seed-section mt-14 scroll-mt-8">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.clients.title}</h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.clients.lede}</p>
+          <ul className="mt-5 space-y-4">
+            {CLIENTS.map((client) => (
+              <li key={client.key}>
+                <a
+                  href={client.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="press inline-flex items-center gap-2 text-[1rem] font-semibold text-ink underline"
+                >
+                  {client.name}
+                  <Icon name="forward" size={16} className="icon-dir" />
+                </a>
+                <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted">
+                  {copy.clients[client.key]}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-[0.9375rem] leading-relaxed text-ink">{copy.clients.running}</p>
+          <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">{copy.clients.delay}</p>
+        </section>
+
+        <SeedMagnets />
+
+        <section className="seed-section mt-20 border-t border-line pt-10">
+          <h2 className="text-[1.5rem] font-semibold leading-snug text-ink">
+            {copy.operators.title}
+          </h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.operators.lede}</p>
+        </section>
 
         <section className="seed-section mt-14">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.why.title}</h2>

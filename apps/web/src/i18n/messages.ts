@@ -50,7 +50,7 @@ const ar = {
     settings: 'الإعدادات',
     about: 'عن تلاوة',
     privacy: 'الخصوصية',
-    seed: 'شغّل عقدة',
+    seed: 'شارك نسخة',
     reciters: 'القرّاء',
   },
   notFound: {
@@ -471,7 +471,7 @@ const en: typeof ar = {
     settings: 'Settings',
     about: 'About Tilawah',
     privacy: 'Privacy',
-    seed: 'Run a node',
+    seed: 'Seed a copy',
     reciters: 'Reciters',
   },
   notFound: {
