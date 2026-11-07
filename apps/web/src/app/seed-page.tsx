@@ -99,7 +99,6 @@ export default function SeedPage() {
           </ul>
           <p className="mt-4 text-[1rem] leading-relaxed text-ink">{copy.clients.lede}</p>
           <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink">{copy.clients.running}</p>
-          <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted">{copy.clients.delay}</p>
         </section>
 
         <SeedMagnets />

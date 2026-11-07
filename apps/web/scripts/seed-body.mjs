@@ -26,7 +26,7 @@ export function seedBody(page, { command, peerPortCommand, clients }) {
     `<h2>${escape(page.clients.title)}</h2><ul>` +
     clients.map((client) => `<li><a href="${escape(client.url)}">${escape(client.name)}</a></li>`).join('') +
     `</ul><p>${escape(page.clients.lede)}</p>` +
-    `<p>${escape(page.clients.running)}</p><p>${escape(page.clients.delay)}</p>` +
+    `<p>${escape(page.clients.running)}</p>` +
     `<h2>${escape(page.magnets.title)}</h2><p>${escape(page.magnets.lede)}</p>` +
     `<h2>${escape(page.operators.title)}</h2><p>${escape(page.operators.lede)}</p>` +
     `<h3>${escape(page.why.title)}</h3>` +

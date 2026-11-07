@@ -1,5 +1,26 @@
 # Changelog
 
+## web 1.13.27 — 2026-11-07
+
+Web release. App versions: **web 1.13.27**, **admin 1.33.14**, **seeder 1.5.7**.
+
+### Changed
+
+- **`/seed` navigates by anchor.** Three links under the hero — the app, the
+  links, the node — and every long section folds into a native `<details>`, the
+  console step included. `#linux` still resolves, and the prerendered body
+  carries the same folds, so nothing hides from a crawler.
+- **The reciter list folds per release,** and one button above it copies every
+  magnet, one per line, for a single paste into qBittorrent's add-links window.
+- **One client, named with its reason.** qBittorrent is the only client on the
+  page because it accepts a list of links at once; Deluge needs its Autoadd
+  plugin, so it is no longer offered rather than given a second procedure.
+
+### Fixed
+
+- **The `/seed` Arabic is written, not translated.** Anchor labels, the client
+  reason and the magnet-list copy were rewritten out of English word order.
+
 ## web 1.13.26 — 2026-11-07
 
 Web release. App versions: **web 1.13.26**, **admin 1.33.14**, **seeder 1.5.7**.

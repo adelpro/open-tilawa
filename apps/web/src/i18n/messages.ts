@@ -337,12 +337,12 @@ const ar = {
     clients: {
       title: 'أي برنامج أستخدم؟',
       lede: 'مفتوح المصدر، بلا إعلانات ولا حساب. وإن لصقت في نافذة إضافة الروابط عدة روابط، كل رابط في سطر، أضافها دفعة واحدة، فتحصل على المكتبة كلها بلصقة واحدة.',
-      running: 'أبقِ البرنامج مفتوحاً بعد اكتمال التنزيل؛ فلا رفع إلا وهو يعمل.',
-      delay: 'وقد يستغرق ظهور الأقران في البداية دقيقة أو أكثر.',
+      running:
+        'يُرجى إبقاء البرنامج مفتوحاً من أجل السماح باستمرار الرفع، وقد يتأخر اتصال الأقران.',
     },
     magnets: {
       title: 'قائمة القرّاء',
-      lede: 'لكل قارئ رابط واحد، يجمع سوره في ملفات منفصلة. والروابط مأخوذة من فهرس الموقع، فتتجدّد معه.',
+      lede: 'لكل قارئ رابط واحد، يجمع سوره في ملفات منفصلة. والروابط مأخوذة من فهرس الموقع.',
       totalLabel: 'المجموع',
       loading: 'جارٍ تحميل القائمة…',
       empty: 'لا يوجد قرّاء منشورون بعد.',
@@ -763,8 +763,8 @@ const en: typeof ar = {
     clients: {
       title: 'Which app?',
       lede: 'qBittorrent is open source, ad-free, and needs no account. Its add-links window takes several links at once, one per line, so the whole roster goes in with one paste.',
-      running: 'Leave the app running after the download finishes: a copy only uploads while it is open.',
-      delay: 'The first peers can take a minute or more to appear.',
+      running:
+        'Please keep the app open so uploads keep going; peers can take a while to connect.',
     },
     magnets: {
       title: 'Reciters',
