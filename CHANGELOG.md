@@ -1,5 +1,16 @@
 # Changelog
 
+## web 1.13.29 — 2026-11-07
+
+Web release. App versions: **web 1.13.29**, **admin 1.33.14**, **seeder 1.5.7**.
+
+### Fixed
+
+- **The reciter and surah panels no longer speak Arabic on `/en`.** Their titles
+  and search placeholders were written into the component, so the language
+  switcher could not reach them and the English message tree sat unused. A test
+  now fails the build on an Arabic literal in a visible attribute.
+
 ## web 1.13.28 — 2026-11-07
 
 Web release. App versions: **web 1.13.28**, **admin 1.33.14**, **seeder 1.5.7**.

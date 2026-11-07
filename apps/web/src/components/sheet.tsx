@@ -649,7 +649,7 @@ export function SurahSheet({
 
   return (
     <Sheet
-      title="السور"
+      title={t.sheets.surahs}
       open={open}
       onClose={onClose}
       pinned={pinned}
@@ -658,8 +658,8 @@ export function SurahSheet({
         <SearchField
           value={query}
           onChange={setQuery}
-          placeholder="ابحث باسم السورة أو رقمها"
-          label="بحث في السور"
+          placeholder={t.sheets.searchSurahs}
+          label={t.sheets.labelSurahs}
         />
       }
     >
@@ -786,7 +786,7 @@ export function ReciterSheet({
 
   return (
     <Sheet
-      title="القرّاء"
+      title={t.sheets.reciters}
       open={open}
       onClose={onClose}
       pinned={pinned}
@@ -796,8 +796,8 @@ export function ReciterSheet({
           <SearchField
             value={query}
             onChange={setQuery}
-            placeholder="ابحث باسم القارئ"
-            label="بحث في القرّاء"
+            placeholder={t.sheets.searchReciters}
+            label={t.sheets.labelReciters}
           />
           <div className="flex flex-wrap gap-2 border-b border-line px-4 py-3">
             {[
