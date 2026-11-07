@@ -1,5 +1,15 @@
 # Changelog
 
+## web 1.13.28 — 2026-11-07
+
+Web release. App versions: **web 1.13.28**, **admin 1.33.14**, **seeder 1.5.7**.
+
+### Fixed
+
+- **`/en/seed` names reciters in latin.** The magnet rows printed the Arabic
+  name on both locales; they now go through `reciterName` like every other
+  surface, matching `/en/reciters` and the magnet's own `dn`.
+
 ## web 1.13.27 — 2026-11-07
 
 Web release. App versions: **web 1.13.27**, **admin 1.33.14**, **seeder 1.5.7**.

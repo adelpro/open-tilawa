@@ -6,6 +6,7 @@ import { useLocale } from '@/hooks/use-locale';
 import { useReciters } from '@/hooks/use-reciters';
 import { formatBytes } from '@/utils/format-bytes';
 import { magnetBatch } from '@/utils/magnet-batch';
+import { reciterName } from '@/utils/reciter-name';
 import { riwayaLabel } from '@/utils/riwaya';
 
 type CopyState = 'idle' | 'copied' | 'failed';
@@ -23,7 +24,7 @@ type CopyState = 'idle' | 'copied' | 'failed';
  */
 export default function SeedMagnets() {
   const { reciters, error, loading, retry } = useReciters();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const copy = t.seedPage.magnets;
   const total = reciters.reduce((sum, reciter) => sum + (reciter.sizeBytes ?? 0), 0);
 
@@ -97,7 +98,9 @@ export default function SeedMagnets() {
             <details>
               <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 py-3">
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[1rem] text-ink">{reciter.name}</span>
+                  <span className="block truncate text-[1rem] text-ink">
+                    {reciterName(reciter, locale)}
+                  </span>
                   <span className="mt-1 block text-[0.75rem] text-muted">
                     {riwayaLabel(reciter.riwaya)} · {formatBytes(reciter.sizeBytes)} ·{' '}
                     {reciter.complet ? t.sheets.complete : t.sheets.partial}
