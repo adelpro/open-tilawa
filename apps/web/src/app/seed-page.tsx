@@ -1,6 +1,7 @@
 import CopyCode from '@/components/copy-code';
 import Icon from '@/components/icons';
 import SeedMagnets from '@/components/seed-magnets';
+import { SEED_CLIENTS } from '@/constants/seed-clients';
 import {
   CONSOLE_SEEDERS_URL,
   INSTALLER_OUTPUT,
@@ -18,11 +19,6 @@ import { useLocale } from '@/hooks/use-locale';
  * from constants, never retyped, and the console keeps its own copy.
  */
 
-const CLIENTS = [
-  { name: 'qBittorrent', url: 'https://www.qbittorrent.org/download', key: 'qbittorrent' },
-  { name: 'Deluge', url: 'https://deluge-torrent.org/download/', key: 'deluge' },
-] as const;
-
 export default function SeedPage() {
   const { t } = useLocale();
   const copy = t.seedPage;
@@ -39,7 +35,7 @@ export default function SeedPage() {
             {copy.lede}
           </p>
           <a
-            href="#magnets"
+            href="#clients"
             className="press mt-6 inline-flex min-h-11 items-center gap-2 bg-ink px-5 text-[0.9375rem] font-semibold text-invert"
           >
             {copy.cta}
@@ -51,7 +47,7 @@ export default function SeedPage() {
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.clients.title}</h2>
           <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.clients.lede}</p>
           <ul className="mt-5 space-y-4">
-            {CLIENTS.map((client) => (
+            {SEED_CLIENTS.map((client) => (
               <li key={client.key}>
                 <a
                   href={client.url}

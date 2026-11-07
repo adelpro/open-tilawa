@@ -30,8 +30,11 @@ import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
 import { PEER_PORT_COMMAND, installCommand } from '../src/constants/seeder.ts';
+import { SEED_CLIENTS } from '../src/constants/seed-clients.ts';
 import { siteManifest } from '../src/utils/site-version.ts';
 import { shellHeadTags } from './head.mjs';
+import { escapeHtml as escape } from './html.mjs';
+import { seedBody } from './seed-body.mjs';
 
 const WEB = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(WEB, 'dist');
@@ -53,9 +56,6 @@ if (assets.length === 0) {
   console.error('prerender: no module script in dist/index.html — run vite build first');
   process.exit(1);
 }
-
-const escape = (value) =>
-  String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** The two languages the build writes. Arabic is first: it is the site's default. */
 const LOCALES = ['ar', 'en'];
@@ -227,36 +227,15 @@ addPage('/privacy', (_locale, copy) => ({
 
 addPage('/seed', (_locale, copy) => {
   const page = copy.seedPage;
-  const command = installCommand({ diskGb: 50, uploadKbps: 20000 });
   return {
-    title: pageTitle({ name: 'seed' }, copy) ?? 'شغّل عقدة — Tilawah',
+    title: pageTitle({ name: 'seed' }, copy) ?? `${copy.routes.seed} — Tilawah`,
     description: page.lede,
     index: indexable('seed'),
-    body:
-      `<h1>${escape(page.title)}</h1><p>${escape(page.lede)}</p>` +
-      `<h2>${escape(page.why.title)}</h2><p>${escape(page.why.p1)}</p><p>${escape(page.why.p2)}</p>` +
-      `<h2>${escape(page.supported.title)}</h2><p>${escape(page.supported.linux)}</p>` +
-      `<p>${escape(page.supported.windows)}</p><p>${escape(page.supported.mac)}</p>` +
-      `<h2>${escape(page.linux.title)}</h2><p>${escape(page.linux.intro)}</p><ul>` +
-      page.linux.requirements.map((item) => `<li>${escape(item)}</li>`).join('') +
-      `</ul><pre dir="ltr"><code>${escape(command)}</code></pre>` +
-      `<p>${escape(page.linux.commandHint)}</p>` +
-      `<pre dir="ltr"><code>${escape(PEER_PORT_COMMAND)}</code></pre>` +
-      `<p>${escape(page.linux.portHint)}</p>` +
-      `<h3>${escape(page.linux.afterTitle)}</h3><p>${escape(page.linux.afterBody)}</p>` +
-      `<h2>${escape(page.windows.title)}</h2><p>${escape(page.windows.warning)}</p><ol>` +
-      page.windows.steps.map((step) => `<li>${escape(step.title)} ${escape(step.body)}</li>`).join('') +
-      `</ol>` +
-      `<h2>${escape(page.console.title)}</h2><p>${escape(page.console.p1)}</p><p>${escape(page.console.p2)}</p>` +
-      `<h2>${escape(page.limits.title)}</h2><dl>` +
-      page.limits.items
-        .map((item) => `<dt>${escape(item.title)}</dt><dd>${escape(item.body)}</dd>`)
-        .join('') +
-      `</dl><h2>${escape(page.faq.title)}</h2><dl>` +
-      page.faq.items
-        .map((item) => `<dt>${escape(item.q)}</dt><dd>${escape(item.a)}</dd>`)
-        .join('') +
-      `</dl>`,
+    body: seedBody(page, {
+      command: installCommand({ diskGb: 50, uploadKbps: 20000 }),
+      peerPortCommand: PEER_PORT_COMMAND,
+      clients: SEED_CLIENTS,
+    }),
   };
 });
 

@@ -2,6 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { shellHeadTags } from '../scripts/head.mjs';
+import { seedBody } from '../scripts/seed-body.mjs';
+import { MESSAGES } from '../src/i18n/messages.ts';
+import { SEED_CLIENTS } from '../src/constants/seed-clients.ts';
+import { PEER_PORT_COMMAND, installCommand } from '../src/constants/seeder.ts';
 
 /**
  * The rule the release got wrong once: `routes.ts` says it is the one place a path
@@ -163,4 +167,26 @@ test('the about page carries its FAQ in words and in JSON-LD', () => {
 test('the seeder page is prerendered from the route table', () => {
   assert.match(SOURCE, /addPage\('\/seed'/);
   assert.match(SOURCE, /index: indexable\('seed'\)/);
+});
+
+test('the static /seed body carries the clients and the list, not just the node manual', () => {
+  const page = MESSAGES.ar.seedPage;
+  const html = seedBody(page, {
+    command: installCommand({ diskGb: 50, uploadKbps: 20000 }),
+    peerPortCommand: PEER_PORT_COMMAND,
+    clients: SEED_CLIENTS,
+  });
+
+  assert.match(html, /qBittorrent/);
+  assert.match(html, /https:\/\/deluge-torrent\.org\/download\//);
+  assert.ok(html.includes(page.magnets.title));
+  assert.ok(html.includes(page.operators.title));
+  // The operator manual still ships: one page, two readers.
+  assert.ok(html.includes(page.why.title));
+  assert.ok(html.includes(page.faq.title));
+  // Nothing invented, and no seed in a document nobody can copy from a `fetch`.
+  assert.doesNotMatch(html, /magnet:\?/);
+  assert.doesNotMatch(html, /ws=/);
+  // The port command carries `&&`, which has to be escaped.
+  assert.ok(html.includes('&amp;&amp;'));
 });

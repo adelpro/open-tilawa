@@ -326,7 +326,7 @@ const ar = {
   },
   seedPage: {
     title: 'شارك نسخة من التلاوات',
-    cta: 'اذهب إلى القائمة',
+    cta: 'ابدأ من هنا',
     lede: 'ثبّت أحد برامج التورنت المفتوحة المصدر، ثم انسخ رابط القارئ الذي تريد الاحتفاظ به. ينزل الملف كاملاً مرة واحدة، ويبقى يُرفع للآخرين ما دام البرنامج يعمل.',
     clients: {
       title: 'أي برنامج أستخدم؟',
@@ -335,7 +335,6 @@ const ar = {
       deluge: 'خفيف، ويصلح لجهاز لا تستخدمه للعمل.',
       running: 'اترك البرنامج يعمل بعد اكتمال التنزيل؛ فالنسخة لا تُرفع إلا ما دام مفتوحاً.',
       delay: 'وقد يتأخر ظهور الأقران دقيقة أو أكثر في أول الأمر.',
-      open: 'صفحة التنزيل',
     },
     magnets: {
       title: 'قائمة القرّاء',
@@ -745,7 +744,7 @@ const en: typeof ar = {
   },
   seedPage: {
     title: 'Seed a copy of the recitations',
-    cta: 'Go to the list',
+    cta: 'Start here',
     lede: 'Install one of the open-source torrent apps, then copy the link for the reciter you want to keep. It downloads once and keeps uploading while the app is open.',
     clients: {
       title: 'Which app?',
@@ -754,7 +753,6 @@ const en: typeof ar = {
       deluge: 'Lightweight, and fine on a machine you do not use for work.',
       running: 'Leave the app running after the download finishes: a copy only uploads while it is open.',
       delay: 'The first peers can take a minute or more to appear.',
-      open: 'Download page',
     },
     magnets: {
       title: 'Reciters',
