@@ -121,10 +121,14 @@ function mergeUnique(current: Reciter[], incoming: Reciter[]): Reciter[] {
 export function useReciters(): {
   reciters: Reciter[];
   error: boolean;
+  loading: boolean;
   retry: () => void;
 } {
   const [reciters, setReciters] = useState<Reciter[]>(readCache);
   const [error, setError] = useState(false);
+  // A cold cache starts empty, which is not the same as "the catalogue has
+  // nothing published". Readers that would say the latter wait for this.
+  const [loading, setLoading] = useState(reciters.length === 0);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -135,10 +139,12 @@ export function useReciters(): {
         if (!live) return;
         setReciters(list);
         setError(false);
+        setLoading(false);
       },
       () => {
         if (!live) return;
         setError(true);
+        setLoading(false);
         // A failed fetch must not be memoised, or retry would resolve instantly.
         pendingFull = null;
       },
@@ -151,11 +157,12 @@ export function useReciters(): {
   const retry = useCallback(() => {
     pendingFull = null;
     setError(false);
+    setLoading(true);
     setReciters(readCache());
     setAttempt((value) => value + 1);
   }, []);
 
-  return { reciters, error, retry };
+  return { reciters, error, loading, retry };
 }
 
 /**
