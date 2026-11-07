@@ -327,12 +327,16 @@ const ar = {
   seedPage: {
     title: 'شارك نسخة من التلاوات',
     cta: 'ابدأ من هنا',
-    lede: 'ثبّت أحد برامج التورنت المفتوحة المصدر، ثم انسخ رابط القارئ الذي تريد الاحتفاظ به. ينزل الملف كاملاً مرة واحدة، ويبقى يُرفع للآخرين ما دام البرنامج يعمل.',
+    lede: 'ثبّت qBittorrent، ثم انسخ رابط القارئ الذي تريد الاحتفاظ به. ينزل الملف كاملاً مرة واحدة، ويبقى يُرفع للآخرين ما دام البرنامج يعمل.',
+    anchors: {
+      label: 'في هذه الصفحة',
+      app: 'التطبيق',
+      list: 'القائمة',
+      node: 'العقدة',
+    },
     clients: {
       title: 'أي برنامج أستخدم؟',
-      lede: 'كلاهما مفتوح المصدر، بلا إعلانات ولا حساب، ويعمل على ويندوز وماك ولينكس.',
-      qbittorrent: 'الأكثر انتشاراً بين البرامج المفتوحة المصدر.',
-      deluge: 'خفيف، ويصلح لجهاز لا تستخدمه للعمل.',
+      lede: 'qBittorrent مفتوح المصدر، بلا إعلانات ولا حساب. وتقبل نافذة إضافة الروابط فيه عدة روابط مرة واحدة، رابطاً في كل سطر، فتضيف المكتبة كلها بخطوة واحدة.',
       running: 'اترك البرنامج يعمل بعد اكتمال التنزيل؛ فالنسخة لا تُرفع إلا ما دام مفتوحاً.',
       delay: 'وقد يتأخر ظهور الأقران دقيقة أو أكثر في أول الأمر.',
     },
@@ -344,6 +348,10 @@ const ar = {
       empty: 'لا يوجد قرّاء منشورون بعد.',
       failed: 'تعذّر تحميل القرّاء. تحقّق من اتصالك ثم أعد المحاولة.',
       retry: 'إعادة المحاولة',
+      copyAll: 'انسخ كل الروابط',
+      copyAllHint: 'ألصقها في qBittorrent من Add Torrent Link، رابطاً في كل سطر.',
+      copiedAll: 'نُسخت كل الروابط',
+      copyAllFailed: 'تعذّر النسخ',
       link: 'الرابط',
     },
     operators: {
@@ -745,12 +753,16 @@ const en: typeof ar = {
   seedPage: {
     title: 'Seed a copy of the recitations',
     cta: 'Start here',
-    lede: 'Install one of the open-source torrent apps, then copy the link for the reciter you want to keep. It downloads once and keeps uploading while the app is open.',
+    lede: 'Install qBittorrent, then copy the link for the reciter you want to keep. It downloads once and keeps uploading while the app is open.',
+    anchors: {
+      label: 'On this page',
+      app: 'The app',
+      list: 'The list',
+      node: 'The node',
+    },
     clients: {
       title: 'Which app?',
-      lede: 'Both are open source, ad-free, with no account, and they run on Windows, macOS and Linux.',
-      qbittorrent: 'The most widely used open-source client.',
-      deluge: 'Lightweight, and fine on a machine you do not use for work.',
+      lede: 'qBittorrent is open source, ad-free, and needs no account. Its add-links window takes several links at once, one per line, so the whole roster goes in with one paste.',
       running: 'Leave the app running after the download finishes: a copy only uploads while it is open.',
       delay: 'The first peers can take a minute or more to appear.',
     },
@@ -762,6 +774,10 @@ const en: typeof ar = {
       empty: 'No reciters are published yet.',
       failed: 'Could not load the reciters. Check your connection and try again.',
       retry: 'Try again',
+      copyAll: 'Copy all magnets',
+      copyAllHint: 'Paste them into qBittorrent’s Add Torrent Link window, one link per line.',
+      copiedAll: 'All links copied',
+      copyAllFailed: 'Could not copy',
       link: 'Magnet',
     },
     operators: {

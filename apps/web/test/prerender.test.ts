@@ -178,7 +178,8 @@ test('the static /seed body carries the clients and the list, not just the node 
   });
 
   assert.match(html, /qBittorrent/);
-  assert.match(html, /https:\/\/deluge-torrent\.org\/download\//);
+  assert.match(html, /https:\/\/www\.qbittorrent\.org\/download/);
+  assert.doesNotMatch(html, /deluge/i);
   assert.ok(html.includes(page.magnets.title));
   assert.ok(html.includes(page.operators.title));
   // The operator manual still ships: one page, two readers.
@@ -187,6 +188,12 @@ test('the static /seed body carries the clients and the list, not just the node 
   // Nothing invented, and no seed in a document nobody can copy from a `fetch`.
   assert.doesNotMatch(html, /magnet:\?/);
   assert.doesNotMatch(html, /ws=/);
+  // Anchors are the in-page navigation, and the folds are real <details>.
+  assert.match(html, /href="#clients"/);
+  assert.match(html, /href="#magnets"/);
+  assert.match(html, /href="#operators"/);
+  assert.ok(html.includes(page.anchors.label));
+  assert.ok((html.match(/<details>/g) ?? []).length >= 6, 'the operator half is not folded');
   // The port command carries `&&`, which has to be escaped.
   assert.ok(html.includes('&amp;&amp;'));
 });
