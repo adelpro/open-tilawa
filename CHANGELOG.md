@@ -1,5 +1,27 @@
 # Changelog
 
+## web 1.13.26 — 2026-11-07
+
+Web release. App versions: **web 1.13.26**, **admin 1.33.14**, **seeder 1.5.7**.
+
+### Changed
+
+- **`/seed` is a magnet list.** Every published reciter appears with its
+  catalogue magnet, copied from the site catalogue at load time, beside the two
+  open-source clients that read it: qBittorrent and Deluge. The magnet is printed
+  verbatim — no web seed is appended — so a copy announces to the same swarm the
+  player uses and never asks the site to serve the files. The node instructions
+  remain on the page, under an operators heading.
+- **The release size travels with the roster.** The page states what a copy
+  costs, per reciter and in total, instead of leaving the disk figure to the
+  operator section.
+
+### Removed
+
+- **The Electron desktop seeder.** `apps/desktop-seeder` and its Windows signing
+  plan are gone: a torrent client a person already trusts does the job, and the
+  app was never released.
+
 ## admin 1.33.14 — 2026-11-06
 
 Admin release. App versions: **web 1.13.25**, **admin 1.33.14**, **seeder 1.5.7**.
