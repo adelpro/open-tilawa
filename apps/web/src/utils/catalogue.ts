@@ -14,6 +14,7 @@ export type CatalogueRow = {
   infohash: string;
   magnet: string;
   fileCount: number | null;
+  sizeBytes?: number | null;
   slug?: string | null;
 };
 
@@ -52,6 +53,8 @@ export function toReciters(rows: CatalogueRow[]): Reciter[] {
       magnet,
       riwaya: row.riwaya?.trim() || 'unknown',
       complet: (row.fileCount ?? 0) >= FULL_QURAN,
+      sizeBytes:
+        typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) ? row.sizeBytes : null,
       slug: (row.slug ?? '').trim(),
     });
   }

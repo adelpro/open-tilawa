@@ -73,3 +73,9 @@ test('a row with no latin name falls back to the Arabic name', () => {
   const reciter = toReciters([row({ name: '', nameAr: 'ياسين الجزائري' })])[0];
   assert.equal(reciter.nameEn, 'ياسين الجزائري');
 });
+
+test('a row keeps its size; a missing size is null', () => {
+  assert.equal(toReciters([row({ sizeBytes: 1650537577 })])[0].sizeBytes, 1650537577);
+  assert.equal(toReciters([row({ sizeBytes: undefined })])[0].sizeBytes, null);
+  assert.equal(toReciters([row({ sizeBytes: 'big' })])[0].sizeBytes, null);
+});

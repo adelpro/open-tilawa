@@ -20,6 +20,11 @@ export type Reciter = {
   riwaya: string;
   complet: boolean;
   /**
+   * Bytes the release weighs, from the catalogue; null when the row omits it.
+   * The seed page states what a copy costs, so this travels with the roster.
+   */
+  sizeBytes: number | null;
+  /**
    * The public face of the release, assigned by the catalogue and frozen there.
    * Empty when the catalogue has not assigned one yet — the row stays playable, it
    * simply has no `/listen/...` URL, because this app never derives a slug itself.
