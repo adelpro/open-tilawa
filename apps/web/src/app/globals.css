@@ -414,7 +414,7 @@ input[type='search']::-webkit-search-decoration {
 /* The contour is an instrument, not a texture: it needs room for a note axis
    and a readout. Same slot, taller block — the transport moves down with it. */
 .now-wave--pitch {
-  height: 168px;
+  height: 210px;
 }
 
 .now-controls {
@@ -482,7 +482,7 @@ input[type='search']::-webkit-search-decoration {
   }
 
   .now-wave--pitch {
-    height: 220px;
+    height: 260px;
   }
 }
 

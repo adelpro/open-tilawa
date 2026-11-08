@@ -104,7 +104,8 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       const plotL = 58;
       const plotR = width - 10;
       const plotT = 30;
-      const plotB = height - 6;
+      const ampH = 26;
+      const plotB = height - 6 - ampH - 6;
       const plotW = plotR - plotL;
       const plotH = plotB - plotT;
       const px = plotL + plotW * PLAYHEAD;
@@ -136,11 +137,11 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       ctx.direction = 'ltr';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      for (let midi = MIN_MIDI; midi <= MAX_MIDI; midi += 1) {
-        const natural = [0, 2, 4, 5, 7, 9, 11].includes(((midi % 12) + 12) % 12);
+      for (let midi = MIN_MIDI; midi <= MAX_MIDI; midi += 0.5) {
+        const whole = Number.isInteger(midi);
         const y = yOf(midi);
         ctx.strokeStyle = tokens.grid;
-        ctx.globalAlpha = natural ? 0.55 : 0.25;
+        ctx.globalAlpha = whole ? 0.35 : 0.15;
         ctx.beginPath();
         ctx.moveTo(plotL, y);
         ctx.lineTo(plotR, y);
@@ -169,8 +170,8 @@ export default function PitchContour({ playing }: { playing: boolean }) {
         ctx.globalAlpha = 0.12;
         roundRect(ctx, x1, y - 7, x2 - x1, 14, 4);
         ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.9;
+        ctx.lineWidth = 1.5;
         roundRect(ctx, x1, y - 7, x2 - x1, 14, 4);
         ctx.stroke();
       }
@@ -181,9 +182,11 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       ctx.rect(plotL, plotT, plotW, plotH);
       ctx.clip();
       ctx.strokeStyle = tokens.gold;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.2;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
+      ctx.shadowColor = tokens.gold;
+      ctx.shadowBlur = 6;
       let open = false;
       let prevT = 0;
       ctx.beginPath();
@@ -203,22 +206,46 @@ export default function PitchContour({ playing }: { playing: boolean }) {
         prevT = sample.t;
       }
       ctx.stroke();
+      ctx.shadowBlur = 0;
       ctx.restore();
+
+      // The amplitude strip: what the original component put along the floor.
+      // History is grey, the last second is gold, so the eye lands on the voice
+      // that is sounding now.
+      const ampT = plotB + 6;
+      for (const sample of visible) {
+        const x = xOf(sample.t);
+        if (x < plotL || x > px) continue;
+        const level = Math.min(1, sample.rms * 6);
+        if (level <= 0) continue;
+        ctx.fillStyle = now - sample.t < 0.8 ? tokens.gold : 'rgba(160,160,170,0.65)';
+        ctx.fillRect(x, ampT + ampH - level * ampH, Math.max(1.2, pps / 60), level * ampH);
+      }
 
       // Playhead, and a dot only while a voice is actually there.
       ctx.strokeStyle = tokens.gold;
-      ctx.globalAlpha = 0.5;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(px, plotT);
-      ctx.lineTo(px, plotB);
+      ctx.lineTo(px, ampT + ampH);
       ctx.stroke();
-      ctx.globalAlpha = 1;
       const last = samples[samples.length - 1];
       if (last && last.midi != null && now - last.t < 0.2) {
+        const y = yOf(Math.min(MAX_MIDI, Math.max(MIN_MIDI, last.midi)));
+        const glow = ctx.createRadialGradient(px, y, 0, px, y, 28);
+        glow.addColorStop(0, 'rgba(245,197,24,0.85)');
+        glow.addColorStop(1, 'rgba(245,197,24,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(px, y, 28, 0, Math.PI * 2);
+        ctx.fill();
         ctx.fillStyle = tokens.gold;
         ctx.beginPath();
-        ctx.arc(px, yOf(Math.min(MAX_MIDI, Math.max(MIN_MIDI, last.midi))), 5, 0, Math.PI * 2);
+        ctx.arc(px, y, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath();
+        ctx.arc(px, y, 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
     };
