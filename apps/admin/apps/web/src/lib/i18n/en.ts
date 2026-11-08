@@ -356,7 +356,7 @@ export const en = {
     'The working-tree check failed, so the build is blocked until it is fixed.',
   'reciters.site.infoTitle': 'Why does the site need a rebuild?',
   'reciters.site.infoBody':
-    'The public site is prerendered: reciter pages and the sitemap are written at build time. The roster is live, so a new reciter is playable and searchable immediately, but its /reciters/{slug} page does not exist until the next build. A build takes two to three minutes and keeps the current site serving until the new one is ready.',
+    'The public site is prerendered: reciter pages and the sitemap are written at build time. The roster is live, so a new reciter is playable and searchable immediately, but its /reciters/<slug> page does not exist until the next build. A build takes two to three minutes and keeps the current site serving until the new one is ready.',
   'reciters.site.infoList':
     'The build uses the committed apps/web tree on this host. If you publish, unpublish, or rename after a build starts, the notice stays up, because the deployed file will no longer match the catalogue.',
   'reciters.site.confirmTitle': 'Rebuild the public site now?',
