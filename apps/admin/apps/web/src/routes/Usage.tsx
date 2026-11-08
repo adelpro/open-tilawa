@@ -182,8 +182,12 @@ export function Usage(): ReactElement {
     );
   };
 
-  /** The window's own start, so "7" is a date and not a number nobody can place. */
-  const from = shortDate(new Date(Date.now() - days * 86_400_000).toISOString(), locale);
+  /**
+   * The window's own start, so "7" is a date and not a number nobody can place.
+   * Seven days ending today start six days back — the same anchor the API uses,
+   * or the header would name a date the panel does not read from.
+   */
+  const from = shortDate(new Date(Date.now() - (days - 1) * 86_400_000).toISOString(), locale);
 
   const surahs = useMemo(
     () =>
@@ -567,7 +571,11 @@ export function Usage(): ReactElement {
                   ].map(({ label, stats }) => (
                     <tr key={label}>
                       <td>{label}</td>
-                      <td className="num">{stats.days}</td>
+                      {/* Reported days out of the selected window: a bare count
+                          here read as devices, next to "Opened the app". */}
+                      <td className="num">
+                        {stats.days} / {days}
+                      </td>
                       <td>
                         {stats.best
                           ? `${stats.best.count} · ${shortDate(stats.best.day, locale)}`

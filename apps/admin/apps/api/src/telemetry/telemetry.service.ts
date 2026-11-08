@@ -448,8 +448,20 @@ export class TelemetryService {
     lastPrunedAt: string | null;
   } {
     const window = Math.min(Math.max(days, 1), RETENTION_DAYS);
-    const since = new Date(Date.now() - window * 86_400_000).toISOString();
-    const sinceDay = since.slice(0, 10);
+    /**
+     * `window` calendar days, today included.
+     *
+     * The window opens on the day `window − 1` days back and at UTC midnight —
+     * the bucket the daily counters are keyed by. Anchoring it on `now − window
+     * days` kept the time of day and reached one day too far: a seven-day panel
+     * counted eight days, which is how "Days reported" could outgrow the period
+     * printed above it. Raw events start at the same midnight so the two halves
+     * of the screen describe one window.
+     */
+    const sinceDay = new Date(Date.now() - (window - 1) * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const since = `${sinceDay}T00:00:00.000Z`;
 
     /** The window, plus every filter except the one this panel is the dimension of. */
     const scope = (ignore?: keyof SummaryFilters): { where: string; params: unknown[] } => {

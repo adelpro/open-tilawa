@@ -207,6 +207,51 @@ describe('the listening funnel', () => {
 });
 
 /**
+ * The window is a count of days, not of 24-hour slices.
+ *
+ * `days=7` has to mean seven daily buckets, today included: anchoring it at
+ * `now − 7d` put eight days under a header that claimed seven, which is how
+ * "Days reported" could exceed the period it was reporting on.
+ */
+describe('the window follows the selected period', () => {
+  /** The day `ago` days back, as the daily counters store it. */
+  const day = (ago: number): string =>
+    new Date(Date.now() - ago * 86_400_000).toISOString().slice(0, 10);
+
+  it('keeps at most `days` daily buckets, today included', () => {
+    const { db, telemetry } = build();
+    db.prepare('INSERT INTO device_days (day, devices) VALUES (?, ?)').run(day(6), 1);
+    // One day before a seven-day window opens: under `now − 7d` it was inside.
+    db.prepare('INSERT INTO device_days (day, devices) VALUES (?, ?)').run(day(7), 1);
+    db.prepare('INSERT INTO listener_days (day, listeners) VALUES (?, ?)').run(day(6), 1);
+    db.prepare('INSERT INTO listener_days (day, listeners) VALUES (?, ?)').run(day(7), 1);
+
+    expect(telemetry.summary(7).devices).toEqual([{ day: day(6), devices: 1 }]);
+    expect(telemetry.summary(7).listeners).toEqual([{ day: day(6), listeners: 1 }]);
+    // A wider window reaches further back, so the exclusion is the window and
+    // not a fixed limit on the query.
+    expect(telemetry.summary(30).devices).toEqual([
+      { day: day(7), devices: 1 },
+      { day: day(6), devices: 1 },
+    ]);
+  });
+
+  it('starts the raw-event window at the same UTC midnight', () => {
+    const { db, telemetry } = build([{ event: 'error', surah: 36 }]);
+    const firstDay = day(6);
+    const before = new Date(Date.parse(`${firstDay}T00:00:00.000Z`) - 60_000).toISOString();
+
+    // 23:59 the evening before the window: inside `now − 7d`, outside seven days.
+    db.prepare('UPDATE telemetry_events SET at = ?').run(before);
+    expect(telemetry.summary(7).recentErrors).toHaveLength(0);
+
+    // Midnight of the first day is the window's first instant, and is included.
+    db.prepare('UPDATE telemetry_events SET at = ?').run(`${firstDay}T00:00:00.000Z`);
+    expect(telemetry.summary(7).recentErrors).toHaveLength(1);
+  });
+});
+
+/**
  * Volume and devices are the two figures that do not come from the listener's
  * payoff report: one is read from the server's own log, the other is a daily
  * "a device was here" row with no identifier in it.
