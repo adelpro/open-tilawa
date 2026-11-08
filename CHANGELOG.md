@@ -1,5 +1,17 @@
 # Changelog
 
+## web 1.13.30 — 2026-11-08
+
+Web release. App versions: **web 1.13.30**, **admin 1.33.15**, **seeder 1.5.7**.
+
+### Added
+
+- **`/seed` reciter rows open the torrent app.** Inside the expanded row, beside
+  Copy, a link hands the magnet to whatever app owns `magnet:` — one torrent per
+  tap, so the bulk roster stays a copy-and-paste job. It is a plain anchor, not a
+  client API: nothing happens on a device with no handler, which is why Copy
+  stays. Only a stored `magnet:?…` becomes an `href`.
+
 ## admin 1.33.15 — 2026-11-08
 
 Admin release. App versions: **web 1.13.29**, **admin 1.33.15**, **seeder 1.5.7**.
