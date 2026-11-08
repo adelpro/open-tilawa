@@ -1,5 +1,21 @@
 # Changelog
 
+## admin 1.33.15 — 2026-11-08
+
+Admin release. App versions: **web 1.13.29**, **admin 1.33.15**, **seeder 1.5.7**.
+
+### Fixed
+
+- **The usage window is the period the screen names.** A "Last 7 days" panel
+  reached one day too far and read eight daily buckets, so "Days reported" could
+  outgrow the period printed above it. The window is now N calendar days ending
+  today, the play queries start at the same UTC midnight, and the cell prints
+  `reported / N` instead of a bare count that read as devices.
+- **The site-rebuild notice names the reciter path in Arabic.** `{slug}` in the
+  English string was never an interpolation — it printed its braces. Both
+  languages now show `/reciters/<slug>`, and the catalogue placeholder check is
+  green again.
+
 ## web 1.13.29 — 2026-11-07
 
 Web release. App versions: **web 1.13.29**, **admin 1.33.14**, **seeder 1.5.7**.
