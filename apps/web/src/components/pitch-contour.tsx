@@ -8,7 +8,7 @@ import {
   hzToMidi,
   INITIAL_JUMP,
   median3,
-  midiToName,
+  midiToHz,
   shouldResetContour,
   type JumpState,
   type Sample,
@@ -32,6 +32,8 @@ const DATA_EVERY = 2;
 /** Where the trace breaks: a gap longer than this is two phrases. */
 const TRACE_GAP_SEC = 0.15;
 const READOUT_MS = 120;
+/** Hz marks on the axis: La2, Mi3, La3, Mi4, La4. */
+const LABEL_MIDI = [45, 52, 57, 64, 69];
 
 interface Tokens {
   front: string;
@@ -54,7 +56,7 @@ export default function PitchContour({ playing }: { playing: boolean }) {
   const samplesRef = useRef<Sample[]>([]);
   /** Survives the effect re-running on pause, so the frozen contour stays put. */
   const nowRef = useRef(0);
-  const [readout, setReadout] = useState<{ note: string; cents: number } | null>(null);
+  const [readout, setReadout] = useState<{ hz: number; cents: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -114,11 +116,12 @@ export default function PitchContour({ playing }: { playing: boolean }) {
 
       // Semitone grid; the naturals are the ones the eye needs to count by.
       ctx.font = '12px system-ui, sans-serif';
+      // The page is RTL; a canvas inherits that and reorders "440 Hz".
+      ctx.direction = 'ltr';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       for (let midi = MIN_MIDI; midi <= MAX_MIDI; midi += 1) {
-        const name = midiToName(midi);
-        const natural = !name.includes('♯');
+        const natural = [0, 2, 4, 5, 7, 9, 11].includes(((midi % 12) + 12) % 12);
         const y = yOf(midi);
         ctx.strokeStyle = tokens.line;
         ctx.globalAlpha = natural ? 0.1 : 0.05;
@@ -126,10 +129,10 @@ export default function PitchContour({ playing }: { playing: boolean }) {
         ctx.moveTo(plotL, y);
         ctx.lineTo(plotR, y);
         ctx.stroke();
-        if (midi % 12 === 0 || midi % 12 === 7) {
+        if (LABEL_MIDI.includes(midi)) {
           ctx.globalAlpha = 1;
           ctx.fillStyle = tokens.muted;
-          ctx.fillText(name, plotL - 6, y);
+          ctx.fillText(`${Math.round(midiToHz(midi))} Hz`, plotL - 6, y);
         }
       }
       ctx.globalAlpha = 1;
@@ -274,7 +277,7 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       if (midi != null && performance.now() - lastReadout > READOUT_MS) {
         lastReadout = performance.now();
         setReadout({
-          note: midiToName(midi),
+          hz: midiToHz(midi),
           cents: Math.round((midi - Math.round(midi)) * 100),
         });
       }
@@ -325,8 +328,13 @@ export default function PitchContour({ playing }: { playing: boolean }) {
   return (
     <div className="flex h-full w-full flex-col">
       <canvas ref={canvasRef} aria-hidden="true" className="block h-full min-h-0 w-full flex-1" />
-      <div className="h-[22px] shrink-0 text-center text-[0.75rem] leading-[22px] text-muted tabular-nums">
-        {readout ? `${readout.note} · ${readout.cents > 0 ? '+' : ''}${readout.cents}¢` : '—'}
+      <div
+        dir="ltr"
+        className="h-[22px] shrink-0 text-center text-[0.75rem] leading-[22px] text-muted tabular-nums"
+      >
+        {readout
+          ? `${readout.hz.toFixed(1)} Hz · ${readout.cents > 0 ? '+' : ''}${readout.cents}¢`
+          : '—'}
       </div>
     </div>
   );

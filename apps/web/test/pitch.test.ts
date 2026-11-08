@@ -7,19 +7,16 @@ import {
   hzToMidi,
   INITIAL_JUMP,
   median3,
-  midiToName,
+  midiToHz,
   shouldResetContour,
   type Sample,
 } from '../src/utils/pitch.ts';
 
-test('solfège names carry the octave, and B3 does not become Do3', () => {
-  const names = Array.from({ length: 12 }, (_, i) => midiToName(60 + i));
-  assert.deepEqual(names, [
-    'دو4', 'دو♯4', 'ري4', 'ري♯4', 'مي4', 'فا4',
-    'فا♯4', 'صول4', 'صول♯4', 'لا4', 'لا♯4', 'سي4',
-  ]);
-  assert.equal(midiToName(59), 'سي3');
-  assert.equal(midiToName(45), 'لا2');
+test('MIDI to Hz is the inverse of the detector scale', () => {
+  assert.equal(Math.round(midiToHz(69)), 440);
+  assert.equal(Math.round(midiToHz(57)), 220);
+  assert.equal(Math.round(midiToHz(45)), 110);
+  assert.equal(Math.round(midiToHz(60)), 262);
 });
 
 test('Hz to MIDI uses A4 = 440', () => {

@@ -32,31 +32,14 @@ export interface JumpState {
 
 export const INITIAL_JUMP: JumpState = { pending: null, count: 0 };
 
-/** Solfège, Do = C. Sharps as the symbol, not a word, so a label stays short. */
-const SOLFEGE = [
-  'دو',
-  'دو♯',
-  'ري',
-  'ري♯',
-  'مي',
-  'فا',
-  'فا♯',
-  'صول',
-  'صول♯',
-  'لا',
-  'لا♯',
-  'سي',
-];
-
 /** Scientific pitch, A4 = 440 Hz. */
 export function hzToMidi(hz: number): number {
   return 69 + 12 * Math.log2(hz / 440);
 }
 
-/** MIDI number to `صول♯3`. */
-export function midiToName(midi: number): string {
-  const m = Math.round(midi);
-  return `${SOLFEGE[((m % 12) + 12) % 12]}${Math.floor(m / 12) - 1}`;
+/** The inverse, for the axis labels. */
+export function midiToHz(midi: number): number {
+  return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
 export function median3(a: number, b: number, c: number): number {
