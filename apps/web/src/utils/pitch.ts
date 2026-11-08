@@ -18,11 +18,14 @@ export interface Sample {
   /** null = no confident pitch (silence, a consonant, or a rejected frame). */
   midi: number | null;
   rms: number;
+  /** Loud relative to the recitation's own peak: the strong half of the voice. */
+  strong: boolean;
 }
 
-export interface Hold {
+export interface Segment {
   start: number;
   end: number;
+  midi: number;
 }
 
 export interface JumpState {
@@ -40,6 +43,82 @@ export function hzToMidi(hz: number): number {
 /** The inverse, for the axis labels. */
 export function midiToHz(midi: number): number {
   return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+/** Latin solfège, Do = C: the labels the panel was drawn with. */
+const SOLFEGE = ['Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'];
+
+export function midiToName(midi: number): string {
+  const m = Math.round(midi);
+  return `${SOLFEGE[((m % 12) + 12) % 12]}${Math.floor(m / 12) - 1}`;
+}
+
+/** One value out of an already-sorted array, clamped at both ends. */
+export function percentile(sorted: number[], p: number): number {
+  return sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(p * (sorted.length - 1))))];
+}
+
+/**
+ * Stable stretches inside a contiguous voiced run: a note the reciter held,
+ * not the whole run. A step of more than 0.6 semitone starts a new segment.
+ */
+export function findSegments(run: Sample[], minDur: number): Segment[] {
+  const out: Segment[] = [];
+  let i = 0;
+  while (i < run.length) {
+    const first = run[i].midi;
+    if (first == null) {
+      i += 1;
+      continue;
+    }
+    let sum = first;
+    let n = 1;
+    let j = i + 1;
+    while (j < run.length) {
+      const m = run[j].midi;
+      if (m == null || Math.abs(m - sum / n) > 0.6) break;
+      sum += m;
+      n += 1;
+      j += 1;
+    }
+    const start = run[i].t;
+    const end = run[j - 1].t;
+    if (end - start >= minDur) out.push({ start, end, midi: sum / n });
+    i = Math.max(j, i + 1);
+  }
+  return out;
+}
+
+/** Direction changes larger than `thr` semitones: the wandering of a ghurba. */
+export function countReversals(ms: number[], thr = 0.35): number {
+  if (!ms.length) return 0;
+  let dir = 0;
+  let ext = ms[0];
+  let n = 0;
+  for (const m of ms) {
+    if (dir === 0) {
+      if (m > ext + thr) {
+        dir = 1;
+        ext = m;
+      } else if (m < ext - thr) {
+        dir = -1;
+        ext = m;
+      }
+    } else if (dir === 1) {
+      if (m > ext) ext = m;
+      else if (m < ext - thr) {
+        dir = -1;
+        ext = m;
+        n += 1;
+      }
+    } else if (m < ext) ext = m;
+    else if (m > ext + thr) {
+      dir = 1;
+      ext = m;
+      n += 1;
+    }
+  }
+  return n;
 }
 
 export function median3(a: number, b: number, c: number): number {
@@ -80,48 +159,4 @@ export function acceptFrame(
  */
 export function shouldResetContour(lastSampleT: number | null, now: number, tolerance = 0.25): boolean {
   return lastSampleT != null && Math.abs(now - lastSampleT) > tolerance;
-}
-
-/**
- * Runs of continuous sound: a voice present, and no gap longer than `gapSec`.
- *
- * Pitch is deliberately not read here. A madd may drift a whole tone and still
- * be one madd, and a box that splits is worse than no box: it teaches a pause
- * the reciter did not make.
- */
-export function findHolds(samples: Sample[], minSec: number, gapSec = 0.08): Hold[] {
-  const out: Hold[] = [];
-  let start: number | null = null;
-  let end = 0;
-  let lastSounding = 0;
-
-  for (const sample of samples) {
-    // An unvoiced frame is not a gap by itself: clarity dips for a frame all
-    // the time, and a 33 ms dip must not cut a madd in two.
-    if (sample.midi == null) {
-      if (start != null && sample.t - lastSounding > gapSec) {
-        if (end - start >= minSec) out.push({ start, end });
-        start = null;
-      }
-      continue;
-    }
-    if (start == null) {
-      start = sample.t;
-      end = sample.t;
-      lastSounding = sample.t;
-      continue;
-    }
-    if (sample.t - lastSounding > gapSec) {
-      if (end - start >= minSec) out.push({ start, end });
-      start = sample.t;
-      end = sample.t;
-      lastSounding = sample.t;
-      continue;
-    }
-    end = sample.t;
-    lastSounding = sample.t;
-  }
-
-  if (start != null && end - start >= minSec) out.push({ start, end });
-  return out;
 }

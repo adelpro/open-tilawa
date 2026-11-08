@@ -175,6 +175,13 @@ const ar = {
     minutes: (count: number) => `${count} د`,
   },
   shapes: { bars: 'أعمدة', peaks: 'قِمم', ribbon: 'شريط', pitch: 'الطبقات' } as Record<string, string>,
+  pitch: {
+    lowest: 'أدنى طبقة في التلاوة',
+    range: 'المدى',
+    pauses: 'سكنات',
+    madds: 'مدود',
+    ghurab: 'غرب',
+  },
   footer: {
     list: 'قائمة السور',
     reciter: 'اختيار القارئ',
@@ -604,6 +611,13 @@ const en: typeof ar = {
     minutes: (count: number) => `${count} min`,
   },
   shapes: { bars: 'Bars', peaks: 'Peaks', ribbon: 'Ribbon', pitch: 'Pitch' },
+  pitch: {
+    lowest: 'Lowest register in the recitation',
+    range: 'Range',
+    pauses: 'Pauses',
+    madds: 'Madds',
+    ghurab: 'Ghurab',
+  },
   footer: {
     list: 'Surah list',
     reciter: 'Choose reciter',

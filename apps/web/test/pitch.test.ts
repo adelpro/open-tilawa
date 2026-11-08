@@ -3,11 +3,14 @@ import { test } from 'node:test';
 
 import {
   acceptFrame,
-  findHolds,
+  countReversals,
+  findSegments,
   hzToMidi,
   INITIAL_JUMP,
   median3,
   midiToHz,
+  midiToName,
+  percentile,
   shouldResetContour,
   type Sample,
 } from '../src/utils/pitch.ts';
@@ -48,29 +51,6 @@ test('a jump is accepted only on the fourth agreeing frame', () => {
   assert.equal(midi, 65);
 });
 
-test('a sliding madd is one hold, not three boxes', () => {
-  const samples: Sample[] = [];
-  for (let i = 0; i < 30; i += 1) {
-    samples.push({ t: i / 30, midi: 60 + i * 0.2, rms: 0.2 });
-  }
-  const holds = findHolds(samples, 0.35);
-  assert.equal(holds.length, 1);
-  assert.ok(holds[0].end - holds[0].start > 0.8);
-});
-
-test('a 0.2 s silence splits two holds', () => {
-  const samples: Sample[] = [];
-  for (let i = 0; i < 15; i += 1) samples.push({ t: i / 30, midi: 60, rms: 0.2 });
-  for (let i = 21; i < 36; i += 1) samples.push({ t: i / 30, midi: 60, rms: 0.2 });
-  assert.equal(findHolds(samples, 0.35).length, 2);
-});
-
-test('a hold shorter than the floor is not a madd', () => {
-  const samples: Sample[] = [];
-  for (let i = 0; i < 9; i += 1) samples.push({ t: i / 30, midi: 60, rms: 0.2 });
-  assert.deepEqual(findHolds(samples, 0.35), []);
-});
-
 test('a seek or a track change resets the contour', () => {
   assert.equal(shouldResetContour(30, 30.033), false);
   assert.equal(shouldResetContour(30, 33), true);
@@ -78,16 +58,43 @@ test('a seek or a track change resets the contour', () => {
   assert.equal(shouldResetContour(null, 5), false);
 });
 
-test('a single unvoiced frame does not split a madd', () => {
-  const samples: Sample[] = [];
-  for (let i = 0; i < 30; i += 1) samples.push({ t: i / 30, midi: 60, rms: 0.2 });
-  samples[15] = { t: 15 / 30, midi: null, rms: 0.2 };
-  assert.equal(findHolds(samples, 0.35).length, 1);
+
+
+test('note names are scientific, Do = C, sharp as #', () => {
+  assert.equal(midiToName(60), 'Do4');
+  assert.equal(midiToName(61), 'Do#4');
+  assert.equal(midiToName(59), 'Si3');
+  assert.equal(midiToName(45), 'La2');
 });
 
-test('a 0.2 s run of unvoiced frames splits two holds', () => {
-  const samples: Sample[] = [];
-  for (let i = 0; i < 30; i += 1) samples.push({ t: i / 30, midi: 60, rms: 0.2 });
-  for (let i = 15; i < 18; i += 1) samples[i] = { t: i / 30, midi: null, rms: 0.2 };
-  assert.equal(findHolds(samples, 0.35).length, 2);
+test('percentile reads the sorted array and clamps at both ends', () => {
+  const values = Array.from({ length: 11 }, (_, i) => i);
+  assert.equal(percentile(values, 0), 0);
+  assert.equal(percentile(values, 0.5), 5);
+  assert.equal(percentile(values, 1), 10);
+});
+
+test('a stable stretch is one segment; a two-semitone step splits it', () => {
+  const flat: Sample[] = [];
+  for (let i = 0; i < 30; i += 1) flat.push({ t: i / 30, midi: 60, rms: 0.2, strong: true });
+  const one = findSegments(flat, 0.45);
+  assert.equal(one.length, 1);
+  assert.ok(Math.abs(one[0].midi - 60) < 0.01);
+
+  const step: Sample[] = [];
+  for (let i = 0; i < 15; i += 1) step.push({ t: i / 30, midi: 60, rms: 0.2, strong: true });
+  for (let i = 15; i < 30; i += 1) step.push({ t: i / 30, midi: 62, rms: 0.2, strong: true });
+  assert.equal(findSegments(step, 0.45).length, 2);
+});
+
+test('a segment shorter than the floor is dropped', () => {
+  const short: Sample[] = [];
+  for (let i = 0; i < 9; i += 1) short.push({ t: i / 30, midi: 60, rms: 0.2, strong: true });
+  assert.deepEqual(findSegments(short, 0.45), []);
+});
+
+test('reversals count direction changes, not samples', () => {
+  assert.equal(countReversals([60, 60, 60]), 0);
+  assert.equal(countReversals([60, 62, 60]), 1);
+  assert.equal(countReversals([60, 62, 60, 62, 60]), 3);
 });
