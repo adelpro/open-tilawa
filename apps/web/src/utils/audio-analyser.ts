@@ -22,6 +22,13 @@ type AudioContextCtor = typeof AudioContext;
 
 let context: AudioContext | null = null;
 let analyser: AnalyserNode | null = null;
+/**
+ * The pitch contour needs a longer window than the spectrum: 1024 samples is
+ * ~23 ms at 48 kHz, too short to see a male fundamental (~85-180 Hz). Both
+ * nodes tap the same source, so the ribbon's frequency mapping is untouched.
+ */
+let pitchAnalyser: AnalyserNode | null = null;
+let pitchSource: { analyser: AnalyserNode; element: HTMLAudioElement } | null = null;
 let elementSource: MediaElementAudioSourceNode | null = null;
 let outputGain: GainNode | null = null;
 let desiredGain = 1;
@@ -94,6 +101,15 @@ export function ensureAnalyser(audio: HTMLAudioElement): AnalyserNode | null {
       outputGain.gain.value = desiredGain;
       elementSource.connect(outputGain);
       outputGain.connect(ctx.destination);
+
+      // A tap, not a second output: connecting this to the destination would
+      // double the signal. 2048 samples is ~43 ms — long enough for a low
+      // fundamental, and the node costs one more pass over the same buffer.
+      pitchAnalyser = ctx.createAnalyser();
+      pitchAnalyser.fftSize = 2048;
+      elementSource.connect(pitchAnalyser);
+      pitchSource = { analyser: pitchAnalyser, element: audio };
+
       source = elementSource;
       (window as unknown as { __outputGain?: GainNode }).__outputGain = outputGain;
     }
@@ -113,4 +129,13 @@ export function ensureAnalyser(audio: HTMLAudioElement): AnalyserNode | null {
 
 export function getAnalyser(): AnalyserNode | null {
   return analyser;
+}
+
+/**
+ * The pitch tap and the element it belongs to, or null when the graph could not
+ * be built (a cross-origin source, a refused context). The element is part of
+ * the answer because the contour's x axis is `currentTime`.
+ */
+export function getPitchSource(): { analyser: AnalyserNode; element: HTMLAudioElement } | null {
+  return pitchSource;
 }
