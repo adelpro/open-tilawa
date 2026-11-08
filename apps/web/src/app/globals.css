@@ -26,6 +26,14 @@
      the page, so the filled waves read as ink that happens to be blue. */
   --wave-front: #1c4d78;
   --wave-back: #5d97c9;
+  /* The instrument's own palette. It does not flip with the theme: a gold trace
+     on parchment is unreadable, so the panel is always this navy surface. */
+  --pitch-surface: #0a1226;
+  --pitch-edge: #1c2a52;
+  --pitch-grid: #243464;
+  --pitch-gold: #f5c518;
+  --pitch-dim: #8d7a2a;
+  --pitch-box: #5b7cff;
   /* The one non-spectrum colour: a refusal, a destructive action, an error.
      7:1 on the page so it never has to be a background to be readable. */
   --danger: #b3261e;

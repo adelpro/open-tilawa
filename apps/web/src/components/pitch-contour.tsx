@@ -36,11 +36,12 @@ const READOUT_MS = 120;
 const LABEL_MIDI = [45, 52, 57, 64, 69];
 
 interface Tokens {
-  front: string;
-  back: string;
-  line: string;
-  ink: string;
-  muted: string;
+  surface: string;
+  edge: string;
+  grid: string;
+  gold: string;
+  dim: string;
+  box: string;
 }
 
 /**
@@ -100,9 +101,9 @@ export default function PitchContour({ playing }: { playing: boolean }) {
     };
 
     const draw = () => {
-      const plotL = 46;
+      const plotL = 58;
       const plotR = width - 10;
-      const plotT = 8;
+      const plotT = 30;
       const plotB = height - 6;
       const plotW = plotR - plotL;
       const plotH = plotB - plotT;
@@ -114,6 +115,21 @@ export default function PitchContour({ playing }: { playing: boolean }) {
 
       ctx.clearRect(0, 0, width, height);
 
+      // The instrument's face: its own surface, in both themes.
+      ctx.fillStyle = tokens.surface;
+      roundRect(ctx, 0, 0, width, height, 14);
+      ctx.fill();
+      ctx.strokeStyle = tokens.edge;
+      ctx.lineWidth = 1;
+      roundRect(ctx, 0.5, 0.5, width - 1, height - 1, 14);
+      ctx.stroke();
+
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = tokens.dim;
+      ctx.fillText('الطبقات', plotR, 15);
+
       // Semitone grid; the naturals are the ones the eye needs to count by.
       ctx.font = '12px system-ui, sans-serif';
       // The page is RTL; a canvas inherits that and reorders "440 Hz".
@@ -123,15 +139,15 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       for (let midi = MIN_MIDI; midi <= MAX_MIDI; midi += 1) {
         const natural = [0, 2, 4, 5, 7, 9, 11].includes(((midi % 12) + 12) % 12);
         const y = yOf(midi);
-        ctx.strokeStyle = tokens.line;
-        ctx.globalAlpha = natural ? 0.1 : 0.05;
+        ctx.strokeStyle = tokens.grid;
+        ctx.globalAlpha = natural ? 0.55 : 0.25;
         ctx.beginPath();
         ctx.moveTo(plotL, y);
         ctx.lineTo(plotR, y);
         ctx.stroke();
         if (LABEL_MIDI.includes(midi)) {
           ctx.globalAlpha = 1;
-          ctx.fillStyle = tokens.muted;
+          ctx.fillStyle = tokens.dim;
           ctx.fillText(`${Math.round(midiToHz(midi))} Hz`, plotL - 6, y);
         }
       }
@@ -148,8 +164,8 @@ export default function PitchContour({ playing }: { playing: boolean }) {
         const inside = visible.filter((s) => s.t >= hold.start && s.t <= hold.end && s.midi != null);
         const mean = inside.reduce((sum, s) => sum + (s.midi ?? 0), 0) / Math.max(1, inside.length);
         const y = yOf(mean);
-        ctx.fillStyle = tokens.front;
-        ctx.strokeStyle = tokens.line;
+        ctx.fillStyle = tokens.box;
+        ctx.strokeStyle = tokens.box;
         ctx.globalAlpha = 0.12;
         roundRect(ctx, x1, y - 7, x2 - x1, 14, 4);
         ctx.fill();
@@ -164,7 +180,7 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       ctx.beginPath();
       ctx.rect(plotL, plotT, plotW, plotH);
       ctx.clip();
-      ctx.strokeStyle = tokens.back;
+      ctx.strokeStyle = tokens.gold;
       ctx.lineWidth = 2;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
@@ -190,7 +206,7 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       ctx.restore();
 
       // Playhead, and a dot only while a voice is actually there.
-      ctx.strokeStyle = tokens.ink;
+      ctx.strokeStyle = tokens.gold;
       ctx.globalAlpha = 0.5;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -200,7 +216,7 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       ctx.globalAlpha = 1;
       const last = samples[samples.length - 1];
       if (last && last.midi != null && now - last.t < 0.2) {
-        ctx.fillStyle = tokens.front;
+        ctx.fillStyle = tokens.gold;
         ctx.beginPath();
         ctx.arc(px, yOf(Math.min(MAX_MIDI, Math.max(MIN_MIDI, last.midi))), 5, 0, Math.PI * 2);
         ctx.fill();
@@ -328,13 +344,20 @@ export default function PitchContour({ playing }: { playing: boolean }) {
   return (
     <div className="flex h-full w-full flex-col">
       <canvas ref={canvasRef} aria-hidden="true" className="block h-full min-h-0 w-full flex-1" />
-      <div
-        dir="ltr"
-        className="h-[22px] shrink-0 text-center text-[0.75rem] leading-[22px] text-muted tabular-nums"
-      >
-        {readout
-          ? `${readout.hz.toFixed(1)} Hz · ${readout.cents > 0 ? '+' : ''}${readout.cents}¢`
-          : '—'}
+      <div className="flex h-[34px] shrink-0 items-center justify-center">
+        <div
+          dir="ltr"
+          className="rounded-full border px-[18px] text-[0.75rem] leading-[22px] tabular-nums"
+          style={{
+            borderColor: 'var(--pitch-edge)',
+            background: 'var(--pitch-surface)',
+            color: 'var(--pitch-dim)',
+          }}
+        >
+          {readout
+            ? `${readout.hz.toFixed(1)} Hz · ${readout.cents > 0 ? '+' : ''}${readout.cents}¢`
+            : '—'}
+        </div>
       </div>
     </div>
   );
@@ -345,11 +368,12 @@ function readTokens(): Tokens {
   const pick = (name: string, fallback: string) =>
     styles.getPropertyValue(name).trim() || fallback;
   return {
-    front: pick('--wave-front', '#1c4d78'),
-    back: pick('--wave-back', '#5d97c9'),
-    line: pick('--line', '#e8e8e8'),
-    ink: pick('--ink', '#111'),
-    muted: pick('--muted', '#666'),
+    surface: pick('--pitch-surface', '#0a1226'),
+    edge: pick('--pitch-edge', '#1c2a52'),
+    grid: pick('--pitch-grid', '#243464'),
+    gold: pick('--pitch-gold', '#f5c518'),
+    dim: pick('--pitch-dim', '#8d7a2a'),
+    box: pick('--pitch-box', '#5b7cff'),
   };
 }
 
