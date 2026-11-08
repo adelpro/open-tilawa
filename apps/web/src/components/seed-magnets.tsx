@@ -8,6 +8,7 @@ import { formatBytes } from '@/utils/format-bytes';
 import { magnetBatch } from '@/utils/magnet-batch';
 import { reciterName } from '@/utils/reciter-name';
 import { riwayaLabel } from '@/utils/riwaya';
+import { torrentLinkHref } from '@/utils/torrent-link';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
@@ -93,35 +94,39 @@ export default function SeedMagnets() {
       ) : null}
 
       <ul className="mt-6 divide-y divide-line/60 border-y border-line/60">
-        {reciters.map((reciter) => (
-          <li key={reciter.id}>
-            <details>
-              <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 py-3">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[1rem] text-ink">
-                    {reciterName(reciter, locale)}
+        {reciters.map((reciter) => {
+          // Only a stored `magnet:?…` becomes a link; see torrentLinkHref.
+          const href = torrentLinkHref(reciter.magnet);
+          const name = reciterName(reciter, locale);
+          return (
+            <li key={reciter.id}>
+              <details>
+                <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 py-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[1rem] text-ink">{name}</span>
+                    <span className="mt-1 block text-[0.75rem] text-muted">
+                      {riwayaLabel(reciter.riwaya)} · {formatBytes(reciter.sizeBytes)} ·{' '}
+                      {reciter.complet ? t.sheets.complete : t.sheets.partial}
+                    </span>
                   </span>
-                  <span className="mt-1 block text-[0.75rem] text-muted">
-                    {riwayaLabel(reciter.riwaya)} · {formatBytes(reciter.sizeBytes)} ·{' '}
-                    {reciter.complet ? t.sheets.complete : t.sheets.partial}
-                  </span>
-                </span>
-                <Icon
-                  name="forward"
-                  size={16}
-                  className="icon-dir shrink-0 text-muted transition-transform [details[open]_&]:rotate-90"
+                  <Icon
+                    name="forward"
+                    size={16}
+                    className="icon-dir shrink-0 text-muted transition-transform [details[open]_&]:rotate-90"
+                  />
+                </summary>
+                <CopyCode
+                  value={reciter.magnet}
+                  title={copy.link}
+                  label={t.seedPage.copy}
+                  copiedLabel={t.seedPage.copied}
+                  failedLabel={t.seedPage.copyFailed}
+                  open={href ? { href, label: copy.open, name } : undefined}
                 />
-              </summary>
-              <CopyCode
-                value={reciter.magnet}
-                title={copy.link}
-                label={t.seedPage.copy}
-                copiedLabel={t.seedPage.copied}
-                failedLabel={t.seedPage.copyFailed}
-              />
-            </details>
-          </li>
-        ))}
+              </details>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

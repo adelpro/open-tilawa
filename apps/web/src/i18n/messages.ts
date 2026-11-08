@@ -353,6 +353,7 @@ const ar = {
       copiedAll: 'نُسخت الروابط',
       copyAllFailed: 'تعذّر النسخ',
       link: 'الرابط',
+      open: 'افتح في تطبيق التورنت',
     },
     operators: {
       title: 'شغّل عقدة وشارك التلاوات',
@@ -779,6 +780,7 @@ const en: typeof ar = {
       copiedAll: 'All links copied',
       copyAllFailed: 'Could not copy',
       link: 'Magnet',
+      open: 'Open in torrent app',
     },
     operators: {
       title: 'Run a node',

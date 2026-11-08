@@ -17,12 +17,21 @@ export default function CopyCode({
   label,
   copiedLabel,
   failedLabel,
+  open,
 }: {
   value: string;
   title: string;
   label: string;
   copiedLabel: string;
   failedLabel: string;
+  /**
+   * An optional hand-off to whatever app owns `magnet:` on this device.
+   *
+   * It is a plain anchor, not a call into a client: the browser asks the
+   * operating system, and nothing happens where no handler is registered — which
+   * is why it sits beside Copy rather than replacing it.
+   */
+  open?: { href: string; label: string; name?: string };
 }) {
   const [state, setState] = useState<CopyState>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,19 +58,30 @@ export default function CopyCode({
 
   return (
     <div className="mt-4 bg-line/30 p-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[0.8125rem] font-semibold text-ink">{title}</p>
-        <button
-          type="button"
-          onClick={() => void copy()}
-          className={cn(
-            'press inline-flex min-h-9 items-center gap-2 px-3 text-[0.8125rem]',
-            state === 'copied' ? 'text-ink' : 'bg-ink text-invert',
-          )}
-        >
-          {state === 'copied' ? <Icon name="check" size={16} /> : null}
-          {state === 'idle' ? label : state === 'copied' ? copiedLabel : failedLabel}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void copy()}
+            className={cn(
+              'press inline-flex min-h-9 items-center gap-2 px-3 text-[0.8125rem]',
+              state === 'copied' ? 'text-ink' : 'bg-ink text-invert',
+            )}
+          >
+            {state === 'copied' ? <Icon name="check" size={16} /> : null}
+            {state === 'idle' ? label : state === 'copied' ? copiedLabel : failedLabel}
+          </button>
+          {open ? (
+            <a
+              href={open.href}
+              className="press inline-flex min-h-9 items-center gap-2 border border-line px-3 text-[0.8125rem] text-ink"
+            >
+              {open.label}
+              {open.name ? <span className="sr-only"> — {open.name}</span> : null}
+            </a>
+          ) : null}
+        </div>
       </div>
       <pre dir="ltr" className="mt-3 overflow-x-auto text-left font-mono text-[0.75rem] leading-relaxed text-ink">
         <code className="whitespace-pre-wrap break-words">{value}</code>
