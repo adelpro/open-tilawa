@@ -1,17 +1,14 @@
 /**
- * The spectrum has three shapes. All of them read the same analyser and draw in
- * the same blue; only the geometry differs, so switching costs no download and
- * no new dependency.
+ * What fills the block above the scrubber.
+ *
+ * Three of them are the spectrum: they read the same analyser, draw in the same
+ * blue, and only the geometry differs. `pitch` is the odd one out — a different
+ * analyser, a time axis, and its own component — but it is the same choice in
+ * the same slot, so it belongs in the same list.
  */
-export const VISUALISERS = ['bars', 'peaks', 'ribbon'] as const;
+export const VISUALISERS = ['bars', 'peaks', 'ribbon', 'pitch'] as const;
 
 export type Visualiser = (typeof VISUALISERS)[number];
-
-export const VISUALISER_LABELS: Record<Visualiser, string> = {
-  bars: 'أعمدة',
-  peaks: 'قِمم',
-  ribbon: 'موجات',
-};
 
 /** Unknown values — including the retired dots and waterfall — fall back to waves. */
 export function normaliseVisualiser(value: unknown): Visualiser {

@@ -14,10 +14,11 @@ import {
 test('an unknown stored model falls back to waves, the default shape', () => {
   assert.equal(normaliseVisualiser('bars'), 'bars');
   assert.equal(normaliseVisualiser('ribbon'), 'ribbon');
+  assert.equal(normaliseVisualiser('pitch'), 'pitch');
   assert.equal(normaliseVisualiser('waterfall'), 'ribbon');
   assert.equal(normaliseVisualiser('nope'), 'ribbon');
   assert.equal(normaliseVisualiser(undefined), 'ribbon');
-  assert.equal(VISUALISERS.length, 3);
+  assert.equal(VISUALISERS.length, 4);
 });
 
 test('downsample keeps the peak of each bucket and normalises it', () => {

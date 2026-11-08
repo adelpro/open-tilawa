@@ -7,6 +7,7 @@ import Scrubber from '@/components/scrubber';
 import Sheet, { ReciterSheet, SurahSheet, type ReciterScope } from '@/components/sheet';
 import StreamSheet from '@/components/stream-sheet';
 import Transport from '@/components/transport';
+import PitchContour from '@/components/pitch-contour';
 import Visualiser from '@/components/visualiser';
 import { surahById } from '@/constants/surah';
 import { useLocale } from '@/hooks/use-locale';
@@ -367,9 +368,15 @@ export default function PlayerPage({
             </div>
 
             {/* The spectrum is the instrument's face: it sits directly on the
-                timeline, so a quiet band is a rest, never a hole. */}
-            <div className="now-wave">
-              <Visualiser playing={isPlaying} model={visualiser} height={wide ? 96 : 64} />
+                timeline, so a quiet band is a rest, never a hole. The contour
+                takes the same slot when it is chosen — one instrument at a
+                time, never both. */}
+            <div className={cn('now-wave', visualiser === 'pitch' && 'now-wave--pitch')}>
+              {visualiser === 'pitch' ? (
+                <PitchContour playing={isPlaying} />
+              ) : (
+                <Visualiser playing={isPlaying} model={visualiser} height={wide ? 96 : 64} />
+              )}
             </div>
 
             <Scrubber
