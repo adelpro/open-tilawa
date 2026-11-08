@@ -8,6 +8,7 @@ import {
   INITIAL_JUMP,
   median3,
   midiToName,
+  shouldResetContour,
   type Sample,
 } from '../src/utils/pitch.ts';
 
@@ -73,9 +74,23 @@ test('a hold shorter than the floor is not a madd', () => {
   assert.deepEqual(findHolds(samples, 0.35), []);
 });
 
-test('an unvoiced sample breaks a hold', () => {
+test('a seek or a track change resets the contour', () => {
+  assert.equal(shouldResetContour(30, 30.033), false);
+  assert.equal(shouldResetContour(30, 33), true);
+  assert.equal(shouldResetContour(30, 2), true);
+  assert.equal(shouldResetContour(null, 5), false);
+});
+
+test('a single unvoiced frame does not split a madd', () => {
   const samples: Sample[] = [];
   for (let i = 0; i < 30; i += 1) samples.push({ t: i / 30, midi: 60, rms: 0.2 });
   samples[15] = { t: 15 / 30, midi: null, rms: 0.2 };
+  assert.equal(findHolds(samples, 0.35).length, 1);
+});
+
+test('a 0.2 s run of unvoiced frames splits two holds', () => {
+  const samples: Sample[] = [];
+  for (let i = 0; i < 30; i += 1) samples.push({ t: i / 30, midi: 60, rms: 0.2 });
+  for (let i = 15; i < 18; i += 1) samples[i] = { t: i / 30, midi: null, rms: 0.2 };
   assert.equal(findHolds(samples, 0.35).length, 2);
 });

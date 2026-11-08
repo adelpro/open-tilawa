@@ -9,6 +9,7 @@ import {
   INITIAL_JUMP,
   median3,
   midiToName,
+  shouldResetContour,
   type JumpState,
   type Sample,
 } from '@/utils/pitch';
@@ -61,6 +62,7 @@ export default function PitchContour({ playing }: { playing: boolean }) {
     if (!canvas || !ctx) return;
 
     const samples = samplesRef.current;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let tokens = readTokens();
     let width = 0;
     let height = 0;
@@ -83,6 +85,7 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       recent = [];
       lastMidi = null;
       jump = INITIAL_JUMP;
+      setReadout(null);
     };
 
     const measure = () => {
@@ -220,6 +223,11 @@ export default function PitchContour({ playing }: { playing: boolean }) {
       }
       now = element.currentTime;
       nowRef.current = now;
+      // A jump in the clock means the samples belong to a position that is no
+      // longer playing: a seek, or a new surah that starts at zero. The paused
+      // case matters too — the seek happens with no frame loop running.
+      const newest = samples[samples.length - 1];
+      if (newest && shouldResetContour(newest.t, now)) reset();
       if (element.paused || element.ended) return;
 
       const { analyser } = found;
@@ -256,6 +264,9 @@ export default function PitchContour({ playing }: { playing: boolean }) {
         recent = [];
         lastMidi = null;
       }
+      // Outside the visible band is not a note at the edge: it is a voice the
+      // panel cannot show, and a flat line there would read as data.
+      if (midi != null && (midi < MIN_MIDI || midi > MAX_MIDI)) midi = null;
 
       samples.push({ t: now, midi, rms });
       while (samples.length && samples[0].t < now - WINDOW_SEC - 1) samples.shift();
@@ -296,7 +307,9 @@ export default function PitchContour({ playing }: { playing: boolean }) {
     });
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-    if (playing) raf = requestAnimationFrame(tick);
+    // Reduced motion gets the axes and the readout, not a scrolling trace: the
+    // spectrum makes the same call.
+    if (playing && !reduced) raf = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(raf);

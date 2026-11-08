@@ -91,6 +91,15 @@ export function acceptFrame(
 }
 
 /**
+ * A discontinuity: the clock jumped, so the samples on screen belong to a
+ * position that is no longer being played. Covers a seek and a new track
+ * (which starts at zero) without touching the audio graph.
+ */
+export function shouldResetContour(lastSampleT: number | null, now: number, tolerance = 0.25): boolean {
+  return lastSampleT != null && Math.abs(now - lastSampleT) > tolerance;
+}
+
+/**
  * Runs of continuous sound: a voice present, and no gap longer than `gapSec`.
  *
  * Pitch is deliberately not read here. A madd may drift a whole tone and still
@@ -101,27 +110,33 @@ export function findHolds(samples: Sample[], minSec: number, gapSec = 0.08): Hol
   const out: Hold[] = [];
   let start: number | null = null;
   let end = 0;
-  let prev = 0;
+  let lastSounding = 0;
 
   for (const sample of samples) {
-    const sounding = sample.midi != null;
-    if (start == null) {
-      if (sounding) {
-        start = sample.t;
-        end = sample.t;
-        prev = sample.t;
+    // An unvoiced frame is not a gap by itself: clarity dips for a frame all
+    // the time, and a 33 ms dip must not cut a madd in two.
+    if (sample.midi == null) {
+      if (start != null && sample.t - lastSounding > gapSec) {
+        if (end - start >= minSec) out.push({ start, end });
+        start = null;
       }
       continue;
     }
-    if (!sounding || sample.t - prev > gapSec) {
-      if (end - start >= minSec) out.push({ start, end });
-      start = sounding ? sample.t : null;
+    if (start == null) {
+      start = sample.t;
       end = sample.t;
-      prev = sample.t;
+      lastSounding = sample.t;
+      continue;
+    }
+    if (sample.t - lastSounding > gapSec) {
+      if (end - start >= minSec) out.push({ start, end });
+      start = sample.t;
+      end = sample.t;
+      lastSounding = sample.t;
       continue;
     }
     end = sample.t;
-    prev = sample.t;
+    lastSounding = sample.t;
   }
 
   if (start != null && end - start >= minSec) out.push({ start, end });
