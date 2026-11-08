@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
+  DEFAULT_VISUALISER,
   downsample,
   follow,
   logBands,
@@ -11,13 +12,14 @@ import {
   waveTints,
 } from '../src/utils/visualiser-models.ts';
 
-test('an unknown stored model falls back to waves, the default shape', () => {
+test('an unknown stored model falls back to the default view', () => {
   assert.equal(normaliseVisualiser('bars'), 'bars');
   assert.equal(normaliseVisualiser('ribbon'), 'ribbon');
   assert.equal(normaliseVisualiser('pitch'), 'pitch');
-  assert.equal(normaliseVisualiser('waterfall'), 'ribbon');
-  assert.equal(normaliseVisualiser('nope'), 'ribbon');
-  assert.equal(normaliseVisualiser(undefined), 'ribbon');
+  assert.equal(normaliseVisualiser('waterfall'), DEFAULT_VISUALISER);
+  assert.equal(normaliseVisualiser('nope'), DEFAULT_VISUALISER);
+  assert.equal(normaliseVisualiser(undefined), DEFAULT_VISUALISER);
+  assert.equal(DEFAULT_VISUALISER, 'pitch');
   assert.equal(VISUALISERS.length, 4);
 });
 

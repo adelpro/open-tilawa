@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 
 import type { TorrentInfo } from '@/types';
 import { DEFAULT_VOLUME, readVolume, toggleVolume } from '@/utils/volume';
-import type { Visualiser } from '@/utils/visualiser-models';
+import { DEFAULT_VISUALISER, type Visualiser } from '@/utils/visualiser-models';
 
 /**
  * Playback state. There is one screen, so this is the whole model:
@@ -35,9 +35,12 @@ export const toggleMuteAtom = atom(null, (get, set) => {
   set(lastVolumeAtom, next.lastVolume);
   set(volumeAtom, next.volume);
 });
-/** Which shape the spectrum takes; a taste, so it is remembered. */
-/** Waves is the default shape: it reads as audio, not as a level meter. */
-export const visualiserAtom = atom<Visualiser>('ribbon');
+/** Which shape the block takes; a taste, so it is remembered. */
+/**
+ * The instrument is the player's face: it shows the reciter's melody and the
+ * madds. The three spectrum shapes stay in settings for anyone who wants them.
+ */
+export const visualiserAtom = atom<Visualiser>(DEFAULT_VISUALISER);
 
 export const torrentAtom = atom<TorrentInfo | undefined>(undefined);
 export const torrentErrorAtom = atom<string | undefined>(undefined);

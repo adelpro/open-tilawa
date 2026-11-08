@@ -10,9 +10,12 @@ export const VISUALISERS = ['bars', 'peaks', 'ribbon', 'pitch'] as const;
 
 export type Visualiser = (typeof VISUALISERS)[number];
 
-/** Unknown values — including the retired dots and waterfall — fall back to waves. */
+/** The player opens on the instrument; the spectrum shapes are a taste. */
+export const DEFAULT_VISUALISER: Visualiser = 'pitch';
+
+/** Unknown values — including the retired dots and waterfall — fall back to the default. */
 export function normaliseVisualiser(value: unknown): Visualiser {
-  return VISUALISERS.includes(value as Visualiser) ? (value as Visualiser) : 'ribbon';
+  return VISUALISERS.includes(value as Visualiser) ? (value as Visualiser) : DEFAULT_VISUALISER;
 }
 
 /** Squash `bins` into `columns` buckets by peak, used by the bars. */
