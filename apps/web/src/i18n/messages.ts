@@ -166,7 +166,7 @@ const ar = {
     appearanceHint: 'فاتح أو داكن — يُحفظ مع بقية اختياراتك.',
     languageHint: 'لغة الواجهة واتجاه الصفحة.',
     playbackHint: 'سرعة التلاوة ومؤقّت يوقف التشغيل وحده.',
-    shapeHint: 'ما يظهر فوق شريط التقدّم: طيف الصوت أو مدرج النغمات.',
+    shapeHint: 'ما يظهر فوق شريط التقدّم: طيف الصوت أو طبقات الصوت.',
     share: 'المشاركة مع المستمعين',
     shareHint:
       'ما دامت الصفحة مفتوحة، يشارك جهازك الأجزاء التي نزّلها مع مستمعين آخرين. إيقاف المشاركة لا يغيّر الاستماع ولا التنزيل.',
@@ -174,7 +174,7 @@ const ar = {
     shareOff: 'معطّلة',
     minutes: (count: number) => `${count} د`,
   },
-  shapes: { bars: 'أعمدة', peaks: 'قِمم', ribbon: 'شريط', pitch: 'نغمات' } as Record<string, string>,
+  shapes: { bars: 'أعمدة', peaks: 'قِمم', ribbon: 'شريط', pitch: 'الطبقات' } as Record<string, string>,
   footer: {
     list: 'قائمة السور',
     reciter: 'اختيار القارئ',
@@ -603,7 +603,7 @@ const en: typeof ar = {
     shareOff: 'Off',
     minutes: (count: number) => `${count} min`,
   },
-  shapes: { bars: 'Bars', peaks: 'Peaks', ribbon: 'Ribbon', pitch: 'Notes' },
+  shapes: { bars: 'Bars', peaks: 'Peaks', ribbon: 'Ribbon', pitch: 'Pitch' },
   footer: {
     list: 'Surah list',
     reciter: 'Choose reciter',
