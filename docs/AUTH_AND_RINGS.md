@@ -38,6 +38,8 @@ A device that holds K0 **is** the account. That is why "linking a device" is
 copying a key rather than authorising a session — and why the sign-out guard in
 §5 exists.
 
+![حلقة تلاوة: ثلاثة مفاتيح متطابقة على حلقة مشقوقة](auth-and-rings/ring-figure/shots/ring-light.png)
+
 Code: `apps/web/src/hooks/use-gun.ts` (`createAccount`), `gun/account-store.ts`.
 
 ## 2. Creating an account
@@ -164,6 +166,8 @@ Two of those deserve their design note:
   and anything favourited while logged out. A replace would delete the
   logged-out ones.
 
+![أين تذهب المفضّلة: من الجهاز الأول إلى خادم المزامنة ثم إلى الجهاز الثاني](auth-and-rings/flow-diagrams/shots/flow.png)
+
 Reads are snapshot-then-subscribe: `once()` first so a screen does not flash
 empty, then `.on()` for changes. Device rows are written locally into the atom at
 the same moment as the relay write, because waiting for the echo left a fresh
@@ -212,6 +216,8 @@ The **playhead is deliberately absent from the graph**: a second device shows th
 same favourites and settings but does not resume where the first stopped.
 Cross-device resume was considered and rejected; L2 is the only home for it
 (`hooks/use-persistence.ts`).
+
+![ما الذي يبقى على جهازك، وما يبقى على خادم المزامنة، وما يسكن خارج الحلقة](auth-and-rings/flow-diagrams/shots/where.png)
 
 ## 8. What sits outside the ring
 
