@@ -1,7 +1,12 @@
 import type { AgeBucket } from './device-age';
 
 export type PlayTelemetryEvent = {
-  event: 'play' | 'complete' | 'error' | 'fallback';
+  /**
+   * One event per play. A web-seeded play is not a second event: `source`
+   * already names where the sound came from, and a second row saying
+   * "fallback" counted the same play twice.
+   */
+  event: 'play' | 'complete' | 'error';
   reciter: string;
   surah: number;
   source: 'torrent' | 'webseed';

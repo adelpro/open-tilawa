@@ -428,8 +428,6 @@ export default function AudioEngine({
           msToPlay: startedAtRef.current ? Date.now() - startedAtRef.current : undefined,
         });
         record(play);
-        // The web seed fed this one: the swarm gave us nothing in time.
-        if (source === 'webseed') record({ ...play, event: 'fallback' });
       }}
       onSeeked={() => {
         persist();

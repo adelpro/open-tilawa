@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
@@ -155,4 +156,18 @@ test('a device event is batched like any other, and dropped when the switch is o
 
   assert.equal(sent.length, 1);
   assert.equal(sent[0][0].event, 'device');
+});
+
+/**
+ * One play, one event.
+ *
+ * The web seed is already named on the play itself (`source: 'webseed'`), so a
+ * second event saying "this was a fallback" doubled every web-seeded play in the
+ * table and read as a failure signal it never measured — `mixed`, meaning a peer
+ * and the web seed together, was counted as a fallback too.
+ */
+const PLAYER = readFileSync(new URL('../src/components/audio-engine.tsx', import.meta.url), 'utf-8');
+
+test('a play sends one event, and never a second one claiming a fallback', () => {
+  assert.doesNotMatch(PLAYER, /event: 'fallback'/, 'the play already says where the sound came from');
 });

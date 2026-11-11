@@ -20,9 +20,11 @@ test('one rule decides what is feeding the stream, so the glyph and the counter 
   assert.equal(streamSourceFor({}), 'waiting');
 });
 
-test('telemetry counts a web-seeded play as a fallback and everything else as a torrent', () => {
+test('telemetry names the source of a play, and only the source', () => {
   assert.equal(telemetrySource('waiting'), 'torrent');
   assert.equal(telemetrySource('connected'), 'torrent');
   assert.equal(telemetrySource('webseed'), 'webseed');
+  // Both feeding at once is not a failure: it is still named for where the bytes
+  // came from, and no second event is sent to say so.
   assert.equal(telemetrySource('mixed'), 'webseed');
 });
