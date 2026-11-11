@@ -3592,7 +3592,7 @@ select:focus {
     inline-size: 100%;
   }
   .usage-range__select {
-    display: inline-flex;
+    display: block;
     inline-size: 100%;
   }
   .usage-range .segmented {
@@ -3668,5 +3668,10 @@ select:focus {
   .table--stacked td:first-child {
     padding-block-end: var(--space-2);
     font: var(--body-strong);
+  }
+  /* The bar is decoration and its percentage is already a labelled row above; left in,
+     it draws a stray 7rem line under every row of the stacked funnel. */
+  .table--stacked .table__bar {
+    display: none;
   }
 }

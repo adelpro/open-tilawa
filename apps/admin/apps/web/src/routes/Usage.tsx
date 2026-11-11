@@ -757,7 +757,7 @@ export function Usage(): ReactElement {
                         <td className="num" data-label={t('usage.playedShare')}>
                           {share === null ? '—' : `${Math.round(share * 100)}%`}
                         </td>
-                        <td>
+                        <td className="table__bar">
                           <span className="share" aria-hidden="true">
                             <span
                               className="share__fill"

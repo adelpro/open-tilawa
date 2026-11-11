@@ -1,5 +1,16 @@
 # Changelog
 
+## admin 1.33.21 — 2026-11-11
+
+Admin release. App versions: **web 1.13.32**, **admin 1.33.21**, **seeder 1.5.7**.
+
+### Fixed
+
+- Two defects in the mobile pass, caught by reading the CSS before the screen was
+  seen: the stacked funnel drew a stray bar under every row, because the decoration
+  cell had no class to hide with the percentage it duplicates, and the range select
+  carried a display mode a native select does not need.
+
 ## admin 1.33.20 — 2026-11-11
 
 Admin release. App versions: **web 1.13.32**, **admin 1.33.20**, **seeder 1.5.7**.
