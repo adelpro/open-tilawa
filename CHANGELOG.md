@@ -1,5 +1,17 @@
 # Changelog
 
+## admin 1.33.18 — 2026-11-11
+
+Admin release. App versions: **web 1.13.31**, **admin 1.33.18**, **seeder 1.5.7**.
+
+### Changed
+
+- **The usage screen's states say what they looked at.** An empty window names the
+  window and the newest report that does exist, with one button to widen it, instead
+  of a sentence that read the same at 7 and at 90 days. A failed load offers a retry
+  in place rather than replacing the screen. The five states are written down in
+  DESIGN.md, so the next screen starts from them instead of reinventing them.
+
 ## admin 1.33.17 — 2026-11-11
 
 Admin release. App versions: **web 1.13.31**, **admin 1.33.17**, **seeder 1.5.7**.

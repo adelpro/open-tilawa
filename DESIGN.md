@@ -156,6 +156,27 @@ logical properties.
 - `--hairline` (#e0e0e0) wherever content is separated.
 - `--divider-soft` (4% black) for inset rings.
 
+## States
+
+Every screen that fetches can be in five states, and each one has to say what it
+looked at. An empty panel that does not name its window reads as a broken pipeline.
+
+- **Loading.** A skeleton, not a spinner and not the word "Loading". Rows are the
+  height of the real row and the bars sit where a label, an identifier and a line of
+  metadata sit, so the swap is a repaint rather than a jump. `role="status"` with an
+  accessible name; the bars are `aria-hidden`.
+- **Empty window.** Name the window it searched, then name the newest report if one
+  exists ("Newest report: 9 Nov."). That sentence is the difference between "nobody
+  listened" and "you are looking too narrowly". One action, and only when it exists:
+  widen the window. Never a bare zero, never a shrug.
+- **Empty by filter.** State the fact and stop. The filter bar above already carries
+  "Clear filters"; a second identical button in the empty block is noise, not help.
+- **Error.** A `role="alert"` notice that names what failed and offers one retry in
+  place. Losing the whole screen to one failed request is the failure mode, not the
+  fix.
+- **Low sample.** A rate under twenty attempts is a dash with a `title`, never a
+  percentage. A 0% built from two attempts reads as a verdict.
+
 ## Motion
 
 - **Gate first.** If it happens 100+ times a day, or it is triggered by a key, it does

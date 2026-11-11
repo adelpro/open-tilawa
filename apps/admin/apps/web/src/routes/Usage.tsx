@@ -13,6 +13,7 @@ import {
   DEFAULT_USAGE_RANGE,
   USAGE_RANGES,
   USAGE_RANGE_IDS,
+  nextRange,
   parseUsageRange,
   periodStats,
   type UsageRange,
@@ -208,6 +209,9 @@ export function Usage(): ReactElement {
    * or the header would name a date the panel does not read from.
    */
   const from = shortDate(new Date(Date.now() - (days - 1) * 86_400_000).toISOString(), locale);
+
+  /** The one range the empty state can offer; null at the widest window. */
+  const wider = nextRange(days);
 
   const surahs = useMemo(
     () =>
@@ -413,14 +417,41 @@ export function Usage(): ReactElement {
         ) : null}
       </div>
 
-      {error && <Notice tone="bad">{t('usage.error')}</Notice>}
+      {error && (
+        <Notice tone="bad">
+          {t('usage.error')}{' '}
+          {/* The failure is a state someone can leave: the retry asks the same
+              question again rather than making them reload the whole screen. */}
+          <button type="button" className="btn" onClick={() => void load()}>
+            {t('usage.retry')}
+          </button>
+        </Notice>
+      )}
 
       {!summary && !error && <SkeletonRows rows={5} label={t('usage.loading')} />}
 
       {empty && (
-        <Notice tone="info">
-          {filtered ? t('usage.emptyFiltered') : t('usage.emptyWindow', { days: String(days) })}
-        </Notice>
+        <div className="empty" role="status">
+          <p>
+            {filtered
+              ? t('usage.emptyFiltered')
+              : t('usage.emptyWindow', { days: String(days) })}
+          </p>
+          {/* A window with nothing in it still has a history: saying when the last
+              report arrived turns "0" into "you are looking too narrowly". */}
+          {openedPeriod.latest ? (
+            <p className="muted">
+              {t('usage.emptyHint', { date: shortDate(openedPeriod.latest.day, locale) })}
+            </p>
+          ) : null}
+          {/* One way out, and only when there is one: a filtered screen already
+              carries "Clear filters" in the bar above. */}
+          {!filtered && wider !== null ? (
+            <button type="button" className="btn" onClick={() => setDays(wider)}>
+              {t('usage.widen', { days: String(wider) })}
+            </button>
+          ) : null}
+        </div>
       )}
 
       {summary && !empty && (

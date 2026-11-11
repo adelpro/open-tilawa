@@ -30,6 +30,18 @@ export function parseUsageRange(id: string): UsageRange {
   return USAGE_RANGES.find((days) => `${days}` === id) ?? DEFAULT_USAGE_RANGE;
 }
 
+/**
+ * The next wider window, or null at the widest one.
+ *
+ * The empty state offers a single click out of a window that reported nothing, so
+ * the button never has to decide which range to offer: it is the next entry in
+ * `USAGE_RANGES`, and the list is already the one place that knows them.
+ */
+export function nextRange(days: UsageRange): UsageRange | null {
+  const index = USAGE_RANGES.indexOf(days);
+  return index === -1 ? null : (USAGE_RANGES[index + 1] ?? null);
+}
+
 export type CountedDay = { day: string; count: number };
 
 export type PeriodStats = {

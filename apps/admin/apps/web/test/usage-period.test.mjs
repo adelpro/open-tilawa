@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   DEFAULT_USAGE_RANGE,
   USAGE_RANGE_IDS,
+  nextRange,
   parseUsageRange,
   periodStats,
 } from '../src/lib/usage-period.ts';
@@ -111,5 +112,14 @@ describe('periodStats', () => {
     ]);
 
     assert.deepEqual(stats.latest, { day: '2026-10-30', count: 4 });
+  });
+});
+
+describe('nextRange', () => {
+  it('offers the next wider window, and stops at the widest', () => {
+    assert.equal(nextRange(7), 30);
+    assert.equal(nextRange(30), 90);
+    // The widest window has nothing wider to offer: the screen must not invent a range.
+    assert.equal(nextRange(90), null);
   });
 });
