@@ -63,7 +63,7 @@ const RETURNING = new Set(['7-13', '14-29', '30+']);
  */
 export function returningDevices(
   rows: readonly AgeRow[],
-): { day: string; returning: number; known: number } | null {
+): { day: string; returning: number; known: number; anyReturning: boolean } | null {
   if (rows.length === 0) return null;
   const latest = rows.reduce((max, row) => (row.day > max ? row.day : max), '');
   const dayRows = rows.filter((row) => row.day === latest);
@@ -72,5 +72,13 @@ export function returningDevices(
   const returning = dayRows
     .filter((row) => RETURNING.has(row.age))
     .reduce((sum, row) => sum + Math.max(0, row.devices), 0);
-  return { day: latest, returning, known };
+  /**
+   * Whether a 7-day age exists anywhere in the window.
+   *
+   * The share above is one day's, and one day can legitimately hold a single
+   * six-day-old device. Without this the screen prints "0 of 1" forever and reads as a
+   * product that never retains anyone, when it is a sample that has not aged yet.
+   */
+  const anyReturning = rows.some((row) => RETURNING.has(row.age) && row.devices > 0);
+  return { day: latest, returning, known, anyReturning };
 }

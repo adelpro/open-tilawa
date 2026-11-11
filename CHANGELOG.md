@@ -1,5 +1,17 @@
 # Changelog
 
+## admin 1.33.23 — 2026-11-11
+
+Admin release. App versions: **web 1.13.32**, **admin 1.33.23**, **seeder 1.5.7**.
+
+### Fixed
+
+- **"Returning devices" said 0 of 1 and never changed.** The count was right and the
+  sentence was wrong: it is one day's share, printed without the day, on a dataset where
+  no browser had stayed a week yet. It now names the date it describes, and says plainly
+  when no device in the window has reported a 7-day age, instead of letting a sample of
+  one look like a product that retains nobody.
+
 ## admin 1.33.22 — 2026-11-11
 
 Admin release. App versions: **web 1.13.32**, **admin 1.33.22**, **seeder 1.5.7**.

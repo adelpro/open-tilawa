@@ -85,6 +85,8 @@ export const ar: Catalogue = {
   'usage.listeners': 'أجهزة استمعت اليوم: {count}',
   'usage.listenersCount': 'استمعوا',
   'usage.returning': 'أجهزة عائدة (7 أيام فأكثر)',
+  'usage.returningOn': '{date}: {returning} من {known} جهازًا',
+  'usage.returningNone': 'لم يبلّغ أي جهاز عن عمر 7 أيام في هذا المدى.',
   'usage.returningOf': '{returning} من {known} جهازاً',
   'usage.returningNote': 'من الأجهزة التي أبلغت عن فئتها العمرية؛ لا تُحتسب الأجهزة الأقدم من هذا الإصدار.',
   'usage.playedShare': 'نسبة من استمع',

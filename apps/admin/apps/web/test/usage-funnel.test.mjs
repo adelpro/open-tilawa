@@ -88,3 +88,21 @@ describe('returningDevices', () => {
     assert.equal(returningDevices([{ day: '2026-11-01', age: 'new', devices: 0 }]), null);
   });
 });
+
+describe('returningDevices', () => {
+  it('says whether any device in the window ever reported a 7-day age', () => {
+    const young = returningDevices([
+      { day: '2026-11-11', age: 'new', devices: 1 },
+      { day: '2026-11-10', age: '4-6', devices: 2 },
+    ]);
+    // Zero here is the sample talking, not the product: no device has crossed a week.
+    assert.equal(young?.returning, 0);
+    assert.equal(young?.anyReturning, false);
+
+    const old = returningDevices([
+      { day: '2026-11-11', age: 'new', devices: 1 },
+      { day: '2026-11-09', age: '7-13', devices: 2 },
+    ]);
+    assert.equal(old?.anyReturning, true);
+  });
+});

@@ -713,13 +713,19 @@ export function Usage(): ReactElement {
             <p>{t('usage.listeners', { count: String(listenedToday) })}</p>
             {returning ? (
               <>
+                {/* The date is not decoration: this is one day's share, and a single
+                    young device on that day reads as "0 of 1" until it is named. */}
                 <p>
                   {t('usage.returning')}:{' '}
-                  {t('usage.returningOf', {
+                  {t('usage.returningOn', {
+                    date: shortDate(returning.day, locale),
                     returning: String(returning.returning),
                     known: String(returning.known),
                   })}
                 </p>
+                {!returning.anyReturning ? (
+                  <p className="muted">{t('usage.returningNone')}</p>
+                ) : null}
                 <p className="muted">{t('usage.returningNote')}</p>
               </>
             ) : null}
