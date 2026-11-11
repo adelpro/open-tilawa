@@ -81,6 +81,15 @@ const ALLOWED_KEYS = new Set([
 /** Ninety days of raw rows; the daily counts outlive them. */
 export const RETENTION_DAYS = 90;
 
+/**
+ * The widest window the console offers.
+ *
+ * Past `RETENTION_DAYS` the raw rows are gone and the rollup answers instead. It keeps
+ * every day the pruner takes, so a year of history is a query rather than a promise,
+ * and the number the screen shows past ninety days is a count, never a reconstruction.
+ */
+export const MAX_WINDOW_DAYS = 365;
+
 export class InvalidEvent extends Error {}
 
 /**
@@ -370,12 +379,12 @@ export class TelemetryService {
 
     const rolledUp = this.db
       .prepare(
-        `INSERT INTO telemetry_daily (day, reciter, surah, event, source, count)
-         SELECT substr(at, 1, 10), reciter, surah, event, source, count(*)
+        `INSERT INTO telemetry_daily (day, version, reciter, surah, event, source, count)
+         SELECT substr(at, 1, 10), version, reciter, surah, event, source, count(*)
            FROM telemetry_events
           WHERE substr(at, 1, 10) <= ?
-          GROUP BY substr(at, 1, 10), reciter, surah, event, source
-         ON CONFLICT (day, reciter, surah, event, source) DO UPDATE SET count = excluded.count`,
+          GROUP BY substr(at, 1, 10), version, reciter, surah, event, source
+         ON CONFLICT (day, version, reciter, surah, event, source) DO UPDATE SET count = excluded.count`,
       )
       .run(day).changes;
 
@@ -440,7 +449,7 @@ export class TelemetryService {
     days: number,
     filters: SummaryFilters = {},
   ): {
-    surahs: { surah: number; plays: number; bytes: number }[];
+    surahs: { surah: number; plays: number; completes: number; bytes: number }[];
     reciters: { reciter: string; plays: number }[];
     sources: { torrent: number; webseed: number };
     reliability: { source: string; plays: number; errors: number; rate: number }[];
@@ -456,7 +465,7 @@ export class TelemetryService {
     deviceAges: { day: string; age: string; devices: number }[];
     lastPrunedAt: string | null;
   } {
-    const window = Math.min(Math.max(days, 1), RETENTION_DAYS);
+    const window = Math.min(Math.max(days, 1), MAX_WINDOW_DAYS);
     /**
      * `window` calendar days, today included.
      *
@@ -471,6 +480,18 @@ export class TelemetryService {
       .toISOString()
       .slice(0, 10);
     const since = `${sinceDay}T00:00:00.000Z`;
+
+    /**
+     * Where the rollup ends and the raw rows begin.
+     *
+     * `telemetry_daily` is rebuilt hourly, so it is at most one rotation behind and
+     * must not be trusted for the day in progress. The last two days are read from
+     * the raw rows and every earlier day from the rollup: two, not one, because a
+     * rotation that runs after midnight may not have touched the day that just ended.
+     * Above this line the split is invisible — both halves carry the same columns.
+     */
+    const rawSinceDay = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const rawSince = `${rawSinceDay}T00:00:00.000Z`;
 
     /** The window, plus every filter except the one this panel is the dimension of. */
     const scope = (ignore?: keyof SummaryFilters): { where: string; params: unknown[] } => {
@@ -516,61 +537,99 @@ export class TelemetryService {
       return { where: parts.join(' AND '), params };
     };
 
-    const surahScope = scope();
-    const mediaScene = mediaWhere('m');
-    const surahs = this.db
-      .prepare(
-        `SELECT p.surah, p.plays, coalesce(b.bytes, 0) AS bytes
-           FROM (
-             SELECT surah, count(*) AS plays FROM telemetry_events
-              WHERE ${surahScope.where} AND event = 'play'
-              GROUP BY surah
-           ) p
-           LEFT JOIN (
-             SELECT m.surah, sum(m.bytes) AS bytes FROM media_daily m
-              WHERE ${mediaScene.where}
-              GROUP BY m.surah
-           ) b ON b.surah = p.surah
-          ORDER BY p.plays DESC, p.surah LIMIT 20`,
-      )
-      .all(...surahScope.params, ...mediaScene.params) as {
-      surah: number;
-      plays: number;
-      bytes: number;
-    }[];
+    /**
+     * One dimension, counted the same way on both sides of the split.
+     *
+     * Closed days come from the rollup, the last two from the raw rows, and the two
+     * are unioned before the GROUP BY so a panel cannot tell them apart. This is also
+     * what lets the screen offer a year: the rollup keeps every day the pruner takes.
+     */
+    const counted = (
+      dimension: string,
+      event: string,
+      ignore?: keyof SummaryFilters,
+    ): { sql: string; params: unknown[] } => {
+      const rollupParts = ['day >= ?', 'day < ?', 'event = ?'];
+      const rollupParams: unknown[] = [sinceDay, rawSinceDay, event];
+      const rawParts = ['at >= ?', 'event = ?'];
+      const rawParams: unknown[] = [rawSince, event];
+      const both = (column: string, value: string | undefined): void => {
+        if (value === undefined) return;
+        rollupParts.push(`${column} = ?`);
+        rollupParams.push(value);
+        rawParts.push(`${column} = ?`);
+        rawParams.push(value);
+      };
+      if (ignore !== 'source') both('source', filters.source);
+      if (ignore !== 'version') both('version', filters.version);
+      if (ignore !== 'reciter') both('reciter', filters.reciter);
+      return {
+        sql: `SELECT ${dimension} AS dim, sum(n) AS n FROM (
+                SELECT ${dimension}, count AS n FROM telemetry_daily
+                 WHERE ${rollupParts.join(' AND ')}
+                UNION ALL
+                SELECT ${dimension}, 1 AS n FROM telemetry_events
+                 WHERE ${rawParts.join(' AND ')}
+              ) GROUP BY ${dimension}`,
+        params: [...rollupParams, ...rawParams],
+      };
+    };
 
-    const reciters = this.db
+    const countedRows = (
+      dimension: string,
+      event: string,
+      ignore?: keyof SummaryFilters,
+    ): { dim: string | number; n: number }[] => {
+      const { sql, params } = counted(dimension, event, ignore);
+      return this.db.prepare(sql).all(...params) as { dim: string | number; n: number }[];
+    };
+
+    const mediaScene = mediaWhere('m');
+    const byteRows = this.db
       .prepare(
-        `SELECT reciter, count(*) AS plays FROM telemetry_events
-          WHERE ${scope('reciter').where} AND event = 'play'
-          GROUP BY reciter ORDER BY plays DESC, reciter LIMIT 20`,
+        `SELECT m.surah AS dim, sum(m.bytes) AS n FROM media_daily m
+          WHERE ${mediaScene.where}
+          GROUP BY m.surah`,
       )
-      .all(...scope('reciter').params) as { reciter: string; plays: number }[];
+      .all(...mediaScene.params) as { dim: number; n: number }[];
+    const bytesBySurah = new Map(byteRows.map((row) => [row.dim, row.n]));
+    const completesBySurah = new Map(
+      countedRows('surah', 'complete').map((row) => [Number(row.dim), row.n]),
+    );
+    const surahs = countedRows('surah', 'play')
+      .map((row) => ({
+        surah: Number(row.dim),
+        plays: row.n,
+        completes: completesBySurah.get(Number(row.dim)) ?? 0,
+        bytes: bytesBySurah.get(Number(row.dim)) ?? 0,
+      }))
+      .sort((a, b) => b.plays - a.plays || a.surah - b.surah)
+      .slice(0, 20);
+
+    const reciters = countedRows('reciter', 'play', 'reciter')
+      .map((row) => ({ reciter: String(row.dim), plays: row.n }))
+      .sort((a, b) => b.plays - a.plays || a.reciter.localeCompare(b.reciter))
+      .slice(0, 20);
 
     /**
      * The source split, and the one comparison it could never make before: which
      * source actually worked.
      *
-     * Both numbers come from one pass. A play is only written once sound started,
-     * so the errors are the failures and they carry the same `source`; the rate is
-     * the same one the errors panel prints, `errors ÷ (errors + plays)`, so the two
-     * panels cannot disagree. The panel is the source dimension, so it keeps both
-     * sides while you filter by source.
+     * Both numbers come from the same split. A play is only written once sound
+     * started, so the errors are the failures and they carry the same `source`; the
+     * rate is the same one the errors panel prints, `errors ÷ (errors + plays)`, so
+     * the two panels cannot disagree. The panel is the source dimension, so it keeps
+     * both sides while you filter by source.
      */
-    const sourceScope = scope('source');
-    const sourceRows = this.db
-      .prepare(
-        `SELECT source,
-                sum(CASE WHEN event = 'play'  THEN 1 ELSE 0 END) AS plays,
-                sum(CASE WHEN event = 'error' THEN 1 ELSE 0 END) AS errors
-           FROM telemetry_events WHERE ${sourceScope.where}
-          GROUP BY source`,
-      )
-      .all(...sourceScope.params) as { source: string; plays: number; errors: number }[];
+    const playsBySource = new Map(
+      countedRows('source', 'play', 'source').map((row) => [String(row.dim), row.n]),
+    );
+    const errorsBySource = new Map(
+      countedRows('source', 'error', 'source').map((row) => [String(row.dim), row.n]),
+    );
     const reliability = SOURCES.map((source) => {
-      const row = sourceRows.find((entry) => entry.source === source);
-      const plays = row?.plays ?? 0;
-      const errors = row?.errors ?? 0;
+      const plays = playsBySource.get(source) ?? 0;
+      const errors = errorsBySource.get(source) ?? 0;
       const attempts = plays + errors;
       return { source, plays, errors, rate: attempts === 0 ? 0 : errors / attempts };
     });
@@ -579,29 +638,24 @@ export class TelemetryService {
       webseed: reliability.find((row) => row.source === 'webseed')?.plays ?? 0,
     };
 
-    const versionScope = scope('version');
-    const versionRows = this.db
-      .prepare(
-        `SELECT version,
-                sum(CASE WHEN event = 'error' THEN 1 ELSE 0 END) AS errors,
-                sum(CASE WHEN event = 'play'  THEN 1 ELSE 0 END) AS plays
-           FROM telemetry_events WHERE ${versionScope.where}
-          GROUP BY version ORDER BY version DESC`,
-      )
-      .all(...versionScope.params) as { version: string; errors: number; plays: number }[];
-    const errorsByVersion = versionRows.map((row) => {
-      // One number, named: an error is counted against the plays it happened in,
-      // plus itself when playback never started. Counting fallbacks or completions
-      // here made a release that leaned on the web seed look healthier than one
-      // that did not — the denominator has to be the plays.
-      const attempts = row.errors + row.plays;
-      return {
-        version: row.version,
-        errors: row.errors,
-        plays: row.plays,
-        rate: attempts === 0 ? 0 : row.errors / attempts,
-      };
-    });
+    const versionPlays = new Map(
+      countedRows('version', 'play', 'version').map((row) => [String(row.dim), row.n]),
+    );
+    const versionErrors = new Map(
+      countedRows('version', 'error', 'version').map((row) => [String(row.dim), row.n]),
+    );
+    const errorsByVersion = [...new Set([...versionPlays.keys(), ...versionErrors.keys()])]
+      .map((version) => {
+        // One number, named: an error is counted against the plays it happened in,
+        // plus itself when playback never started. Counting completions here made a
+        // release that finished more of what it started look healthier than one that
+        // did not — the denominator has to be the plays.
+        const plays = versionPlays.get(version) ?? 0;
+        const errors = versionErrors.get(version) ?? 0;
+        const attempts = errors + plays;
+        return { version, errors, plays, rate: attempts === 0 ? 0 : errors / attempts };
+      })
+      .sort((a, b) => (a.version < b.version ? 1 : a.version > b.version ? -1 : 0));
 
     const recentErrors = this.db
       .prepare(

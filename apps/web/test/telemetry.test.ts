@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
+  completeEvent,
   createTelemetry,
   deviceEvent,
   errorEvent,
@@ -170,4 +171,29 @@ const PLAYER = readFileSync(new URL('../src/components/audio-engine.tsx', import
 
 test('a play sends one event, and never a second one claiming a fallback', () => {
   assert.doesNotMatch(PLAYER, /event: 'fallback'/, 'the play already says where the sound came from');
+});
+
+test('a completed play says it finished, and carries no wait', () => {
+  const event = completeEvent({
+    reciter: 'maher-al-muaiqly',
+    surah: 18,
+    source: 'webseed',
+    version: '1.13.31',
+    locale: 'ar',
+  });
+
+  assert.deepEqual(event, {
+    event: 'complete',
+    reciter: 'maher-al-muaiqly',
+    surah: 18,
+    source: 'webseed',
+    version: '1.13.31',
+    locale: 'ar',
+  });
+  // `msToPlay` belongs to the start of a play. A finished surah was not waiting for sound.
+  assert.deepEqual(Object.keys(event).sort(), ['event', 'locale', 'reciter', 'source', 'surah', 'version']);
+});
+
+test('a surah that reaches its end is reported', () => {
+  assert.match(PLAYER, /record\(\s*completeEvent\(/, 'the one event that answers "do they finish"');
 });

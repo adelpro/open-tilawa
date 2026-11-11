@@ -31,7 +31,7 @@ import {
 import { surahName } from '../lib/surahs';
 
 type Summary = {
-  surahs: { surah: number; plays: number; bytes: number }[];
+  surahs: { surah: number; plays: number; completes: number; bytes: number }[];
   reciters: { reciter: string; plays: number }[];
   sources: { torrent: number; webseed: number };
   reliability: { source: string; plays: number; errors: number; rate: number }[];
@@ -66,6 +66,8 @@ const RANGE_LABEL: Record<UsageRange, MessageKey> = {
   7: 'usage.range7',
   30: 'usage.range30',
   90: 'usage.range90',
+  // Past the raw retention the rollup answers, so the screen can offer a year.
+  365: 'usage.range365',
 };
 
 /** Enough days to see a trend without turning one panel into the whole screen. */
@@ -220,6 +222,7 @@ export function Usage(): ReactElement {
         {
           surah: (a, b) => a.surah - b.surah,
           plays: (a, b) => a.plays - b.plays,
+          completes: (a, b) => a.completes - b.completes,
           bytes: (a, b) => a.bytes - b.bytes,
         },
         surahSort,
@@ -467,6 +470,7 @@ export function Usage(): ReactElement {
                   <tr>
                     {sortHeader(t('usage.surah'), surahSort, setSurahSort, 'surah')}
                     {sortHeader(t('usage.plays'), surahSort, setSurahSort, 'plays')}
+                    {sortHeader(t('usage.completes'), surahSort, setSurahSort, 'completes')}
                     <th scope="col">{t('usage.share')}</th>
                     {sortHeader(t('usage.serverBytes'), surahSort, setSurahSort, 'bytes')}
                   </tr>
@@ -478,6 +482,9 @@ export function Usage(): ReactElement {
                         <SurahCell id={row.surah} />
                       </td>
                       <td className="num">{row.plays}</td>
+                      {/* A play says sound started; this says it reached the end. The
+                          pair is the only honest completion figure on the screen. */}
+                      <td className="num">{row.completes}</td>
                       <td>
                         {/* The count beside it is the fact; the bar is decoration, so it
                             is hidden from a screen reader rather than read as content. */}

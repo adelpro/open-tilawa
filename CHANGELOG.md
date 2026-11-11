@@ -1,5 +1,22 @@
 # Changelog
 
+## admin 1.33.19 — 2026-11-11
+
+Admin release. App versions: **web 1.13.32**, **admin 1.33.19**, **seeder 1.5.7**.
+
+### Added
+
+- **The usage screen answers a year.** The widest window was 90 days, the same ninety
+  the raw events live for, so the rollup written every hour could never show a day the
+  raw table had lost: it held exactly what the raw table held and nothing more. It now
+  carries the app version too, which is what the panels filter by, and the panels read
+  it for the closed days and the raw rows for the last two. A 365-day option follows,
+  and the hourly rollup stops being decoration.
+- **Completions are counted.** A play says sound started; the player now also reports
+  when a surah reaches its end, so the surah table shows plays beside completes. Until
+  now `complete` was on the allowed list with nothing sending it, so "did anyone finish"
+  had no answer.
+
 ## admin 1.33.18 — 2026-11-11
 
 Admin release. App versions: **web 1.13.31**, **admin 1.33.18**, **seeder 1.5.7**.

@@ -24,7 +24,7 @@ import { reciterName } from '@/utils/reciter-name';
 import { audioRef as sharedAudio } from '@/utils/audio-ref';
 import { canSetElementVolume, ensureAnalyser, setOutputGain } from '@/utils/audio-analyser';
 import { APP_VERSION } from '@/constants/version';
-import { errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
+import { completeEvent, errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
 import { streamSourceFor, telemetrySource } from '@/utils/stream-source';
 import { choosePlaybackSource, mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
 import { sameRelease } from '@/utils/release';
@@ -433,7 +433,29 @@ export default function AudioEngine({
         persist();
         flushPosition();
       }}
-      onEnded={() => next()}
+      onEnded={() => {
+        // The end of the selection is the only place that can answer "do they finish".
+        // One per play: the ref that stopped a second `play` for the same surah stops a
+        // second `complete` too, and clearing it makes a deliberate replay count as the
+        // new play it is.
+        if (
+          reciter &&
+          typeof surahId === 'number' &&
+          recordedForRef.current === `${reciter.id}:${surahId}`
+        ) {
+          record(
+            completeEvent({
+              reciter: reciter.slug || reciter.name,
+              surah: surahId,
+              source,
+              version: APP_VERSION,
+              locale,
+            }),
+          );
+          recordedForRef.current = null;
+        }
+        next();
+      }}
       onError={(event) => {
         const audio = event.currentTarget;
 

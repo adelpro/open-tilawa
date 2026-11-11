@@ -13,11 +13,11 @@
  * The windows the screen offers, and the id each one stores.
  *
  * The chosen window is a browser preference (see tab-memory), and localStorage
- * holds text, so an id is the day count written out: "7", "30", "90". Keeping
+ * holds text, so an id is the day count written out: "7", "30", "90", "365". Keeping
  * the list here — next to the window maths — means the button row, the stored
  * value and the header can never disagree about which ranges exist.
  */
-export const USAGE_RANGES = [7, 30, 90] as const;
+export const USAGE_RANGES = [7, 30, 90, 365] as const;
 
 export type UsageRange = (typeof USAGE_RANGES)[number];
 

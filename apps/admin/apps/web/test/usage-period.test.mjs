@@ -30,7 +30,7 @@ describe('parseUsageRange', () => {
   });
 
   it('falls back when a build dropped the range', () => {
-    assert.equal(parseUsageRange('365'), DEFAULT_USAGE_RANGE);
+    assert.equal(parseUsageRange('180'), DEFAULT_USAGE_RANGE);
   });
 });
 
@@ -119,7 +119,8 @@ describe('nextRange', () => {
   it('offers the next wider window, and stops at the widest', () => {
     assert.equal(nextRange(7), 30);
     assert.equal(nextRange(30), 90);
+    assert.equal(nextRange(90), 365);
     // The widest window has nothing wider to offer: the screen must not invent a range.
-    assert.equal(nextRange(90), null);
+    assert.equal(nextRange(365), null);
   });
 });

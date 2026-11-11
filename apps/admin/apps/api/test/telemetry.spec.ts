@@ -44,7 +44,12 @@ function build(rows: Row[] = []): { db: Db; telemetry: TelemetryService } {
       at,
     );
   }
-  return { db, telemetry: new TelemetryService(db) };
+  const telemetry = new TelemetryService(db);
+  // The read path splits at two days: everything older comes from the rollup, so a
+  // fixture that only wrote raw rows would be invisible to any window past that. The
+  // rotation is idempotent and is what the deployment runs hourly anyway.
+  telemetry.rotate();
+  return { db, telemetry };
 }
 
 const params = (...values: string[]) => values;
@@ -61,7 +66,7 @@ describe('TelemetryService.summary', () => {
 
     const summary = telemetry.summary(7);
 
-    expect(summary.surahs[0]).toEqual({ surah: 18, plays: 2, bytes: 0 });
+    expect(summary.surahs[0]).toEqual({ surah: 18, plays: 2, completes: 0, bytes: 0 });
     expect(summary.reciters[0]).toEqual({ reciter: 'maher-al-muaiqly', plays: 2 });
     expect(summary.surahs.map((row) => row.surah)).not.toContain(36);
   });
@@ -75,7 +80,7 @@ describe('TelemetryService.summary', () => {
 
     const summary = telemetry.summary(7, { source: 'webseed' });
 
-    expect(summary.surahs).toEqual([{ surah: 2, plays: 2, bytes: 0 }]);
+    expect(summary.surahs).toEqual([{ surah: 2, plays: 2, completes: 0, bytes: 0 }]);
     // The panel you are filtering by keeps both sides: that is the comparison.
     expect(summary.sources).toEqual({ torrent: 1, webseed: 2 });
   });
@@ -90,7 +95,7 @@ describe('TelemetryService.summary', () => {
     const summary = telemetry.summary(7, { version: '1.10.7' });
 
     // One play and one error on 1.10.7; the play count must not include the error.
-    expect(summary.surahs).toEqual([{ surah: 2, plays: 1, bytes: 0 }]);
+    expect(summary.surahs).toEqual([{ surah: 2, plays: 1, completes: 0, bytes: 0 }]);
     expect(summary.errorsByVersion.map((row) => row.version).sort()).toEqual(['1.10.7', '1.12.2']);
     // 1.10.7 has one play and one error: one failed attempt out of two.
     const row = summary.errorsByVersion.find((entry) => entry.version === '1.10.7');
@@ -107,7 +112,7 @@ describe('TelemetryService.summary', () => {
 
     const summary = telemetry.summary(7, { reciter: 'abdul-basit' });
 
-    expect(summary.surahs).toEqual([{ surah: 2, plays: 2, bytes: 0 }]);
+    expect(summary.surahs).toEqual([{ surah: 2, plays: 2, completes: 0, bytes: 0 }]);
     expect(summary.reciters).toEqual([
       { reciter: 'abdul-basit', plays: 2 },
       { reciter: 'maher-al-muaiqly', plays: 1 },
@@ -128,8 +133,8 @@ describe('TelemetryService.summary', () => {
     });
 
     expect(summary.surahs).toEqual([
-      { surah: 2, plays: 1, bytes: 0 },
-      { surah: 18, plays: 1, bytes: 0 },
+      { surah: 2, plays: 1, completes: 0, bytes: 0 },
+      { surah: 18, plays: 1, completes: 0, bytes: 0 },
     ]);
   });
 
@@ -165,7 +170,7 @@ describe('TelemetryController.summary validation', () => {
     const { telemetry } = build([{ surah: 2, source: 'webseed' }, { surah: 18 }]);
     const controller = new TelemetryController(telemetry);
     const summary = controller.summary('7', 'webseed');
-    expect(summary.surahs).toEqual([{ surah: 2, plays: 1, bytes: 0 }]);
+    expect(summary.surahs).toEqual([{ surah: 2, plays: 1, completes: 0, bytes: 0 }]);
   });
 });
 
@@ -287,7 +292,7 @@ describe('TelemetryService volume and devices', () => {
 
     const summary = telemetry.summary(7);
 
-    expect(summary.surahs).toEqual([{ surah: 18, plays: 1, bytes: 1_048_576 }]);
+    expect(summary.surahs).toEqual([{ surah: 18, plays: 1, completes: 0, bytes: 1_048_576 }]);
     expect(summary.volume.serverBytes).toBe(1_048_576);
     expect(summary.volume.byReciter).toEqual([
       { reciter: 'maher-al-muaiqly', serverBytes: 1_048_576, torrentBytes: 0 },
@@ -316,7 +321,7 @@ describe('TelemetryService volume and devices', () => {
       byReciter: [{ reciter: 'maher-al-muaiqly', serverBytes: 500, torrentBytes: 300 }],
     });
     // The surah column obeys the same reciter filter as the panel above it.
-    expect(filtered.surahs).toEqual([{ surah: 18, plays: 1, bytes: 500 }]);
+    expect(filtered.surahs).toEqual([{ surah: 18, plays: 1, completes: 0, bytes: 500 }]);
     expect(telemetry.summary(7, { reciter: 'someone-else' }).volume).toEqual({
       serverBytes: 0,
       torrentBytes: 0,
@@ -478,5 +483,56 @@ describe('events from an older client', () => {
     expect(db.prepare('SELECT event, count(*) AS n FROM telemetry_events GROUP BY event').all()).toEqual(
       [{ event: 'play', n: 1 }],
     );
+  });
+});
+
+/**
+ * The handover between the rollup and the raw rows.
+ *
+ * Closed days come from `telemetry_daily`; the last two from `telemetry_events`. The
+ * point of the split is that a window can outlive the ninety-day raw retention, so the
+ * tests delete the raw rows by hand to stand in for the day the pruner takes them.
+ */
+describe('the rollup carries what the pruner takes', () => {
+  it('still counts a play whose raw row is gone', () => {
+    const { db, telemetry } = build([{ surah: 18, daysAgo: 40 }]);
+    db.prepare('DELETE FROM telemetry_events').run();
+
+    expect(telemetry.summary(90).surahs).toEqual([
+      { surah: 18, plays: 1, completes: 0, bytes: 0 },
+    ]);
+  });
+
+  it('answers a window the raw rows can never cover', () => {
+    const { db, telemetry } = build([{ surah: 2, daysAgo: 200 }]);
+    db.prepare('DELETE FROM telemetry_events').run();
+
+    expect(telemetry.summary(365).surahs[0]).toMatchObject({ surah: 2, plays: 1 });
+    // And the short windows stay short: the rollup is filtered by the same window.
+    expect(telemetry.summary(90).surahs).toEqual([]);
+  });
+
+  it('counts a day once, wherever the handover falls', () => {
+    const { telemetry } = build([{ surah: 18 }, { surah: 18, daysAgo: 1 }]);
+
+    expect(telemetry.summary(7).surahs).toEqual([
+      { surah: 18, plays: 2, completes: 0, bytes: 0 },
+    ]);
+  });
+
+  it('counts a completed play apart from the play itself', () => {
+    const { telemetry } = build([{ surah: 18 }, { surah: 18, event: 'complete' }]);
+
+    expect(telemetry.summary(7).surahs).toEqual([
+      { surah: 18, plays: 1, completes: 1, bytes: 0 },
+    ]);
+  });
+
+  it('refuses a window past the widest one it can answer', () => {
+    const { telemetry } = build();
+    const controller = new TelemetryController(telemetry);
+
+    expect(() => controller.summary('366')).toThrow(BadRequestException);
+    expect(controller.summary('365').surahs).toEqual([]);
   });
 });

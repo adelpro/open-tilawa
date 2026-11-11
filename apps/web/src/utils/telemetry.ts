@@ -190,6 +190,30 @@ export function errorEvent(input: {
   };
 }
 
+/**
+ * The event a surah sends when it reaches its end.
+ *
+ * A `play` says sound started; this one says it finished, and it is the only thing that
+ * can answer "do people listen to a whole surah". No wait band: `msToPlay` belongs to the
+ * start, and attaching it here would make a completion look like a slow start.
+ */
+export function completeEvent(input: {
+  reciter: string;
+  surah: number;
+  source: PlayTelemetryEvent['source'];
+  version: string;
+  locale: PlayTelemetryEvent['locale'];
+}): PlayTelemetryEvent {
+  return {
+    event: 'complete',
+    reciter: input.reciter,
+    surah: input.surah,
+    source: input.source,
+    version: input.version,
+    locale: input.locale,
+  };
+}
+
 /** The daily "a device was here" event; its whole payload is the day it is sent. */
 export function deviceEvent(input: {
   version: string;

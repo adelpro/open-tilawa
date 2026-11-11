@@ -17,7 +17,7 @@ import type { Request } from 'express';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { InvalidEvent, RETENTION_DAYS, TelemetryService, assertSummaryFilters } from './telemetry.service';
+import { InvalidEvent, MAX_WINDOW_DAYS, TelemetryService, assertSummaryFilters } from './telemetry.service';
 
 /**
  * Ingest is public on purpose: it carries nothing that identifies anyone, and a listener
@@ -53,8 +53,8 @@ export class TelemetryController {
     @Query('reciter') reciter?: string,
   ) {
     const window = Math.max(1, Number.parseInt(days ?? '7', 10) || 7);
-    if (window > RETENTION_DAYS) {
-      throw new BadRequestException(`the raw window is ${RETENTION_DAYS} days`);
+    if (window > MAX_WINDOW_DAYS) {
+      throw new BadRequestException(`the widest window is ${MAX_WINDOW_DAYS} days`);
     }
     try {
       return this.telemetry.summary(window, assertSummaryFilters({ source, version, reciter }));
