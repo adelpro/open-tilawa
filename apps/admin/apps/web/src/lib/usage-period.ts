@@ -9,6 +9,27 @@
  * which is often not today.
  */
 
+/**
+ * The windows the screen offers, and the id each one stores.
+ *
+ * The chosen window is a browser preference (see tab-memory), and localStorage
+ * holds text, so an id is the day count written out: "7", "30", "90". Keeping
+ * the list here — next to the window maths — means the button row, the stored
+ * value and the header can never disagree about which ranges exist.
+ */
+export const USAGE_RANGES = [7, 30, 90] as const;
+
+export type UsageRange = (typeof USAGE_RANGES)[number];
+
+export const USAGE_RANGE_IDS = USAGE_RANGES.map((days) => String(days) as `${UsageRange}`);
+
+export const DEFAULT_USAGE_RANGE: UsageRange = 7;
+
+/** A stored id as the window it names; an id this build dropped is the default. */
+export function parseUsageRange(id: string): UsageRange {
+  return USAGE_RANGES.find((days) => `${days}` === id) ?? DEFAULT_USAGE_RANGE;
+}
+
 export type CountedDay = { day: string; count: number };
 
 export type PeriodStats = {

@@ -393,3 +393,90 @@ describe('TelemetryService volume and devices', () => {
     });
   });
 });
+
+/**
+ * Where the sound came from, as a reliability read-out.
+ *
+ * The split already says how many plays each source served. It cannot say whether
+ * either of them worked: a play is only recorded once sound started, so the error
+ * rows are the failures, and they carry the same `source`. Peer and server are
+ * then comparable for the first time — 24% against 0% in the live data, which the
+ * errors-by-version table was hiding by mixing both sources into one rate.
+ */
+describe('the source the sound came from', () => {
+  it('counts plays and errors per source, and rates them against the plays', () => {
+    const { telemetry } = build([
+      { source: 'torrent' },
+      { source: 'torrent' },
+      { source: 'torrent', event: 'error', errorCode: 'MEDIA_ERR_NETWORK' },
+      { source: 'webseed' },
+      { source: 'webseed' },
+    ]);
+
+    expect(telemetry.summary(7).reliability).toEqual([
+      { source: 'torrent', plays: 2, errors: 1, rate: 1 / 3 },
+      { source: 'webseed', plays: 2, errors: 0, rate: 0 },
+    ]);
+  });
+
+  it('keeps both sources while the source filter is on, like the split above it', () => {
+    const { telemetry } = build([
+      { source: 'torrent' },
+      { source: 'torrent', event: 'error', errorCode: 'MEDIA_ERR_NETWORK' },
+      { source: 'webseed' },
+      { source: 'webseed' },
+      { source: 'webseed' },
+    ]);
+
+    const summary = telemetry.summary(7, { source: 'webseed' });
+
+    // The panel is the dimension being filtered by: collapsing it to one row
+    // would delete the comparison the panel exists for.
+    expect(summary.reliability).toEqual([
+      { source: 'torrent', plays: 1, errors: 1, rate: 0.5 },
+      { source: 'webseed', plays: 3, errors: 0, rate: 0 },
+    ]);
+    expect(summary.sources).toEqual({ torrent: 1, webseed: 3 });
+  });
+
+  it('narrows by version, which is not this panel dimension', () => {
+    const { telemetry } = build([
+      { source: 'torrent', version: '1.10.7' },
+      { source: 'webseed', version: '1.12.2' },
+      { source: 'webseed', version: '1.12.2' },
+    ]);
+
+    const rows = telemetry.summary(7, { version: '1.12.2' }).reliability;
+
+    expect(rows).toEqual([
+      { source: 'torrent', plays: 0, errors: 0, rate: 0 },
+      { source: 'webseed', plays: 2, errors: 0, rate: 0 },
+    ]);
+  });
+});
+
+/**
+ * A client older than the release that stopped sending `fallback` still sends it.
+ *
+ * Rejecting the event would fail the whole batch, so every play from every other
+ * un-updated client would be lost with it. Accept, and do not count.
+ */
+describe('events from an older client', () => {
+  const play = {
+    event: 'play' as const,
+    reciter: 'maher-al-muaiqly',
+    surah: 18,
+    source: 'webseed' as const,
+    version: '1.13.30',
+    locale: 'ar' as const,
+  };
+
+  it('accepts a fallback event and does not store it', () => {
+    const { db, telemetry } = build();
+    telemetry.ingest([play, { ...play, event: 'fallback' as const }], '127.0.0.1');
+
+    expect(db.prepare('SELECT event, count(*) AS n FROM telemetry_events GROUP BY event').all()).toEqual(
+      [{ event: 'play', n: 1 }],
+    );
+  });
+});

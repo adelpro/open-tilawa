@@ -9,8 +9,16 @@ import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
 import { funnelRows, playedShare, returningDevices } from '../lib/usage-funnel';
-import { periodStats } from '../lib/usage-period';
+import {
+  DEFAULT_USAGE_RANGE,
+  USAGE_RANGES,
+  USAGE_RANGE_IDS,
+  parseUsageRange,
+  periodStats,
+  type UsageRange,
+} from '../lib/usage-period';
 import { readFolded, writeFolded, type Folded, type UsagePanel } from '../lib/usage-fold';
+import { readTab, writeTab } from '../lib/tab-memory';
 import {
   nextSort,
   reciterLabel,
@@ -25,6 +33,7 @@ type Summary = {
   surahs: { surah: number; plays: number; bytes: number }[];
   reciters: { reciter: string; plays: number }[];
   sources: { torrent: number; webseed: number };
+  reliability: { source: string; plays: number; errors: number; rate: number }[];
   errorsByVersion: { version: string; errors: number; plays: number; rate: number }[];
   recentErrors: {
     at: string;
@@ -52,8 +61,7 @@ type Filters = { source: Source; version: string; reciter: string };
 type CatalogueName = { name: string; nameAr: string | null };
 type CatalogueRow = CatalogueName & { slug: string };
 
-const RANGES = [7, 30, 90] as const;
-const RANGE_LABEL: Record<(typeof RANGES)[number], MessageKey> = {
+const RANGE_LABEL: Record<UsageRange, MessageKey> = {
   7: 'usage.range7',
   30: 'usage.range30',
   90: 'usage.range90',
@@ -86,7 +94,19 @@ const EMPTY_FILTERS: Filters = { source: '', version: '', reciter: '' };
  */
 export function Usage(): ReactElement {
   const { t, locale } = useI18n();
-  const [days, setDays] = useState<(typeof RANGES)[number]>(7);
+  /**
+   * The chosen window is a preference, like the fold state and the Account tabs:
+   * it belongs to this browser, so a reload opens on the range last read. The
+   * stored value is validated on the way in — a range this build no longer
+   * offers falls back to the default instead of leaving the screen blank.
+   */
+  const [days, setDaysState] = useState<UsageRange>(() =>
+    parseUsageRange(readTab('usage', USAGE_RANGE_IDS, `${DEFAULT_USAGE_RANGE}`)),
+  );
+  const setDays = (value: UsageRange): void => {
+    setDaysState(value);
+    writeTab('usage', String(value));
+  };
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState(false);
@@ -318,7 +338,7 @@ export function Usage(): ReactElement {
           <p className="muted">{t('usage.window', { days: String(days), date: from })}</p>
         </div>
         <div className="segmented" role="group" aria-label={t('usage.range')}>
-          {RANGES.map((value) => (
+          {USAGE_RANGES.map((value) => (
             <button
               key={value}
               type="button"
@@ -480,12 +500,43 @@ export function Usage(): ReactElement {
             open={!folded.source}
             onToggle={() => togglePanel('source')}
           >
-            <p>
-              {t('usage.torrent')} {summary.sources.torrent} ({share(summary.sources.torrent)}%)
-              {' · '}
-              {t('usage.webseed')} {summary.sources.webseed} ({share(summary.sources.webseed)}%)
-            </p>
+            <div className="table-scroll">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col" aria-hidden="true" />
+                    <th scope="col">{t('usage.plays')}</th>
+                    <th scope="col">{t('usage.share')}</th>
+                    <th scope="col">{t('usage.errorsCount')}</th>
+                    <th scope="col">{t('usage.rate')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Both sources, always: this table *is* the comparison, so it
+                      keeps its own dimension while the source filter narrows the
+                      rest of the screen. */}
+                  {summary.reliability.map((row) => {
+                    const attempts = row.plays + row.errors;
+                    const small = attempts < LOW_SAMPLE;
+                    return (
+                      <tr key={row.source}>
+                        <td>
+                          {row.source === 'torrent' ? t('usage.torrent') : t('usage.webseed')}
+                        </td>
+                        <td className="num">{row.plays}</td>
+                        <td className="num">{share(row.plays)}%</td>
+                        <td className="num">{row.errors}</td>
+                        <td className="num" title={small ? t('usage.lowSample') : undefined}>
+                          {small ? '—' : `${Math.round(row.rate * 1000) / 10}%`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             <p className="muted">{t('usage.countsNote')}</p>
+            <p className="muted">{t('usage.rateNote')}</p>
           </FoldPanel>
 
           <FoldPanel

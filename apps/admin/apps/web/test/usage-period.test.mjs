@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { periodStats } from '../src/lib/usage-period.ts';
+import {
+  DEFAULT_USAGE_RANGE,
+  USAGE_RANGE_IDS,
+  parseUsageRange,
+  periodStats,
+} from '../src/lib/usage-period.ts';
 
 /**
  * The period read-out: what a window of daily counters adds up to.
@@ -11,6 +16,22 @@ import { periodStats } from '../src/lib/usage-period.ts';
  * describes the days — how many reported, which was busiest, the average of the
  * days that did report, and the newest one — and never a range total.
  */
+
+describe('parseUsageRange', () => {
+  it('reads every stored id back as the window it names', () => {
+    for (const id of USAGE_RANGE_IDS) {
+      assert.equal(parseUsageRange(id), Number(id));
+    }
+  });
+
+  it('falls back to the default when nothing was stored', () => {
+    assert.equal(parseUsageRange(''), DEFAULT_USAGE_RANGE);
+  });
+
+  it('falls back when a build dropped the range', () => {
+    assert.equal(parseUsageRange('365'), DEFAULT_USAGE_RANGE);
+  });
+});
 
 describe('periodStats', () => {
   it('counts only the days that reported something', () => {

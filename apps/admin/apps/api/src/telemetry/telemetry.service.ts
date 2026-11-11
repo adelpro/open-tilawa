@@ -14,6 +14,10 @@ import { MediaLogImporter } from './media-import';
  *
  * `device` is the one event that is not a play: one per consenting device per day, with no
  * identifier in it, which is why the server can count devices but never join two days.
+ *
+ * `fallback` is legacy. Up to web 1.13.30 the client sent it beside every play the web seed
+ * served, saying what `source` already said. Ingest still accepts it — one rejected event
+ * fails the whole batch, so removing it would silence every older client — and never stores it.
  */
 export const EVENTS = ['play', 'complete', 'error', 'fallback', 'device', 'first_play'] as const;
 export const SOURCES = ['torrent', 'webseed'] as const;
@@ -244,6 +248,10 @@ export class TelemetryService {
         listeners += 1;
         continue;
       }
+      // A client older than web 1.13.31 still sends this beside a web-seeded play.
+      // Accepted above so its batch still lands, and dropped here so the same play
+      // is not counted twice.
+      if (event.event === 'fallback') continue;
       insert.run(
         event.event,
         event.reciter,
@@ -435,6 +443,7 @@ export class TelemetryService {
     surahs: { surah: number; plays: number; bytes: number }[];
     reciters: { reciter: string; plays: number }[];
     sources: { torrent: number; webseed: number };
+    reliability: { source: string; plays: number; errors: number; rate: number }[];
     errorsByVersion: { version: string; errors: number; plays: number; rate: number }[];
     recentErrors: unknown[];
     volume: {
@@ -538,16 +547,36 @@ export class TelemetryService {
       )
       .all(...scope('reciter').params) as { reciter: string; plays: number }[];
 
+    /**
+     * The source split, and the one comparison it could never make before: which
+     * source actually worked.
+     *
+     * Both numbers come from one pass. A play is only written once sound started,
+     * so the errors are the failures and they carry the same `source`; the rate is
+     * the same one the errors panel prints, `errors ÷ (errors + plays)`, so the two
+     * panels cannot disagree. The panel is the source dimension, so it keeps both
+     * sides while you filter by source.
+     */
     const sourceScope = scope('source');
     const sourceRows = this.db
       .prepare(
-        `SELECT source, count(*) AS n FROM telemetry_events
-          WHERE ${sourceScope.where} AND event = 'play' GROUP BY source`,
+        `SELECT source,
+                sum(CASE WHEN event = 'play'  THEN 1 ELSE 0 END) AS plays,
+                sum(CASE WHEN event = 'error' THEN 1 ELSE 0 END) AS errors
+           FROM telemetry_events WHERE ${sourceScope.where}
+          GROUP BY source`,
       )
-      .all(...sourceScope.params) as { source: string; n: number }[];
+      .all(...sourceScope.params) as { source: string; plays: number; errors: number }[];
+    const reliability = SOURCES.map((source) => {
+      const row = sourceRows.find((entry) => entry.source === source);
+      const plays = row?.plays ?? 0;
+      const errors = row?.errors ?? 0;
+      const attempts = plays + errors;
+      return { source, plays, errors, rate: attempts === 0 ? 0 : errors / attempts };
+    });
     const sources = {
-      torrent: sourceRows.find((row) => row.source === 'torrent')?.n ?? 0,
-      webseed: sourceRows.find((row) => row.source === 'webseed')?.n ?? 0,
+      torrent: reliability.find((row) => row.source === 'torrent')?.plays ?? 0,
+      webseed: reliability.find((row) => row.source === 'webseed')?.plays ?? 0,
     };
 
     const versionScope = scope('version');
@@ -648,6 +677,7 @@ export class TelemetryService {
       surahs,
       reciters,
       sources,
+      reliability,
       errorsByVersion,
       recentErrors,
       volume: { serverBytes: serverTotal, torrentBytes: torrentTotal, byReciter },
