@@ -344,18 +344,35 @@ export function Usage(): ReactElement {
           <h1 className="title">{t('usage.title')}</h1>
           <p className="muted">{t('usage.window', { days: String(days), date: from })}</p>
         </div>
-        <div className="segmented" role="group" aria-label={t('usage.range')}>
-          {USAGE_RANGES.map((value) => (
-            <button
-              key={value}
-              type="button"
-              className="segmented__item"
-              aria-pressed={value === days}
-              onClick={() => setDays(value)}
-            >
-              {t(RANGE_LABEL[value])}
-            </button>
-          ))}
+        <div className="usage-range">
+          {/* One control per shape. Four Arabic labels and a 34px target do not fit at
+              375px, so a phone gets the native picker and the segments stay for wider
+              screens. Only one of the two is ever displayed, so only one is announced. */}
+          <select
+            className="usage-range__select field__select"
+            aria-label={t('usage.range')}
+            value={days}
+            onChange={(event) => setDays(parseUsageRange(event.target.value))}
+          >
+            {USAGE_RANGES.map((value) => (
+              <option key={value} value={value}>
+                {t(RANGE_LABEL[value])}
+              </option>
+            ))}
+          </select>
+          <div className="segmented" role="group" aria-label={t('usage.range')}>
+            {USAGE_RANGES.map((value) => (
+              <button
+                key={value}
+                type="button"
+                className="segmented__item"
+                aria-pressed={value === days}
+                onClick={() => setDays(value)}
+              >
+                {t(RANGE_LABEL[value])}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -459,6 +476,25 @@ export function Usage(): ReactElement {
 
       {summary && !empty && (
         <>
+          {/* The three facts worth seeing without unfolding a panel. The numbers are
+              already below, inside collapsible tables nobody opens to check the pipe. */}
+          <section className="usage-today">
+            <div className="usage-today__tile">
+              <span className="usage-today__n">{reportedToday}</span>
+              <span className="usage-today__l">{t('usage.devicesCount')}</span>
+            </div>
+            <div className="usage-today__tile">
+              <span className="usage-today__n">{listenedToday}</span>
+              <span className="usage-today__l">{t('usage.listenersCount')}</span>
+            </div>
+            <div className="usage-today__tile">
+              <span className="usage-today__n">
+                {openedPeriod.latest ? shortDate(openedPeriod.latest.day, locale) : '—'}
+              </span>
+              <span className="usage-today__l">{t('usage.periodLast')}</span>
+            </div>
+          </section>
+
           <FoldPanel
             title={t('usage.surahs')}
             open={!folded.surahs}
@@ -539,7 +575,7 @@ export function Usage(): ReactElement {
             onToggle={() => togglePanel('source')}
           >
             <div className="table-scroll">
-              <table className="table">
+              <table className="table table--stacked">
                 <thead>
                   <tr>
                     <th scope="col" aria-hidden="true" />
@@ -561,10 +597,20 @@ export function Usage(): ReactElement {
                         <td>
                           {row.source === 'torrent' ? t('usage.torrent') : t('usage.webseed')}
                         </td>
-                        <td className="num">{row.plays}</td>
-                        <td className="num">{share(row.plays)}%</td>
-                        <td className="num">{row.errors}</td>
-                        <td className="num" title={small ? t('usage.lowSample') : undefined}>
+                        <td className="num" data-label={t('usage.plays')}>
+                          {row.plays}
+                        </td>
+                        <td className="num" data-label={t('usage.share')}>
+                          {share(row.plays)}%
+                        </td>
+                        <td className="num" data-label={t('usage.errorsCount')}>
+                          {row.errors}
+                        </td>
+                        <td
+                          className="num"
+                          data-label={t('usage.rate')}
+                          title={small ? t('usage.lowSample') : undefined}
+                        >
                           {small ? '—' : `${Math.round(row.rate * 1000) / 10}%`}
                         </td>
                       </tr>
@@ -643,7 +689,7 @@ export function Usage(): ReactElement {
 
             <p className="muted">{t('usage.periodNote')}</p>
             <div className="table-scroll">
-              <table className="table">
+              <table className="table table--stacked">
                 <thead>
                   <tr>
                     <th scope="col">{t('usage.periodMeasure')}</th>
@@ -662,16 +708,20 @@ export function Usage(): ReactElement {
                       <td>{label}</td>
                       {/* Reported days out of the selected window: a bare count
                           here read as devices, next to "Opened the app". */}
-                      <td className="num">
+                      <td className="num" data-label={t('usage.periodDays')}>
                         {stats.days} / {days}
                       </td>
-                      <td>
+                      <td data-label={t('usage.periodBest')}>
                         {stats.best
                           ? `${stats.best.count} · ${shortDate(stats.best.day, locale)}`
                           : '—'}
                       </td>
-                      <td className="num">{stats.days === 0 ? '—' : stats.average}</td>
-                      <td>{stats.latest ? shortDate(stats.latest.day, locale) : '—'}</td>
+                      <td className="num" data-label={t('usage.periodAverage')}>
+                        {stats.days === 0 ? '—' : stats.average}
+                      </td>
+                      <td data-label={t('usage.periodLast')}>
+                        {stats.latest ? shortDate(stats.latest.day, locale) : '—'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -680,7 +730,7 @@ export function Usage(): ReactElement {
 
             <TrendBars rows={funnel} />
             <div className="table-scroll">
-              <table className="table">
+              <table className="table table--stacked">
                 <thead>
                   <tr>
                     <th scope="col">{t('usage.when')}</th>
@@ -698,9 +748,13 @@ export function Usage(): ReactElement {
                     return (
                       <tr key={row.day}>
                         <td title={shortDate(row.day, locale)}>{row.day.slice(5)}</td>
-                        <td className="num">{row.devices}</td>
-                        <td className="num">{row.listeners}</td>
-                        <td className="num">
+                        <td className="num" data-label={t('usage.devicesCount')}>
+                          {row.devices}
+                        </td>
+                        <td className="num" data-label={t('usage.listenersCount')}>
+                          {row.listeners}
+                        </td>
+                        <td className="num" data-label={t('usage.playedShare')}>
                           {share === null ? '—' : `${Math.round(share * 100)}%`}
                         </td>
                         <td>

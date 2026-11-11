@@ -1,5 +1,28 @@
 # Changelog
 
+## admin 1.33.20 — 2026-11-11
+
+Admin release. App versions: **web 1.13.32**, **admin 1.33.20**, **seeder 1.5.7**.
+
+### Changed
+
+- **The usage screen is usable on a phone.** The range control becomes the native
+  picker under 560px, because four Arabic labels and a 34px target do not fit at 375.
+  The source, period and funnel tables become label/value pairs instead of five columns
+  inside a 560px scroller, where you had to scroll sideways to find the column that
+  explained the number you just read. The long tables (surahs, reciters, volume) keep
+  the scroller on purpose: twenty-six stacked rows bury the page rather than clarify it.
+- **Three numbers moved above the fold.** Devices today, played today and the newest
+  report now sit at the top of the screen instead of inside collapsible panels, which is
+  where an operator looks when the question is "is the pipe still working".
+
+### Removed
+
+- **`telemetry_errors_daily`.** It was written every hour and read by nothing: the
+  errors panel grouped by version, which `telemetry_daily` now carries, and the recent
+  errors list reads the raw rows. Migration 029 drops it, and the hourly job loses one
+  insert.
+
 ## admin 1.33.19 — 2026-11-11
 
 Admin release. App versions: **web 1.13.32**, **admin 1.33.19**, **seeder 1.5.7**.

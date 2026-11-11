@@ -388,16 +388,11 @@ export class TelemetryService {
       )
       .run(day).changes;
 
-    this.db
-      .prepare(
-        `INSERT INTO telemetry_errors_daily (day, version, error_code, count)
-         SELECT substr(at, 1, 10), version, coalesce(error_code, 'unknown'), count(*)
-           FROM telemetry_events
-          WHERE event = 'error' AND substr(at, 1, 10) <= ?
-          GROUP BY substr(at, 1, 10), version, coalesce(error_code, 'unknown')
-         ON CONFLICT (day, version, error_code) DO UPDATE SET count = excluded.count`,
-      )
-      .run(day);
+    // `telemetry_errors_daily` lived here: a second rollup grouping errors by version and
+    // code. Migration 029 drops it. `telemetry_daily` already carries the version and the
+    // event, so everything that table answered is one GROUP BY away, and two rollups that
+    // must agree is one rollup too many — the error-code breakdown was the only thing it
+    // held alone, and no screen asks for it.
 
     // Only days that are already in the rollup can be pruned: the subquery is the guard,
     // not the comment above it.
