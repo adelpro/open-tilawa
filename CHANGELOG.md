@@ -1,5 +1,18 @@
 # Changelog
 
+## admin 1.33.22 — 2026-11-11
+
+Admin release. App versions: **web 1.13.32**, **admin 1.33.22**, **seeder 1.5.7**.
+
+### Added
+
+- **Time to first sound.** The player has measured the wait on every play since the
+  first release and nothing read it. The source panel now shows the four bands as one
+  bar, with the counts beside it: 61% of plays start under a second and 15% take more
+  than ten, which is the first figure on this screen that says how playback feels
+  rather than how often it happened. The band joins the rollup key (migration 030), so
+  the distribution survives the ninety-day prune like every other count.
+
 ## admin 1.33.21 — 2026-11-11
 
 Admin release. App versions: **web 1.13.32**, **admin 1.33.21**, **seeder 1.5.7**.

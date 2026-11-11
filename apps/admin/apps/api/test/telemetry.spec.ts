@@ -536,3 +536,46 @@ describe('the rollup carries what the pruner takes', () => {
     expect(controller.summary('365').surahs).toEqual([]);
   });
 });
+
+/**
+ * How long the listener waited.
+ *
+ * A distribution over four bands, not a time series: it stays readable when a day holds
+ * two plays, which is the only kind of day this project has so far.
+ */
+describe('time to first sound', () => {
+  it('counts a play per band, and reports every band even when it is empty', () => {
+    const { db, telemetry } = build();
+    const insert = db.prepare(
+      `INSERT INTO telemetry_events (event, reciter, surah, source, error_code, ms_to_play, version, locale, at)
+       VALUES ('play', 'maher-al-muaiqly', 18, 'torrent', NULL, ?, '1.13.31', 'ar', ?)`,
+    );
+    const now = new Date().toISOString();
+    insert.run('0-1s', now);
+    insert.run('0-1s', now);
+    insert.run('10s+', now);
+    telemetry.rotate();
+
+    expect(telemetry.summary(7).startBands).toEqual([
+      { band: '0-1s', plays: 2 },
+      { band: '1-3s', plays: 0 },
+      { band: '3-10s', plays: 0 },
+      { band: '10s+', plays: 1 },
+    ]);
+  });
+
+  it('keeps the band for a day the pruner has taken', () => {
+    const { db, telemetry } = build();
+    db.prepare(
+      `INSERT INTO telemetry_events (event, reciter, surah, source, error_code, ms_to_play, version, locale, at)
+       VALUES ('play', 'maher-al-muaiqly', 18, 'webseed', NULL, '3-10s', '1.13.31', 'ar', ?)`,
+    ).run(new Date(Date.now() - 40 * 86_400_000).toISOString());
+    telemetry.rotate();
+    db.prepare('DELETE FROM telemetry_events').run();
+
+    expect(telemetry.summary(90).startBands.find((row) => row.band === '3-10s')).toEqual({
+      band: '3-10s',
+      plays: 1,
+    });
+  });
+});

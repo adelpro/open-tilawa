@@ -39,6 +39,8 @@ export const en = {
   'usage.source': 'Where the audio came from',
   'usage.torrent': 'Peers',
   'usage.webseed': 'Server',
+  'usage.startTitle': 'Time to first sound',
+  'usage.startNote': '{count} of the plays in this window timed their own start.',
   'usage.countsNote': 'These are play counts, not volume; the volume is in “Volume served”.',
   'usage.errors': 'Errors by version',
   'usage.version': 'Version',

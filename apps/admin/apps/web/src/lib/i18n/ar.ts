@@ -45,6 +45,8 @@ export const ar: Catalogue = {
   'usage.source': 'مصدر الصوت',
   'usage.torrent': 'من الأقران',
   'usage.webseed': 'من الخادم',
+  'usage.startTitle': 'الزمن حتى أول صوت',
+  'usage.startNote': '{count} من التشغيلات في هذا المدى قاست زمن بدايتها.',
   'usage.countsNote': 'هذه أعداد تشغيل لا أحجام؛ الحجم في لوحة «حجم ما قدّمناه».',
   'usage.errors': 'الأخطاء حسب الإصدار',
   'usage.version': 'الإصدار',

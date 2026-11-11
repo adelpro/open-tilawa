@@ -379,12 +379,16 @@ export class TelemetryService {
 
     const rolledUp = this.db
       .prepare(
-        `INSERT INTO telemetry_daily (day, version, reciter, surah, event, source, count)
-         SELECT substr(at, 1, 10), version, reciter, surah, event, source, count(*)
+        `INSERT INTO telemetry_daily
+                (day, version, reciter, surah, event, source, ms_to_play, count)
+         SELECT substr(at, 1, 10), version, reciter, surah, event, source,
+                coalesce(ms_to_play, ''), count(*)
            FROM telemetry_events
           WHERE substr(at, 1, 10) <= ?
-          GROUP BY substr(at, 1, 10), version, reciter, surah, event, source
-         ON CONFLICT (day, version, reciter, surah, event, source) DO UPDATE SET count = excluded.count`,
+          GROUP BY substr(at, 1, 10), version, reciter, surah, event, source,
+                   coalesce(ms_to_play, '')
+         ON CONFLICT (day, version, reciter, surah, event, source, ms_to_play)
+         DO UPDATE SET count = excluded.count`,
       )
       .run(day).changes;
 
@@ -448,6 +452,7 @@ export class TelemetryService {
     reciters: { reciter: string; plays: number }[];
     sources: { torrent: number; webseed: number };
     reliability: { source: string; plays: number; errors: number; rate: number }[];
+    startBands: { band: string; plays: number }[];
     errorsByVersion: { version: string; errors: number; plays: number; rate: number }[];
     recentErrors: unknown[];
     volume: {
@@ -559,13 +564,16 @@ export class TelemetryService {
       if (ignore !== 'version') both('version', filters.version);
       if (ignore !== 'reciter') both('reciter', filters.reciter);
       return {
-        sql: `SELECT ${dimension} AS dim, sum(n) AS n FROM (
-                SELECT ${dimension}, count AS n FROM telemetry_daily
+        // The dimension is aliased on both sides and the outer query groups by that
+        // alias: a bare expression such as coalesce(ms_to_play, '') has no column name
+        // for the outer GROUP BY to resolve.
+        sql: `SELECT dim, sum(n) AS n FROM (
+                SELECT ${dimension} AS dim, count AS n FROM telemetry_daily
                  WHERE ${rollupParts.join(' AND ')}
                 UNION ALL
-                SELECT ${dimension}, 1 AS n FROM telemetry_events
+                SELECT ${dimension} AS dim, 1 AS n FROM telemetry_events
                  WHERE ${rawParts.join(' AND ')}
-              ) GROUP BY ${dimension}`,
+              ) GROUP BY dim`,
         params: [...rollupParams, ...rawParams],
       };
     };
@@ -632,6 +640,20 @@ export class TelemetryService {
       torrent: reliability.find((row) => row.source === 'torrent')?.plays ?? 0,
       webseed: reliability.find((row) => row.source === 'webseed')?.plays ?? 0,
     };
+
+    /**
+     * How long the listener waited for sound, as the four bands the player measured.
+     *
+     * A distribution, not a series: it does not get noisier when a day holds two plays.
+     * A play with no band is omitted here (the client only omits it when it took no
+     * clock), so the four figures add up to fewer than the plays in the window and the
+     * screen says how many it is describing.
+     */
+    const bandRows = countedRows("coalesce(ms_to_play, '')", 'play');
+    const startBands = MS_TO_PLAY.map((band) => ({
+      band,
+      plays: bandRows.find((row) => row.dim === band)?.n ?? 0,
+    }));
 
     const versionPlays = new Map(
       countedRows('version', 'play', 'version').map((row) => [String(row.dim), row.n]),
@@ -727,6 +749,7 @@ export class TelemetryService {
       reciters,
       sources,
       reliability,
+      startBands,
       errorsByVersion,
       recentErrors,
       volume: { serverBytes: serverTotal, torrentBytes: torrentTotal, byReciter },

@@ -35,6 +35,7 @@ type Summary = {
   reciters: { reciter: string; plays: number }[];
   sources: { torrent: number; webseed: number };
   reliability: { source: string; plays: number; errors: number; rate: number }[];
+  startBands: { band: string; plays: number }[];
   errorsByVersion: { version: string; errors: number; plays: number; rate: number }[];
   recentErrors: {
     at: string;
@@ -327,6 +328,12 @@ export function Usage(): ReactElement {
   const reportedToday = todayRow?.devices ?? 0;
   const listenedToday = todayRow?.listeners ?? 0;
   const maxSurahPlays = surahs.reduce((max, row) => Math.max(max, row.plays), 0);
+
+  /**
+   * The wait distribution. The client omits the band when it took no clock, so the four
+   * figures can add up to fewer than the plays, and the note says how many it covers.
+   */
+  const timedPlays = (summary?.startBands ?? []).reduce((sum, row) => sum + row.plays, 0);
 
   const empty =
     summary !== null &&
@@ -621,6 +628,36 @@ export function Usage(): ReactElement {
             </div>
             <p className="muted">{t('usage.countsNote')}</p>
             <p className="muted">{t('usage.rateNote')}</p>
+
+            {timedPlays > 0 ? (
+              <>
+                <p>{t('usage.startTitle')}</p>
+                {/* The bar is decoration; the list below carries the same numbers as
+                    text, so a screen reader never has to infer them from a width. */}
+                <div className="startbar" aria-hidden="true">
+                  {summary.startBands.map((row, index) => (
+                    <span
+                      key={row.band}
+                      className={`startbar__seg startbar__seg--${index}`}
+                      style={{ inlineSize: `${(row.plays / timedPlays) * 100}%` }}
+                    />
+                  ))}
+                </div>
+                <ul className="startbar__legend">
+                  {summary.startBands.map((row, index) => (
+                    <li key={row.band}>
+                      <span
+                        className={`startbar__dot startbar__dot--${index}`}
+                        aria-hidden="true"
+                      />
+                      {row.band} <span className="num">{row.plays}</span> (
+                      {Math.round((row.plays / timedPlays) * 100)}%)
+                    </li>
+                  ))}
+                </ul>
+                <p className="muted">{t('usage.startNote', { count: String(timedPlays) })}</p>
+              </>
+            ) : null}
           </FoldPanel>
 
           <FoldPanel
