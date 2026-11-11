@@ -1,5 +1,42 @@
 # Changelog
 
+## admin 1.33.17 — 2026-11-11
+
+Admin release. App versions: **web 1.13.31**, **admin 1.33.17**, **seeder 1.5.7**.
+
+### Added
+
+- **The source panel now answers whether either source works.** It printed how
+  many plays the peers served and how many the server served, which says nothing
+  about whether either of them succeeded. It now shows plays, share, errors and a
+  rate per source, from the same rows: a play is only written once sound started,
+  so the error rows are the failures. In the first window it read 24% for the
+  peers against 0% for the server, a comparison the errors-by-version table was
+  hiding by mixing both sources into one rate. A source under twenty attempts
+  shows a dash, like every other rate on the screen.
+
+### Fixed
+
+- **One play sends one event.** Up to web 1.13.30 the player also sent a
+  `fallback` event beside every play the web seed served, saying what `source`
+  already said: it doubled every server play in the table, and it counted `mixed`
+  (a peer and the web seed together) as a fallback too. The player no longer sends
+  it. The API still accepts it from older clients and does not store it, because
+  one rejected event fails the whole batch and would silence everyone who has not
+  updated yet.
+
+## admin 1.33.16 — 2026-11-09
+
+Admin release. App versions: **web 1.13.30**, **admin 1.33.16**, **seeder 1.5.7**.
+
+### Added
+
+- **The usage screen remembers the window you were reading.** Picking 7, 30 or
+  90 days is a browser preference now, like the Account tabs and the folded
+  panels: a reload or the next visit opens on the same range instead of
+  snapping back to 7. The stored id is validated on the way in, so a range a
+  later build drops falls back to 7 rather than leaving the screen blank.
+
 ## web 1.13.30 — 2026-11-08
 
 Web release. App versions: **web 1.13.30**, **admin 1.33.15**, **seeder 1.5.7**.
