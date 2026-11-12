@@ -16,7 +16,7 @@ import TopBar from './components/top-bar';
 import AccountSheet from './components/account/account-sheet';
 import { useRoute } from './hooks/use-route';
 import { useReciters } from './hooks/use-reciters';
-import { resolveDeepLink } from './utils/deep-link';
+import { planDeepLink } from './utils/deep-link';
 import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
 import { useTheatre } from './hooks/use-theatre';
@@ -29,7 +29,6 @@ import { isPlayingAtom, rateAtom, visualiserAtom } from './jotai/player';
 import { normaliseVisualiser } from './utils/visualiser-models';
 import { selectedReciterAtom, accountSheetOpenAtom } from './jotai/atom';
 import { currentSurahIdAtom } from './jotai/player';
-import { toPath } from './routes';
 import { createTelemetry, deviceEvent, firstPlayEvent, type TelemetryEvent } from './utils/telemetry';
 import {
   markDeviceDay,
@@ -103,23 +102,26 @@ export default function App() {
 
   useEffect(() => {
     if (route.name !== 'listen' || reciters.length === 0) return;
-    const href = toPath(route);
-    if (appliedLink.current === href) return;
+    const plan = planDeepLink(route, reciters, appliedLink.current);
+    if (plan.kind === 'skip') return;
 
-    const resolution = resolveDeepLink(route, reciters);
-    if (resolution.kind === 'missing') {
+    if (plan.kind === 'missing') {
       setDeepLinkMissing(true);
       return;
     }
     setDeepLinkMissing(false);
-    appliedLink.current = href;
 
-    if (resolution.kind === 'moved') {
-      navigate({ name: 'listen', release: resolution.to.split('/')[2], surah: route.surah, surahName: '' }, 'replace');
+    // A redirect is not an application: writing the href here made the
+    // canonical address look already honoured, so the reciter was never
+    // selected after the move.
+    if (plan.kind === 'moved') {
+      navigate({ name: 'listen', release: route.release, surah: route.surah, surahName: '' }, 'replace');
       return;
     }
-    setSelectedReciter(resolution.reciter);
-    setSurahId(resolution.surah);
+
+    appliedLink.current = plan.href;
+    setSelectedReciter(plan.reciter);
+    setSurahId(plan.surah);
     setIsPlaying(false);
   }, [route, reciters, navigate, setSelectedReciter, setSurahId, setIsPlaying]);
   const wide = useMediaQuery('(min-width: 1024px)');

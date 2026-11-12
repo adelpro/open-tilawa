@@ -14,6 +14,37 @@ export type Resolution =
   | { kind: 'moved'; to: string }
   | { kind: 'missing' };
 
+/**
+ * The effect's whole decision, in one place.
+ *
+ * `applied` is the canonical link already honoured this mount. It is compared
+ * *before* resolving, but it is only ever written by an `apply`: `toPath` writes
+ * the canonical surah name, so a stale link and its redirect target share the
+ * same href. Recording the href on `moved` made the canonical pass look like a
+ * repeat, the reciter was never selected, and the player sat with no source —
+ * the defect this type exists to keep out.
+ */
+export type DeepLinkPlan =
+  | { kind: 'skip' }
+  | { kind: 'missing' }
+  | { kind: 'moved' }
+  | { kind: 'apply'; reciter: Reciter; surah: number; href: string };
+
+export function planDeepLink(
+  route: Extract<Parsed, { name: 'listen' }>,
+  reciters: Reciter[],
+  applied: string,
+): DeepLinkPlan {
+  const href = toPath(route);
+  if (applied === href) return { kind: 'skip' };
+
+  const resolution = resolveDeepLink(route, reciters);
+  if (resolution.kind === 'missing') return { kind: 'missing' };
+  if (resolution.kind === 'moved') return { kind: 'moved' };
+
+  return { kind: 'apply', reciter: resolution.reciter, surah: resolution.surah, href };
+}
+
 export function resolveDeepLink(
   route: Extract<Parsed, { name: 'listen' }>,
   reciters: Reciter[],

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import type { Parsed } from '../src/routes.ts';
 import type { Reciter } from '../src/types/reciter.ts';
-import { resolveDeepLink } from '../src/utils/deep-link.ts';
+import { planDeepLink, resolveDeepLink } from '../src/utils/deep-link.ts';
 
 const reciter = (over: Partial<Reciter> = {}): Reciter => ({
   id: 9,
@@ -35,6 +35,39 @@ test('a stale surah name is a redirect, not a page', () => {
 
 test('an unknown slug is missing', () => {
   assert.equal(resolveDeepLink(listen({ release: 'nobody' }), [reciter()]).kind, 'missing');
+});
+
+/**
+ * Enough of the effect to prove what it records. The defect was not in
+ * `resolveDeepLink` — a stale name was always a redirect — but in the caller
+ * writing the canonical href before navigating, so the target looked applied.
+ */
+function runEffect(
+  route: Parameters<typeof planDeepLink>[0],
+  reciters: Reciter[],
+  applied: { current: string },
+) {
+  const plan = planDeepLink(route, reciters, applied.current);
+  if (plan.kind === 'apply') applied.current = plan.href;
+  return { plan, selected: plan.kind === 'apply' ? plan.reciter : null };
+}
+
+test('a redirect consumes nothing: the canonical address still selects the reciter', () => {
+  const applied = { current: '' };
+
+  const first = runEffect(listen({ surahName: 'alkahf' }), [reciter()], applied);
+  assert.equal(first.plan.kind, 'moved');
+  assert.equal(applied.current, '');
+
+  const second = runEffect(listen(), [reciter()], applied);
+  assert.equal(second.plan.kind, 'apply');
+  assert.equal(second.selected?.slug, 'maher-al-muaiqly');
+  assert.equal(applied.current, '/listen/maher-al-muaiqly/18-al-kahf');
+});
+
+test('a link already applied this mount is skipped', () => {
+  const plan = planDeepLink(listen(), [reciter()], '/listen/maher-al-muaiqly/18-al-kahf');
+  assert.equal(plan.kind, 'skip');
 });
 
 test('a release with no slug yet has no link, and is not a redirect loop', () => {
