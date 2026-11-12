@@ -44,6 +44,34 @@ describe('public reciter catalogue', () => {
     expect(res.body.reciters[0].nameAr).toBe('ماهر');
   });
 
+  it('publishes the release manifest, and null when the catalogue does not know it', async () => {
+    const service = h.app.get(RecitersService);
+    const hash = 'e'.repeat(40);
+    const row = service.add({
+      name: 'Partial',
+      riwaya: 'Warsh',
+      infohash: hash,
+      magnet: magnet(hash),
+      fileCount: 3,
+      surahs: [1, 18, 19],
+    });
+    expect(service.get(row.id)?.surahs).toEqual([1, 18, 19]);
+
+    const res = await request(h.app.getHttpServer()).get('/api/public/reciters').expect(200);
+    const served = res.body.reciters.find((r: { id: number }) => r.id === row.id);
+    expect(served.surahs).toEqual([1, 18, 19]);
+
+    // A row whose manifest was never recorded must not claim an empty book.
+    const unknown = service.add({
+      name: 'Unknown manifest',
+      riwaya: 'Hafs',
+      infohash: 'd'.repeat(40),
+      magnet: magnet('d'.repeat(40)),
+      fileCount: 114,
+    });
+    expect(service.get(unknown.id)?.surahs).toBeNull();
+  });
+
   it('keeps an unknown riwaya as unknown', async () => {
     const service = h.app.get(RecitersService);
     const hash = 'f'.repeat(40);

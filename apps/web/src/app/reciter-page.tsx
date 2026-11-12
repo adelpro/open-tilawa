@@ -6,8 +6,9 @@ import { SURAHS } from '@/constants/surah';
 import { useLocale } from '@/hooks/use-locale';
 import { useReciters } from '@/hooks/use-reciters';
 import { surahSlug } from '@/routes';
-import { riwayaLabel } from '@/utils/riwaya';
 import { reciterName } from '@/utils/reciter-name';
+import { surahsForRelease } from '@/utils/release-surahs';
+import { riwayaLabel } from '@/utils/riwaya';
 import { surahName } from '@/utils/surah-name';
 
 /**
@@ -27,6 +28,10 @@ export default function ReciterPage({ slug }: { slug: string }) {
 
   const reciter = reciters.find((candidate) => candidate.slug === slug);
   const name = reciter ? reciterName(reciter, locale) : slug;
+  // The page is the shelf for this release: a partial release's shelf holds only
+  // the surahs it carries. Unknown (null) stays the whole book.
+  const rows = surahsForRelease(reciter?.surahs);
+  const partial = rows.length < SURAHS.length;
 
   /**
    * The tab names the reciter, and the player's own title logic steps aside for this
@@ -57,13 +62,15 @@ export default function ReciterPage({ slug }: { slug: string }) {
           </p>
         ) : null}
 
-        <p className="mt-6 text-[1rem] leading-relaxed text-ink">{copy.lede(name)}</p>
+        <p className="mt-6 text-[1rem] leading-relaxed text-ink">
+          {partial ? copy.ledePartial(name, rows.length) : copy.lede(name)}
+        </p>
 
         {error && reciters.length === 0 ? (
           <p className="mt-8 text-[1rem] leading-relaxed text-muted">{t.sheets.recitersError}</p>
         ) : (
           <ul className="mt-8 grid grid-cols-2 gap-x-4 border-t border-line/60 sm:grid-cols-3">
-            {SURAHS.map((surah) => (
+            {rows.map((surah) => (
               <li key={surah.id} className="border-b border-line/60">
                 {reciter?.slug ? (
                   <Link

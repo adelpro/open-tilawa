@@ -25,6 +25,7 @@ import { pageTitle } from '../src/utils/page-title.ts';
 import { riwayaLabel } from '../src/utils/riwaya.ts';
 import { sortByArabicName } from '../src/utils/reciter-order.ts';
 import { surahName } from '../src/utils/surah-name.ts';
+import { surahsForRelease } from '../src/utils/release-surahs.ts';
 import { breadcrumbTrail, faqPage, websiteGraph } from '../src/utils/schema.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
@@ -308,7 +309,14 @@ for (const release of catalogue) {
   addPage(`/reciters/${release.slug}`, (locale, copy) => {
     const name = release.nameAr ?? release.name;
     const arabicUrl = urlFor(`/reciters/${release.slug}`, 'ar');
-    const rows = SURAHS.map(
+    // A partial release's page is its shelf: only the surahs the torrent carries.
+    // `file_count` says how many, the manifest says which.
+    const carried = surahsForRelease(release.surahs);
+    const lede =
+      carried.length < SURAHS.length
+        ? copy.reciterPage.ledePartial(name, carried.length)
+        : copy.reciterPage.lede(name);
+    const rows = carried.map(
       (surah) =>
         `<li><a href="${toUrl(
           {
@@ -322,7 +330,7 @@ for (const release of catalogue) {
     ).join('');
     return {
       title: `${name} — Tilawah`,
-      description: copy.reciterPage.lede(name),
+      description: lede,
       index: indexable('reciter'),
       // The English page translates the chrome, not the reciter's name and not the
       // 114 links, so Google reads it as a thin twin of the Arabic page and served it
@@ -340,14 +348,14 @@ for (const release of catalogue) {
       ]),
       body:
         `<h1>${escape(name)}</h1>` +
-        `<p>${escape(copy.reciterPage.lede(name))}</p><ul>${rows}</ul>`,
+        `<p>${escape(lede)}</p><ul>${rows}</ul>`,
     };
   });
 }
 
 for (const release of catalogue) {
   if (!release.slug) continue;
-  for (const surah of SURAHS) {
+  for (const surah of surahsForRelease(release.surahs)) {
     const name = release.nameAr ?? release.name;
     addPage(`/listen/${release.slug}/${surah.id}-${surahSlug(surah.id)}`, (locale) => {
       // The surah name in the language of the page: a listener looking for الكهف does

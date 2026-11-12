@@ -16,6 +16,12 @@ export interface Reciter {
   infohash: string;
   magnet: string;
   fileCount: number;
+  /**
+   * The surahs this release carries, from the provider's track list.
+   * Null means the catalogue does not know (a row that predates the column, or a
+   * torrent entered by hand); the player then assumes the whole book, as before.
+   */
+  surahs: number[] | null;
   /** Release size in bytes; null until known (import fills it from the node). */
   sizeBytes: number | null;
   /** Whether the public player lists this row. Curation, not deletion. */
@@ -52,6 +58,34 @@ export interface ReciterWithPlacement extends Reciter {
   heldBy: { seederId: number; name: string }[];
   placements: ReciterPlacement[];
   state: ReciterState;
+}
+
+/**
+ * `surahs` is JSON text in the row, and the reader is the boundary: malformed
+ * text is "unknown", never an empty book. Ids outside the mushaf are dropped
+ * rather than trusted — a manifest is an index into the 114, not free data.
+ */
+function parseSurahs(value: unknown): number[] | null {
+  if (typeof value !== 'string' || value === '') return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return null;
+    const ids = [...new Set(parsed)].filter(
+      (id): id is number => Number.isInteger(id) && (id as number) >= 1 && (id as number) <= 114,
+    );
+    return ids.length > 0 ? ids.sort((a, b) => a - b) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The same rule on the way in, so a form cannot write an unreadable manifest. */
+function encodeSurahs(surahs: number[] | null | undefined): string | null {
+  if (!Array.isArray(surahs)) return null;
+  const ids = [...new Set(surahs)].filter(
+    (id): id is number => Number.isInteger(id) && id >= 1 && id <= 114,
+  );
+  return ids.length > 0 ? JSON.stringify(ids.sort((a, b) => a - b)) : null;
 }
 
 @Injectable()
@@ -259,6 +293,7 @@ export class RecitersService {
       infohash: r.infohash,
       magnet: r.magnet,
       fileCount: r.file_count,
+      surahs: parseSurahs(r.surahs),
       sizeBytes: (r.size_bytes as number | null) ?? null,
       published: r.published !== 0,
       slug: (r.slug as string | null) ?? '',
@@ -283,6 +318,7 @@ export class RecitersService {
     infohash?: string;
     magnet?: string;
     fileCount?: number;
+    surahs?: number[] | null;
     sizeBytes?: number | null;
     published?: boolean;
     provider?: ProviderId | null;
@@ -307,8 +343,8 @@ export class RecitersService {
       .prepare(
         `INSERT INTO reciters
            (name, name_ar, riwaya, infohash, magnet, file_count, size_bytes, published, slug,
-            provider, provider_reciter_id, provider_release_id, provider_variant)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            provider, provider_reciter_id, provider_release_id, provider_variant, surahs)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         input.name,
@@ -324,6 +360,7 @@ export class RecitersService {
         input.reciterId ?? null,
         input.releaseId ?? null,
         input.variant ?? '',
+        encodeSurahs(input.surahs),
       );
     if (infohash) {
       this.db
@@ -347,6 +384,7 @@ export class RecitersService {
       infohash?: string;
       magnet?: string;
       fileCount?: number;
+      surahs?: number[] | null;
       sizeBytes?: number | null;
       published?: boolean;
       provider?: ProviderId | null;
@@ -377,6 +415,7 @@ export class RecitersService {
     }
     if (input.magnet !== undefined) put('magnet', input.magnet.trim());
     if (input.fileCount !== undefined) put('file_count', input.fileCount);
+    if (input.surahs !== undefined) put('surahs', encodeSurahs(input.surahs));
     if (input.sizeBytes !== undefined) put('size_bytes', input.sizeBytes);
 
     const providerTouched =

@@ -37,6 +37,7 @@ import type { StreamSource } from '@/utils/stream-source';
 import { streamSourceFor } from '@/utils/stream-source';
 import { surahIdOf } from '@/utils/surah-id';
 import { bootSelection } from '@/utils/boot-selection';
+import { surahInRelease } from '@/utils/release-surahs';
 import { normaliseVisualiser } from '@/utils/visualiser-models';
 import { riwayaLabel } from '@/utils/riwaya';
 import { reciterName } from '@/utils/reciter-name';
@@ -128,7 +129,7 @@ export default function PlayerPage({
       // A surah picked but never played still counts as "where they were".
       const surahId =
         saved?.surahId ?? (state.reciterId === target.id ? state.lastSurahId : undefined) ?? 1;
-      selectSurah(surahId, target.id);
+      selectSurah(surahInRelease(surahId, target.surahs), target.id);
     },
     [selectSurah],
   );
@@ -449,6 +450,7 @@ export default function PlayerPage({
         open={sheet === 'surahs'}
         onClose={close}
         current={surahId}
+        surahs={reciter?.surahs ?? null}
         sizes={sizes}
         onPick={pickSurah}
         pinned={pinned}

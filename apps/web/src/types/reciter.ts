@@ -20,6 +20,12 @@ export type Reciter = {
   riwaya: string;
   complet: boolean;
   /**
+   * The surahs the release carries, from the catalogue's import manifest.
+   * Null means the catalogue does not know; the app then offers the whole book,
+   * as it did before the column existed.
+   */
+  surahs: number[] | null;
+  /**
    * Bytes the release weighs, from the catalogue; null when the row omits it.
    * The seed page states what a copy costs, so this travels with the roster.
    */

@@ -1,0 +1,17 @@
+-- Which surahs a release actually carries.
+--
+-- `file_count` says how many files the torrent has; it cannot say *which* ones.
+-- A partial release (Abdelaziz sheim is 16 of 114) therefore looked complete to
+-- every listing surface: the reciter page offered 114 links, the player's surah
+-- sheet offered 114 rows, and 98 of them opened a player with no file behind it.
+--
+-- The import already has the provider's track list, so it writes the ids here at
+-- the same moment it writes `file_count`. JSON text rather than a join table:
+-- the list is read with the row, never queried across rows, and a release has at
+-- most 114 entries.
+--
+-- NULL means "the catalogue does not know" — every row that predates this
+-- column, and a torrent entered by hand. The client answers with the whole book
+-- for a NULL manifest, which is today's behaviour, and the player's own file
+-- check still refuses a surah that is not in the torrent.
+ALTER TABLE reciters ADD COLUMN surahs TEXT;

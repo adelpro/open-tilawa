@@ -11,6 +11,7 @@ const reciter = (over: Partial<Reciter> = {}): Reciter => ({
   magnet: 'magnet:?xt=urn:btih:5e0becf35d91ea4602f04db90d74621a172aa396&dn=x',
   riwaya: 'hafs',
   complet: true,
+  surahs: null,
   slug: 'maher-al-muaiqly',
   ...over,
 });
@@ -68,6 +69,19 @@ test('a redirect consumes nothing: the canonical address still selects the recit
 test('a link already applied this mount is skipped', () => {
   const plan = planDeepLink(listen(), [reciter()], '/listen/maher-al-muaiqly/18-al-kahf');
   assert.equal(plan.kind, 'skip');
+});
+
+test('a surah the release does not carry is missing, not a dead player', () => {
+  const partial = reciter({ surahs: [1, 18, 19] });
+  const absent = resolveDeepLink(listen({ surah: 2, surahName: 'al-baqarah' }), [partial]);
+  assert.equal(absent.kind, 'missing');
+  const carried = resolveDeepLink(listen(), [partial]);
+  assert.equal(carried.kind, 'ok');
+});
+
+test('a null manifest keeps the old answer: nothing is refused', () => {
+  const unknown = reciter({ surahs: null });
+  assert.equal(resolveDeepLink(listen({ surah: 2, surahName: 'al-baqarah' }), [unknown]).kind, 'ok');
 });
 
 test('a release with no slug yet has no link, and is not a redirect loop', () => {

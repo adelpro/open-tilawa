@@ -10,3 +10,15 @@ export function ayahCountLabel(count: number): string {
   if (count <= 10) return `${count} آيات`;
   return `${count} آية`;
 }
+
+/**
+ * The same rule for the other noun. A partial release is counted on its page
+ * ("16 سورة"), and the wrong form is as visible here as it is for آية.
+ */
+export function surahCountLabel(count: number): string {
+  if (!Number.isFinite(count) || count <= 0) return 'سور';
+  if (count === 1) return 'سورة واحدة';
+  if (count === 2) return 'سورتان';
+  if (count <= 10) return `${count} سور`;
+  return `${count} سورة`;
+}

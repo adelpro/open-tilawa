@@ -13,6 +13,7 @@ import { formatBytes } from '@/utils/format-bytes';
 import { riwayaLabel } from '@/utils/riwaya';
 import { reciterName } from '@/utils/reciter-name';
 import { filterReciters, filterSurahs } from '@/utils/search';
+import { surahsForRelease } from '@/utils/release-surahs';
 import { DRAG_THRESHOLD, dragOffset, easeOutCubic, exitDuration, shouldDismiss, springStep } from '@/utils/sheet-drag';
 import { createSheetLayer } from '@/utils/sheet-layer';
 import FavoriteButton from '@/components/favorite-button';
@@ -614,6 +615,7 @@ const chipOff = 'border-line text-ink hover:border-ink/40';
 export function SurahSheet({
   open,
   current,
+  surahs,
   sizes,
   onPick,
   onClose,
@@ -622,6 +624,8 @@ export function SurahSheet({
 }: {
   open: boolean;
   current: number;
+  /** The release's manifest, when the catalogue knows it; null is the whole book. */
+  surahs?: number[] | null;
   /** Bytes per surah id, once the torrent's metadata has landed. */
   sizes?: Record<number, number>;
   onPick: (surahId: number) => void;
@@ -632,7 +636,7 @@ export function SurahSheet({
   const { t, locale } = useLocale();
   const listRef = useRef<HTMLUListElement>(null);
   const [query, setQuery] = useState('');
-  const rows = useMemo(() => filterSurahs(query), [query]);
+  const rows = useMemo(() => filterSurahs(query, surahsForRelease(surahs)), [query, surahs]);
 
   useEffect(() => {
     if (open) return;

@@ -1,5 +1,6 @@
 import type { Parsed } from '@/routes';
 import type { Reciter } from '@/types';
+import { surahInRelease } from '@/utils/release-surahs';
 
 /**
  * What the player selects when the app opens, in one place.
@@ -34,5 +35,6 @@ export function bootSelection(input: {
     (input.storedReciterId === reciter.id ? input.storedSurahId : undefined) ??
     1;
 
-  return { reciter, surahId };
+  // A partial release cannot resume on a surah it does not carry.
+  return { reciter, surahId: surahInRelease(surahId, reciter.surahs) };
 }

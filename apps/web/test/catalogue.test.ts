@@ -63,6 +63,16 @@ test('the catalogue publishes the slug it was given, and never invents one', () 
   assert.equal(toReciters([row({ slug: undefined })])[0].slug, '');
 });
 
+test('the release manifest travels with the row', () => {
+  assert.deepEqual(toReciters([row({ surahs: [1, 18] })])[0].surahs, [1, 18]);
+  // An unrecorded manifest is "unknown", and the player answers with the whole book.
+  assert.equal(toReciters([row()])[0].surahs, null);
+});
+
+test('a manifest with no valid ids is unknown, not an empty book', () => {
+  assert.equal(toReciters([row({ surahs: [0, 200] })])[0].surahs, null);
+});
+
 test('the English label is the release name, kept beside the Arabic one', () => {
   const reciter = toReciters([row({ name: 'Yassine_El_Jazairi_Warsh', nameAr: 'ياسين الجزائري' })])[0];
   assert.equal(reciter.name, 'ياسين الجزائري');

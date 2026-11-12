@@ -47,6 +47,7 @@ export class PublicRecitersController {
         magnet: reciter.magnet,
         sizeBytes: reciter.sizeBytes,
         fileCount: reciter.fileCount,
+        surahs: reciter.surahs,
       })),
       total,
       page: pageNum,

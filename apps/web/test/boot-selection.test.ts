@@ -18,10 +18,35 @@ const reciter = (id: number, slug: string): Reciter => ({
   magnet: `magnet:?xt=urn:btih:${String(id).repeat(40).slice(0, 40)}`,
   riwaya: 'Hafs',
   complet: true,
+  surahs: null,
   slug,
 });
 
 const roster = [reciter(4, 'abdulbasit'), reciter(9, 'maher')];
+
+test('a partial release does not resume on a surah it does not carry', () => {
+  const partial = { ...reciter(9, 'maher'), surahs: [1, 18] };
+  const choice = bootSelection({
+    route: { name: 'home' },
+    reciters: [partial],
+    storedReciterId: 9,
+    storedSurahId: 36,
+    savedPositionFor: () => ({ surahId: 36 }),
+  });
+  assert.equal(choice?.surahId, 1);
+});
+
+test('a carried surah is kept as the resume point', () => {
+  const partial = { ...reciter(9, 'maher'), surahs: [1, 18] };
+  const choice = bootSelection({
+    route: { name: 'home' },
+    reciters: [partial],
+    storedReciterId: 9,
+    storedSurahId: 18,
+    savedPositionFor: () => ({ surahId: 18 }),
+  });
+  assert.equal(choice?.surahId, 18);
+});
 
 test('the address wins: a listen link is not booted over', () => {
   const choice = bootSelection({

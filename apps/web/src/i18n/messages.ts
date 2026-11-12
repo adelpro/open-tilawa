@@ -7,6 +7,9 @@ export const LOCALES = ['ar', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 
 import type { RelativeUnit } from '@/utils/relative-time';
+// Relative on purpose: `vite.config.ts` loads this module through Node, before
+// the build's `@/` aliases exist.
+import { surahCountLabel } from '../utils/arabic-count';
 
 /**
  * Arabic counts agree with the noun by number: 3–10 take the plural (أشهر),
@@ -64,6 +67,9 @@ const ar = {
   },
   reciterPage: {
     lede: (name: string) => `استمع إلى سور القرآن كلها بصوت ${name}.`,
+    /** A partial release: say how many, never "all". */
+    ledePartial: (name: string, count: number) =>
+      `استمع إلى ${surahCountLabel(count)} من القرآن بصوت ${name}.`,
   },
   account: {
     title: 'الحساب',
@@ -493,6 +499,8 @@ const en: typeof ar = {
   },
   reciterPage: {
     lede: (name: string) => `Listen to every surah of the Quran in the voice of ${name}.`,
+    ledePartial: (name: string, count: number) =>
+      `Listen to ${count} ${count === 1 ? 'surah' : 'surahs'} of the Quran in the voice of ${name}.`,
   },
   account: {
     title: 'Account',

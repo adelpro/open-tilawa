@@ -43,6 +43,17 @@ test('the sitemap lists the pages the table calls indexable', () => {
  * Arabic page is the document, so the English URL canonicalises to it and the pair is
  * not declared. Revisit in Phase 5, when the English pages get content of their own.
  */
+/**
+ * A partial release is a supported state (`file_count` 16 of 114), but every
+ * listing surface used to iterate the static 114. The prerender must read the
+ * release's manifest for both the page rows and the listen family it writes;
+ * otherwise the static HTML advertises 98 surahs that have no file.
+ */
+test('a partial release lists only the surahs it carries', () => {
+  assert.match(SOURCE, /surahsForRelease\(release\.surahs\)/);
+  assert.match(SOURCE, /for \(const surah of surahsForRelease\(release\.surahs\)\)/);
+});
+
 test('the English reciter page canonicalises to Arabic and leaves the sitemap', () => {
   assert.match(SOURCE, /canonicalUrl: locale === 'en' \? arabicUrl : undefined/);
   assert.match(SOURCE, /sitemap: locale === 'ar'/);

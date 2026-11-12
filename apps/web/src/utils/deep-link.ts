@@ -52,6 +52,13 @@ export function resolveDeepLink(
   const reciter = reciters.find((item) => item.slug !== '' && item.slug === route.release);
   if (!reciter) return { kind: 'missing' };
 
+  // A partial release has no file behind a surah it does not carry: that link is
+  // a dead player with no source, so it is missing rather than a page. A null
+  // manifest is "unknown" and refuses nothing.
+  if (reciter.surahs && reciter.surahs.length > 0 && !reciter.surahs.includes(route.surah)) {
+    return { kind: 'missing' };
+  }
+
   const canonical = toPath({ name: 'listen', release: reciter.slug, surah: route.surah, surahName: '' });
   // The name segment only: `18-al-kahf` → `al-kahf`, so a link that omits the number or
   // writes an older spelling is compared on the part that can actually differ.

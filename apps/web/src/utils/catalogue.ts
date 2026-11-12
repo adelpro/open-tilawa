@@ -16,6 +16,8 @@ export type CatalogueRow = {
   fileCount: number | null;
   sizeBytes?: number | null;
   slug?: string | null;
+  /** The surah ids the release carries; absent on an older catalogue. */
+  surahs?: number[] | null;
 };
 
 /** 114 surahs is the whole book; fewer means a partial release. */
@@ -45,6 +47,11 @@ export function toReciters(rows: CatalogueRow[]): Reciter[] {
 
     const nameAr = row.nameAr?.trim() ?? '';
     const nameEn = cleanTorrentName(row.name ?? '') || nameAr;
+    // A manifest is an index into the 114, not free data: an id outside the mushaf
+    // can never name a file, and an empty list is "unknown", not an empty book.
+    const manifest = Array.isArray(row.surahs)
+      ? row.surahs.filter((id) => Number.isInteger(id) && id >= 1 && id <= FULL_QURAN)
+      : [];
 
     list.push({
       id: row.id,
@@ -53,6 +60,7 @@ export function toReciters(rows: CatalogueRow[]): Reciter[] {
       magnet,
       riwaya: row.riwaya?.trim() || 'unknown',
       complet: (row.fileCount ?? 0) >= FULL_QURAN,
+      surahs: manifest.length > 0 ? manifest : null,
       sizeBytes:
         typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) ? row.sizeBytes : null,
       slug: (row.slug ?? '').trim(),

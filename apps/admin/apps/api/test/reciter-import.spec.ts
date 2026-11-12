@@ -121,6 +121,32 @@ describe('reciter provider import', () => {
     expect(row.importState).toBe('downloading');
   });
 
+  it('keeps the track ids as the release manifest, so a partial row says which surahs it has', async () => {
+    const imports = h.app.get(ReciterImportService);
+    const registry = h.app.get(ProviderRegistry);
+    const sparse = release('5', '13');
+    // The real shape of a partial release: the ids are the surahs, not 1..n.
+    sparse.tracks = sparse.tracks.filter((track) => [1, 18, 19].includes(track.surah));
+    sparse.surahCount = 3;
+    jest.spyOn(registry, 'get').mockReturnValue({
+      id: 'itqan',
+      label: 'Itqan',
+      search: async () => [],
+      release: async () => sparse,
+    });
+
+    const row = await imports.start({
+      provider: 'itqan',
+      reciterId: '5',
+      releaseId: '13',
+      seederIds: [7],
+      folderName: 'Sparse_Hafs',
+      publish: false,
+    });
+
+    expect(row.surahs).toEqual([1, 18, 19]);
+  });
+
   it('starts the import on every selected node and tracks the first success', async () => {
     const imports = h.app.get(ReciterImportService);
     const seeders = h.app.get(SeedersService);

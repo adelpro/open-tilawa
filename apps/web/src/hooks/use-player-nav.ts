@@ -11,6 +11,7 @@ import {
   torrentAtom,
 } from '@/jotai/player';
 import { surahIdOf } from '@/utils/surah-id';
+import { nextSurahInRelease, previousSurahInRelease } from '@/utils/release-surahs';
 import { audioRef } from '@/utils/audio-ref';
 
 export const FIRST_SURAH = 1;
@@ -65,8 +66,14 @@ export function usePlayerNav() {
     [setPositionAtom],
   );
 
-  const next = useCallback(() => playSurah(surahId + 1), [playSurah, surahId]);
-  const previous = useCallback(() => playSurah(surahId - 1), [playSurah, surahId]);
+  const next = useCallback(() => {
+    const target = nextSurahInRelease(surahId, reciter?.surahs);
+    if (target !== null) playSurah(target);
+  }, [playSurah, reciter?.surahs, surahId]);
+  const previous = useCallback(() => {
+    const target = previousSurahInRelease(surahId, reciter?.surahs);
+    if (target !== null) playSurah(target);
+  }, [playSurah, reciter?.surahs, surahId]);
 
   return {
     files,
