@@ -133,3 +133,22 @@ test('the shell is served noindex and never cached', () => {
   assert.match(pageLocation, /try_files \$uri \$uri\/index\.html @shell;/);
   assert.doesNotMatch(pageLocation, /\s\/index\.html\s*;/, 'the fallback still redirects through a path');
 });
+
+/**
+ * The pages are the only thing the edge holds.
+ *
+ * Every page view used to reach this machine through the tunnel: 0.85–4.1 s to
+ * first byte, measured from the same host. The media was already cached; the HTML
+ * was not, and the difference is the whole of a mobile first paint.
+ */
+test('a prerendered page may be cached at the edge, for an hour at most', () => {
+  assert.match(rootLocation, /add_header Cache-Control "public, max-age=0, s-maxage=3600"/);
+  assert.doesNotMatch(
+    rootLocation,
+    /s-maxage=\d+[^;]*always/,
+    'a 404 cached for an hour hides a page that appears later',
+  );
+  // The shell is per-visitor state and stays uncached; only the pre-built pages move.
+  const shell = /location @shell \{([\s\S]*?)\n  \}/.exec(CONF)?.[1] ?? '';
+  assert.doesNotMatch(shell, /s-maxage/);
+});
