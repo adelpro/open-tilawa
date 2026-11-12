@@ -42,7 +42,12 @@ export class NotificationsScheduler implements OnModuleInit {
         now: new Date(),
         services: this.status
           .recentChecks(CHECK_WINDOW)
-          .map((service) => ({ id: service.id, name: service.name, passed: service.passed })),
+          .map((service) => ({
+            id: service.id,
+            name: service.name,
+            passed: service.passed,
+            reason: service.reason,
+          })),
         seeders: this.seeders.list().map((seeder) => ({
           id: seeder.id,
           name: seeder.name,

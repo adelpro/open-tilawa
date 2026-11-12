@@ -14,6 +14,8 @@ export interface ObservedService {
   name: string;
   /** Newest first. */
   passed: boolean[];
+  /** What the newest check answered, so the alert can say why it is down. */
+  reason: string | null;
 }
 
 export interface ObservedSeeder {
@@ -52,6 +54,8 @@ export interface AlertEvent {
     headroomBytes?: number;
     lastSeen?: string | null;
     error?: string | null;
+    /** The probe's own answer: a status line, an errno, a timeout. */
+    reason?: string | null;
   };
 }
 
@@ -96,14 +100,17 @@ export function evaluate(observation: Observation): AlertEvent[] {
     const failures = leading(service.passed, false);
 
     if (!isOpen && failures >= settings.serviceFailures) {
+      const reason = service.reason ?? null;
       emit({
         action: 'open',
         kind: 'service.down',
         subject,
         name: service.name,
         title: `Service down: ${service.name}`,
-        detail: `${failures} consecutive checks failed`,
-        params: { failures },
+        detail: reason
+          ? `${failures} consecutive checks failed - last answer: ${reason}`
+          : `${failures} consecutive checks failed`,
+        params: { failures, reason },
       });
     } else if (isOpen && leading(service.passed, true) >= RECOVERY_CHECKS) {
       emit({

@@ -43,4 +43,19 @@ describe('StatusService.recentChecks', () => {
     const { status } = build();
     expect(status.recentChecks(3).every((entry) => entry.passed.length === 0)).toBe(true);
   });
+
+  it('carries the newest check detail as the reason', () => {
+    const { db, status } = build();
+    const service = status.list()[0];
+    db.prepare('INSERT INTO service_checks (service_id, ok, detail) VALUES (?, 0, ?)').run(
+      service.id,
+      '503 Service Unavailable',
+    );
+    expect(status.recentChecks(3)[0].reason).toBe('503 Service Unavailable');
+  });
+
+  it('has no reason before the first check', () => {
+    const { status } = build();
+    expect(status.recentChecks(3)[0].reason).toBeNull();
+  });
 });

@@ -23,6 +23,8 @@ export interface ServiceHistory {
   name: string;
   enabled: boolean;
   passed: boolean[];
+  /** What the newest check saw — the reason an operator is looking for. */
+  reason: string | null;
 }
 
 /** A service is checked with the protocol it names; sockets get a handshake. */
@@ -378,15 +380,19 @@ export class StatusService {
       .all() as { id: number; name: string }[];
 
     const checks = this.db.prepare(
-      'SELECT ok FROM service_checks WHERE service_id = ? ORDER BY id DESC LIMIT ?',
+      'SELECT ok, detail FROM service_checks WHERE service_id = ? ORDER BY id DESC LIMIT ?',
     );
 
-    return rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      enabled: true,
-      passed: (checks.all(row.id, limit) as { ok: number }[]).map((check) => check.ok === 1),
-    }));
+    return rows.map((row) => {
+      const list = checks.all(row.id, limit) as { ok: number; detail: string | null }[];
+      return {
+        id: row.id,
+        name: row.name,
+        enabled: true,
+        passed: list.map((check) => check.ok === 1),
+        reason: list[0]?.detail ?? null,
+      };
+    });
   }
 
   /** TURN timeline from the probe history the TURN module already keeps. */

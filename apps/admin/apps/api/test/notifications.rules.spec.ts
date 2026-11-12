@@ -20,7 +20,12 @@ function observation(overrides: Partial<Observation> = {}): Observation {
   };
 }
 
-const service = (passed: boolean[]) => ({ id: 1, name: 'Tracker', passed });
+const service = (passed: boolean[], reason: string | null = null) => ({
+  id: 1,
+  name: 'Tracker',
+  passed,
+  reason,
+});
 const seeder = (overrides: Partial<Observation['seeders'][number]> = {}) => ({
   id: 7,
   name: 'node-1',
@@ -37,6 +42,21 @@ describe('evaluate', () => {
     const events = evaluate(observation({ services: [service([false, false, false])] }));
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({ action: 'open', kind: 'service.down', subject: 'service:1' });
+  });
+
+  it('names what the probe saw when it opens', () => {
+    const events = evaluate(
+      observation({ services: [service([false, false, false], '503 Service Unavailable')] }),
+    );
+    expect(events[0].params).toMatchObject({ failures: 3, reason: '503 Service Unavailable' });
+    expect(events[0].detail).toBe(
+      '3 consecutive checks failed - last answer: 503 Service Unavailable',
+    );
+  });
+
+  it('still opens when the probe had no reason', () => {
+    const events = evaluate(observation({ services: [service([false, false, false])] }));
+    expect(events[0].detail).toBe('3 consecutive checks failed');
   });
 
   it('does not re-open while the alert is open', () => {
