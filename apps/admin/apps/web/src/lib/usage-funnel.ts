@@ -82,3 +82,23 @@ export function returningDevices(
   const anyReturning = rows.some((row) => RETURNING.has(row.age) && row.devices > 0);
   return { day: latest, returning, known, anyReturning };
 }
+
+/**
+ * The returning share without the day it came from, when that day is today.
+ *
+ * The tile that prints this number also prints the word "today". Carrying the
+ * date beside it is noise on a normal morning and a lie on a gap day, when the
+ * latest day that reported an age is older than the tile's claim. So the date
+ * survives only when it is the only thing keeping the line honest.
+ */
+export function returningStamp(
+  row: { day: string; returning: number; known: number } | null,
+  today: string,
+): { day: string | null; returning: number; known: number } | null {
+  if (!row) return null;
+  return {
+    day: row.day === today ? null : row.day,
+    returning: row.returning,
+    known: row.known,
+  };
+}

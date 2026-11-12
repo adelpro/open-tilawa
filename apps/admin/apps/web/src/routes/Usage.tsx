@@ -8,7 +8,7 @@ import { Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
-import { funnelRows, playedShare, returningDevices } from '../lib/usage-funnel';
+import { funnelRows, playedShare, returningDevices, returningStamp } from '../lib/usage-funnel';
 import {
   DEFAULT_USAGE_RANGE,
   USAGE_RANGES,
@@ -302,6 +302,8 @@ export function Usage(): ReactElement {
   // claims "today", so it must read today or say nothing.
   const today = new Date().toISOString().slice(0, 10);
   const returning = useMemo(() => returningDevices(summary?.deviceAges ?? []), [summary]);
+  /** The same share with the day it belongs to: null when that day is today. */
+  const stamp = useMemo(() => returningStamp(returning, today), [returning, today]);
 
   /**
    * The window, not only today. Two separate series, so two separate read-outs:
@@ -484,7 +486,10 @@ export function Usage(): ReactElement {
       {summary && !empty && (
         <>
           {/* The three facts worth seeing without unfolding a panel. The numbers are
-              already below, inside collapsible tables nobody opens to check the pipe. */}
+              already below, inside collapsible tables nobody opens to check the pipe.
+              The third tile is the retention answer, not the last day that reported:
+              the date is dropped when it is today, kept when it is not, so the word
+              "today" beside it is never a lie. */}
           <section className="usage-today">
             <div className="usage-today__tile">
               <span className="usage-today__n">{reportedToday}</span>
@@ -496,9 +501,15 @@ export function Usage(): ReactElement {
             </div>
             <div className="usage-today__tile">
               <span className="usage-today__n">
-                {openedPeriod.latest ? shortDate(openedPeriod.latest.day, locale) : '—'}
+                {stamp ? t('usage.returningOf', {
+                  returning: String(stamp.returning),
+                  known: String(stamp.known),
+                }) : '—'}
               </span>
-              <span className="usage-today__l">{t('usage.periodLast')}</span>
+              <span className="usage-today__l">
+                {t('usage.returning')}
+                {stamp?.day ? ` · ${shortDate(stamp.day, locale)}` : ''}
+              </span>
             </div>
           </section>
 
@@ -711,19 +722,24 @@ export function Usage(): ReactElement {
           >
             <p>{t('usage.devicesToday', { count: String(reportedToday) })}</p>
             <p>{t('usage.listeners', { count: String(listenedToday) })}</p>
-            {returning ? (
+            {stamp ? (
               <>
-                {/* The date is not decoration: this is one day's share, and a single
-                    young device on that day reads as "0 of 1" until it is named. */}
+                {/* The day is named only when the share is not today's: an older day
+                    shown bare under a "today" heading is the one way this lies. */}
                 <p>
                   {t('usage.returning')}:{' '}
-                  {t('usage.returningOn', {
-                    date: shortDate(returning.day, locale),
-                    returning: String(returning.returning),
-                    known: String(returning.known),
-                  })}
+                  {stamp.day
+                    ? t('usage.returningOn', {
+                        date: shortDate(stamp.day, locale),
+                        returning: String(stamp.returning),
+                        known: String(stamp.known),
+                      })
+                    : t('usage.returningOf', {
+                        returning: String(stamp.returning),
+                        known: String(stamp.known),
+                      })}
                 </p>
-                {!returning.anyReturning ? (
+                {returning && !returning.anyReturning ? (
                   <p className="muted">{t('usage.returningNone')}</p>
                 ) : null}
                 <p className="muted">{t('usage.returningNote')}</p>

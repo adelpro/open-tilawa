@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { funnelRows, playedShare, returningDevices } from '../src/lib/usage-funnel.ts';
+import { funnelRows, playedShare, returningDevices, returningStamp } from '../src/lib/usage-funnel.ts';
 
 /**
  * The launch funnel: devices that opened the app, devices that played, and the
@@ -72,7 +72,12 @@ describe('returningDevices', () => {
       { day: '2026-11-01', age: '7-13', devices: 3 },
       { day: '2026-11-01', age: '30+', devices: 1 },
     ]);
-    assert.deepEqual(result, { day: '2026-11-01', returning: 4, known: 6 });
+    assert.deepEqual(result, {
+      day: '2026-11-01',
+      returning: 4,
+      known: 6,
+      anyReturning: true,
+    });
   });
 
   it('counts an unknown age as known but not as returning', () => {
@@ -80,12 +85,41 @@ describe('returningDevices', () => {
       { day: '2026-11-01', age: 'new', devices: 1 },
       { day: '2026-11-01', age: 'unknown', devices: 4 },
     ]);
-    assert.deepEqual(result, { day: '2026-11-01', returning: 0, known: 5 });
+    assert.deepEqual(result, {
+      day: '2026-11-01',
+      returning: 0,
+      known: 5,
+      anyReturning: false,
+    });
   });
 
   it('says nothing when no device reported an age', () => {
     assert.equal(returningDevices([]), null);
     assert.equal(returningDevices([{ day: '2026-11-01', age: 'new', devices: 0 }]), null);
+  });
+});
+
+describe('returningStamp', () => {
+  it('drops the date when the share belongs to today', () => {
+    const stamp = returningStamp(
+      { day: '2026-11-12', returning: 3, known: 7 },
+      '2026-11-12',
+    );
+    assert.deepEqual(stamp, { day: null, returning: 3, known: 7 });
+  });
+
+  it('keeps the date when the latest day is not today', () => {
+    // The screen prints "today" beside this number. Printing today's word over
+    // an older day's share is the one way this line can lie.
+    const stamp = returningStamp(
+      { day: '2026-11-09', returning: 2, known: 4 },
+      '2026-11-12',
+    );
+    assert.deepEqual(stamp, { day: '2026-11-09', returning: 2, known: 4 });
+  });
+
+  it('says nothing when there is no share to show', () => {
+    assert.equal(returningStamp(null, '2026-11-12'), null);
   });
 });
 
