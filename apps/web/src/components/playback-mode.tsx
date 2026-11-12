@@ -7,7 +7,7 @@ import { cn } from '@/utils/cn';
 import { nextPlaybackMode, type PlaybackMode } from '@/utils/playback';
 
 /**
- * How the next surah is chosen, as one control beside the transport.
+ * How the next surah is chosen, in the functions row under the transport.
  *
  * One tap cycles linear → shuffle → repeat-one, and the glyph is the state, so
  * the row keeps a single 44px slot and no panel is needed. It sits here rather

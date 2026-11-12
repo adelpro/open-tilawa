@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import {
   BookOpen,
+  CaretDoubleRight,
   CaretDown,
   CaretLeft,
   CaretRight,
@@ -21,7 +22,6 @@ import {
   Info,
   Key,
   LinkSimple,
-  ListNumbers,
   MagnifyingGlass,
   Microphone,
   Moon,
@@ -146,7 +146,7 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
   activity: Pulse,
   server: HardDrives,
   // How the next surah is chosen: the order, a shuffled queue, or this one again.
-  order: ListNumbers,
+  order: CaretDoubleRight,
   shuffle: Shuffle,
   'repeat-one': RepeatOnce,
   house: House,
@@ -194,7 +194,7 @@ function WifiGlyph({ size = 16 }: { size?: number }): ReactElement {
 
 /** `back` and `forward` are directions, not sides: the arrow flips in RTL. */
 function isDirectional(name: IconName): boolean {
-  return name === 'back' || name === 'forward';
+  return name === 'back' || name === 'forward' || name === 'order';
 }
 
 /**

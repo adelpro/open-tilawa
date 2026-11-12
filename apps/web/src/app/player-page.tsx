@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/components/icons';
 import PlaybackModeControl from '@/components/playback-mode';
 import PlayerFooter from '@/components/player-footer';
+import VolumeControl from '@/components/volume-control';
 import Scrubber from '@/components/scrubber';
 import Sheet, { ReciterSheet, SurahSheet, type ReciterScope } from '@/components/sheet';
 import StreamSheet from '@/components/stream-sheet';
@@ -393,8 +394,14 @@ export default function PlayerPage({
                   if (duration > 0) seekTo(seekBy(position, delta, duration));
                 }}
               />
-              <div className="flex items-center gap-1">
-                <span aria-hidden="true" className="h-6 w-px bg-line" />
+              {/* The session functions keep their own line: new ones land here,
+                  aligned under the play button rather than crowding the transport. */}
+              <div className="now-functions">
+                <VolumeControl
+                  volume={volume}
+                  onVolume={chooseVolume}
+                  onToggleMute={toggleMute}
+                />
                 <PlaybackModeControl />
               </div>
             </div>
@@ -442,9 +449,6 @@ export default function PlayerPage({
           onOpenStream={openStream}
           rate={rate}
           onOpenRate={onOpenMenu}
-          volume={volume}
-          onVolume={chooseVolume}
-          onToggleMute={toggleMute}
           onToggleFullscreen={onToggleTheatre}
         />
       )}

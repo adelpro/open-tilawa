@@ -405,11 +405,19 @@ input[type='search']::-webkit-search-decoration {
 
 .now-controls {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+/* Session functions, one line under the transport: volume, playback mode, and
+   whatever joins them next. */
+.now-functions {
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 12px;
 }
 
 .now-note,
