@@ -26,7 +26,7 @@ import { riwayaLabel } from '../src/utils/riwaya.ts';
 import { sortByArabicName } from '../src/utils/reciter-order.ts';
 import { surahName } from '../src/utils/surah-name.ts';
 import { surahsForRelease } from '../src/utils/release-surahs.ts';
-import { breadcrumbTrail, faqPage, websiteGraph } from '../src/utils/schema.ts';
+import { breadcrumbTrail, combinedGraph, faqPage, reciterGraph, websiteGraph } from '../src/utils/schema.ts';
 import { SURAHS } from '../src/constants/surah.ts';
 import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
@@ -341,11 +341,37 @@ for (const release of catalogue) {
       // Not a language pair: one of the two URLs is a canonicalised twin, and hreflang
       // naming it would contradict the canonical on the page.
       pair: false,
-      jsonLd: breadcrumbTrail([
-        { name: siteName(locale), url: urlFor('/', locale) },
-        { name: copy.recitersPage.title, url: urlFor('/reciters', locale) },
-        { name, url: arabicUrl },
-      ]),
+      // Two claims on one page: where it sits, and what it is. The second is the
+      // only place the page says "these are recordings, by this person" — and the
+      // only place the verse count, juz and page of each surah appear at all, since
+      // the visible page is a list of links.
+      jsonLd: combinedGraph(
+        breadcrumbTrail([
+          { name: siteName(locale), url: urlFor('/', locale) },
+          { name: copy.recitersPage.title, url: urlFor('/reciters', locale) },
+          { name, url: arabicUrl },
+        ]),
+        reciterGraph({
+          site: SITE,
+          url: urlFor(`/reciters/${release.slug}`, locale),
+          name,
+          alternateName: release.name,
+          riwaya: riwayaLabel(release.riwaya),
+          surahs: carried.map((surah) => ({
+            name: surahName(surah.id, locale),
+            url: toUrl(
+              {
+                name: 'listen',
+                release: release.slug,
+                surah: surah.id,
+                surahName: surahSlug(surah.id),
+              },
+              locale,
+            ),
+            note: `${copy.sheets.verses(surah.ayahCount)} · ${copy.sheets.juz(surah.juz)} · ${copy.home.page(surah.page)}`,
+          })),
+        }),
+      ),
       body:
         `<h1>${escape(name)}</h1>` +
         `<p>${escape(lede)}</p><ul>${rows}</ul>`,

@@ -124,3 +124,89 @@ export function faqPage(items: FaqItem[]): Record<string, unknown> {
     })),
   };
 }
+
+export type ReciterSurah = {
+  /** The surah's name in the page's own language. */
+  name: string;
+  /** Absolute URL of the listen page, built by the router on the caller's side. */
+  url: string;
+  /** Verses, juz and page, already worded in the page's language. */
+  note: string;
+};
+
+/**
+ * `Person` + `CollectionPage` for one reciter.
+ *
+ * The page a visitor sees is a name and a hundred and fourteen links; nothing on
+ * it says "these are recordings, by this person". This graph says exactly that,
+ * and each list item carries the verse count, juz and page the page has no room
+ * for — the text Google needs to match a search against.
+ *
+ * No `AudioObject` per surah on purpose: a hundred and fourteen of them add tens
+ * of kilobytes of JSON to every page for a type Google shows no rich result for.
+ * The list is the claim; the files are one tap away.
+ */
+export function reciterGraph(input: {
+  site: string;
+  url: string;
+  name: string;
+  alternateName: string;
+  riwaya: string;
+  surahs: ReciterSurah[];
+}): Record<string, unknown> {
+  const siteUrl = `${input.site.replace(/\/$/, '')}/`;
+  const personId = `${input.url}#reciter`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Person',
+        '@id': personId,
+        name: input.name,
+        alternateName: input.alternateName,
+        knowsLanguage: 'ar',
+        description: `${input.riwaya}`,
+        url: input.url,
+      },
+      {
+        '@type': 'CollectionPage',
+        '@id': input.url,
+        url: input.url,
+        name: input.name,
+        inLanguage: 'ar',
+        about: { '@id': personId },
+        isPartOf: { '@id': `${siteUrl}#website` },
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: input.surahs.length,
+          itemListElement: input.surahs.map((surah, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: surah.name,
+            url: surah.url,
+            description: surah.note,
+          })),
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Several graphs on one page, as one document.
+ *
+ * A page can need more than one claim — the breadcrumb and the reciter, say — and
+ * a second `<script type="application/ld+json">` is a second document with its own
+ * `@context`. Merging them into one `@graph` is what the specification expects, and
+ * what keeps the page's structured data readable as a single thing.
+ */
+export function combinedGraph(...graphs: Record<string, unknown>[]): Record<string, unknown> {
+  const nodes = graphs.flatMap((graph) => {
+    const inner = graph['@graph'];
+    if (Array.isArray(inner)) return inner as unknown[];
+    const { '@context': _context, ...node } = graph;
+    return [node];
+  });
+  return { '@context': 'https://schema.org', '@graph': nodes };
+}
