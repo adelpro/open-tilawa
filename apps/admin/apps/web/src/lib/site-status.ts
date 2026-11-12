@@ -6,6 +6,7 @@ export interface SiteRelease {
   slug: string;
   name: string;
   riwaya: string;
+  surahs: string;
 }
 
 export interface SiteBuild {

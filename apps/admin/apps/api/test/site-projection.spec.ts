@@ -19,6 +19,7 @@ describe('site projection', () => {
     name: 'Maher_Al-Muaiqly',
     nameAr: null,
     riwaya: 'Hafs',
+    surahs: null,
     ...over,
   });
 
@@ -29,8 +30,8 @@ describe('site projection', () => {
         row({ slug: 'yassine-el-jazairi-warsh', nameAr: 'ياسين الجزائري', riwaya: 'Warsh' }),
       ]),
     ).toEqual([
-      { slug: 'maher-al-muaiqly', name: 'Maher_Al-Muaiqly', riwaya: 'Hafs' },
-      { slug: 'yassine-el-jazairi-warsh', name: 'ياسين الجزائري', riwaya: 'Warsh' },
+      { slug: 'maher-al-muaiqly', name: 'Maher_Al-Muaiqly', riwaya: 'Hafs', surahs: '' },
+      { slug: 'yassine-el-jazairi-warsh', name: 'ياسين الجزائري', riwaya: 'Warsh', surahs: '' },
     ]);
   });
 
@@ -40,8 +41,13 @@ describe('site projection', () => {
 
   it('trims the label and falls back to "unknown" for a missing riwaya', () => {
     expect(projectSite([row({ nameAr: '  ماهر  ', riwaya: '   ' })])).toEqual([
-      { slug: 'maher-al-muaiqly', name: 'ماهر', riwaya: 'unknown' },
+      { slug: 'maher-al-muaiqly', name: 'ماهر', riwaya: 'unknown', surahs: '' },
     ]);
+  });
+
+  it('normalizes the stored surah list into the page key', () => {
+    expect(projectSite([row({ surahs: '[19,1,18]' })])[0].surahs).toBe('1,18,19');
+    expect(projectSite([row({ surahs: 'not json' })])[0].surahs).toBe('');
   });
 });
 
@@ -50,6 +56,7 @@ describe('site manifest', () => {
     slug: 'maher-al-muaiqly',
     name: 'ماهر المعيقلي',
     riwaya: 'Hafs',
+    surahs: '',
     ...over,
   });
 
@@ -62,6 +69,24 @@ describe('site manifest', () => {
     ).toEqual({
       builtAt: '2026-11-06T10:00:00.000Z',
       releases: [release()],
+    });
+  });
+
+  it('reads the surah list, and treats its absence as unknown', () => {
+    expect(
+      readSiteManifest({
+        builtAt: null,
+        releases: [{ slug: 'partial', name: 'Partial', riwaya: 'Warsh', surahs: '1,18' }],
+      }),
+    ).toEqual({
+      builtAt: null,
+      releases: [{ slug: 'partial', name: 'Partial', riwaya: 'Warsh', surahs: '1,18' }],
+    });
+    expect(
+      readSiteManifest({ releases: [{ slug: 'old', name: 'Old', riwaya: 'Hafs' }] }),
+    ).toEqual({
+      builtAt: null,
+      releases: [{ slug: 'old', name: 'Old', riwaya: 'Hafs', surahs: '' }],
     });
   });
 
@@ -78,6 +103,7 @@ describe('site diff', () => {
     slug: 'maher-al-muaiqly',
     name: 'ماهر المعيقلي',
     riwaya: 'Hafs',
+    surahs: '',
     ...over,
   });
 
@@ -126,6 +152,12 @@ describe('site diff', () => {
 
   it('reports a riwaya correction as a rename', () => {
     const diff = diffSite([release({ riwaya: 'Warsh' })], [release({ riwaya: 'Hafs' })]);
+    expect(diff.renamed).toHaveLength(1);
+    expect(diff.changed).toBe(true);
+  });
+
+  it('reports a changed surah list as a content change', () => {
+    const diff = diffSite([release({ surahs: '1,18' })], [release()]);
     expect(diff.renamed).toHaveLength(1);
     expect(diff.changed).toBe(true);
   });

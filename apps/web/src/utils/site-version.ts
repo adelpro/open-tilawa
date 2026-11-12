@@ -8,14 +8,16 @@
  * the notice as surely as one started from the console.
  *
  * The shape is the admin's contract (`site-projection.ts`): slug + the name the
- * page prints + the stored riwaya. Keep the two in step.
+ * page prints + the stored riwaya + the surah list it listed. Keep the two in step.
  */
 
 export interface SiteManifestRelease {
   slug: string;
-  /** `nameAr` when the row has one, else the torrent name — the label on the page. */
+  /** `nameAr` when the row has one, else the torrent name - the label on the page. */
   name: string;
   riwaya: string;
+  /** Comma-joined ids the page listed; '' when the catalogue does not know. */
+  surahs: string;
 }
 
 export interface SiteManifest {
@@ -28,6 +30,22 @@ export interface CatalogueRow {
   name?: string | null;
   nameAr?: string | null;
   riwaya?: string | null;
+  surahs?: number[] | null;
+}
+
+/**
+ * The page's list as one stable key.
+ *
+ * The console computes the same key from its own column, so this is the field
+ * that catches a re-import which added or removed surahs - a change the name and
+ * riwaya cannot see. Unknown is '', never a claim about an empty book.
+ */
+function surahsKey(surahs: readonly number[] | null | undefined): string {
+  if (!Array.isArray(surahs)) return '';
+  return [...new Set(surahs)]
+    .filter((id) => Number.isInteger(id) && id >= 1 && id <= 114)
+    .sort((a, b) => a - b)
+    .join(',');
 }
 
 /**
@@ -46,6 +64,7 @@ export function siteManifest(
       slug: (row.slug ?? '').trim(),
       name: (row.nameAr?.trim() || row.name?.trim() || '').trim(),
       riwaya: (row.riwaya ?? '').trim() || 'unknown',
+      surahs: surahsKey(row.surahs),
     }))
     .filter((release) => release.slug !== '')
     .sort((a, b) => a.slug.localeCompare(b.slug));

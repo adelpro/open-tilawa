@@ -31,10 +31,28 @@ test('the manifest names each release the way the page prints it', () => {
   assert.deepEqual(manifest, {
     builtAt: '2026-11-06T10:00:00.000Z',
     releases: [
-      { slug: 'maher-al-muaiqly', name: 'Maher_Al-Muaiqly', riwaya: 'Hafs' },
-      { slug: 'yassine-el-jazairi-warsh', name: 'ياسين الجزائري', riwaya: 'Warsh' },
+      { slug: 'maher-al-muaiqly', name: 'Maher_Al-Muaiqly', riwaya: 'Hafs', surahs: '' },
+      { slug: 'yassine-el-jazairi-warsh', name: 'ياسين الجزائري', riwaya: 'Warsh', surahs: '' },
     ],
   });
+});
+
+test('the manifest records which surahs the page listed', () => {
+  const manifest = siteManifest(
+    [
+      { slug: 'partial', name: 'Partial', nameAr: null, riwaya: 'Warsh', surahs: [19, 1, 18] },
+      { slug: 'full', name: 'Full', nameAr: null, riwaya: 'Hafs', surahs: null },
+    ],
+    '2026-11-06T10:00:00.000Z',
+  );
+
+  assert.deepEqual(
+    manifest.releases.map((release) => [release.slug, release.surahs]),
+    [
+      ['full', ''],
+      ['partial', '1,18,19'],
+    ],
+  );
 });
 
 test('a row with no slug has no page to compare', () => {

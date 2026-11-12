@@ -16,6 +16,8 @@ export interface SiteRelease {
   slug: string;
   name: string;
   riwaya: string;
+  /** Comma-joined surah ids the reciter page listed; '' when unknown. */
+  surahs: string;
 }
 
 export interface SiteManifest {
@@ -28,6 +30,27 @@ export interface SiteRow {
   name: string;
   nameAr: string | null;
   riwaya: string;
+  /** The `reciters.surahs` column: JSON text, or null when unknown. */
+  surahs: string | null;
+}
+
+/**
+ * The same key the build writes: ids in mushaf order, no duplicates, '' when the
+ * column is absent or unreadable. The two sides must agree exactly, because this
+ * is the field that notices a re-import that added or removed surahs.
+ */
+function surahsKey(value: string | null): string {
+  if (!value) return '';
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return '';
+    return [...new Set(parsed)]
+      .filter((id): id is number => Number.isInteger(id) && (id as number) >= 1 && (id as number) <= 114)
+      .sort((a, b) => a - b)
+      .join(',');
+  } catch {
+    return '';
+  }
 }
 
 export interface SiteDiff {
@@ -49,6 +72,7 @@ export function projectSite(rows: readonly SiteRow[]): SiteRelease[] {
       slug: (row.slug ?? '').trim(),
       name: (row.nameAr?.trim() || row.name?.trim() || '').trim(),
       riwaya: (row.riwaya ?? '').trim() || 'unknown',
+      surahs: surahsKey(row.surahs),
     }))
     .filter((release) => release.slug !== '')
     .sort((a, b) => a.slug.localeCompare(b.slug));
@@ -69,7 +93,7 @@ export function readSiteManifest(value: unknown): SiteManifest | null {
   const parsed: SiteRelease[] = [];
   for (const entry of releases) {
     if (!entry || typeof entry !== 'object') return null;
-    const { slug, name, riwaya } = entry as Record<string, unknown>;
+    const { slug, name, riwaya, surahs } = entry as Record<string, unknown>;
     if (typeof slug !== 'string' || typeof name !== 'string' || typeof riwaya !== 'string') {
       return null;
     }
@@ -78,6 +102,8 @@ export function readSiteManifest(value: unknown): SiteManifest | null {
       slug: slug.trim(),
       name: name.trim(),
       riwaya: riwaya.trim() || 'unknown',
+      // A file written before this field existed is "unknown", not an empty book.
+      surahs: typeof surahs === 'string' ? surahs.trim() : '',
     });
   }
 
@@ -96,7 +122,14 @@ export function diffSite(
   const removed = deployed.filter((release) => !currentBySlug.has(release.slug));
   const renamed = current.flatMap((release) => {
     const before = deployedBySlug.get(release.slug);
-    if (!before || (before.name === release.name && before.riwaya === release.riwaya)) return [];
+    if (
+      !before ||
+      (before.name === release.name &&
+        before.riwaya === release.riwaya &&
+        before.surahs === release.surahs)
+    ) {
+      return [];
+    }
     return [{ slug: release.slug, from: before, to: release }];
   });
 

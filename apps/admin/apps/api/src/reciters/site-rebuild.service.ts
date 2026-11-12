@@ -223,7 +223,7 @@ export class SiteRebuildService implements OnModuleInit {
     // torrent, is not on the site and must not make the console claim drift.
     const rows = this.db
       .prepare(
-        `SELECT slug, name, name_ar AS nameAr, riwaya
+        `SELECT slug, name, name_ar AS nameAr, riwaya, surahs
            FROM reciters
           WHERE published = 1 AND infohash <> '' AND magnet <> ''
           ORDER BY id`,
