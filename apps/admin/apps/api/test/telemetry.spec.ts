@@ -82,7 +82,15 @@ describe('TelemetryService.summary', () => {
 
     expect(summary.surahs).toEqual([{ surah: 2, plays: 2, completes: 0, bytes: 0 }]);
     // The panel you are filtering by keeps both sides: that is the comparison.
-    expect(summary.sources).toEqual({ torrent: 1, webseed: 2 });
+    // Every state is present, zero included, so one denominator carries the shares.
+    expect(summary.sources).toEqual({
+      connected: 0,
+      waiting: 0,
+      webseed: 2,
+      mixed: 0,
+      direct: 0,
+      torrent: 1,
+    });
   });
 
   it('narrows the surahs by version, but not the errors-by-version panel', () => {
@@ -408,6 +416,16 @@ describe('TelemetryService volume and devices', () => {
  * then comparable for the first time — 24% against 0% in the live data, which the
  * errors-by-version table was hiding by mixing both sources into one rate.
  */
+
+/**
+ * The panel now carries one row per source state, zero rows included.
+ *
+ * These readings are about the two the live data has; the four that arrived with
+ * the sheet's own vocabulary are asserted at zero in the summary test above.
+ */
+const only = (rows: { source: string }[], sources: string[]) =>
+  rows.filter((row) => sources.includes(row.source));
+
 describe('the source the sound came from', () => {
   it('counts plays and errors per source, and rates them against the plays', () => {
     const { telemetry } = build([
@@ -418,7 +436,7 @@ describe('the source the sound came from', () => {
       { source: 'webseed' },
     ]);
 
-    expect(telemetry.summary(7).reliability).toEqual([
+    expect(only(telemetry.summary(7).reliability, ['torrent', 'webseed'])).toEqual([
       { source: 'torrent', plays: 2, errors: 1, rate: 1 / 3 },
       { source: 'webseed', plays: 2, errors: 0, rate: 0 },
     ]);
@@ -437,11 +455,19 @@ describe('the source the sound came from', () => {
 
     // The panel is the dimension being filtered by: collapsing it to one row
     // would delete the comparison the panel exists for.
-    expect(summary.reliability).toEqual([
-      { source: 'torrent', plays: 1, errors: 1, rate: 0.5 },
+    // Busiest first: the server served three of the four attempts here.
+    expect(only(summary.reliability, ['torrent', 'webseed'])).toEqual([
       { source: 'webseed', plays: 3, errors: 0, rate: 0 },
+      { source: 'torrent', plays: 1, errors: 1, rate: 0.5 },
     ]);
-    expect(summary.sources).toEqual({ torrent: 1, webseed: 3 });
+    expect(summary.sources).toEqual({
+      connected: 0,
+      waiting: 0,
+      webseed: 3,
+      mixed: 0,
+      direct: 0,
+      torrent: 1,
+    });
   });
 
   it('narrows by version, which is not this panel dimension', () => {
@@ -451,11 +477,14 @@ describe('the source the sound came from', () => {
       { source: 'webseed', version: '1.12.2' },
     ]);
 
-    const rows = telemetry.summary(7, { version: '1.12.2' }).reliability;
+    const rows = only(telemetry.summary(7, { version: '1.12.2' }).reliability, [
+      'torrent',
+      'webseed',
+    ]);
 
     expect(rows).toEqual([
-      { source: 'torrent', plays: 0, errors: 0, rate: 0 },
       { source: 'webseed', plays: 2, errors: 0, rate: 0 },
+      { source: 'torrent', plays: 0, errors: 0, rate: 0 },
     ]);
   });
 });

@@ -7,6 +7,7 @@ import useTorrent from '@/hooks/use-torrent';
 import { selectedReciterAtom, webtorrentReadyAtom } from '@/jotai/atom';
 import {
   currentSurahIdAtom,
+  directFallbackAtom,
   durationAtom,
   isPlayingAtom,
   playbackModeAtom,
@@ -26,7 +27,7 @@ import { audioRef as sharedAudio } from '@/utils/audio-ref';
 import { canSetElementVolume, ensureAnalyser, setOutputGain } from '@/utils/audio-analyser';
 import { APP_VERSION } from '@/constants/version';
 import { completeEvent, errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
-import { streamSourceFor, telemetrySource } from '@/utils/stream-source';
+import { streamSourceFor } from '@/utils/stream-source';
 import { choosePlaybackSource, mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
 import { sameRelease } from '@/utils/release';
 import { surahIdOf } from '@/utils/surah-id';
@@ -89,6 +90,7 @@ export default function AudioEngine({
 }) {
   const { torrentInfo, error } = useTorrent();
   const setTorrent = useSetAtom(torrentAtom);
+  const setDirectFallbackAtom = useSetAtom(directFallbackAtom);
   const setTorrentError = useSetAtom(torrentErrorAtom);
   const setWebtorrentReady = useSetAtom(webtorrentReadyAtom);
 
@@ -138,12 +140,17 @@ export default function AudioEngine({
   /** One direct retry per surah file; a second failure is the real error. */
   const retriedRef = useRef<string | null>(null);
 
-  /** What is feeding the sound right now, in the two words telemetry accepts. */
-  const source = directFallback
-    ? 'webseed'
-    : telemetrySource(
-        streamSourceFor({ webSeed: torrentInfo?.webSeed, peers: torrentInfo?.peers }),
-      );
+  /**
+   * What is feeding the sound right now, in the same words the sheet shows.
+   *
+   * The rescued state is the one worth counting: `direct` means the stream had
+   * failed and the node's own copy kept the recitation playing.
+   */
+  const source = streamSourceFor({
+    webSeed: torrentInfo?.webSeed,
+    peers: torrentInfo?.peers,
+    direct: directFallback,
+  });
   /** When play was asked for, so the first sound can be reported as a band. */
   const startedAtRef = useRef(0);
   /** The surah already counted, so a resume or a re-buffer is not a second play. */
@@ -153,6 +160,11 @@ export default function AudioEngine({
   useEffect(() => {
     setTorrent(torrentInfo);
   }, [torrentInfo, setTorrent]);
+
+  /** And the rescue flag, or the sheet keeps drawing the torrent it no longer uses. */
+  useEffect(() => {
+    setDirectFallbackAtom(directFallback);
+  }, [directFallback, setDirectFallbackAtom]);
 
   useEffect(() => {
     setTorrentError(error);

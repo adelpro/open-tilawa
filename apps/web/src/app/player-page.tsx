@@ -26,6 +26,7 @@ import {
   visualiserAtom,
   rateAtom,
   retrySignalAtom,
+  directFallbackAtom,
   torrentAtom,
   torrentErrorAtom,
   volumeAtom,
@@ -120,6 +121,7 @@ export default function PlayerPage({
   const toggleMute = useSetAtom(toggleMuteAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const torrent = useAtomValue(torrentAtom);
+  const directFallback = useAtomValue(directFallbackAtom);
   const { surahId, duration, ready, track, selectSurah, playSurah, seekTo, next, previous } =
     usePlayerNav();
 
@@ -296,6 +298,7 @@ export default function PlayerPage({
   const source: StreamSource = streamSourceFor({
     webSeed: torrent?.webSeed,
     peers: torrent?.peers ?? 0,
+    direct: directFallback,
   });
 
   return (

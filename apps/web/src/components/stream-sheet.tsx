@@ -94,7 +94,7 @@ export default function StreamSheet({
   const sourceLabel =
     source === 'mixed'
       ? t.source.mixed
-      : source === 'webseed'
+      : source === 'webseed' || source === 'direct'
         ? t.source.webseed
         : source === 'connected'
           ? t.source.connected
@@ -111,6 +111,11 @@ export default function StreamSheet({
             </dt>
             <dd className="text-[0.875rem] font-medium text-ink">{sourceLabel}</dd>
           </div>
+          {/* The one state the numbers below cannot explain: no peer, no
+              download, and yet the recitation plays. Say where it came from. */}
+          {source === 'direct' ? (
+            <p className="text-[0.8125rem] leading-relaxed text-muted">{t.stream.directNote}</p>
+          ) : null}
           {rowsFor(torrent, t).map((row) => (
             <div key={row.label} className="flex items-center justify-between gap-6">
               <dt className="flex items-center gap-2 text-[0.875rem] text-muted">

@@ -59,5 +59,13 @@ export const setPlaybackModeAtom = atom(null, (_get, set, mode: PlaybackMode) =>
 
 export const torrentAtom = atom<TorrentInfo | undefined>(undefined);
 export const torrentErrorAtom = atom<string | undefined>(undefined);
+/**
+ * The element was re-pointed at the node's own copy after the stream failed.
+ *
+ * The engine owns this fact and the page does not: without it the sheet keeps
+ * drawing whatever the torrent says, so a listener hearing the recitation can be
+ * told "waiting for peers".
+ */
+export const directFallbackAtom = atom(false);
 /** Bumping this is the retry button; the torrent hook watches it. */
 export const retrySignalAtom = atom(0);

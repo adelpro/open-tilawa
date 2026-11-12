@@ -20,7 +20,23 @@ import { MediaLogImporter } from './media-import';
  * fails the whole batch, so removing it would silence every older client — and never stores it.
  */
 export const EVENTS = ['play', 'complete', 'error', 'fallback', 'device', 'first_play'] as const;
-export const SOURCES = ['torrent', 'webseed'] as const;
+/*
+ * Six values, two of them legacy.
+ *
+ * `torrent` and `webseed` are what every client up to 1.13.33 sent: a pair that
+ * collapsed four situations into two and made "HTTP on purpose" indistinguishable
+ * from "HTTP rescued a broken stream". The player now sends the state its own
+ * sheet shows, and `direct` is the rescue. The old two stay accepted because one
+ * rejected event fails the whole batch, and old clients keep sending for days.
+ */
+export const SOURCES = [
+  'connected',
+  'waiting',
+  'webseed',
+  'mixed',
+  'direct',
+  'torrent',
+] as const;
 export const MS_TO_PLAY = ['0-1s', '1-3s', '3-10s', '10s+'] as const;
 const LOCALES = ['ar', 'en'] as const;
 
@@ -450,7 +466,7 @@ export class TelemetryService {
   ): {
     surahs: { surah: number; plays: number; completes: number; bytes: number }[];
     reciters: { reciter: string; plays: number }[];
-    sources: { torrent: number; webseed: number };
+    sources: Record<(typeof SOURCES)[number], number>;
     reliability: { source: string; plays: number; errors: number; rate: number }[];
     startBands: { band: string; plays: number }[];
     errorsByVersion: { version: string; errors: number; plays: number; rate: number }[];
@@ -630,16 +646,26 @@ export class TelemetryService {
     const errorsBySource = new Map(
       countedRows('source', 'error', 'source').map((row) => [String(row.dim), row.n]),
     );
-    const reliability = SOURCES.map((source) => {
+    // Every state, busiest first: the panel is a comparison, and a state with no
+    // traffic should not sit above one that served the month. Ties keep the
+    // vocabulary's own order, so a fresh install reads the same way twice.
+    const reliability = SOURCES.map((source, index) => {
       const plays = playsBySource.get(source) ?? 0;
       const errors = errorsBySource.get(source) ?? 0;
       const attempts = plays + errors;
-      return { source, plays, errors, rate: attempts === 0 ? 0 : errors / attempts };
-    });
-    const sources = {
-      torrent: reliability.find((row) => row.source === 'torrent')?.plays ?? 0,
-      webseed: reliability.find((row) => row.source === 'webseed')?.plays ?? 0,
-    };
+      return { source, plays, errors, rate: attempts === 0 ? 0 : errors / attempts, index };
+    })
+      .sort((a, b) => b.plays + b.errors - (a.plays + a.errors) || a.index - b.index)
+      .map(({ index: _index, ...row }) => row);
+    /**
+     * Plays per source state. Every state is present with a zero, so the shares
+     * on the screen have one denominator and a state that appears later is not a
+     * shape change.
+     */
+    const sources = Object.fromEntries(reliability.map((row) => [row.source, row.plays])) as Record<
+      (typeof SOURCES)[number],
+      number
+    >;
 
     /**
      * How long the listener waited for sound, as the four bands the player measured.

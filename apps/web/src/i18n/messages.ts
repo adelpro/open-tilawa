@@ -212,6 +212,7 @@ const ar = {
     fallbackMissing: 'غير متوفّر',
     fallbackChecking: 'جارٍ الفحص',
     waitingNote: 'لم يتصل أي قارئ بعد. التشغيل يبدأ عندما يظهر أوّل قرين.',
+    directNote: 'توقّف البث المباشر، ويُشغَّل الآن من الخادم.',
   },
   sheets: {
     surahs: 'السور',
@@ -649,6 +650,7 @@ const en: typeof ar = {
     fallbackMissing: 'Unavailable',
     fallbackChecking: 'Checking',
     waitingNote: 'No peer has connected yet. Playback starts with the first one.',
+    directNote: 'The live stream stopped, so this plays from the server.',
   },
   sheets: {
     surahs: 'Surahs',

@@ -9,6 +9,7 @@ import { SkeletonRows } from '../components/Skeleton';
 import { Icon } from '../components/icons';
 import { shortDate, relative, bytes } from '../lib/format';
 import { funnelRows, playedShare, returningDevices, returningStamp } from '../lib/usage-funnel';
+import { sourceLabel } from '../lib/usage-source';
 import {
   DEFAULT_USAGE_RANGE,
   USAGE_RANGES,
@@ -33,7 +34,8 @@ import { surahName } from '../lib/surahs';
 type Summary = {
   surahs: { surah: number; plays: number; completes: number; bytes: number }[];
   reciters: { reciter: string; plays: number }[];
-  sources: { torrent: number; webseed: number };
+  /** Plays per source state; every state present, zero included. */
+  sources: Record<string, number>;
   reliability: { source: string; plays: number; errors: number; rate: number }[];
   startBands: { band: string; plays: number }[];
   errorsByVersion: { version: string; errors: number; plays: number; rate: number }[];
@@ -56,7 +58,7 @@ type Summary = {
   lastPrunedAt: string | null;
 };
 
-type Source = '' | 'torrent' | 'webseed';
+type Source = '' | 'connected' | 'waiting' | 'webseed' | 'mixed' | 'direct' | 'torrent';
 type Filters = { source: Source; version: string; reciter: string };
 
 /** What the catalogue contributes to a telemetry row: a name for the slug. */
@@ -178,7 +180,10 @@ export function Usage(): ReactElement {
     void load();
   }, [load]);
 
-  const total = summary ? summary.sources.torrent + summary.sources.webseed : 0;
+  // Every state on one denominator: a share of plays, not a share of two of them.
+  const total = summary
+    ? Object.values(summary.sources).reduce((sum, plays) => sum + plays, 0)
+    : 0;
   const share = (value: number): number => (total === 0 ? 0 : Math.round((value / total) * 100));
   const filtered = Boolean(filters.source || filters.version || filters.reciter);
 
@@ -395,8 +400,13 @@ export function Usage(): ReactElement {
           }
         >
           <option value="">{t('usage.allSources')}</option>
-          <option value="torrent">{t('usage.torrent')}</option>
+          <option value="connected">{t('usage.torrent')}</option>
+          <option value="waiting">{t('usage.sourceWaiting')}</option>
           <option value="webseed">{t('usage.webseed')}</option>
+          <option value="mixed">{t('usage.sourceMixed')}</option>
+          <option value="direct">{t('usage.sourceDirect')}</option>
+          {/* The pair every client before 1.13.33 reported, still in the table. */}
+          <option value="torrent">{t('usage.legacyPair')}</option>
         </select>
 
         <select
@@ -612,9 +622,7 @@ export function Usage(): ReactElement {
                     const small = attempts < LOW_SAMPLE;
                     return (
                       <tr key={row.source}>
-                        <td>
-                          {row.source === 'torrent' ? t('usage.torrent') : t('usage.webseed')}
-                        </td>
+                        <td>{sourceLabel(row.source, t)}</td>
                         <td className="num" data-label={t('usage.plays')}>
                           {row.plays}
                         </td>

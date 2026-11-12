@@ -1,4 +1,5 @@
 import type { AgeBucket } from './device-age';
+import type { StreamSource } from './stream-source';
 
 export type PlayTelemetryEvent = {
   /**
@@ -9,7 +10,13 @@ export type PlayTelemetryEvent = {
   event: 'play' | 'complete' | 'error';
   reciter: string;
   surah: number;
-  source: 'torrent' | 'webseed';
+  /**
+   * The state the listener was in, in the same words the player's own sheet
+   * uses — not a collapsed pair. `webseed` and `mixed` say the node's copy fed
+   * the sound; `direct` says it fed it because the stream had failed, which is
+   * the only one of the five that is a fault.
+   */
+  source: StreamSource;
   errorCode?: string;
   msToPlay?: '0-1s' | '1-3s' | '3-10s' | '10s+';
   version: string;

@@ -43,6 +43,10 @@ export default function PlayerFooter({
     waiting: t.source.waiting,
     webseed: t.source.webseed,
     mixed: t.source.mixed,
+    // The rescued stream is the node's own copy over HTTP: the same word as
+    // `webseed`, because that is what the listener is hearing. The sheet says
+    // why, one tap away.
+    direct: t.source.webseed,
   };
   const hasProgress = progress > 0.005;
   const percent = Math.round(progress * 100);
