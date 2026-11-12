@@ -30,6 +30,42 @@ export function serviceKind(protocol: string): ServiceKind {
   return protocol === 'ws:' || protocol === 'wss:' ? 'ws' : 'http';
 }
 
+/**
+ * The sentence an operator reads after a failed check.
+ *
+ * `fetch` rejects with `TypeError: fetch failed` and puts the only useful word —
+ * `ECONNREFUSED`, `ENOTFOUND`, an expired certificate — in `cause`. Storing the
+ * outer message makes every network alert say the same nine words, so the reason
+ * is read from the deepest node of the chain instead. A timeout wins over every
+ * message: "aborted" is a symptom, "no answer within 8s" is the finding.
+ */
+export function probeReason(error: unknown, timeoutMs = CHECK_TIMEOUT_MS): string {
+  let node: unknown = error;
+  let message = '';
+  let code: string | null = null;
+  let timedOut = false;
+
+  for (let depth = 0; node && depth < 6; depth += 1) {
+    const current = node as {
+      message?: unknown;
+      name?: unknown;
+      code?: unknown;
+      cause?: unknown;
+    };
+    if (current.name === 'TimeoutError' || current.name === 'AbortError') timedOut = true;
+    if (typeof current.message === 'string' && current.message.trim()) {
+      message = current.message.trim();
+    }
+    if (typeof current.code === 'string' && !code) code = current.code;
+    node = current.cause;
+  }
+
+  if (timedOut) return `no answer within ${Math.round(timeoutMs / 1000)}s`;
+  if (message) return message;
+  if (code) return code;
+  return error instanceof Error ? error.name : 'unknown error';
+}
+
 export interface ServiceOverview {
   id: number;
   name: string;
@@ -223,7 +259,7 @@ export class StatusService {
         detail = ok ? `${response.status}` : `${response.status} ${response.statusText}`.trim();
       }
     } catch (err) {
-      detail = (err as Error).message;
+      detail = probeReason(err);
     }
     const latency = Date.now() - started;
     this.db
