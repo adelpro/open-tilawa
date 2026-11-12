@@ -1,6 +1,6 @@
 {
   "name": "open-tilawa-vite",
-  "version": "1.13.32",
+  "version": "1.13.33",
   "private": true,
   "type": "module",
   "scripts": {

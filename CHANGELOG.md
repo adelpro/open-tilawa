@@ -1,5 +1,47 @@
 # Changelog
 
+## web 1.13.33 — 2026-11-12
+
+Web release. App versions: **web 1.13.33**, **admin 1.33.24**, **seeder 1.5.7**.
+
+### Added
+
+- **Playback modes beside the transport.** One glyph cycles in order → shuffle →
+  repeat one. Shuffle walks a shuffled queue of the surahs the release carries, and
+  Previous follows the same queue; repeat one replays the file when it ends. The mode
+  is device-local, so one device shuffling does not reorder another's.
+- **A functions row under the transport.** Volume moved there from the mini-player,
+  with the playback mode beside it, so the next session control has a place.
+
+### Fixed
+
+- **A partial release now lists only the surahs it carries.** Abdelaziz sheim has 16
+  of 114; the reciter page and the surah sheet offered all 114, and 98 opened a player
+  with no file. The import records the track ids, and the page, the sheet, `/listen`
+  links, resume and Next/Previous all read them. The page says "16 سورة", not "all".
+- **A `/listen` link with a stale surah name opened a dead player.** The redirect
+  recorded the canonical address before navigating, so the target looked applied and
+  the reciter was never selected.
+- **The not-found screen put the last surah in the tab.** It now names the page.
+- **The stream panel told the download speed and the stored total apart.** The total
+  uses a disk; the arrow stays on the transfer.
+
+## admin 1.33.24 — 2026-11-12
+
+Admin release. App versions: **web 1.13.33**, **admin 1.33.24**, **seeder 1.5.7**.
+
+### Added
+
+- **The catalogue remembers which surahs a release carries.** `reciters.surahs`
+  (migration 031) is written from the import's track list and served by the public
+  catalogue, so a partial release can describe itself.
+
+### Fixed
+
+- **A changed surah list now counts as site drift.** `site-version.json` carries the
+  manifest too, so a re-import that adds or removes surahs raises the console's
+  "Changed" notice instead of leaving the static pages stale.
+
 ## admin 1.33.23 — 2026-11-11
 
 Admin release. App versions: **web 1.13.32**, **admin 1.33.23**, **seeder 1.5.7**.
