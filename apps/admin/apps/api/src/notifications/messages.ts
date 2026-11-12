@@ -22,6 +22,15 @@ function gb(bytes: number | undefined): string {
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
 
+/**
+ * A probe's answer is Latin and must not be reshaped by the Arabic paragraph
+ * around it: the isolates keep `503 Service Unavailable` readable inside a
+ * right-to-left sentence instead of letting bidi move the words and the full stop.
+ */
+function isolate(text: string): string {
+  return `\u2068${text}\u2069`;
+}
+
 const EN: Record<string, { open: string; resolved: string }> = {
   'service.down': { open: 'Service down', resolved: 'Service recovered' },
   'seeder.offline': { open: 'Node offline', resolved: 'Node back online' },
@@ -48,7 +57,9 @@ export function describeAlert(event: AlertEvent, locale: Locale): AlertWords {
     const detail =
       event.kind === 'service.down'
         ? event.action === 'open'
-          ? `تعذّر الوصول إلى الخدمة في آخر ${params.failures ?? 3} محاولات متتالية.`
+          ? `تعذّر الوصول إلى الخدمة في آخر ${params.failures ?? 3} محاولات متتالية.${
+              params.reason ? ` آخر إجابة: ${isolate(params.reason)}.` : ''
+            }`
           : 'استجابت الخدمة في آخر محاولتين متتاليتين.'
         : event.kind === 'seeder.offline'
           ? event.action === 'open'
@@ -70,7 +81,9 @@ export function describeAlert(event: AlertEvent, locale: Locale): AlertWords {
   const detail =
     event.kind === 'service.down'
       ? event.action === 'open'
-        ? `${params.failures ?? 3} consecutive checks failed.`
+        ? `${params.failures ?? 3} consecutive checks failed.${
+            params.reason ? ` The last answer was: ${isolate(params.reason)}.` : ''
+          }`
         : 'The service answered the last two checks.'
       : event.kind === 'seeder.offline'
         ? event.action === 'open'

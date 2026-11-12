@@ -154,6 +154,24 @@ describe('operator alerts', () => {
     expect(alerts.recent(50).filter((entry) => entry.subject === 'seeder:slice')).toHaveLength(1);
   });
 
+  it('escapes markup that arrived through a probe reason', async () => {
+    h.db.prepare("UPDATE users SET status = 'active'").run();
+    h.mail.clear();
+    await alerts.apply([
+      {
+        action: 'open',
+        kind: 'service.down',
+        subject: 'service:esc',
+        name: 'esc',
+        title: 'Service down: esc',
+        detail: null,
+        params: { failures: 3, reason: '<img src=x onerror=alert(1)>' },
+      },
+    ]);
+    expect(h.mail.last().html).not.toContain('<img src=x');
+    expect(h.mail.last().html).toContain('&lt;img');
+  });
+
   it('escapes HTML in the detail', async () => {
     h.db.prepare("UPDATE users SET status = 'active'").run();
     h.mail.clear();
