@@ -38,7 +38,7 @@ export default function ReciterPage({ slug }: { slug: string }) {
    * route — the name lives in the catalogue, not in the route.
    */
   useEffect(() => {
-    if (reciter) document.title = `${name} — Tilawah`;
+    if (reciter) document.title = `${name} - Tilawah`;
   }, [reciter, name]);
 
   return (

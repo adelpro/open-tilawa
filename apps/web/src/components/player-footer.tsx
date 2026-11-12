@@ -156,7 +156,7 @@ export default function PlayerFooter({
           >
             <Icon name="book" className="text-muted" />
             <span className="min-w-0 flex-1 truncate">{surahName}</span>
-            <span className="sr-only">{`— ${t.footer.list}`}</span>
+            <span className="sr-only">{`- ${t.footer.list}`}</span>
           </button>
 
           <button
@@ -166,7 +166,7 @@ export default function PlayerFooter({
           >
             <Icon name="mic" />
             <span className="min-w-0 flex-1 truncate">{reciterName}</span>
-            <span className="sr-only">{`— ${t.footer.reciter}`}</span>
+            <span className="sr-only">{`- ${t.footer.reciter}`}</span>
           </button>
         </div>
 

@@ -15,7 +15,7 @@ function scaled(bytes: number): { value: number; unit: string } {
 }
 
 export function formatBytes(bytes: number | null | undefined): string {
-  if (bytes === null || bytes === undefined || !Number.isFinite(bytes)) return '—';
+  if (bytes === null || bytes === undefined || !Number.isFinite(bytes)) return '-';
   if (bytes <= 0) return '0 B';
   const { value, unit } = scaled(bytes);
   const digits = value >= 10 || unit === 'B' ? 0 : 1;
@@ -23,7 +23,7 @@ export function formatBytes(bytes: number | null | undefined): string {
 }
 
 export function formatSpeed(bytesPerSecond: number | null | undefined): string {
-  if (bytesPerSecond === null || bytesPerSecond === undefined) return '—';
+  if (bytesPerSecond === null || bytesPerSecond === undefined) return '-';
   if (!Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) return '0 B/s';
   return `${formatBytes(bytesPerSecond)}/s`;
 }

@@ -16,17 +16,17 @@ import type { Parsed } from '@/routes';
 export function pageTitle(route: Parsed, t: Messages): string | null {
   switch (route.name) {
     case 'reciters':
-      return `${t.routes.reciters} — Tilawah`;
+      return `${t.routes.reciters} - Tilawah`;
     case 'about':
-      return `${t.routes.about} — Tilawah`;
+      return `${t.routes.about} - Tilawah`;
     case 'privacy':
-      return `${t.routes.privacy} — Tilawah`;
+      return `${t.routes.privacy} - Tilawah`;
     case 'seed':
-      return `${t.routes.seed} — Tilawah`;
+      return `${t.routes.seed} - Tilawah`;
     case 'settings':
-      return `${t.routes.settings} — Tilawah`;
+      return `${t.routes.settings} - Tilawah`;
     case 'notFound':
-      return `${t.notFound.title} — Tilawah`;
+      return `${t.notFound.title} - Tilawah`;
     default:
       return null;
   }
@@ -34,5 +34,5 @@ export function pageTitle(route: Parsed, t: Messages): string | null {
 
 /** What the tab says: the page's own title, or the surah the player is holding. */
 export function documentTitle(route: Parsed, t: Messages, surahName: string): string {
-  return pageTitle(route, t) ?? (surahName ? `${surahName} — Tilawah` : 'Tilawah');
+  return pageTitle(route, t) ?? (surahName ? `${surahName} - Tilawah` : 'Tilawah');
 }

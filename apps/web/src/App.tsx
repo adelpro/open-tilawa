@@ -296,6 +296,13 @@ export default function App() {
     setMenuOpen(false);
   };
 
+  /**
+   * The not-found screen can be the answer to a `/listen` link, but the route is
+   * still `listen`. The engine would keep the last surah's name in the tab while
+   * the page says "not found", so it is handed the document the screen shows.
+   */
+  const engineRoute = deepLinkMissing && route.name === 'listen' ? { name: 'notFound' as const } : route;
+
   return (
     <ErrorBoundary>
       <div
@@ -381,7 +388,7 @@ export default function App() {
       {/* `p2p` while the reciter is still unknown, so boot does not remount the
           engine and abort the session open. */}
       <AudioEngine
-        route={route}
+        route={engineRoute}
         record={(event: TelemetryEvent) => {
           // The day's first play is announced before the play it announces: the
           // listener count must never be behind the plays that prove it happened.

@@ -33,7 +33,7 @@ export default function DeviceList({ highlightId }: { highlightId?: string | nul
 
   /** "3 months ago" — the words come from the locale, the unit from here. */
   const ago = (ts?: number): string => {
-    if (!ts) return '—';
+    if (!ts) return '-';
     const relative = relativeTime(ts);
     return copy.ago(relative.unit, relative.value);
   };

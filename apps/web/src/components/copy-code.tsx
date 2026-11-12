@@ -78,7 +78,7 @@ export default function CopyCode({
               className="press inline-flex min-h-9 items-center gap-2 border border-line px-3 text-[0.8125rem] text-ink"
             >
               {open.label}
-              {open.name ? <span className="sr-only"> — {open.name}</span> : null}
+              {open.name ? <span className="sr-only"> - {open.name}</span> : null}
             </a>
           ) : null}
         </div>

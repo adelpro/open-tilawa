@@ -176,7 +176,7 @@ function addPage(path, build) {
 
 addPage('/', (locale, copy) => ({
   title:
-    locale === 'ar' ? 'Tilawah — القرآن الكريم ندّاً بندّ' : 'Tilawah — the Quran, closer',
+    locale === 'ar' ? 'Tilawah - القرآن الكريم ندّاً بندّ' : 'Tilawah - the Quran, closer',
   description: copy.about.lede,
   index: indexable('home'),
   // The app itself is the document: `WebSite` says what the address is, and
@@ -193,7 +193,7 @@ addPage('/about', (locale, copy) => {
   const about = copy.about;
   const seedUrl = urlFor('/seed', locale);
   return {
-    title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة — Tilawah',
+    title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة - Tilawah',
     description: about.lede,
     index: indexable('about'),
     // The visible questions and the markup are one list; a page that answers in
@@ -218,7 +218,7 @@ addPage('/about', (locale, copy) => {
 });
 
 addPage('/privacy', (_locale, copy) => ({
-  title: pageTitle({ name: 'privacy' }, copy) ?? 'الخصوصية — Tilawah',
+  title: pageTitle({ name: 'privacy' }, copy) ?? 'الخصوصية - Tilawah',
   description: copy.about.lede,
   index: indexable('privacy'),
   body: `<h1>${escape(copy.privacy.title)}</h1><ul>${copy.privacy.items
@@ -229,7 +229,7 @@ addPage('/privacy', (_locale, copy) => ({
 addPage('/seed', (_locale, copy) => {
   const page = copy.seedPage;
   return {
-    title: pageTitle({ name: 'seed' }, copy) ?? `${copy.routes.seed} — Tilawah`,
+    title: pageTitle({ name: 'seed' }, copy) ?? `${copy.routes.seed} - Tilawah`,
     description: page.lede,
     index: indexable('seed'),
     body: seedBody(page, {
@@ -278,7 +278,7 @@ writeFileSync(
 // same rows from the same catalogue, so the names a crawler reads are the names it can
 // act on — and the page is worth the sitemap row it gets.
 addPage('/reciters', (locale, copy) => ({
-  title: pageTitle({ name: 'reciters' }, copy) ?? 'القرّاء — Tilawah',
+  title: pageTitle({ name: 'reciters' }, copy) ?? 'القرّاء - Tilawah',
   description: copy.recitersPage.lede,
   index: indexable('reciters'),
   jsonLd: breadcrumbTrail([
@@ -289,7 +289,7 @@ addPage('/reciters', (locale, copy) => ({
     `<h1>${escape(copy.recitersPage.title)}</h1><p>${escape(copy.recitersPage.lede)}</p><ul>` +
     catalogue
       .map((release) => {
-        const label = `${escape(release.nameAr ?? release.name)} — ${escape(riwayaLabel(release.riwaya))}`;
+        const label = `${escape(release.nameAr ?? release.name)} - ${escape(riwayaLabel(release.riwaya))}`;
         // The roster is the crawl path to every reciter page: a row without an anchor
         // was invisible to Googlebot unless the sitemap had been processed, which is
         // how one reciter got indexed and the other nine stayed unknown.
@@ -329,7 +329,7 @@ for (const release of catalogue) {
         )}">${surah.id}. ${escape(surahName(surah.id, locale))}</a></li>`,
     ).join('');
     return {
-      title: `${name} — Tilawah`,
+      title: `${name} - Tilawah`,
       description: lede,
       index: indexable('reciter'),
       // The English page translates the chrome, not the reciter's name and not the
@@ -363,16 +363,16 @@ for (const release of catalogue) {
       const surahName = locale === 'ar' ? surah.name : SURAH_NAMES_EN[surah.id] ?? surah.name;
       return locale === 'ar'
         ? {
-            title: `سورة ${surah.name} — ${name}`,
+            title: `سورة ${surah.name} - ${name}`,
             description: `استمع إلى سورة ${surah.name} بصوت ${name}.`,
             index: indexable('listen'),
-            body: `<h1>سورة ${escape(surah.name)} — ${escape(name)}</h1>`,
+            body: `<h1>سورة ${escape(surah.name)} - ${escape(name)}</h1>`,
           }
         : {
-            title: `Surah ${surahName} — ${name}`,
+            title: `Surah ${surahName} - ${name}`,
             description: `Listen to Surah ${surahName} recited by ${name}.`,
             index: indexable('listen'),
-            body: `<h1>Surah ${escape(surahName)} — ${escape(name)}</h1>`,
+            body: `<h1>Surah ${escape(surahName)} - ${escape(name)}</h1>`,
           };
     });
   }
@@ -423,7 +423,7 @@ writeFileSync(
   page({
     path: '/404',
     locale: 'ar',
-    title: pageTitle({ name: 'notFound' }, COPY.ar) ?? 'هذه الصفحة غير موجودة — Tilawah',
+    title: pageTitle({ name: 'notFound' }, COPY.ar) ?? 'هذه الصفحة غير موجودة - Tilawah',
     description: COPY.ar.about.lede,
     // Not a route: this is the page nginx serves with a 404, so it can never be indexed.
     index: false,

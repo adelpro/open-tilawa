@@ -52,7 +52,7 @@ export const PWA_SCREENSHOTS: PwaScreenshot[] = [
     sizes: '1080x1920',
     type: 'image/png',
     form_factor: 'narrow',
-    label: `${ar.routes.settings} — ${ar.settings.dark}`,
+    label: `${ar.routes.settings} - ${ar.settings.dark}`,
   },
   {
     src: '/screenshots/player-wide.png',

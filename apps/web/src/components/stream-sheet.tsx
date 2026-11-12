@@ -40,7 +40,7 @@ const FALLBACK_LABEL = {
   checking: (t: Messages) => t.stream.fallbackChecking,
   available: (t: Messages) => t.stream.fallbackAvailable,
   missing: (t: Messages) => t.stream.fallbackMissing,
-  unknown: () => '—',
+  unknown: () => '-',
 } as const;
 
 /**
