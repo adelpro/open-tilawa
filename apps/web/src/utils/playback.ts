@@ -20,6 +20,11 @@ export function isPlaybackMode(value: unknown): value is PlaybackMode {
   return typeof value === 'string' && (PLAYBACK_MODES as readonly string[]).includes(value);
 }
 
+/** The one-button cycle: linear → shuffle → repeat-one → linear. */
+export function nextPlaybackMode(mode: PlaybackMode): PlaybackMode {
+  return mode === 'linear' ? 'shuffle' : mode === 'shuffle' ? 'repeat-one' : 'linear';
+}
+
 export type PlaybackStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 /** Storage can throw in private mode; a blocked store is simply no preference. */

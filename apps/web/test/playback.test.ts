@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   isPlaybackMode,
   nextInQueue,
+  nextPlaybackMode,
   previousInQueue,
   readPlaybackMode,
   shuffledOrder,
@@ -55,6 +56,12 @@ test('a shuffle order is a permutation and leaves its input alone', () => {
   const order = shuffledOrder(ids, () => 0.42);
   assert.deepEqual([...order].sort((a, b) => a - b), ids);
   assert.deepEqual(ids, [1, 18, 19, 31, 49]);
+});
+
+test('the single button cycles linear → shuffle → repeat-one → linear', () => {
+  assert.equal(nextPlaybackMode('linear'), 'shuffle');
+  assert.equal(nextPlaybackMode('shuffle'), 'repeat-one');
+  assert.equal(nextPlaybackMode('repeat-one'), 'linear');
 });
 
 test('the queue wraps, and an unknown current starts at the near end', () => {
