@@ -7,8 +7,10 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -67,6 +69,14 @@ export class StatusController {
   @HttpCode(HttpStatus.CREATED)
   add(@Body() body: { name: string; url: string }) {
     return this.status.add(body?.name, body?.url);
+  }
+
+  /** One service's recent checks, newest first, for the card's history table. */
+  @Get('services/:id/checks')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "One service's recent checks, newest first" })
+  history(@Param('id') id: string, @Query('limit') limit?: string) {
+    return this.status.history(Number(id), Number(limit ?? 50));
   }
 
   @Delete('services/:id')

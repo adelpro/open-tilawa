@@ -32,6 +32,14 @@ export function serviceKind(protocol: string): ServiceKind {
   return protocol === 'ws:' || protocol === 'wss:' ? 'ws' : 'http';
 }
 
+/** One recorded check, for the console's history table. */
+export interface ServiceCheck {
+  checkedAt: string;
+  ok: boolean;
+  latencyMs: number | null;
+  detail: string | null;
+}
+
 /**
  * The sentence an operator reads after a failed check.
  *
@@ -393,6 +401,37 @@ export class StatusService {
         reason: list[0]?.detail ?? null,
       };
     });
+  }
+
+  /**
+   * Recent checks for one service, newest first.
+   *
+   * The limit arrives from a query string, so it is normalised here rather than
+   * trusted: SQLite raises a datatype mismatch on `LIMIT 2.5`, and a bad
+   * parameter must narrow the table, not 500 the page.
+   */
+  history(id: number, limit = 50): ServiceCheck[] {
+    const requested = Number.isFinite(limit) ? Math.trunc(limit) : 50;
+    const capped = Math.min(200, Math.max(1, requested));
+
+    return (
+      this.db
+        .prepare(
+          `SELECT checked_at, ok, latency_ms, detail FROM service_checks
+            WHERE service_id = ? ORDER BY id DESC LIMIT ?`,
+        )
+        .all(id, capped) as {
+        checked_at: string;
+        ok: number;
+        latency_ms: number | null;
+        detail: string | null;
+      }[]
+    ).map((row) => ({
+      checkedAt: row.checked_at,
+      ok: row.ok === 1,
+      latencyMs: row.latency_ms,
+      detail: row.detail,
+    }));
   }
 
   /** TURN timeline from the probe history the TURN module already keeps. */

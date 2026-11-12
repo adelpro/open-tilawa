@@ -71,6 +71,21 @@ function never(locale: FmtLocale): string {
 }
 
 /**
+ * A stamp from SQLite's `datetime('now')`, which carries no zone.
+ *
+ * `new Date('2026-11-12 21:00:00')` is read as *local* time by the JS parser, so a
+ * check written at 21:00 UTC would show an hour late to a UTC+1 operator — in a
+ * table whose whole job is "when did it fail". A stamp without a zone is read as
+ * UTC, the way `alerts.service.ts` already reads the alert timeline.
+ */
+export function sqliteTime(stamp: string | null | undefined): Date | null {
+  if (!stamp) return null;
+  const zoned = /(?:Z|[+-]\d{2}:?\d{2})$/.test(stamp) ? stamp : `${stamp.replace(' ', 'T')}Z`;
+  const date = new Date(zoned);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
  * Byte sizes and transfer rates: 1 234 567 → "1.2 MB"; with `perSecond` the
  * same number is a rate ("1.2 MB/s"). Base 1024, because that is what every
  * torrent client and the seeder itself means by a megabyte.

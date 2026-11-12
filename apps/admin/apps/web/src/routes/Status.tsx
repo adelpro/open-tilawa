@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useI18n } from '../lib/i18n';
-import { bytes } from '../lib/format';
+import { bytes, sqliteTime } from '../lib/format';
 import { Button } from '../components/Button';
 import { Field, Input } from '../components/Field';
 import { Chip, Notice } from '../components/Chip';
@@ -27,6 +27,13 @@ interface ServiceOverview {
   lastCheckedAt: string | null;
   uptime24h: number | null;
   timeline: (number | null)[];
+}
+
+interface ServiceCheck {
+  checkedAt: string;
+  ok: boolean;
+  latencyMs: number | null;
+  detail: string | null;
 }
 
 interface NodeRow {
@@ -233,6 +240,7 @@ export function Status(): ReactElement {
                   </bdi>
                 </p>
                 <Timeline buckets={service.timeline} />
+                <ServiceChecks id={service.id} defaultOpen={service.ok === false} />
                 <div className="cluster" style={{ marginTop: 'var(--space-2)' }}>
                   <Button
                     small
@@ -377,6 +385,76 @@ export function Status(): ReactElement {
           }}
         />
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * The checks behind the verdict, opened where the red chip is.
+ *
+ * A separate route would be a page to navigate to for a list nobody edits; the
+ * operator asking "since when" is already looking at this card. Loaded on first
+ * open because most cards are never inspected, and open by default when the
+ * service is down — that is the one moment the history is the answer.
+ */
+function ServiceChecks({ id, defaultOpen }: { id: number; defaultOpen: boolean }): ReactElement {
+  const { t, locale } = useI18n();
+  const [open, setOpen] = useState(defaultOpen);
+  const [checks, setChecks] = useState<ServiceCheck[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!open || checks !== null || failed) return;
+    api<ServiceCheck[]>(`/status/services/${id}/checks?limit=50`)
+      .then(setChecks)
+      .catch(() => setFailed(true));
+  }, [open, checks, failed, id]);
+
+  return (
+    <div className="stack stack--tight" style={{ marginTop: 'var(--space-2)' }}>
+      <div>
+        <Button small variant="tertiary" aria-expanded={open} onClick={() => setOpen(!open)}>
+          {t('status.history')}
+        </Button>
+      </div>
+      {!open ? null : failed ? (
+        <Notice tone="bad">{t('status.historyFailed')}</Notice>
+      ) : checks === null ? (
+        <p className="fine-print">{t('status.loading')}</p>
+      ) : checks.length === 0 ? (
+        <p className="body muted">{t('status.historyEmpty')}</p>
+      ) : (
+        <div className="table-scroll">
+          <table className="table">
+            <thead>
+              <tr>
+                <th scope="col">{t('status.checkedAt')}</th>
+                <th scope="col">{t('status.state')}</th>
+                <th scope="col">{t('status.latency')}</th>
+                <th scope="col">{t('status.reason')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checks.map((check, index) => (
+                <tr key={index}>
+                  <td className="num">
+                    <bdi dir="ltr">{sqliteTime(check.checkedAt)?.toLocaleString(locale) ?? '—'}</bdi>
+                  </td>
+                  <td>
+                    <Chip tone={check.ok ? 'ok' : 'bad'}>
+                      {t(check.ok ? 'status.ok' : 'status.down')}
+                    </Chip>
+                  </td>
+                  <td className="num">
+                    {check.latencyMs === null ? '—' : <bdi>{`${check.latencyMs} ms`}</bdi>}
+                  </td>
+                  <td>{check.detail ? <bdi dir="ltr">{check.detail}</bdi> : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

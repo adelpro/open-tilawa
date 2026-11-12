@@ -58,4 +58,28 @@ describe('StatusService.recentChecks', () => {
     const { status } = build();
     expect(status.recentChecks(3)[0].reason).toBeNull();
   });
+
+  it('returns one service history, newest first, capped', () => {
+    const { db, status } = build();
+    const service = status.list()[0];
+    const insert = db.prepare(
+      'INSERT INTO service_checks (service_id, ok, latency_ms, detail) VALUES (?, ?, ?, ?)',
+    );
+    insert.run(service.id, 0, null, '503 Service Unavailable');
+    insert.run(service.id, 1, 42, '200');
+
+    const rows = status.history(service.id, 1);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ ok: true, latencyMs: 42, detail: '200' });
+  });
+
+  it('normalises a bad limit instead of handing SQLite a datatype error', () => {
+    const { db, status } = build();
+    const service = status.list()[0];
+    db.prepare('INSERT INTO service_checks (service_id, ok) VALUES (?, 1)').run(service.id);
+
+    expect(status.history(service.id, Number.NaN)).toHaveLength(1);
+    expect(() => status.history(service.id, 2.5)).not.toThrow();
+    expect(status.history(service.id, 0)).toHaveLength(1);
+  });
 });
