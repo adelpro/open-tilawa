@@ -213,6 +213,11 @@ export function Status(): ReactElement {
                 <p className="row__id">
                   <bdi>{service.url}</bdi>
                 </p>
+                {service.ok === false && service.detail ? (
+                  <p className="fine-print">
+                    {t('status.reason')}: <bdi dir="ltr">{service.detail}</bdi>
+                  </p>
+                ) : null}
                 <p className="fine-print">
                   {service.version ? `v${service.version} · ` : ''}
                   {service.latencyMs !== null ? (

@@ -39,6 +39,7 @@ interface AlertRow {
   kind: AlertKind;
   subject: string;
   title: string;
+  detail: string | null;
   state: 'open' | 'resolved';
   openedAt: string;
   notifyError: string | null;
@@ -505,6 +506,11 @@ export function Settings(): ReactElement {
                       <li key={row.id} className="row">
                         <span className="grow stack stack--tight" style={{ gap: 2 }}>
                           <span className="row__label">{row.title}</span>
+                          {row.detail ? (
+                            <span className="row__meta">
+                              <bdi dir="ltr">{row.detail}</bdi>
+                            </span>
+                          ) : null}
                           <span className="row__meta">
                             {new Date(row.openedAt).toLocaleString(locale)}
                             {row.notifyError

@@ -699,6 +699,7 @@ export const ar: Catalogue = {
   'status.headroom': 'المتاح',
   'status.ok': 'يعمل',
   'status.down': 'متوقف',
+  'status.reason': 'آخر إجابة',
   'status.unknown': 'غير معروف',
   'status.timeline': 'سجل آخر 24 ساعة؛ العمود الأخير هو الساعة الحالية.',
   'status.timelineStart': 'قبل 24 ساعة',

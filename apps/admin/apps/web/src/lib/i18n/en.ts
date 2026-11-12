@@ -703,6 +703,7 @@ export const en = {
   'status.headroom': 'Headroom',
   'status.ok': 'Up',
   'status.down': 'Down',
+  'status.reason': 'Last answer',
   'status.unknown': 'Unknown',
   'status.timeline': 'Last 24 hours; the last column is the current hour.',
   'status.timelineStart': '24 hours ago',
