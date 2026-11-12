@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import {
   BookOpen,
-  CaretDoubleRight,
   CaretDown,
   CaretLeft,
   CaretRight,
@@ -31,7 +30,6 @@ import {
   Play,
   Pulse,
   PushPin,
-  RepeatOnce,
   ShieldCheck,
   Shuffle,
   SpeakerHigh,
@@ -121,7 +119,7 @@ export type IconName =
 /** 16 with text, 20 for a control, 24 for a card. Nothing else. */
 export type IconSize = 16 | 20 | 24;
 
-const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
+const GLYPHS: Record<Exclude<IconName, 'wifi-waiting' | 'order' | 'repeat-one'>, PhosphorGlyph> = {
   back: CaretLeft,
   forward: CaretRight,
   expand: CaretDown,
@@ -146,9 +144,7 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
   activity: Pulse,
   server: HardDrives,
   // How the next surah is chosen: the order, a shuffled queue, or this one again.
-  order: CaretDoubleRight,
   shuffle: Shuffle,
-  'repeat-one': RepeatOnce,
   house: House,
   book: BookOpen,
   gear: GearSix,
@@ -170,7 +166,43 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
   pin: PushPin,
 };
 
-/** The one local glyph: three arcs that answer in turn while nothing seeds. */
+/**
+ * The two playback-mode glyphs come from open-tarteel, not Phosphor: the
+ * ordered mode is its parallel-arrows pair and repeat-one is Material's
+ * `MdRepeatOne`, so the control reads the same in both players. Both are
+ * `currentColor`, unlike the source files, so the theme still owns the colour.
+ */
+function OrderGlyph({ size = 16 }: { size?: number }): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 1024 1024"
+      width={size}
+      height={size}
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M682.666667 192V298.666667H213.333333v85.333333h469.333334v106.666667L832 341.333333M682.666667 533.333333V640H213.333333v85.333333h469.333334v106.666667l149.333333-149.333333" />
+    </svg>
+  );
+}
+
+function RepeatOneGlyph({ size = 16 }: { size?: number }): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2zm-4-2V9h-1l-2 1v1h1.5v4z" />
+    </svg>
+  );
+}
+
+/** The one animated local glyph: three arcs that answer in turn while nothing seeds. */
 function WifiGlyph({ size = 16 }: { size?: number }): ReactElement {
   return (
     <svg
@@ -194,7 +226,7 @@ function WifiGlyph({ size = 16 }: { size?: number }): ReactElement {
 
 /** `back` and `forward` are directions, not sides: the arrow flips in RTL. */
 function isDirectional(name: IconName): boolean {
-  return name === 'back' || name === 'forward' || name === 'order';
+  return name === 'back' || name === 'forward';
 }
 
 /**
@@ -238,6 +270,12 @@ export default function Icon({
 }): ReactElement {
   if (name === 'wifi-waiting') {
     return <WifiGlyph size={size} />;
+  }
+  if (name === 'order') {
+    return <OrderGlyph size={size} />;
+  }
+  if (name === 'repeat-one') {
+    return <RepeatOneGlyph size={size} />;
   }
 
   const Glyph = GLYPHS[name];
