@@ -36,6 +36,8 @@ export const STORAGE_KEYS = {
   seed: `${NS}:seed`,
   /** Output level 0–1. Device-local: the room, not the account, sets it. */
   volume: `${NS}:volume`,
+  /** `linear` | `shuffle` | `repeat-one`. Device-local, like the volume. */
+  playbackMode: `${NS}:playback-mode`,
 } as const;
 
 /**

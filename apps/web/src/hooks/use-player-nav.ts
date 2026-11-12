@@ -7,11 +7,18 @@ import {
   currentSurahIdAtom,
   durationAtom,
   isPlayingAtom,
+  playbackModeAtom,
   positionAtom,
+  shuffleOrderAtom,
   torrentAtom,
 } from '@/jotai/player';
 import { surahIdOf } from '@/utils/surah-id';
-import { nextSurahInRelease, previousSurahInRelease } from '@/utils/release-surahs';
+import { nextInQueue, previousInQueue, shuffledOrder } from '@/utils/playback';
+import {
+  nextSurahInRelease,
+  previousSurahInRelease,
+  surahIdsForRelease,
+} from '@/utils/release-surahs';
 import { audioRef } from '@/utils/audio-ref';
 
 export const FIRST_SURAH = 1;
@@ -29,6 +36,8 @@ export function usePlayerNav() {
   const setPositionAtom = useSetAtom(positionAtom);
   const setIsPlaying = useSetAtom(isPlayingAtom);
   const duration = useAtomValue(durationAtom);
+  const playbackMode = useAtomValue(playbackModeAtom);
+  const [shuffleOrder, setShuffleOrder] = useAtom(shuffleOrderAtom);
 
   const files = torrent?.files ?? [];
   const track = useMemo(
@@ -66,14 +75,35 @@ export function usePlayerNav() {
     [setPositionAtom],
   );
 
+  /**
+   * The queue shuffle walks. Built once per reciter and kept until the mode is
+   * re-selected (the write atom clears it); rebuilt here because a reload starts
+   * with a stored mode and no queue.
+   */
+  const ensureShuffleOrder = useCallback((): number[] => {
+    const reciterId = reciter?.id ?? null;
+    if (shuffleOrder && shuffleOrder.reciterId === reciterId && shuffleOrder.ids.length > 0) {
+      return shuffleOrder.ids;
+    }
+    const ids = shuffledOrder(surahIdsForRelease(reciter?.surahs));
+    setShuffleOrder({ reciterId, ids });
+    return ids;
+  }, [reciter?.id, reciter?.surahs, setShuffleOrder, shuffleOrder]);
+
   const next = useCallback(() => {
-    const target = nextSurahInRelease(surahId, reciter?.surahs);
+    const target =
+      playbackMode === 'shuffle'
+        ? nextInQueue(surahId, ensureShuffleOrder())
+        : nextSurahInRelease(surahId, reciter?.surahs);
     if (target !== null) playSurah(target);
-  }, [playSurah, reciter?.surahs, surahId]);
+  }, [ensureShuffleOrder, playbackMode, playSurah, reciter?.surahs, surahId]);
   const previous = useCallback(() => {
-    const target = previousSurahInRelease(surahId, reciter?.surahs);
+    const target =
+      playbackMode === 'shuffle'
+        ? previousInQueue(surahId, ensureShuffleOrder())
+        : previousSurahInRelease(surahId, reciter?.surahs);
     if (target !== null) playSurah(target);
-  }, [playSurah, reciter?.surahs, surahId]);
+  }, [ensureShuffleOrder, playbackMode, playSurah, reciter?.surahs, surahId]);
 
   return {
     files,

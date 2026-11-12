@@ -21,6 +21,7 @@ import {
   Info,
   Key,
   LinkSimple,
+  ListNumbers,
   MagnifyingGlass,
   Microphone,
   Moon,
@@ -30,7 +31,9 @@ import {
   Play,
   Pulse,
   PushPin,
+  RepeatOnce,
   ShieldCheck,
+  Shuffle,
   SpeakerHigh,
   SpeakerSlash,
   Sun,
@@ -92,6 +95,9 @@ export type IconName =
   | 'file'
   | 'activity'
   | 'server'
+  | 'order'
+  | 'shuffle'
+  | 'repeat-one'
   | 'house'
   | 'book'
   | 'gear'
@@ -139,6 +145,10 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
   file: File,
   activity: Pulse,
   server: HardDrives,
+  // How the next surah is chosen: the order, a shuffled queue, or this one again.
+  order: ListNumbers,
+  shuffle: Shuffle,
+  'repeat-one': RepeatOnce,
   house: House,
   book: BookOpen,
   gear: GearSix,

@@ -27,17 +27,21 @@ export function surahInRelease(wanted: number, surahs: number[] | null | undefin
 }
 
 /**
- * The next surah that can actually play. A sparse release is stepped, not
- * incremented: from Al-Fatihah the next file is 18, and after the last one the
- * transport stops instead of opening a missing file. An unknown manifest keeps
- * the old arithmetic, with `selectSurah`'s own 1..114 guard as the edge.
+ * The next surah that can actually play, wrapping after the last one.
+ *
+ * A sparse release is stepped, not incremented: from Al-Fatihah the next file is
+ * 18, and after the last one the listener lands on the first instead of a
+ * missing file. The wrap is the behavior the player had at the end of a full
+ * mushaf, made explicit by the mode control.
  */
 export function nextSurahInRelease(
   current: number,
   surahs: number[] | null | undefined,
 ): number | null {
-  if (!Array.isArray(surahs) || surahs.length === 0) return current + 1;
-  return [...surahs].sort((a, b) => a - b).find((id) => id > current) ?? null;
+  const ids = surahIdsForRelease(surahs);
+  if (ids.length === 0) return null;
+  const at = ids.indexOf(current);
+  return ids[(at + 1) % ids.length];
 }
 
 /** The mirror of `nextSurahInRelease`, for the back button. */
@@ -45,6 +49,13 @@ export function previousSurahInRelease(
   current: number,
   surahs: number[] | null | undefined,
 ): number | null {
-  if (!Array.isArray(surahs) || surahs.length === 0) return current - 1;
-  return [...surahs].sort((a, b) => b - a).find((id) => id < current) ?? null;
+  const ids = surahIdsForRelease(surahs);
+  if (ids.length === 0) return null;
+  const at = ids.indexOf(current);
+  return ids[(at - 1 + ids.length) % ids.length];
+}
+
+/** The ids a release carries, in mushaf order; the whole book when unknown. */
+export function surahIdsForRelease(surahs: number[] | null | undefined): number[] {
+  return surahsForRelease(surahs).map((surah) => surah.id);
 }

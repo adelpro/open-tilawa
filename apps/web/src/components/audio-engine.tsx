@@ -9,6 +9,7 @@ import {
   currentSurahIdAtom,
   durationAtom,
   isPlayingAtom,
+  playbackModeAtom,
   positionAtom,
   rateAtom,
   torrentAtom,
@@ -101,6 +102,7 @@ export default function AudioEngine({
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
+  const playbackMode = useAtomValue(playbackModeAtom);
 
   const { files, next, previous } = usePlayerNav();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -454,6 +456,21 @@ export default function AudioEngine({
           );
           recordedForRef.current = null;
         }
+
+        // Repeat one is about the end of a file, not a lock on the transport:
+        // Next and Previous still move, and a manual pick of another surah
+        // replaces it. Clearing the play ref above is what makes the replay
+        // count as the new play it is.
+        if (playbackMode === 'repeat-one') {
+          const audio = audioRef.current;
+          if (audio) {
+            audio.currentTime = 0;
+            setPositionAtom(0);
+            void audio.play();
+          }
+          return;
+        }
+
         next();
       }}
       onError={(event) => {

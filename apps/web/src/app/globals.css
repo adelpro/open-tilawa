@@ -408,7 +408,7 @@ input[type='search']::-webkit-search-decoration {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px 12px;
+  gap: 8px;
   margin-top: 12px;
 }
 

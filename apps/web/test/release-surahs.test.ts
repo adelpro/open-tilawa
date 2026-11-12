@@ -42,13 +42,17 @@ test('resume lands on a carried surah, never on a missing one', () => {
   assert.equal(surahInRelease(36, []), 36);
 });
 
-test('transport steps over the gaps a partial release has', () => {
+test('transport steps over the gaps a partial release has, and wraps', () => {
   assert.equal(nextSurahInRelease(1, [1, 18, 19]), 18);
   assert.equal(nextSurahInRelease(18, [1, 18, 19]), 19);
-  assert.equal(nextSurahInRelease(19, [1, 18, 19]), null);
+  // A listener at the end of the release lands on its first surah, not on a
+  // missing file: the mode control makes the wrap explicit.
+  assert.equal(nextSurahInRelease(19, [1, 18, 19]), 1);
   assert.equal(previousSurahInRelease(19, [1, 18, 19]), 18);
-  assert.equal(previousSurahInRelease(1, [1, 18, 19]), null);
-  // An unknown manifest keeps the plain arithmetic the hook always had.
+  assert.equal(previousSurahInRelease(1, [1, 18, 19]), 19);
+  // An unknown manifest keeps the plain arithmetic, now wrapping too.
   assert.equal(nextSurahInRelease(1, null), 2);
   assert.equal(previousSurahInRelease(18, null), 17);
+  assert.equal(nextSurahInRelease(114, null), 1);
+  assert.equal(previousSurahInRelease(1, null), 114);
 });

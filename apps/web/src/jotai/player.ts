@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 
 import type { TorrentInfo } from '@/types';
+import { readPlaybackMode, writePlaybackMode, type PlaybackMode } from '@/utils/playback';
 import { DEFAULT_VOLUME, readVolume, toggleVolume } from '@/utils/volume';
 import type { Visualiser } from '@/utils/visualiser-models';
 
@@ -38,6 +39,23 @@ export const toggleMuteAtom = atom(null, (get, set) => {
 /** Which shape the spectrum takes; a taste, so it is remembered. */
 /** Waves is the default shape: it reads as audio, not as a level meter. */
 export const visualiserAtom = atom<Visualiser>('ribbon');
+
+/** How the next surah is chosen. Device-local, like the volume. */
+export const playbackModeAtom = atom<PlaybackMode>(readPlaybackMode());
+
+/**
+ * The order shuffle walks: one queue per reciter, built on the first Next after
+ * the mode is chosen. In-memory on purpose - a reload reshuffles, which a
+ * shuffled queue should.
+ */
+export const shuffleOrderAtom = atom<{ reciterId: number | null; ids: number[] } | null>(null);
+
+/** Selecting a mode writes it through and starts a fresh walk. */
+export const setPlaybackModeAtom = atom(null, (_get, set, mode: PlaybackMode) => {
+  writePlaybackMode(mode);
+  set(playbackModeAtom, mode);
+  set(shuffleOrderAtom, null);
+});
 
 export const torrentAtom = atom<TorrentInfo | undefined>(undefined);
 export const torrentErrorAtom = atom<string | undefined>(undefined);

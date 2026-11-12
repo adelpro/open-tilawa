@@ -248,6 +248,12 @@ const ar = {
     forward: 'تقدم 15 ثانية',
     next: 'السورة التالية',
   },
+  playback: {
+    mode: 'طريقة التشغيل',
+    linear: 'بالترتيب',
+    shuffle: 'عشوائي',
+    repeatOne: 'تكرار السورة',
+  },
   scrubber: { label: 'موضع التشغيل', of: 'من' },
   player: {
     error: 'تعذّر تشغيل هذا القارئ.',
@@ -677,6 +683,12 @@ const en: typeof ar = {
     pause: 'Pause',
     forward: 'Forward 15 seconds',
     next: 'Next surah',
+  },
+  playback: {
+    mode: 'Playback mode',
+    linear: 'In order',
+    shuffle: 'Shuffle',
+    repeatOne: 'Repeat surah',
   },
   scrubber: { label: 'Playback position', of: 'of' },
   player: {

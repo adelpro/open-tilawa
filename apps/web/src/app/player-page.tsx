@@ -2,6 +2,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Icon from '@/components/icons';
+import PlaybackModeControl from '@/components/playback-mode';
 import PlayerFooter from '@/components/player-footer';
 import Scrubber from '@/components/scrubber';
 import Sheet, { ReciterSheet, SurahSheet, type ReciterScope } from '@/components/sheet';
@@ -392,6 +393,10 @@ export default function PlayerPage({
                   if (duration > 0) seekTo(seekBy(position, delta, duration));
                 }}
               />
+              <div className="flex items-center gap-1">
+                <span aria-hidden="true" className="h-6 w-px bg-line" />
+                <PlaybackModeControl />
+              </div>
             </div>
 
             {reciters.length === 0 ? (
