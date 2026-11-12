@@ -240,7 +240,11 @@ export function Status(): ReactElement {
                   </bdi>
                 </p>
                 <Timeline buckets={service.timeline} />
-                <ServiceChecks id={service.id} defaultOpen={service.ok === false} />
+                <ServiceChecks
+                  id={service.id}
+                  stamp={service.lastCheckedAt}
+                  defaultOpen={service.ok === false}
+                />
                 <div className="cluster" style={{ marginTop: 'var(--space-2)' }}>
                   <Button
                     small
@@ -396,19 +400,42 @@ export function Status(): ReactElement {
  * operator asking "since when" is already looking at this card. Loaded on first
  * open because most cards are never inspected, and open by default when the
  * service is down — that is the one moment the history is the answer.
+ *
+ * `stamp` is the parent's newest `lastCheckedAt`: the page polls every minute and
+ * "Check now" re-probes, and the table has to follow. Without it the recovery row
+ * — the one the table exists to show — never appears, and a green chip sits above
+ * a list whose newest line is the failure.
  */
-function ServiceChecks({ id, defaultOpen }: { id: number; defaultOpen: boolean }): ReactElement {
+function ServiceChecks({
+  id,
+  defaultOpen,
+  stamp,
+}: {
+  id: number;
+  defaultOpen: boolean;
+  stamp: string | null;
+}): ReactElement {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(defaultOpen);
   const [checks, setChecks] = useState<ServiceCheck[] | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (!open || checks !== null || failed) return;
+    if (!open) return;
+    // A closed card keeps what it had; an open one answers the poll it just saw.
+    let live = true;
+    setFailed(false);
     api<ServiceCheck[]>(`/status/services/${id}/checks?limit=50`)
-      .then(setChecks)
-      .catch(() => setFailed(true));
-  }, [open, checks, failed, id]);
+      .then((rows) => {
+        if (live) setChecks(rows);
+      })
+      .catch(() => {
+        if (live) setFailed(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [open, id, stamp]);
 
   return (
     <div className="stack stack--tight" style={{ marginTop: 'var(--space-2)' }}>

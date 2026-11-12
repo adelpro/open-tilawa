@@ -22,4 +22,9 @@ describe('the status card explains a failure', () => {
   it('holds the reason at LTR so a status line cannot reorder the card', () => {
     assert.match(status, /<bdi dir="ltr">\{service\.detail\}<\/bdi>/);
   });
+
+  it('re-reads the table when the poll records a new check', () => {
+    assert.match(status, /stamp=\{service\.lastCheckedAt\}/);
+    assert.match(status, /\[open, id, stamp\]/);
+  });
 });
