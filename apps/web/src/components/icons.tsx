@@ -10,6 +10,7 @@ import {
   DownloadSimple,
   DotsThreeVertical,
   File,
+  FloppyDisk,
   Gauge,
   GearSix,
   GlobeHemisphereWest,
@@ -86,6 +87,7 @@ export type IconName =
   | 'fullscreen-exit'
   | 'users'
   | 'download'
+  | 'disk'
   | 'upload'
   | 'file'
   | 'activity'
@@ -130,6 +132,9 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting'>, PhosphorGlyph> = {
   'fullscreen-exit': CornersIn,
   users: Users,
   download: DownloadSimple,
+  // The arrow means "moving now"; the disk means "already kept". `server` is
+  // already `HardDrives`, so a floppy keeps the two stored things apart.
+  disk: FloppyDisk,
   upload: UploadSimple,
   file: File,
   activity: Pulse,

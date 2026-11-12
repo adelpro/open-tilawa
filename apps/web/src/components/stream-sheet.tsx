@@ -11,14 +11,16 @@ import type { StreamSource } from '@/utils/stream-source';
 import { surahIdOf } from '@/utils/surah-id';
 import { mediaFileUrl, probeMedia } from '@/utils/webseed';
 
-type Row = { label: string; value: string; icon: 'users' | 'download' | 'upload' | 'activity' | 'file' };
+type Row = { label: string; value: string; icon: 'users' | 'download' | 'upload' | 'disk' | 'activity' | 'file' };
 
 function rowsFor(torrent: TorrentInfo | undefined, t: Messages): Row[] {
   return [
     { label: t.stream.peers, value: `${torrent?.peers ?? 0}`, icon: 'users' },
     { label: t.stream.down, value: formatSpeed(torrent?.downloadSpeed), icon: 'download' },
     { label: t.stream.up, value: formatSpeed(torrent?.uploadSpeed), icon: 'upload' },
-    { label: t.stream.downloaded, value: formatBytes(torrent?.downloaded), icon: 'download' },
+    // A disk, not the arrow: the row above is the speed of the transfer, this is
+    // what the transfer has already kept.
+    { label: t.stream.downloaded, value: formatBytes(torrent?.downloaded), icon: 'disk' },
     { label: t.stream.progress, value: `${((torrent?.progress ?? 0) * 100).toFixed(1)}%`, icon: 'activity' },
     { label: t.stream.files, value: `${torrent?.files.length ?? 0}`, icon: 'file' },
   ];
