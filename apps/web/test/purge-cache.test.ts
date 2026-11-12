@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { urlsFromSitemap } from '../scripts/purge-cache.mjs';
+import { purge, urlsFromSitemap } from '../scripts/purge-cache.mjs';
 
 /**
  * What a deploy has to evict.
@@ -41,4 +41,21 @@ test('a language twin is evicted too, or one language serves the old page', () =
 
 test('a sitemap with nothing in it evicts nothing', () => {
   assert.deepEqual(urlsFromSitemap('<urlset></urlset>'), []);
+});
+
+test('more than thirty URLs are evicted in batches, not silently truncated', async () => {
+  // The API takes thirty files per call. A release can pass that, and a success
+  // line that names the whole list while half of it stayed cached is worse than
+  // an error.
+  const urls = Array.from({ length: 31 }, (_, index) => `https://tilawah.cc/p/${index}`);
+  const calls: number[] = [];
+  const fetchImpl = async (_url: string, init: { body: string }) => {
+    calls.push(JSON.parse(init.body).files.length);
+    return { ok: true, status: 200, json: async () => ({ success: true }) };
+  };
+
+  const result = await purge(urls, { token: 't', zone: 'z', fetchImpl });
+
+  assert.deepEqual(calls, [30, 1]);
+  assert.deepEqual(result, { purged: 31 });
 });

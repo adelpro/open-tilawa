@@ -511,10 +511,12 @@ export function Usage(): ReactElement {
             </div>
             <div className="usage-today__tile">
               <span className="usage-today__n">
-                {stamp ? t('usage.returningOf', {
-                  returning: String(stamp.returning),
-                  known: String(stamp.known),
-                }) : '—'}
+                {stamp && returning?.anyReturning
+                  ? t('usage.returningOf', {
+                      returning: String(stamp.returning),
+                      known: String(stamp.known),
+                    })
+                  : '—'}
               </span>
               <span className="usage-today__l">
                 {t('usage.returning')}

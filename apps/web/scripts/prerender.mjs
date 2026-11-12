@@ -404,6 +404,22 @@ for (const release of catalogue) {
   }
 }
 
+// Every page the edge may hold, for the purge that follows a deploy.
+//
+// Not the sitemap: the English twins are canonicalised and therefore unlisted, yet
+// they are served from the same cache and would keep the previous build for an hour.
+// Not every written file either — the listen pages are written to disk but answered
+// by the app's own location, which is never cached, and there are two thousand of
+// them. `index` is exactly the set nginx serves with an edge TTL.
+writeFileSync(
+  join(DIST, 'purge-urls.txt'),
+  [
+    ...new Set(
+      pages.filter((entry) => entry.index).map((entry) => urlFor(entry.path, entry.locale)),
+    ),
+  ].join('\n') + '\n',
+);
+
 // `sitemap: false` drops a page that is still crawlable and still index-eligible but
 // canonically points at another URL: listing it would ask Google to index the twin.
 const listed = pages.filter((entry) => entry.index && entry.sitemap !== false);

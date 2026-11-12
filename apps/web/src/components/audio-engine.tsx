@@ -28,6 +28,7 @@ import { canSetElementVolume, ensureAnalyser, setOutputGain } from '@/utils/audi
 import { APP_VERSION } from '@/constants/version';
 import { completeEvent, errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
 import { streamSourceFor } from '@/utils/stream-source';
+import type { DirectReason } from '@/utils/stream-source';
 import { choosePlaybackSource, mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
 import { sameRelease } from '@/utils/release';
 import { surahIdOf } from '@/utils/surah-id';
@@ -136,7 +137,7 @@ export default function AudioEngine({
    * service-worker stream failed. The torrent's web seed may not be active yet,
    * so this is stated, not inferred: the sound is coming over HTTP either way.
    */
-  const [directFallback, setDirectFallback] = useState(false);
+  const [directReason, setDirectReason] = useState<DirectReason>('none');
   /** One direct retry per surah file; a second failure is the real error. */
   const retriedRef = useRef<string | null>(null);
 
@@ -149,7 +150,7 @@ export default function AudioEngine({
   const source = streamSourceFor({
     webSeed: torrentInfo?.webSeed,
     peers: torrentInfo?.peers,
-    direct: directFallback,
+    direct: directReason,
   });
   /** When play was asked for, so the first sound can be reported as a band. */
   const startedAtRef = useRef(0);
@@ -163,8 +164,8 @@ export default function AudioEngine({
 
   /** And the rescue flag, or the sheet keeps drawing the torrent it no longer uses. */
   useEffect(() => {
-    setDirectFallbackAtom(directFallback);
-  }, [directFallback, setDirectFallbackAtom]);
+    setDirectFallbackAtom(directReason);
+  }, [directReason, setDirectFallbackAtom]);
 
   useEffect(() => {
     setTorrentError(error);
@@ -211,7 +212,7 @@ export default function AudioEngine({
     }
 
     // A new source supersedes any earlier direct retry.
-    setDirectFallback(false);
+    setDirectReason('none');
     restoredForRef.current = null;
 
     // A reciter swap destroys the old torrent before the new one is ready. Until
@@ -249,8 +250,9 @@ export default function AudioEngine({
 
     if (!chosen) return;
     if (chosen.direct) {
-      // No streaming server (in-app browsers): play the node's own file.
-      setDirectFallback(true);
+      // No streaming server (in-app browsers): play the node's own file. This is
+      // not a rescue — the stream never existed — so it is not counted as one.
+      setDirectReason('nostream');
     } else {
       try {
         file?.select?.();
@@ -504,7 +506,7 @@ export default function AudioEngine({
         // element refuses it outright, the node still has the same file over
         // HTTP. One retry per surah, and only for a source-level failure.
         if (
-          !directFallback &&
+          directReason === 'none' &&
           direct &&
           shouldRetryDirect({ code, alreadyTried: retriedRef.current === retryKey })
         ) {
@@ -513,7 +515,7 @@ export default function AudioEngine({
           restoredForRef.current = null;
           audio.src = direct;
           audio.load();
-          setDirectFallback(true);
+          setDirectReason('afterDrop');
           if (isPlaying) {
             audio.play().catch((error: DOMException) => {
               if (error?.name === 'AbortError') return;

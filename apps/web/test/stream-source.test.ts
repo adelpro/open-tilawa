@@ -26,6 +26,14 @@ test('one rule decides what is feeding the stream, so the glyph and the counter 
 test('a rescued stream is its own state, and it outranks the torrent', () => {
   // The element was re-pointed at /media after the service-worker stream failed.
   // Whatever the torrent still reports, no peer is feeding that element.
-  assert.equal(streamSourceFor({ webSeed: 'off', peers: 0, direct: true }), 'direct');
-  assert.equal(streamSourceFor({ webSeed: 'active', peers: 2, direct: true }), 'direct');
+  assert.equal(streamSourceFor({ webSeed: 'off', peers: 0, direct: 'afterDrop' }), 'direct');
+  assert.equal(streamSourceFor({ webSeed: 'active', peers: 2, direct: 'afterDrop' }), 'direct');
+});
+
+test('a browser with no streaming server is not a failure', () => {
+  // Facebook and Instagram in-app browsers start without a service worker, so the
+  // player opens the node's own file from the first second. Nothing dropped, and
+  // counting it as a rescue would report the swarm collapsing on a good day.
+  assert.equal(streamSourceFor({ webSeed: 'off', peers: 0, direct: 'nostream' }), 'webseed');
+  assert.equal(streamSourceFor({ webSeed: 'active', peers: 2, direct: 'nostream' }), 'webseed');
 });

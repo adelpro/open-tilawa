@@ -4,6 +4,17 @@ import type { IconName } from '@/components/icons';
 export type StreamSource = 'connected' | 'waiting' | 'webseed' | 'mixed' | 'direct';
 
 /**
+ * Why the element is playing the node's own copy instead of the stream.
+ *
+ * Two situations, and only one of them is a fault:
+ * `nostream` is a browser that never had a service worker (Facebook and
+ * Instagram in-app browsers on iOS) — it opens the direct file from the first
+ * second and nothing broke. `afterDrop` is the stream that failed mid-play and
+ * had to be re-pointed.
+ */
+export type DirectReason = 'none' | 'nostream' | 'afterDrop';
+
+/**
  * One glyph per state, for every surface that shows the stream source.
  *
  * `waiting` is the only animated one: no peer is answering yet, so the glyph
@@ -34,9 +45,13 @@ export function iconForSource(source: StreamSource): IconName {
 export function streamSourceFor(state: {
   webSeed?: 'active' | 'off';
   peers?: number;
-  direct?: boolean;
+  direct?: DirectReason;
 }): StreamSource {
-  if (state.direct) return 'direct';
+  // The rescue outranks the torrent: no peer is feeding a re-pointed element.
+  if (state.direct === 'afterDrop') return 'direct';
+  // No streaming server at all is not a break — the node's copy simply is the
+  // source, which is what `webseed` already says.
+  if (state.direct === 'nostream') return 'webseed';
   const peers = state.peers ?? 0;
   if (state.webSeed === 'active') return peers > 0 ? 'mixed' : 'webseed';
   return peers > 0 ? 'connected' : 'waiting';

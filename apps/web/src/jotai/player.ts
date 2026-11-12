@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 
+import type { DirectReason } from '@/utils/stream-source';
 import type { TorrentInfo } from '@/types';
 import { readPlaybackMode, writePlaybackMode, type PlaybackMode } from '@/utils/playback';
 import { DEFAULT_VOLUME, readVolume, toggleVolume } from '@/utils/volume';
@@ -60,12 +61,13 @@ export const setPlaybackModeAtom = atom(null, (_get, set, mode: PlaybackMode) =>
 export const torrentAtom = atom<TorrentInfo | undefined>(undefined);
 export const torrentErrorAtom = atom<string | undefined>(undefined);
 /**
- * The element was re-pointed at the node's own copy after the stream failed.
+ * Why the element is playing the node's own copy, if it is.
  *
  * The engine owns this fact and the page does not: without it the sheet keeps
  * drawing whatever the torrent says, so a listener hearing the recitation can be
- * told "waiting for peers".
+ * told "waiting for peers". The reason matters as much as the fact — a browser
+ * with no service worker was never broken, and must not be reported as a rescue.
  */
-export const directFallbackAtom = atom(false);
+export const directFallbackAtom = atom<DirectReason>('none');
 /** Bumping this is the retry button; the torrent hook watches it. */
 export const retrySignalAtom = atom(0);

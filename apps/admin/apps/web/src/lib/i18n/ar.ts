@@ -91,7 +91,9 @@ export const ar: Catalogue = {
   'usage.returning': 'أجهزة عائدة (7 أيام فأكثر)',
   'usage.returningOn': '{date}: {returning} من {known} جهازًا',
   'usage.returningNone': 'لم يبلّغ أي جهاز عن عمر 7 أيام في هذا المدى.',
-  'usage.returningOf': '{returning} من {known} جهازاً',
+  // No counted noun: the label above it already says 'devices', and Arabic's
+  // plural for 3–10 is not the same word as for 11+.
+  'usage.returningOf': '{returning} من {known}',
   'usage.returningNote': 'من الأجهزة التي أبلغت عن فئتها العمرية؛ لا تُحتسب الأجهزة الأقدم من هذا الإصدار.',
   'usage.playedShare': 'نسبة من استمع',
   'usage.funnelNote':

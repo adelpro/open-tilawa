@@ -8,9 +8,10 @@
  * would otherwise sit behind the previous one: this is the thing that says
  * "now".
  *
- * The list comes from the sitemap the build just wrote, because that is the only
- * record of what actually landed. A hand-kept list would be wrong the first time
- * a route is added, and wrong silently.
+ * The list comes from `dist/purge-urls.txt`, which the build writes for exactly
+ * this: every URL it wrote, English twins included. The sitemap is the fallback —
+ * it is the same list minus the pages that canonicalise elsewhere, and those are
+ * cached too.
  *
  *   CF_API_TOKEN=... CF_ZONE_ID=... node scripts/purge-cache.mjs
  *   node scripts/purge-cache.mjs --dry-run     # print the URLs, call nothing
@@ -31,20 +32,31 @@ export function urlsFromSitemap(xml) {
   return urls;
 }
 
+/** The API takes thirty files per call; a release is closer to fifty URLs. */
+export const PURGE_BATCH = 30;
+
 export async function purge(urls, { token, zone, fetchImpl = fetch }) {
   if (urls.length === 0) return { skipped: 'nothing to purge' };
-  const response = await fetchImpl(`https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    // Thirty files per call is the API ceiling; a release is 23 today.
-    body: JSON.stringify({ files: urls.slice(0, 30) }),
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok || body.success === false) {
-    const detail = body.errors ? JSON.stringify(body.errors) : `HTTP ${response.status}`;
-    throw new Error(`purge failed: ${detail}`);
+  let purged = 0;
+  for (let start = 0; start < urls.length; start += PURGE_BATCH) {
+    const files = urls.slice(start, start + PURGE_BATCH);
+    const response = await fetchImpl(
+      `https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`,
+      {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ files }),
+      },
+    );
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || body.success === false) {
+      const detail = body.errors ? JSON.stringify(body.errors) : `HTTP ${response.status}`;
+      // Partial is not success: say how many landed, so the next run can be aimed.
+      throw new Error(`purge failed after ${purged}/${urls.length}: ${detail}`);
+    }
+    purged += files.length;
   }
-  return { purged: urls.length };
+  return { purged };
 }
 
 async function main() {
@@ -58,7 +70,16 @@ async function main() {
     process.exit(1);
   }
 
-  const urls = urlsFromSitemap(xml);
+  // The build's own list first: it includes the English twins the sitemap omits.
+  let urls;
+  try {
+    urls = readFileSync(join(dist, 'purge-urls.txt'), 'utf8')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch {
+    urls = urlsFromSitemap(xml);
+  }
   const token = process.env.CF_API_TOKEN;
   const zone = process.env.CF_ZONE_ID;
 
