@@ -3733,3 +3733,99 @@ select:focus {
   margin-inline-end: 4px;
   border-radius: 50%;
 }
+
+/* ---------- palette select (Theme) ----------
+
+   A listbox, not a <select>: an <option> can only render text, and the swatch
+   is the thing that says "this is a paper". The trigger shows the current
+   stock; the menu paints all seven and marks the chosen one. */
+
+.palette-select {
+  position: relative;
+  width: 100%;
+}
+
+.palette-select__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  color: var(--ink);
+  font: var(--body);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--motion-ui);
+}
+
+.palette-select__trigger:hover,
+.palette-select__trigger[aria-expanded='true'],
+.palette-select__trigger:focus-visible {
+  border-color: var(--ink);
+}
+
+.palette-select__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Paper over accent: the two things a stock sets on this console. */
+.palette-select__swatch {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 24px;
+  height: 16px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+}
+
+.palette-select__swatch > span {
+  display: block;
+  flex: 1;
+}
+
+.palette-select__menu {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(100% + 4px);
+  z-index: 40;
+  max-height: 288px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  box-shadow: var(--shadow-premium);
+}
+
+.palette-select__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  font: var(--body);
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+
+.palette-select__option:hover,
+.palette-select__option:focus {
+  background: var(--canvas-parchment);
+}
+
+.palette-select__option[aria-selected='true'] {
+  font-weight: 600;
+}

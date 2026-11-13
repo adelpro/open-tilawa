@@ -241,6 +241,183 @@
   --card: #ffffff;
 }
 
+/* ---------- papers ----------
+
+   The same seven stocks as the player, mapped onto this console: the paper
+   paints the surfaces, and the accent follows it — the house blue on the three
+   neutrals, the stock's own hue on the four coloured ones. Status colours and
+   the shadow system are absent on purpose: a warning is the same amber on any
+   paper, and depth is the same depth.
+
+   Light blocks only set the surfaces; the dark blocks are doubled under
+   `[data-theme='dark']` because the engine writes that attribute before paint
+   (index.html), while the media-query block above stays the no-JS fallback for
+   the default paper. */
+
+[data-palette='light-ivory'] {
+  --canvas: #fdfbf6;
+  --canvas-parchment: #f6f2e9;
+  --surface-pearl: #f9f6ef;
+  --card: #fdfbf6;
+  --ink: #1d1a15;
+  --ink-secondary: #6b6357;
+  --hairline: #ebe6dc;
+  --primary: #086288;
+  --primary-hover: #065273;
+  --focus: #086288;
+}
+
+[data-palette='ivory'] {
+  --canvas: #faf6ee;
+  --canvas-parchment: #f2ece0;
+  --surface-pearl: #f6f1e7;
+  --card: #faf6ee;
+  --ink: #241d15;
+  --ink-secondary: #6b5a50;
+  --hairline: #e6dfd2;
+  --primary: #086288;
+  --primary-hover: #065273;
+  --focus: #086288;
+}
+
+[data-palette='sage'] {
+  --canvas: #f6f7f2;
+  --canvas-parchment: #eef0e7;
+  --surface-pearl: #f2f4ee;
+  --card: #f6f7f2;
+  --ink: #1f2a22;
+  --ink-secondary: #59645a;
+  --hairline: #dfe3d8;
+  --primary: #23603f;
+  --primary-hover: #1a4a30;
+  --focus: #23603f;
+  --tint-selected: rgba(35, 96, 63, 0.14);
+}
+
+[data-palette='slate'] {
+  --canvas: #f7f9fb;
+  --canvas-parchment: #edf1f5;
+  --surface-pearl: #f2f5f8;
+  --card: #f7f9fb;
+  --ink: #16202b;
+  --ink-secondary: #55606b;
+  --hairline: #dbe2e9;
+  --primary: #14506f;
+  --primary-hover: #0f3e57;
+  --focus: #14506f;
+  --tint-selected: rgba(20, 80, 111, 0.14);
+}
+
+[data-palette='clay'] {
+  --canvas: #fdf7f2;
+  --canvas-parchment: #f5e9df;
+  --surface-pearl: #f9f1ea;
+  --card: #fdf7f2;
+  --ink: #2a1c15;
+  --ink-secondary: #6b5a50;
+  --hairline: #e8d8cb;
+  --primary: #8a4526;
+  --primary-hover: #6f361c;
+  --focus: #8a4526;
+  --tint-selected: rgba(138, 69, 38, 0.14);
+}
+
+[data-palette='rose'] {
+  --canvas: #fdf7f7;
+  --canvas-parchment: #f7eaea;
+  --surface-pearl: #faf2f2;
+  --card: #fdf7f7;
+  --ink: #2b1520;
+  --ink-secondary: #6e565d;
+  --hairline: #ead8da;
+  --primary: #7d3352;
+  --primary-hover: #652843;
+  --focus: #7d3352;
+  --tint-selected: rgba(125, 51, 82, 0.14);
+}
+
+[data-theme='dark'][data-palette='light-ivory'] {
+  --canvas: #201e1a;
+  --canvas-parchment: #141311;
+  --surface-pearl: #1b1a16;
+  --card: #1b1a16;
+  --ink: #f2efe8;
+  --ink-secondary: #b5aea1;
+  --hairline: #33302a;
+  --primary: #97d7ff;
+  --primary-hover: #b8e2ff;
+  --focus: #97d7ff;
+}
+
+[data-theme='dark'][data-palette='ivory'] {
+  --canvas: #201c18;
+  --canvas-parchment: #151310;
+  --surface-pearl: #1b1713;
+  --card: #1b1713;
+  --ink: #f2efe8;
+  --ink-secondary: #a09a8d;
+  --hairline: #2e2a24;
+  --primary: #97d7ff;
+  --primary-hover: #b8e2ff;
+  --focus: #97d7ff;
+}
+
+[data-theme='dark'][data-palette='sage'] {
+  --canvas: #1a1e1a;
+  --canvas-parchment: #101311;
+  --surface-pearl: #151917;
+  --card: #151917;
+  --ink: #e8ede6;
+  --ink-secondary: #9aa79d;
+  --hairline: #262b27;
+  --primary: #a8d8c2;
+  --primary-hover: #c2e6d4;
+  --focus: #a8d8c2;
+  --tint-selected: rgba(168, 216, 194, 0.18);
+}
+
+[data-theme='dark'][data-palette='slate'] {
+  --canvas: #171c22;
+  --canvas-parchment: #0d1116;
+  --surface-pearl: #12171d;
+  --card: #12171d;
+  --ink: #e9eef4;
+  --ink-secondary: #97a3ae;
+  --hairline: #232a32;
+  --primary: #a9cbe8;
+  --primary-hover: #c6e0f5;
+  --focus: #a9cbe8;
+  --tint-selected: rgba(169, 203, 232, 0.18);
+}
+
+[data-theme='dark'][data-palette='clay'] {
+  --canvas: #221a15;
+  --canvas-parchment: #17110e;
+  --surface-pearl: #1c1511;
+  --card: #1c1511;
+  --ink: #f0e6dd;
+  --ink-secondary: #a89688;
+  --hairline: #2f2620;
+  --primary: #e8b898;
+  --primary-hover: #f2cdb3;
+  --focus: #e8b898;
+  --tint-selected: rgba(232, 184, 152, 0.18);
+}
+
+[data-theme='dark'][data-palette='rose'] {
+  --canvas: #221419;
+  --canvas-parchment: #170f13;
+  --surface-pearl: #1c1115;
+  --card: #1c1115;
+  --ink: #f2e6ea;
+  --ink-secondary: #b09aa2;
+  --hairline: #2e2126;
+  --primary: #e3b3c6;
+  --primary-hover: #f0cbda;
+  --focus: #e3b3c6;
+  --tint-selected: rgba(227, 179, 198, 0.18);
+}
+
 * {
   box-sizing: border-box;
 }

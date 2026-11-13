@@ -18,7 +18,9 @@ import { PasswordField } from '../components/fields';
 import { Chip, Notice } from '../components/Chip';
 import { GoogleMark, GitHubMark } from '../components/icons';
 import { Panel } from '../components/Panel';
+import { PaletteSelect } from '../components/PaletteSelect';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { useTheme } from '../lib/theme';
 import { readTab, writeTab } from '../lib/tab-memory';
 
 const ACCOUNT_TABS = ['profile', 'photo', 'password'] as const;
@@ -34,6 +36,7 @@ type AccountTab = (typeof ACCOUNT_TABS)[number];
 export function Account(): ReactElement {
   const { user, refresh, signOut } = useSession();
   const { t, locale, setLocale, saving } = useI18n();
+  const { resolved, palette, setPalette } = useTheme();
   const [name, setName] = useState(user?.name ?? '');
   const [tab, setTabState] = useState<AccountTab>(() =>
     readTab('account', ACCOUNT_TABS, 'profile'),
@@ -342,6 +345,11 @@ export function Account(): ReactElement {
                 )}
               </Field>
               <Field label={t('prefs.theme')}>{() => <ThemeToggle />}</Field>
+              <Field label={t('prefs.palette')} hint={t('prefs.paletteHint')}>
+                {(id) => (
+                  <PaletteSelect id={id} value={palette} resolved={resolved} onChange={setPalette} />
+                )}
+              </Field>
             </div>
           </Panel>
         </>

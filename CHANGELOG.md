@@ -1,5 +1,35 @@
 # Changelog
 
+## web 1.13.38 — 2026-11-13
+
+Web and admin release. App versions: **web 1.13.38**, **admin 1.34.0**, **seeder 1.5.7**.
+
+### Added
+
+- **Seven themes, as paper and ink.** White, Light ivory, Ivory, Sage, Slate, Clay
+  and Rose. A theme moves the page's paper, its ink and nothing else: the play
+  button and every filled action are `--ink`, so the stock tints the primary
+  instead of adding a second accent. Every ink holds 12:1 or better on its own
+  paper, the muted 4.5:1, the spectrum 7:1; `--danger` is the same red on all
+  seven. `data-palette` on `<html>` beside a mode that did not change, and an
+  absent attribute means the original white page, so no device needed migrating.
+- **The same theme system in the console.** Seven stocks over the console's own
+  tokens — paper, ink, hairline and accent — with status colours and the shadow
+  system untouched. The console's paper is device-local (`tilawa.palette`); its
+  mode stays an account preference.
+- **A listbox, not a `<select>`.** An `<option>` can only render text, so neither
+  picker could keep the swatch that says "this is a paper". Both are hand-built:
+  paper over ink in the trigger, a swatch per stock in the list, arrows without
+  wrap, Home/End, Enter/Space, Escape returning focus. `test/listbox.test.ts`
+  holds the walk.
+
+### Changed
+
+- **Settings labels the picker السمة / Theme**, and keeps saying that playback,
+  layout and text size never move with it.
+- **`apps/admin/apps/web/src/lib/theme.ts` is gone.** A dead pre-tokens palette
+  module that shadowed `theme.tsx` for the type checker and had no importer.
+
 ## web 1.13.35 — 2026-11-13
 
 Web and admin release. App versions: **web 1.13.35**, **admin 1.33.27**, **seeder 1.5.7**.
