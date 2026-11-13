@@ -170,8 +170,8 @@ const ar = {
     off: 'إيقاف',
     pageTitle: 'الإعدادات',
     appearanceHint: 'فاتح أو داكن — يُحفظ مع بقية اختياراتك.',
-    paper: 'الورق والحبر',
-    paperHint: 'ورق الصفحة وحبرها؛ لا يتغيّر التشغيل ولا التخطيط ولا حجم النص.',
+    theme: 'السمة',
+    themeHint: 'ورق الصفحة وحبرها؛ لا يتغيّر التشغيل ولا التخطيط ولا حجم النص.',
     paperWhite: 'أبيض',
     paperLightIvory: 'عاجي فاتح',
     paperIvory: 'عاجي',
@@ -625,8 +625,8 @@ const en: typeof ar = {
     off: 'Off',
     pageTitle: 'Settings',
     appearanceHint: 'Light or dark — saved with the rest of your choices.',
-    paper: 'Paper and ink',
-    paperHint:
+    theme: 'Theme',
+    themeHint:
       'The paper the page is printed on, and its ink. Playback, layout and text size stay the same.',
     paperWhite: 'White',
     paperLightIvory: 'Light ivory',

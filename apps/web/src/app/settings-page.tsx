@@ -2,23 +2,19 @@ import type { ReactNode } from 'react';
 
 import Icon from '@/components/icons';
 import Link from '@/components/link';
+import ThemeSelect from '@/components/theme-select';
 import { PLAYBACK_RATES } from '@/hooks/use-persistence';
 import { useLocale } from '@/hooks/use-locale';
 import type { Theme } from '@/hooks/use-theme';
 import { LOCALES, type Locale } from '@/i18n/messages';
 import { cn } from '@/utils/cn';
-import { PALETTES, type PaletteId } from '@/utils/palettes';
+import type { PaletteId } from '@/utils/palettes';
 import { formatCountdown, SLEEP_OPTIONS } from '@/utils/sleep-timer';
 import { type Visualiser, VISUALISERS } from '@/utils/visualiser-models';
 
 const chip = 'min-h-8 shrink-0 rounded-full border px-3 py-1 text-[0.875rem] transition-colors';
 const chipOn = 'border-ink bg-ink font-semibold text-invert';
 const chipOff = 'border-line text-ink hover:border-ink/40';
-/** The paper chips cannot use `chipOn`: an ink fill would cover the swatch. */
-const chipPaperOn = 'border-ink font-semibold text-ink';
-/** The stock at chip scale: paper over ink, the two things a palette sets. */
-const swatch =
-  'flex h-4 w-6 shrink-0 flex-col overflow-hidden rounded-[3px] border border-line';
 
 function Group({
   icon,
@@ -127,28 +123,15 @@ export default function SettingsPage({
 
           <Group
             icon={<Icon name="palette" size={20} />}
-            title={t.settings.paper}
-            hint={t.settings.paperHint}
+            title={t.settings.theme}
+            hint={t.settings.themeHint}
           >
-            {PALETTES.map((entry) => {
-              const on = palette === entry.id;
-              const paint = theme === 'dark' ? entry.dark : entry.light;
-              return (
-                <button
-                  key={entry.id}
-                  type="button"
-                  onClick={() => onPalette(entry.id)}
-                  aria-pressed={on}
-                  className={cn(chip, 'flex items-center gap-2', on ? chipPaperOn : chipOff)}
-                >
-                  <span aria-hidden="true" className={swatch}>
-                    <span className="block flex-1" style={{ background: paint.paper }} />
-                    <span className="block flex-1" style={{ background: paint.ink }} />
-                  </span>
-                  {t.settings[entry.label]}
-                </button>
-              );
-            })}
+            <ThemeSelect
+              value={palette}
+              mode={theme}
+              onChange={onPalette}
+              label={t.settings.theme}
+            />
           </Group>
 
           <Group

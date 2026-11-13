@@ -43,13 +43,13 @@ logical properties.
 
 ### Papers and inks (the player's second stock)
 
-The player chooses a paper, not a theme: the mode stays Light/Dark and a palette
-changes what the page is printed on **and the ink it is printed with**. The play
-button, the selected chip and every filled action are `--ink`, so the ink is the
-palette's voice — that is how a paper gets a character without gaining a second
-accent. `Default` is the white page above and is written as `:root`; every other
-stock is an additive block further down `globals.css`, applied as `data-palette`
-on `<html>`.
+UI label: **السمة / Theme**. The player chooses a paper, not a theme system: the
+mode stays Light/Dark and a theme changes what the page is printed on **and the
+ink it is printed with**. The play button, the selected chip and every filled
+action are `--ink`, so the ink is the palette's voice — that is how a paper gets
+a character without gaining a second accent. `Default` is the white page above
+and is written as `:root`; every other stock is an additive block further down
+`globals.css`, applied as `data-palette` on `<html>`.
 
 | Paper | `--bg` | `--ink` | `--muted` | `--wave-front` | ink |
 |---|---|---|---|---|---|
@@ -85,9 +85,12 @@ on `<html>`.
 - Seven stocks, by the founder's call (2026-11-13): the two ivories and rose
   all stayed. What the test guards instead is that every stock is unique and
   legible at once — a count was never the design decision.
-- The picker paints the paper and the ink (a swatch: paper over ink), because a
-  sun and a moon cannot tell two light stocks apart. The test keeps the swatch
-  and the CSS from drifting.
+- The picker is a **listbox, not a `<select>`**: an `<option>` may only render
+  text, so a native control cannot paint the swatch that says "this is a paper".
+  The trigger shows the current paper and ink; the list paints each stock, marks
+  the chosen one, and walks with arrows (no wrap), Home/End, Enter/Space, Esc.
+  `test/listbox.test.ts` holds the walk; the swatch/CSS drift is held by
+  `test/palettes.test.ts`.
 
 ### Rules
 - One interactive accent. `--primary` is the only colour that signals "click me".
