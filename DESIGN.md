@@ -59,6 +59,7 @@ on `<html>`.
 | Sage | #eef0e6 | #1f2a22 | #59645a | #2f5145 | 12.9:1 |
 | Slate | #edf1f5 | #16202b | #55606b | #2a4d6e | 14.5:1 |
 | Clay | #f5e9df | #2a1c15 | #6b5a50 | #6a4026 | 13.8:1 |
+| Rose | #f7e9ea | #2b1520 | #6e565d | #6b3350 | 14.5:1 |
 
 | Paper (dark) | `--bg` | `--ink` | `--muted` | `--wave-front` | ink |
 |---|---|---|---|---|---|
@@ -68,6 +69,7 @@ on `<html>`.
 | Sage | #101311 | #e8ede6 | #9aa79d | #9dc3b2 | 15.8:1 |
 | Slate | #0d1116 | #e9eef4 | #97a3ae | #a3c4e4 | 16.2:1 |
 | Clay | #17110e | #f0e6dd | #a89688 | #d9a487 | 15.2:1 |
+| Rose | #170f13 | #f2e6ea | #b09aa2 | #e0b3c6 | 15.5:1 |
 
 - **A paper moves surfaces, ink and the two wave tokens. Nothing else.** Not
   `--danger`, not the layout, not the type scale, not a status colour.
@@ -80,8 +82,9 @@ on `<html>`.
 - `--danger` is identical on every paper: a refusal is the same red.
 - Every ink is **above 12:1** on its own paper, the muted above 4.5:1, the
   spectrum above 7:1. `test/palettes.test.ts` holds those bars.
-- The shipping list is capped at five; the ivory test takes it to six for now.
-  Anything beyond five is a skin, and a skin is a different product.
+- Seven stocks, by the founder's call (2026-11-13): the two ivories and rose
+  all stayed. What the test guards instead is that every stock is unique and
+  legible at once — a count was never the design decision.
 - The picker paints the paper and the ink (a swatch: paper over ink), because a
   sun and a moon cannot tell two light stocks apart. The test keeps the swatch
   and the CSS from drifting.

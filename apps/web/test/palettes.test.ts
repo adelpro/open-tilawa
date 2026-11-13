@@ -128,9 +128,12 @@ test('the picker swatch is the palette the CSS paints', () => {
   }
 });
 
-test('the list is short, unique and starts with the original', () => {
+test('the list starts with the original and names each stock once', () => {
   assert.equal(PALETTES[0].id, 'default');
-  // Six while the two ivory tests are on the page; the shipping cap is five.
-  assert.ok(PALETTES.length <= 6, 'the paper list is capped at six during the test');
+  // Seven is the founder's call (2026-11-13): the two ivories stay as a live
+  // comparison and rose joins them. The guard is uniqueness, not a count — the
+  // number stopped being a design decision the day the list became a catalogue.
+  assert.ok(PALETTES.length <= 7, 'the paper list is capped at seven');
   assert.equal(new Set(PALETTES.map((p) => p.id)).size, PALETTES.length);
+  assert.equal(new Set(PALETTES.map((p) => p.label)).size, PALETTES.length);
 });

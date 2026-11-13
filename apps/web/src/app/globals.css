@@ -178,6 +178,31 @@
   --wave-back: #6b4630;
 }
 
+/* Plum on rose. The ink leans aubergine on purpose: a red-leaning primary
+   would sit in the same family as the refusal red, which is the one colour
+   on the page that must never be mistaken for a mood. */
+[data-palette='rose'] {
+  --bg: #f7e9ea;
+  --ink: #2b1520;
+  --muted: #6e565d;
+  --line: #e6d3d6;
+  --invert: #f7e9ea;
+  --surface: #fdf6f6;
+  --wave-front: #6b3350;
+  --wave-back: #a87a92;
+}
+
+[data-palette='rose'][data-theme='dark'] {
+  --bg: #170f13;
+  --ink: #f2e6ea;
+  --muted: #b09aa2;
+  --line: #2e2126;
+  --invert: #170f13;
+  --surface: #201418;
+  --wave-front: #e0b3c6;
+  --wave-back: #6f4056;
+}
+
 html {
   background: var(--bg);
   -webkit-text-size-adjust: 100%;

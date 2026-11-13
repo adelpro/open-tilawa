@@ -12,7 +12,7 @@
  * values because the picker has to paint a paper — and its primary — before it
  * is chosen. `test/palettes.test.ts` fails when the CSS and the swatch drift.
  */
-export type PaletteId = 'default' | 'ivory-white' | 'paper' | 'sage' | 'slate' | 'clay';
+export type PaletteId = 'default' | 'ivory-white' | 'paper' | 'sage' | 'slate' | 'clay' | 'rose';
 
 export type PaletteSwatch = { paper: string; ink: string };
 
@@ -25,7 +25,8 @@ export type PaletteEntry = {
     | 'paperIvory'
     | 'paperSage'
     | 'paperSlate'
-    | 'paperClay';
+    | 'paperClay'
+    | 'paperRose';
   /** What the chip paints in the current mode: the page, and the ink on it. */
   light: PaletteSwatch;
   dark: PaletteSwatch;
@@ -67,6 +68,12 @@ export const PALETTES: readonly PaletteEntry[] = [
     label: 'paperClay',
     light: { paper: '#f5e9df', ink: '#2a1c15' },
     dark: { paper: '#17110e', ink: '#f0e6dd' },
+  },
+  {
+    id: 'rose',
+    label: 'paperRose',
+    light: { paper: '#f7e9ea', ink: '#2b1520' },
+    dark: { paper: '#170f13', ink: '#f2e6ea' },
   },
 ];
 
