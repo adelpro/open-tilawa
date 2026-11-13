@@ -12,6 +12,7 @@
  */
 
 import { LOCALES, type Locale } from '@/i18n/messages';
+import { PALETTES, type PaletteId } from '@/utils/palettes';
 import { VISUALISERS, type Visualiser } from '@/utils/visualiser-models';
 import { STORAGE_EVENT, STORAGE_KEYS } from '@/utils/storage-keys';
 
@@ -34,6 +35,8 @@ export type StoredSettings = {
   visualiser?: string;
   locale?: string;
   theme?: string;
+  /** The paper. Absent on every device that never chose one: that is `default`. */
+  palette?: string;
   /**
    * When this device last changed a setting, in ms. Cross-device sync compares
    * it so a late relay echo cannot undo a newer local choice. Absent in states
@@ -49,6 +52,7 @@ export type StoredSettings = {
 export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2] as const;
 
 const THEMES = ['light', 'dark'] as const;
+const PALETTE_IDS = PALETTES.map((entry) => entry.id);
 
 /** A wrong clock must not win forever: stamps this far ahead are ignored. */
 const MAX_CLOCK_SKEW = 60_000;
@@ -59,6 +63,7 @@ export type ResolvedSettings = {
   visualiser?: Visualiser;
   locale?: Locale;
   theme?: (typeof THEMES)[number];
+  palette?: PaletteId;
   updatedAt: number;
 };
 
@@ -129,12 +134,14 @@ function settingsOf(source: {
   visualiser?: unknown;
   locale?: unknown;
   theme?: unknown;
+  palette?: unknown;
 }): StoredSettings {
   const settings: StoredSettings = {
     rate: numberOrUndefined(source.rate),
     visualiser: stringOrUndefined(source.visualiser),
     locale: stringOrUndefined(source.locale),
     theme: stringOrUndefined(source.theme),
+    palette: stringOrUndefined(source.palette),
   };
   // Drop absent keys so the blob stays readable in devtools.
   (Object.keys(settings) as (keyof StoredSettings)[]).forEach((key) => {
@@ -336,6 +343,9 @@ export function resolveRemoteSettings(
   }
   if (typeof source.theme === 'string' && (THEMES as readonly string[]).includes(source.theme)) {
     resolved.theme = source.theme as (typeof THEMES)[number];
+  }
+  if (typeof source.palette === 'string' && (PALETTE_IDS as readonly string[]).includes(source.palette)) {
+    resolved.palette = source.palette as PaletteId;
   }
 
   // A stamp with no usable field is not worth a re-render.

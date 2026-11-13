@@ -69,6 +69,7 @@ test('values outside the buttons the app offers are dropped', () => {
       visualiser: 'waterfall',
       locale: 'fr',
       theme: 'blue',
+      palette: 'newsprint',
       updatedAt: NOW,
     },
     NOW,
@@ -83,6 +84,11 @@ test('valid fields survive next to invalid ones', () => {
     NOW,
   );
   assert.deepEqual(resolved, { locale: 'en', updatedAt: NOW });
+});
+
+test('the paper travels with the rest of the choices, and only a real one lands', () => {
+  const resolved = resolveRemoteSettings({}, { palette: 'paper', updatedAt: NOW }, NOW);
+  assert.deepEqual(resolved, { palette: 'paper', updatedAt: NOW });
 });
 
 test('a fresh account with no local stamp accepts the account settings', () => {

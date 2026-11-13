@@ -25,6 +25,7 @@ import {
   Microphone,
   Moon,
   MoonStars,
+  Palette,
   Pause,
   PencilSimple,
   Play,
@@ -107,6 +108,7 @@ export type IconName =
   | 'edit'
   | 'sun'
   | 'moon'
+  | 'palette'
   | 'globe'
   | 'gauge'
   | 'sleep'
@@ -157,6 +159,7 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting' | 'order' | 'repeat-one'>,
   check: Check,
   sun: Sun,
   moon: Moon,
+  palette: Palette,
   globe: GlobeHemisphereWest,
   gauge: Gauge,
   sleep: MoonStars,

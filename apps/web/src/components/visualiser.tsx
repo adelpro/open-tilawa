@@ -212,13 +212,17 @@ export default function Visualiser({
     });
     observer.observe(canvas);
 
-    // The theme lives on <html> as `data-theme`, so the tints have to be re-read
-    // when it flips — during a playing track, without remounting the canvas.
+    // The look lives on <html> as `data-theme` and `data-palette`, so the tints
+    // have to be re-read when either flips — during a playing track, without
+    // remounting the canvas.
     const theme = new MutationObserver(() => {
       tokens = readTokens();
       draw();
     });
-    theme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    theme.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-palette'],
+    });
 
     if (!playing) {
       return () => {

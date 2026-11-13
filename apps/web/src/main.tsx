@@ -4,7 +4,7 @@ import App from './App';
 import './app/globals.css';
 import { registerAppWorker } from './utils/sw-registration';
 import { alignUrlWithLocale, applyLocale, resolveInitialLocale } from './hooks/use-locale';
-import { applyTheme, resolveInitialTheme } from './hooks/use-theme';
+import { applyTheme, applyPalette, resolveInitialPalette, resolveInitialTheme } from './hooks/use-theme';
 import { migrateStorageNamespace } from './utils/storage-keys';
 
 // The namespace moved from `open-tilawa` to `tilawah`. Copy the old keys before
@@ -22,6 +22,7 @@ const startLocale = resolveInitialLocale();
 applyLocale(startLocale);
 alignUrlWithLocale(startLocale);
 applyTheme(resolveInitialTheme());
+applyPalette(resolveInitialPalette());
 
 // Install the shell (and the streaming origin) immediately, not on first play.
 void registerAppWorker();

@@ -143,7 +143,7 @@ export default function App() {
   }, [params, openRecitersAt]);
 
   const { locale, setLocale, adoptLocale } = useLocale();
-  const { theme, setTheme, adoptTheme } = useTheme();
+  const { theme, setTheme, adoptTheme, palette, setPalette, adoptPalette } = useTheme();
   const [rate, setRate] = useAtom(rateAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const [accountOpen, setAccountOpen] = useAtom(accountSheetOpenAtom);
@@ -272,13 +272,14 @@ export default function App() {
       if (applied.visualiser) setVisualiser(applied.visualiser);
       if (applied.locale) adoptLocale(applied.locale);
       if (applied.theme) adoptTheme(applied.theme);
+      if (applied.palette) adoptPalette(applied.palette);
       return;
     }
 
     // The account is older (or silent) and this device has a newer choice —
     // send it up once, so a second device can adopt it.
     if (shouldPushLocalSettings(local, remoteSettings)) updateSettings(local);
-  }, [remoteSettings, setRate, setVisualiser, adoptLocale, adoptTheme, updateSettings]);
+  }, [remoteSettings, setRate, setVisualiser, adoptLocale, adoptTheme, adoptPalette, updateSettings]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -337,6 +338,8 @@ export default function App() {
           <SettingsPage
             theme={theme}
             onTheme={setTheme}
+            palette={palette}
+            onPalette={setPalette}
             locale={locale}
             onLocale={setLocale}
             rate={rate}

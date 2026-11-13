@@ -7,10 +7,15 @@
 /*
  * Open Tilawa — one white screen.
  *
- * Seven values. No second surface, no shadow, no theme system: playback state
- * is expressed by weight and the play glyph only. The spectrum is the one place
+ * Seven values. No second surface, no shadow, no skins: playback state is
+ * expressed by weight and the play glyph only. The spectrum is the one place
  * colour is allowed, and it is one hue: --wave-front is the nearest layer,
  * --wave-back the furthest, and the two between them are mixed in code.
+ *
+ * One paper at a time. A palette may change the paper, the ink on it and that
+ * one hue — never the layout, the type, the shadows (there are none) or a
+ * status colour. `:root` is the white paper; the other stocks are additive
+ * blocks after the night palette, so the cascade always resolves.
  */
 :root {
   --bg: #ffffff;
@@ -44,6 +49,34 @@
   --wave-back: #3d6b96;
   --danger: #f87171;
   color-scheme: dark;
+}
+
+/* The ivory stock: the same page on warm paper. Ink deepens to keep 15.4:1
+   (white paper sits at 18.9), the hairline goes warmer with it, and the
+   spectrum drops a step of blue so it still reads as ink rather than a link.
+   Nothing here touches --danger: a refusal is the same red on any paper. */
+[data-palette='paper'] {
+  --bg: #f7f2e8;
+  --ink: #1c1b18;
+  --muted: #6b665c;
+  --line: #e2dacb;
+  --invert: #f7f2e8;
+  --surface: #fffdf9;
+  --wave-front: #1e4a6f;
+  --wave-back: #618fb5;
+}
+
+/* Ivory at night: warm black, not grey-black. Both attributes on the selector,
+   so it outranks the paper block above without depending on source order. */
+[data-palette='paper'][data-theme='dark'] {
+  --bg: #151310;
+  --ink: #efe9dc;
+  --muted: #a09a8d;
+  --line: #2e2a24;
+  --invert: #151310;
+  --surface: #201c18;
+  --wave-front: #a9c8e6;
+  --wave-back: #45688a;
 }
 
 html {
