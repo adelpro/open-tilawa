@@ -264,11 +264,17 @@ const ar = {
   },
   home: {
     page: (n: number) => `الصفحة ${n}`,
+    description:
+      'استمع إلى القرآن الكريم على تلاوة: اختر القارئ والسورة، ويبدأ التشغيل في ثوانٍ على أي جهاز. مجاناً، دون حساب أو إعلانات.',
   },
   about: {
-    title: 'تلاوة | القرآن أقرب إليك',
-    lede: 'تلاوة مشغّل قرآن يجمع التلاوات القرآنية في مكان واحد، ويتيح لك الاستماع إلى قرّائك المفضلين أينما كنت. اختر القارئ والسورة، وابدأ الاستماع مباشرةً، دون إعلانات أو اشتراكات أو الحاجة إلى إنشاء حساب.',
-    lede2: 'يعمل تلاوة بطريقة تتيح للمستمعين مساعدة بعضهم بعضاً في إيصال التلاوات، مع وجود خادم احتياطي يضمن استمرار التشغيل عند الحاجة.',
+    title: 'القرآن أقرب إليك',
+    // The snippet a search result shows, and a different sentence from the one the
+    // page opens with: the lede runs past the ~160 characters a result keeps.
+    description:
+      'كيف تعمل تلاوة: تنتقل التلاوات بين المستمعين أنفسهم، ويتدخّل خادم المشروع عند الحاجة، دون الحاجة إلى حساب. مجانية ومفتوحة المصدر.',
+    lede: 'استمع إلى القرآن الكريم على تلاوة. اختر القارئ والسورة، ويبدأ التشغيل في ثوانٍ على أي جهاز، دون حساب أو إعلانات.',
+    lede2: 'وتصل التلاوات إليك عبر المستمعين أنفسهم: يشارك كل جهاز ما لديه من أجزاء مع غيره، ويتدخّل خادم المشروع عند الحاجة.',
     how: {
       title: 'كيف يعمل تلاوة؟',
       p1: 'بدلاً من الاعتماد على خادم واحد لتوصيل جميع التسجيلات، يستخدم تلاوة تقنية WebTorrent التي تتيح للمستمعين تبادل أجزاء التسجيل الصوتي فيما بينهم.',
@@ -301,7 +307,7 @@ const ar = {
     faq: {
       title: 'أسئلة شائعة',
       items: [
-        { q: 'هل تلاوة مجاني؟', a: 'نعم، تلاوة مجاني، دون إعلانات أو اشتراكات.' },
+        { q: 'هل تلاوة مجانية؟', a: 'نعم، تلاوة مجانية، دون إعلانات أو اشتراكات.' },
         { q: 'هل أحتاج إلى إنشاء حساب؟', a: 'لا. يمكنك الاستماع مباشرةً دون تسجيل. وإذا أردت مزامنة المفضّلة والإعدادات بين أجهزتك، يمكنك إنشاء حلقة ونقل مفتاحها باستخدام رمز QR.' },
         { q: 'من أين تأتي التسجيلات؟', a: 'من كتالوج مجتمع إتقان (itqan.dev)، عبر منصّة «فنار» لنشر المحتوى القرآني، ومن مكتبة MP3Quran (mp3quran.net). وتعود حقوق التسجيلات إلى أصحابها من القرّاء والناشرين.' },
         { q: 'ماذا لو لم يكن هناك مستمعون آخرون؟', a: 'يجلب تلاوة الأجزاء المطلوبة من خادم المشروع إذا لم يعثر على أجهزة مشاركة خلال 8 ثوانٍ، بحد أقصى يبلغ 1 ميغابايت في الثانية لكل اتصال.' },
@@ -326,6 +332,8 @@ const ar = {
   },
   privacy: {
     title: 'الخصوصية',
+    description:
+      'ما تحتفظ به تلاوة وما لا تحتفظ به: الاستماع دون حساب، ولا إعلانات ولا أدوات تتبّع، وإحصاءات الاستخدام معطّلة حتى تشغّلها.',
     items: [
       'الاستماع لا يتطلب منك حساباً: لا بريد ولا اسم ولا كلمة مرور.',
       'الحلقة اختيارية: إن ربطت أجهزتك بها، زامنت الإعدادات والمفضّلة، وحفظها خادم المزامنة ما دامت موصولة.',
@@ -701,11 +709,17 @@ const en: typeof ar = {
   },
   home: {
     page: (n: number) => `Page ${n}`,
+    description:
+      "Listen to the Qur'an on Tilawah: choose a reciter and a surah, and playback starts in seconds on any device. Free, no account, no ads.",
   },
   about: {
-    title: 'Tilawah | The Quran, Closer to You',
-    lede: 'Tilawah is a Quran player that brings Quran recitations together in one place. Find your favorite reciters, choose a surah, and start listening wherever you are, with no ads, subscriptions, or account required.',
-    lede2: "Tilawah also lets listeners help each other deliver recitations through peer-to-peer sharing, backed by the project's own server whenever needed.",
+    title: 'The Quran, closer to you',
+    // The snippet a search result shows, and a different sentence from the one the
+    // page opens with: the lede runs past the ~160 characters a result keeps.
+    description:
+      "How Tilawah works: recitations travel between listeners, the project's server fills any gap, and no account is needed. Free and open source.",
+    lede: "Listen to the Qur'an on Tilawah. Choose a reciter, choose a surah, and playback starts within seconds on any device, with no account and no ads.",
+    lede2: "Recitations reach you through the people listening: each device shares the parts it has, and the project's own server fills in whenever a part is missing.",
     how: {
       title: 'How Does Tilawah Work?',
       p1: 'Instead of relying on a single server to deliver every audio stream, Tilawah uses WebTorrent, a technology that allows listeners to share audio segments directly with one another.',
@@ -763,6 +777,8 @@ const en: typeof ar = {
   },
   privacy: {
     title: 'Privacy',
+    description:
+      'What Tilawah stores and what it does not: listening needs no account, there are no ads or trackers, and usage statistics stay off until you enable them.',
     items: [
       'Listening needs no account. A ring is optional: connect your devices to one and your settings and favourites sync between them.',
       'No ads, no trackers.',

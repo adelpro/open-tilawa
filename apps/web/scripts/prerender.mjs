@@ -177,7 +177,7 @@ function addPage(path, build) {
 addPage('/', (locale, copy) => ({
   title:
     locale === 'ar' ? 'Tilawah - القرآن الكريم ندّاً بندّ' : 'Tilawah - the Quran, closer',
-  description: copy.about.lede,
+  description: copy.home.description,
   index: indexable('home'),
   // The app itself is the document: `WebSite` says what the address is, and
   // `WebApplication` says it is a free, browser-run player.
@@ -194,7 +194,7 @@ addPage('/about', (locale, copy) => {
   const seedUrl = urlFor('/seed', locale);
   return {
     title: pageTitle({ name: 'about' }, copy) ?? 'عن تلاوة - Tilawah',
-    description: about.lede,
+    description: about.description,
     index: indexable('about'),
     // The visible questions and the markup are one list; a page that answers in
     // words and tells a crawler something else is cloaking.
@@ -219,7 +219,7 @@ addPage('/about', (locale, copy) => {
 
 addPage('/privacy', (_locale, copy) => ({
   title: pageTitle({ name: 'privacy' }, copy) ?? 'الخصوصية - Tilawah',
-  description: copy.about.lede,
+  description: copy.privacy.description,
   index: indexable('privacy'),
   body: `<h1>${escape(copy.privacy.title)}</h1><ul>${copy.privacy.items
     .map((item) => `<li>${escape(item)}</li>`)
