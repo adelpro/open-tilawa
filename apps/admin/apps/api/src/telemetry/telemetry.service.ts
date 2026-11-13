@@ -640,16 +640,31 @@ export class TelemetryService {
      * the two panels cannot disagree. The panel is the source dimension, so it keeps
      * both sides while you filter by source.
      */
-    const playsBySource = new Map(
-      countedRows('source', 'play', 'source').map((row) => [String(row.dim), row.n]),
-    );
-    const errorsBySource = new Map(
-      countedRows('source', 'error', 'source').map((row) => [String(row.dim), row.n]),
-    );
+    /**
+     * Clients before 1.13.33 sent `torrent` for peers-or-server — the pair the player
+     * now splits. It is the same population the peer row names, so its plays are
+     * counted there: a sixth row that reads as a second "Peers" is a duplicate on
+     * screen, and nobody can act on the difference.
+     */
+    const LEGACY_SOURCES = new Set<string>(['torrent']);
+    const foldSource = (source: string): string =>
+      LEGACY_SOURCES.has(source) ? 'connected' : source;
+    const bySource = (rows: { dim: string | number; n: number }[]): Map<string, number> => {
+      const map = new Map<string, number>();
+      for (const row of rows) {
+        const key = foldSource(String(row.dim));
+        map.set(key, (map.get(key) ?? 0) + row.n);
+      }
+      return map;
+    };
+
+    const playsBySource = bySource(countedRows('source', 'play', 'source'));
+    const errorsBySource = bySource(countedRows('source', 'error', 'source'));
     // Every state, busiest first: the panel is a comparison, and a state with no
     // traffic should not sit above one that served the month. Ties keep the
     // vocabulary's own order, so a fresh install reads the same way twice.
-    const reliability = SOURCES.map((source, index) => {
+    const reliability = SOURCES.filter((source) => !LEGACY_SOURCES.has(source))
+      .map((source, index) => {
       const plays = playsBySource.get(source) ?? 0;
       const errors = errorsBySource.get(source) ?? 0;
       const attempts = plays + errors;
@@ -660,12 +675,12 @@ export class TelemetryService {
     /**
      * Plays per source state. Every state is present with a zero, so the shares
      * on the screen have one denominator and a state that appears later is not a
-     * shape change.
+     * shape change. The legacy state stays in the record at zero — its plays are
+     * already in the peer row, which is what keeps the denominator honest.
      */
-    const sources = Object.fromEntries(reliability.map((row) => [row.source, row.plays])) as Record<
-      (typeof SOURCES)[number],
-      number
-    >;
+    const sources = Object.fromEntries(
+      SOURCES.map((source) => [source, playsBySource.get(source) ?? 0]),
+    ) as Record<(typeof SOURCES)[number], number>;
 
     /**
      * How long the listener waited for sound, as the four bands the player measured.
