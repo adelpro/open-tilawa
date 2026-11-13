@@ -129,6 +129,30 @@
   --wave-back: #45688a;
 }
 
+/* Umber on clay. The warmest stock, and the only one whose ink is a brown:
+   it reads as earth, not as the refusal red, which stays #b3261e beside it. */
+[data-palette='clay'] {
+  --bg: #f5e9df;
+  --ink: #2a1c15;
+  --muted: #6b5a50;
+  --line: #e6d5c8;
+  --invert: #f5e9df;
+  --surface: #fdf7f2;
+  --wave-front: #6a4026;
+  --wave-back: #a97a5c;
+}
+
+[data-palette='clay'][data-theme='dark'] {
+  --bg: #17110e;
+  --ink: #f0e6dd;
+  --muted: #a89688;
+  --line: #2f2620;
+  --invert: #17110e;
+  --surface: #201814;
+  --wave-front: #d9a487;
+  --wave-back: #6b4630;
+}
+
 html {
   background: var(--bg);
   -webkit-text-size-adjust: 100%;

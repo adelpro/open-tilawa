@@ -57,6 +57,7 @@ on `<html>`.
 | Ivory | #f7f2e8 | #241d15 | #6b665c | #2c4a6e | 14.9:1 |
 | Sage | #eef0e6 | #1f2a22 | #59645a | #2f5145 | 12.9:1 |
 | Slate | #edf1f5 | #16202b | #55606b | #2a4d6e | 14.5:1 |
+| Clay | #f5e9df | #2a1c15 | #6b5a50 | #6a4026 | 13.8:1 |
 
 | Paper (dark) | `--bg` | `--ink` | `--muted` | `--wave-front` | ink |
 |---|---|---|---|---|---|
@@ -64,6 +65,7 @@ on `<html>`.
 | Ivory | #151310 | #efe9dc | #a09a8d | #a9c8e6 | 15.3:1 |
 | Sage | #101311 | #e8ede6 | #9aa79d | #9dc3b2 | 15.8:1 |
 | Slate | #0d1116 | #e9eef4 | #97a3ae | #a3c4e4 | 16.2:1 |
+| Clay | #17110e | #f0e6dd | #a89688 | #d9a487 | 15.2:1 |
 
 - **A paper moves surfaces, ink and the two wave tokens. Nothing else.** Not
   `--danger`, not the layout, not the type scale, not a status colour.
