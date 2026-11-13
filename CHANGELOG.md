@@ -1,5 +1,29 @@
 # Changelog
 
+## admin 1.33.26 — 2026-11-13
+
+Admin-only release. App versions: **web 1.13.34**, **admin 1.33.26**, **seeder 1.5.7**.
+
+### Fixed
+
+- **"Where the audio came from" said Peers twice.** A window holds both the current
+  `connected` state and the legacy `torrent` one while older clients report, and both
+  rows printed the same word. The legacy row keeps the filter's own name, "Legacy:
+  peers or server", so the two populations read as two.
+- **The returning-devices read-out printed a day.** The date appeared beside the
+  tile's label and again inside the devices sentence, where "3 of 8 devices" under a
+  "today" heading read as today's share. The count is the window's; the day is gone
+  from both surfaces.
+
+### Added
+
+- **`scripts/purge-console.mjs`.** The console's shell is cached at the edge by a
+  Cache Rule that ignores the origin's `no-cache`, so a rebuild left a cached shell
+  pointing at a hashed bundle the new build had deleted — a blank console until the
+  TTL ran out. The script evicts the shell, the prerendered pages and every
+  `/console/...` route, and a test fails when the router gains a screen the list does
+  not name.
+
 ## web 1.13.34 — 2026-11-13
 
 Web and admin release. App versions: **web 1.13.34**, **admin 1.33.25**, **seeder 1.5.7**.
