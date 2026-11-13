@@ -19,10 +19,11 @@ describe('sourceLabel', () => {
     assert.equal(sourceLabel('direct', t), 'key:usage.sourceDirect');
   });
 
-  it('names the legacy pair with the words this screen already used', () => {
-    // Every client before 1.13.33 sent `torrent` or `webseed`; their rows stay
-    // readable instead of turning into six-month-old blanks.
-    assert.equal(sourceLabel('torrent', t), 'key:usage.torrent');
+  it('names the legacy pair so it cannot be read as the peer row twice', () => {
+    // Both states can appear in one window: a client before 1.13.33 reports `torrent`
+    // while a current one reports `connected`. Two rows labelled "Peers" is the bug
+    // this name fixes; the pair keeps the filter's own words.
+    assert.equal(sourceLabel('torrent', t), 'key:usage.legacyPair');
     assert.equal(sourceLabel('webseed', t), 'key:usage.webseed');
   });
 

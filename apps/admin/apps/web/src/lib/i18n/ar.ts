@@ -89,7 +89,6 @@ export const ar: Catalogue = {
   'usage.listeners': 'أجهزة استمعت اليوم: {count}',
   'usage.listenersCount': 'استمعوا',
   'usage.returning': 'أجهزة عائدة (7 أيام فأكثر)',
-  'usage.returningOn': '{date}: {returning} من {known} جهازًا',
   'usage.returningNone': 'لم يبلّغ أي جهاز عن عمر 7 أيام في هذا المدى.',
   // No counted noun: the label above it already says 'devices', and Arabic's
   // plural for 3–10 is not the same word as for 11+.

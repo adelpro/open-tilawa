@@ -18,8 +18,11 @@ const KEYS: Record<string, MessageKey> = {
   webseed: 'usage.webseed',
   mixed: 'usage.sourceMixed',
   direct: 'usage.sourceDirect',
-  // Legacy: one word for connected-and-waiting, which is what the pair meant.
-  torrent: 'usage.torrent',
+  // Legacy: one word for connected-and-waiting, which is what the pair meant. It
+  // keeps the filter's own name ("Legacy: peers or server") rather than "Peers":
+  // a window can hold both states at once, and two rows called Peers reads as a
+  // duplicate, not as two populations.
+  torrent: 'usage.legacyPair',
 };
 
 export function sourceLabel(source: string, t: (key: MessageKey) => string): string {

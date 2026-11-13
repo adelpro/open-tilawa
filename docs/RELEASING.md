@@ -88,7 +88,30 @@ git push origin <app>-v<version>
 
 # 4. deploy every service whose code changed
 docker compose up -d --build web          # or admin-web, admin-api, seeder
+
+# 5. evict what the deploy replaced (see "Purge the edge")
+( cd apps/web && CF_API_TOKEN=... CF_ZONE_ID=... node scripts/purge-cache.mjs )
+( cd apps/admin/apps/web && CF_API_TOKEN=... CF_ZONE_ID=... node scripts/purge-console.mjs )
 ```
+
+### Purge the edge
+
+Two hosts cache HTML at Cloudflare, and each has its own list because they are built
+differently:
+
+- **`tilawah.cc`** — the prerendered pages, cached for an hour by design
+  (`s-maxage=3600`). `apps/web/scripts/purge-cache.mjs` reads `dist/purge-urls.txt`,
+  the list the build itself wrote, so the English twins are evicted too.
+- **`console.tilawah.cc`** — one SPA shell served for every screen. A Cache Rule on
+  that host ignores the origin's `no-cache`, and the shell names a hashed bundle:
+  once a new build replaces it, a cached shell points at a script that answers 404
+  and the console is blank until the TTL runs out. `apps/admin/apps/web/scripts/
+  purge-console.mjs` evicts the shell, the prerendered pages and every
+  `/console/...` route; a test fails when the router gains a screen that list does
+  not name.
+
+Both scripts print what they would evict and exit 0 without `CF_API_TOKEN` /
+`CF_ZONE_ID`: a missing purge is a stale hour, not a failed deploy.
 
 `develop` and `main` are kept identical: `main` is fast-forwarded, never merged
 into by hand, so `git rev-list --count main..develop` is 0 between releases.

@@ -84,7 +84,6 @@ export const en = {
   'usage.listeners': 'Devices that played today: {count}',
   'usage.listenersCount': 'Played',
   'usage.returning': 'Returning devices (7+ days)',
-  'usage.returningOn': '{date}: {returning} of {known} devices',
   'usage.returningNone': 'No device has reported a 7-day age in this window.',
   'usage.returningOf': '{returning} of {known} devices',
   'usage.returningNote': 'Among devices that reported an age; older clients are not counted.',

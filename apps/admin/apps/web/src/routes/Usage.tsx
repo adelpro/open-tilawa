@@ -520,7 +520,6 @@ export function Usage(): ReactElement {
               </span>
               <span className="usage-today__l">
                 {t('usage.returning')}
-                {stamp?.day ? ` · ${shortDate(stamp.day, locale)}` : ''}
               </span>
             </div>
           </section>
@@ -734,20 +733,14 @@ export function Usage(): ReactElement {
             <p>{t('usage.listeners', { count: String(listenedToday) })}</p>
             {stamp ? (
               <>
-                {/* The day is named only when the share is not today's: an older day
-                    shown bare under a "today" heading is the one way this lies. */}
+                {/* The count is the window's, so no day is named: beside a "today"
+                    heading a date reads as "today's share", which it is not. */}
                 <p>
                   {t('usage.returning')}:{' '}
-                  {stamp.day
-                    ? t('usage.returningOn', {
-                        date: shortDate(stamp.day, locale),
-                        returning: String(stamp.returning),
-                        known: String(stamp.known),
-                      })
-                    : t('usage.returningOf', {
-                        returning: String(stamp.returning),
-                        known: String(stamp.known),
-                      })}
+                  {t('usage.returningOf', {
+                    returning: String(stamp.returning),
+                    known: String(stamp.known),
+                  })}
                 </p>
                 {returning && !returning.anyReturning ? (
                   <p className="muted">{t('usage.returningNone')}</p>
