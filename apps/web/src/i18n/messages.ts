@@ -211,7 +211,7 @@ const ar = {
     fallbackAvailable: 'متوفّر',
     fallbackMissing: 'غير متوفّر',
     fallbackChecking: 'جارٍ الفحص',
-    waitingNote: 'لم يتصل أي قارئ بعد. التشغيل يبدأ عندما يظهر أوّل قرين.',
+    waitingNote: 'لا يوجد أقران بعد. يعمل التشغيل من الخادم حتى يتصل قرين.',
     directNote: 'توقّف البث المباشر، ويُشغَّل الآن من الخادم.',
   },
   sheets: {
@@ -649,7 +649,7 @@ const en: typeof ar = {
     fallbackAvailable: 'Available',
     fallbackMissing: 'Unavailable',
     fallbackChecking: 'Checking',
-    waitingNote: 'No peer has connected yet. Playback starts with the first one.',
+    waitingNote: 'No peers yet. Playback runs from the server until one connects.',
     directNote: 'The live stream stopped, so this plays from the server.',
   },
   sheets: {

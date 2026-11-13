@@ -1,5 +1,20 @@
 # Changelog
 
+## web 1.13.35 — 2026-11-13
+
+Web and admin release. App versions: **web 1.13.35**, **admin 1.33.27**, **seeder 1.5.7**.
+
+### Fixed
+
+- **The stream sheet said playback waits for a peer.** "No peer has connected yet.
+  Playback starts with the first one" promised silence, when the player starts from
+  the project server and keeps it as the fallback. It now says what happens:
+  "No peers yet. Playback runs from the server until one connects."
+- **"Where the audio came from" listed Peers twice.** Clients before 1.13.33 report
+  the old `torrent` value — peers-or-server as one word — and it rendered as a second
+  row called Peers. Its plays are now counted in the peer row, so the panel compares
+  five states. The source filter still isolates the legacy value for diagnosis.
+
 ## admin 1.33.26 — 2026-11-13
 
 Admin-only release. App versions: **web 1.13.34**, **admin 1.33.26**, **seeder 1.5.7**.
