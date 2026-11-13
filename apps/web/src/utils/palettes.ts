@@ -12,14 +12,20 @@
  * values because the picker has to paint a paper — and its primary — before it
  * is chosen. `test/palettes.test.ts` fails when the CSS and the swatch drift.
  */
-export type PaletteId = 'default' | 'paper' | 'sage' | 'slate' | 'clay';
+export type PaletteId = 'default' | 'ivory-white' | 'paper' | 'sage' | 'slate' | 'clay';
 
 export type PaletteSwatch = { paper: string; ink: string };
 
 export type PaletteEntry = {
   id: PaletteId;
   /** A `settings` message key: the chip's name. */
-  label: 'paperWhite' | 'paperIvory' | 'paperSage' | 'paperSlate' | 'paperClay';
+  label:
+    | 'paperWhite'
+    | 'paperLightIvory'
+    | 'paperIvory'
+    | 'paperSage'
+    | 'paperSlate'
+    | 'paperClay';
   /** What the chip paints in the current mode: the page, and the ink on it. */
   light: PaletteSwatch;
   dark: PaletteSwatch;
@@ -33,10 +39,16 @@ export const PALETTES: readonly PaletteEntry[] = [
     dark: { paper: '#0b0b0c', ink: '#f2f2f2' },
   },
   {
+    id: 'ivory-white',
+    label: 'paperLightIvory',
+    light: { paper: '#fdfbf7', ink: '#111111' },
+    dark: { paper: '#0d0c0b', ink: '#f2f2f2' },
+  },
+  {
     id: 'paper',
     label: 'paperIvory',
-    light: { paper: '#f7f2e8', ink: '#241d15' },
-    dark: { paper: '#151310', ink: '#efe9dc' },
+    light: { paper: '#f7f2e8', ink: '#111111' },
+    dark: { paper: '#151310', ink: '#f2f2f2' },
   },
   {
     id: 'sage',

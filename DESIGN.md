@@ -54,7 +54,8 @@ on `<html>`.
 | Paper | `--bg` | `--ink` | `--muted` | `--wave-front` | ink |
 |---|---|---|---|---|---|
 | White (default) | #ffffff | #111111 | #6b6b6b | #1c4d78 | 18.9:1 |
-| Ivory | #f7f2e8 | #241d15 | #6b665c | #2c4a6e | 14.9:1 |
+| Light ivory (test) | #fdfbf7 | #111111 | #6b6b6b | #1c4d78 | 18.3:1 |
+| Ivory (test) | #f7f2e8 | #111111 | #6b6b6b | #1c4d78 | 16.9:1 |
 | Sage | #eef0e6 | #1f2a22 | #59645a | #2f5145 | 12.9:1 |
 | Slate | #edf1f5 | #16202b | #55606b | #2a4d6e | 14.5:1 |
 | Clay | #f5e9df | #2a1c15 | #6b5a50 | #6a4026 | 13.8:1 |
@@ -62,24 +63,28 @@ on `<html>`.
 | Paper (dark) | `--bg` | `--ink` | `--muted` | `--wave-front` | ink |
 |---|---|---|---|---|---|
 | White (default) | #0b0b0c | #f2f2f2 | #9a9a9a | #a6c9ec | 17.6:1 |
-| Ivory | #151310 | #efe9dc | #a09a8d | #a9c8e6 | 15.3:1 |
+| Light ivory (test) | #0d0c0b | #f2f2f2 | #9a9a9a | #a6c9ec | 17.5:1 |
+| Ivory (test) | #151310 | #f2f2f2 | #9a9a9a | #a6c9ec | 16.6:1 |
 | Sage | #101311 | #e8ede6 | #9aa79d | #9dc3b2 | 15.8:1 |
 | Slate | #0d1116 | #e9eef4 | #97a3ae | #a3c4e4 | 16.2:1 |
 | Clay | #17110e | #f0e6dd | #a89688 | #d9a487 | 15.2:1 |
 
 - **A paper moves surfaces, ink and the two wave tokens. Nothing else.** Not
   `--danger`, not the layout, not the type scale, not a status colour.
-- **The ink carries the hue, not a badge.** Iron-gall on ivory, green-black on
-  sage, blue-black on slate. There is still one colour on the page: a tinted
-  ink is not an accent to be clicked beside something else.
+- **The ink carries the hue, not a badge.** Green-black on sage, blue-black on
+  slate, umber on clay. There is still one colour on the page: a tinted ink is
+  not an accent to be clicked beside something else.
+- **The two ivory stocks are a controlled test, not a settled opinion.** They
+  wear white's own ink and spectrum, so the paper is the only variable. One of
+  them is expected to be dropped once it has been looked at.
 - `--danger` is identical on every paper: a refusal is the same red.
 - Every ink is **above 12:1** on its own paper, the muted above 4.5:1, the
   spectrum above 7:1. `test/palettes.test.ts` holds those bars.
-- The list is capped at five. A sixth paper is a skin, and a skin is a
-  different product.
-- The picker paints the paper and the ink (a swatch: page, with the primary
-  along its foot), because a sun and a moon cannot tell two light stocks apart.
-  The test keeps the swatch and the CSS from drifting.
+- The shipping list is capped at five; the ivory test takes it to six for now.
+  Anything beyond five is a skin, and a skin is a different product.
+- The picker paints the paper and the ink (a swatch: paper over ink), because a
+  sun and a moon cannot tell two light stocks apart. The test keeps the swatch
+  and the CSS from drifting.
 
 ### Rules
 - One interactive accent. `--primary` is the only colour that signals "click me".

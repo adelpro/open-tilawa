@@ -173,6 +173,7 @@ const ar = {
     paper: 'الورق والحبر',
     paperHint: 'ورق الصفحة وحبرها؛ لا يتغيّر التشغيل ولا التخطيط ولا حجم النص.',
     paperWhite: 'أبيض',
+    paperLightIvory: 'عاجي فاتح',
     paperIvory: 'عاجي',
     paperSage: 'زيتي',
     paperSlate: 'رمادي',
@@ -627,6 +628,7 @@ const en: typeof ar = {
     paperHint:
       'The paper the page is printed on, and its ink. Playback, layout and text size stay the same.',
     paperWhite: 'White',
+    paperLightIvory: 'Light ivory',
     paperIvory: 'Ivory',
     paperSage: 'Sage',
     paperSlate: 'Slate',

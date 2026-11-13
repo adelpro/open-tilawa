@@ -58,27 +58,52 @@
    above 4.5:1, and the spectrum is the ink hue lifted, not a second palette.
    `--danger` is absent on purpose: a refusal is the same red on any stock. */
 
-/* Iron-gall on ivory, warm black on cream. */
+/* The two ivory tests: white's own ink and spectrum on two warm papers, so the
+   paper is the only variable against the default white page. They exist to be
+   compared — one of them is likely to be dropped once it has been seen. */
+[data-palette='ivory-white'] {
+  --bg: #fdfbf7;
+  --ink: #111111;
+  --muted: #6b6b6b;
+  --line: #e9e4da;
+  --invert: #fdfbf7;
+  --surface: #fffefb;
+  --wave-front: #1c4d78;
+  --wave-back: #5d97c9;
+}
+
+[data-palette='ivory-white'][data-theme='dark'] {
+  --bg: #0d0c0b;
+  --ink: #f2f2f2;
+  --muted: #9a9a9a;
+  --line: #262421;
+  --invert: #0d0c0b;
+  --surface: #191715;
+  --wave-front: #a6c9ec;
+  --wave-back: #3d6b96;
+}
+
+/* Ivory: the cream the reader asked for, still printed in carbon. */
 [data-palette='paper'] {
   --bg: #f7f2e8;
-  --ink: #241d15;
-  --muted: #6b665c;
+  --ink: #111111;
+  --muted: #6b6b6b;
   --line: #e2dacb;
   --invert: #f7f2e8;
   --surface: #fffdf9;
-  --wave-front: #2c4a6e;
-  --wave-back: #6f8fae;
+  --wave-front: #1c4d78;
+  --wave-back: #5d97c9;
 }
 
 [data-palette='paper'][data-theme='dark'] {
   --bg: #151310;
-  --ink: #efe9dc;
-  --muted: #a09a8d;
+  --ink: #f2f2f2;
+  --muted: #9a9a9a;
   --line: #2e2a24;
   --invert: #151310;
   --surface: #201c18;
-  --wave-front: #a9c8e6;
-  --wave-back: #45688a;
+  --wave-front: #a6c9ec;
+  --wave-back: #3d6b96;
 }
 
 /* Green-black on sage. The green is in the ink and the hairlines, not in a

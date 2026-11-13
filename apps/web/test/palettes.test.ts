@@ -130,6 +130,7 @@ test('the picker swatch is the palette the CSS paints', () => {
 
 test('the list is short, unique and starts with the original', () => {
   assert.equal(PALETTES[0].id, 'default');
-  assert.ok(PALETTES.length <= 5, 'the paper list is capped at five');
+  // Six while the two ivory tests are on the page; the shipping cap is five.
+  assert.ok(PALETTES.length <= 6, 'the paper list is capped at six during the test');
   assert.equal(new Set(PALETTES.map((p) => p.id)).size, PALETTES.length);
 });
