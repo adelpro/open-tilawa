@@ -103,7 +103,7 @@ test('every palette is legible in both modes', () => {
 
     for (const set of pairs) {
       const page = set['--bg'];
-      assert.ok(contrast(set['--ink'], page) >= 7, `${palette.id}: ink under 7:1 on ${page}`);
+      assert.ok(contrast(set['--ink'], page) >= 12, `${palette.id}: ink under 12:1 on ${page}`);
       assert.ok(contrast(set['--muted'], page) >= 4.5, `${palette.id}: muted under 4.5:1 on ${page}`);
       // The spectrum is data, not text, but it is the only hue on the page and
       // it carries the visualiser: it holds the same bar as body ink.
@@ -121,15 +121,15 @@ test('the picker swatch is the palette the CSS paints', () => {
       ? tokens("[data-theme='dark']")
       : tokens(`[data-palette='${palette.id}'][data-theme='dark']`);
 
-    assert.equal(palette.light.bg, light['--bg'], `${palette.id}: light swatch paper drifted`);
-    assert.equal(palette.light.wave, light['--wave-front'], `${palette.id}: light swatch wave drifted`);
-    assert.equal(palette.dark.bg, dark['--bg'], `${palette.id}: dark swatch paper drifted`);
-    assert.equal(palette.dark.wave, dark['--wave-front'], `${palette.id}: dark swatch wave drifted`);
+    assert.equal(palette.light.paper, light['--bg'], `${palette.id}: light swatch paper drifted`);
+    assert.equal(palette.light.ink, light['--ink'], `${palette.id}: light swatch ink drifted`);
+    assert.equal(palette.dark.paper, dark['--bg'], `${palette.id}: dark swatch paper drifted`);
+    assert.equal(palette.dark.ink, dark['--ink'], `${palette.id}: dark swatch ink drifted`);
   }
 });
 
 test('the list is short, unique and starts with the original', () => {
   assert.equal(PALETTES[0].id, 'default');
-  assert.ok(PALETTES.length <= 3, 'the paper list is capped at three');
+  assert.ok(PALETTES.length <= 5, 'the paper list is capped at five');
   assert.equal(new Set(PALETTES.map((p) => p.id)).size, PALETTES.length);
 });

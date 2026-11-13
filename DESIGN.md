@@ -41,34 +41,43 @@ logical properties.
 | `--primary-hover` | #b8e2ff | hover state |
 | `--hairline` | #2c2c2e | dividers |
 
-### Papers (the player's second stock)
+### Papers and inks (the player's second stock)
 
 The player chooses a paper, not a theme: the mode stays Light/Dark and a palette
-only changes what the page is printed on. `Default` is the white page above and
-is written as `:root`; every other paper is an additive block further down
-`globals.css`, applied as `data-palette` on `<html>`.
+changes what the page is printed on **and the ink it is printed with**. The play
+button, the selected chip and every filled action are `--ink`, so the ink is the
+palette's voice — that is how a paper gets a character without gaining a second
+accent. `Default` is the white page above and is written as `:root`; every other
+stock is an additive block further down `globals.css`, applied as `data-palette`
+on `<html>`.
 
-| Token | Paper light | Paper dark |
-|---|---|---|
-| `--bg` | #f7f2e8 | #151310 |
-| `--ink` | #1c1b18 | #efe9dc |
-| `--muted` | #6b665c | #a09a8d |
-| `--line` | #e2dacb | #2e2a24 |
-| `--invert` | #f7f2e8 | #151310 |
-| `--surface` | #fffdf9 | #201c18 |
-| `--wave-front` | #1e4a6f | #a9c8e6 |
-| `--wave-back` | #618fb5 | #45688a |
+| Paper | `--bg` | `--ink` | `--muted` | `--wave-front` | ink |
+|---|---|---|---|---|---|
+| White (default) | #ffffff | #111111 | #6b6b6b | #1c4d78 | 18.9:1 |
+| Ivory | #f7f2e8 | #241d15 | #6b665c | #2c4a6e | 14.9:1 |
+| Sage | #eef0e6 | #1f2a22 | #59645a | #2f5145 | 12.9:1 |
+| Slate | #edf1f5 | #16202b | #55606b | #2a4d6e | 14.5:1 |
 
-Measured: ink 15.4:1 / 15.3:1, muted 5.1:1 / 6.6:1, wave-front 8.3:1 / 10.7:1.
+| Paper (dark) | `--bg` | `--ink` | `--muted` | `--wave-front` | ink |
+|---|---|---|---|---|---|
+| White (default) | #0b0b0c | #f2f2f2 | #9a9a9a | #a6c9ec | 17.6:1 |
+| Ivory | #151310 | #efe9dc | #a09a8d | #a9c8e6 | 15.3:1 |
+| Sage | #101311 | #e8ede6 | #9aa79d | #9dc3b2 | 15.8:1 |
+| Slate | #0d1116 | #e9eef4 | #97a3ae | #a3c4e4 | 16.2:1 |
 
 - **A paper moves surfaces, ink and the two wave tokens. Nothing else.** Not
   `--danger`, not the layout, not the type scale, not a status colour.
+- **The ink carries the hue, not a badge.** Iron-gall on ivory, green-black on
+  sage, blue-black on slate. There is still one colour on the page: a tinted
+  ink is not an accent to be clicked beside something else.
 - `--danger` is identical on every paper: a refusal is the same red.
-- The list is capped at three. A fourth paper is a skin, and a skin is a
+- Every ink is **above 12:1** on its own paper, the muted above 4.5:1, the
+  spectrum above 7:1. `test/palettes.test.ts` holds those bars.
+- The list is capped at five. A sixth paper is a skin, and a skin is a
   different product.
-- The picker paints the paper it offers (a swatch), because a sun and a moon
-  cannot tell two light papers apart. `test/palettes.test.ts` keeps the swatch
-  and the CSS from drifting and holds the contrast bars above.
+- The picker paints the paper and the ink (a swatch: page, with the primary
+  along its foot), because a sun and a moon cannot tell two light stocks apart.
+  The test keeps the swatch and the CSS from drifting.
 
 ### Rules
 - One interactive accent. `--primary` is the only colour that signals "click me".

@@ -16,9 +16,9 @@ const chipOn = 'border-ink bg-ink font-semibold text-invert';
 const chipOff = 'border-line text-ink hover:border-ink/40';
 /** The paper chips cannot use `chipOn`: an ink fill would cover the swatch. */
 const chipPaperOn = 'border-ink font-semibold text-ink';
-/** The paper itself, at chip scale: a page with the spectrum along its foot. */
+/** The stock at chip scale: paper over ink, the two things a palette sets. */
 const swatch =
-  'flex h-4 w-6 shrink-0 flex-col justify-end overflow-hidden rounded-[3px] border border-line';
+  'flex h-4 w-6 shrink-0 flex-col overflow-hidden rounded-[3px] border border-line';
 
 function Group({
   icon,
@@ -141,8 +141,9 @@ export default function SettingsPage({
                   aria-pressed={on}
                   className={cn(chip, 'flex items-center gap-2', on ? chipPaperOn : chipOff)}
                 >
-                  <span aria-hidden="true" className={swatch} style={{ background: paint.bg }}>
-                    <span className="block h-[3px] w-full" style={{ background: paint.wave }} />
+                  <span aria-hidden="true" className={swatch}>
+                    <span className="block flex-1" style={{ background: paint.paper }} />
+                    <span className="block flex-1" style={{ background: paint.ink }} />
                   </span>
                   {t.settings[entry.label]}
                 </button>

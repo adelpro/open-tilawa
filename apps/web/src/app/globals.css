@@ -51,23 +51,25 @@
   color-scheme: dark;
 }
 
-/* The ivory stock: the same page on warm paper. Ink deepens to keep 15.4:1
-   (white paper sits at 18.9), the hairline goes warmer with it, and the
-   spectrum drops a step of blue so it still reads as ink rather than a link.
-   Nothing here touches --danger: a refusal is the same red on any paper. */
+/* Papers. A palette is a stock and the ink it is printed with: the play
+   button, the selected chip and every filled action are `--ink`, so tinting
+   ink is what gives each paper a voice — still one colour per page, never an
+   accent beside it. Every ink stays above 12:1 on its own paper, the muted
+   above 4.5:1, and the spectrum is the ink hue lifted, not a second palette.
+   `--danger` is absent on purpose: a refusal is the same red on any stock. */
+
+/* Iron-gall on ivory, warm black on cream. */
 [data-palette='paper'] {
   --bg: #f7f2e8;
-  --ink: #1c1b18;
+  --ink: #241d15;
   --muted: #6b665c;
   --line: #e2dacb;
   --invert: #f7f2e8;
   --surface: #fffdf9;
-  --wave-front: #1e4a6f;
-  --wave-back: #618fb5;
+  --wave-front: #2c4a6e;
+  --wave-back: #6f8fae;
 }
 
-/* Ivory at night: warm black, not grey-black. Both attributes on the selector,
-   so it outranks the paper block above without depending on source order. */
 [data-palette='paper'][data-theme='dark'] {
   --bg: #151310;
   --ink: #efe9dc;
@@ -76,6 +78,54 @@
   --invert: #151310;
   --surface: #201c18;
   --wave-front: #a9c8e6;
+  --wave-back: #45688a;
+}
+
+/* Green-black on sage. The green is in the ink and the hairlines, not in a
+   badge or a banner, so the page is still one value lighter than the words. */
+[data-palette='sage'] {
+  --bg: #eef0e6;
+  --ink: #1f2a22;
+  --muted: #59645a;
+  --line: #d9ddcf;
+  --invert: #eef0e6;
+  --surface: #f7f8f2;
+  --wave-front: #2f5145;
+  --wave-back: #7f9e8b;
+}
+
+[data-palette='sage'][data-theme='dark'] {
+  --bg: #101311;
+  --ink: #e8ede6;
+  --muted: #9aa79d;
+  --line: #262b27;
+  --invert: #101311;
+  --surface: #191d1a;
+  --wave-front: #9dc3b2;
+  --wave-back: #4a6b5c;
+}
+
+/* Blue-black on cool grey. The one paper that leans cold: a console stock,
+   for a listener who reads at a desk. */
+[data-palette='slate'] {
+  --bg: #edf1f5;
+  --ink: #16202b;
+  --muted: #55606b;
+  --line: #d8dfe6;
+  --invert: #edf1f5;
+  --surface: #f8fafc;
+  --wave-front: #2a4d6e;
+  --wave-back: #7d9cba;
+}
+
+[data-palette='slate'][data-theme='dark'] {
+  --bg: #0d1116;
+  --ink: #e9eef4;
+  --muted: #97a3ae;
+  --line: #232a32;
+  --invert: #0d1116;
+  --surface: #161c23;
+  --wave-front: #a3c4e4;
   --wave-back: #45688a;
 }
 
