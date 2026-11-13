@@ -1,5 +1,41 @@
 # Changelog
 
+## web 1.13.34 — 2026-11-13
+
+Web and admin release. App versions: **web 1.13.34**, **admin 1.33.25**, **seeder 1.5.7**.
+
+### Added
+
+- **An operator alert says why a service is down.** The probe has always recorded
+  what it saw — a status line, a refused socket, a timeout — and three hops threw
+  it away: the alert history read only pass/fail, the mail wrote "3 consecutive
+  checks failed", and the status page ignored a `detail` field it already had.
+  The mail now quotes the answer ("The last answer was: 503 Service Unavailable"),
+  and a network failure reports the real reason instead of `fetch failed`.
+- **A check history under each service card.** The last 50 checks, newest first,
+  opened by default when the service is down and refreshed by the same poll that
+  moves the chip — so the recovery row is visible, not just the last red bar.
+- **A reciter page states its facts.** Each indexed page now carries a Person and
+  a CollectionPage whose list items name each surah's verses, juz and page: the
+  facts the visible page has no room for, emitted as one merged graph.
+
+### Fixed
+
+- **An in-app browser was counted as a failed peer.** A browser that never had a
+  streaming worker and a stream that died mid-play both reported `direct`, so the
+  reliability panel counted every in-app visitor as a peer failure. The flag now
+  carries the reason: `nostream` is the server's copy working normally.
+- **The Arabic share said "3 من 7 جهازاً"** — the counted noun is dropped, as
+  Arabic requires for three to ten.
+- **The purge truncated at thirty files**, and skipped the English twins because
+  it read a hand-kept list instead of the sitemap the build just wrote.
+
+### Changed
+
+- **The edge holds a prerendered page for an hour** (`s-maxage=3600`, browser
+  revalidates). Time to first byte was 0.85–4.1 s from the same host; only the
+  HTML was slow, and the audio was already cached. A 404 is never cached.
+
 ## web 1.13.33 — 2026-11-12
 
 Web release. App versions: **web 1.13.33**, **admin 1.33.24**, **seeder 1.5.7**.
