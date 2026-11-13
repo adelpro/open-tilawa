@@ -498,7 +498,7 @@ const en: typeof ar = {
   routes: {
     listen: 'Listen',
     settings: 'Settings',
-    about: 'About Tilawah',
+    about: 'About',
     privacy: 'Privacy',
     seed: 'Seed a copy',
     reciters: 'Reciters',
