@@ -1399,6 +1399,45 @@
         ]
       }
     },
+    "/api/backups": {
+      "get": {
+        "operationId": "BackupsController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Catalogue snapshots: the newest here, and the newest on the node.",
+        "tags": [
+          "Backups"
+        ]
+      }
+    },
+    "/api/backups/{name}/download": {
+      "get": {
+        "operationId": "BackupsController_download",
+        "parameters": [
+          {
+            "name": "name",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Download one catalogue snapshot.",
+        "tags": [
+          "Backups"
+        ]
+      }
+    },
     "/api/reciters": {
       "get": {
         "operationId": "RecitersController_list",
@@ -2284,7 +2323,7 @@
   "info": {
     "title": "Tilawa Admin API",
     "description": "",
-    "version": "1.33.27",
+    "version": "1.34.0",
     "contact": {}
   },
   "tags": [],

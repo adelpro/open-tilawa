@@ -23,6 +23,7 @@ import { About } from './routes/About';
 import { Help } from './routes/Help';
 import { Tools } from './routes/Tools';
 import { Status } from './routes/Status';
+import { Backups } from './routes/Backups';
 import { Settings } from './routes/Settings';
 import { Privacy } from './routes/Privacy';
 import { Terms } from './routes/Terms';
@@ -365,6 +366,7 @@ function Screen({
   if (first === 'account') return <Account />;
   if (first === 'tools') return <Tools />;
   if (first === 'status') return <Status />;
+  if (first === 'backups' && (role === 'admin' || role === 'super_admin')) return <Backups />;
   if (first === 'usage' && (role === 'admin' || role === 'super_admin')) return <Usage />;
   if (first === 'settings' && (role === 'admin' || role === 'super_admin')) return <Settings />;
   if (first === 'help') return <Help />;
