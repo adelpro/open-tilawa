@@ -71,7 +71,9 @@ doc = {
     "local": {"file": name, "bytes": int(size), "sha256": sha},
     "remote": {"state": state if state != "failed" else "unknown",
                "last_ok_at": prev_remote or None,
-               "last_ok_file": remote_last or None},
+               "last_ok_file": remote_last or None,
+               "verified_at": os.environ.get("VERIFIED_AT") or None,
+               "verified_error": os.environ.get("VERIFIED_ERROR") or None},
     "error": error or None,
 }
 tmp = status_path + ".tmp"
@@ -151,6 +153,47 @@ if rsync -az --timeout=60 -e "ssh ${SSH_OPTS[*]}" \
 else
   err="remote unreachable, local copy kept"
 fi
+
+# 3b. Read the far copy back and check it is still a database.
+#
+# A checksum proves the bytes arrived; it cannot prove the file at rest is intact, and
+# a backup nobody has ever opened is a hope. The check runs on this side, so the far
+# machine needs no sqlite tooling and no agent: it is the same ssh session rsync used.
+verified_at=""
+verified_error=""
+if [ "$state" = ok ]; then
+  probe="$LOCAL_DIR/.verify-$ts.sqlite"
+  if rsync -az --timeout=60 -e "ssh ${SSH_OPTS[*]}" \
+       "$REMOTE:$REMOTE_DIR/$name" "$probe" 2>/dev/null; then
+    verdict=$(python3 - "$probe" <<'PY3' 2>&1
+import json, sqlite3, sys
+try:
+    check = sqlite3.connect(f"file:{sys.argv[1]}?mode=ro", uri=True)
+    integrity = check.execute("PRAGMA integrity_check").fetchone()[0]
+    tables = check.execute(
+        "select count(*) from sqlite_master "
+        "where type='table' and name not like 'sqlite_%'"
+    ).fetchone()[0]
+    check.close()
+    print(json.dumps({"integrity": integrity, "tables": tables}))
+except Exception as error:
+    print(json.dumps({"integrity": f"error: {error}", "tables": 0}))
+PY3
+)
+    rm -f "$probe"
+    r_integrity=$(printf '%s' "$verdict" | python3 -c 'import json,sys;print(json.load(sys.stdin)["integrity"])' 2>/dev/null || echo unparsed)
+    if [ "$r_integrity" = ok ]; then
+      verified_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    else
+      verified_error="remote copy is not a healthy database: $r_integrity"
+      state=failed
+      err=$verified_error
+    fi
+  else
+    verified_error="could not read the remote copy back"
+  fi
+fi
+export VERIFIED_AT="$verified_at" VERIFIED_ERROR="$verified_error"
 
 # 4. Prune both ends, with the same rule and the same code.
 #

@@ -239,6 +239,10 @@ services:
     image: ${BACKUP_IMAGE:-open-tilawa-backup:local}
     container_name: open-tilawa-backup
     profiles: ["ops"]
+    # Run as the host user, not root: the snapshots land 600 and must stay readable by
+    # the console (uid 1000) and by nobody else. Root-owned files here meant the page
+    # showed "0 snapshots" while the disk had five.
+    user: "${BACKUP_UID:-1000}:${BACKUP_GID:-1000}"
     environment:
       DB: /data/tilawa-admin.sqlite
       LOCAL_DIR: /backups

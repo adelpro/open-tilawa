@@ -8,7 +8,13 @@
 # turns a timestamp from the file name into an epoch.
 FROM python:3-alpine
 
-RUN apk add --no-cache bash bash-completion rsync openssh-client coreutils
+RUN apk add --no-cache bash rsync openssh-client coreutils
+
+# The job runs as the host user (uid 1000) so the snapshots it writes stay readable by
+# the console and by nobody else. ssh looks that uid up in passwd and refuses to run
+# without a name ("No user exists for uid 1000"), so the image carries one.
+RUN adduser -D -u 1000 -h /home/backup backup
+ENV HOME=/home/backup
 
 # The script itself is bind-mounted over this path by Compose, so editing it never
 # needs a rebuild. The copy is a fallback for anyone running the image directly.
