@@ -18,6 +18,22 @@ const FILE_PATTERN = /^tilawa-admin-\d{8}T\d{6}Z\.sqlite$/;
  * same way `composeArgs()` is treated in the seeders module: the project, the file, the
  * profile and the service are all fixed, and no request field reaches this array.
  */
+export function composeRestoreArgs(composeFile: string, name: string): string[] {
+  return [
+    'compose',
+    '-f',
+    composeFile,
+    '--profile',
+    'ops',
+    'run',
+    '--rm',
+    '-d',
+    '--no-deps',
+    'restore',
+    name,
+  ];
+}
+
 export function composeRunArgs(composeFile: string): string[] {
   return [
     'compose',
@@ -126,6 +142,32 @@ export class BackupsService {
       remote,
       files,
     };
+  }
+
+  /**
+   * The argv that restores one snapshot, and nothing else.
+   *
+   * `-d` because the container this command starts stops admin-api, which is the process
+   * that would otherwise be waiting for the answer. The name is validated against the
+   * writer's pattern before it reaches here; nothing else from the request is used.
+   */
+  async restore(name: string): Promise<{ started: boolean }> {
+    await this.pathFor(name); // 404 for anything that is not a snapshot we wrote
+    return new Promise((resolve) => {
+      execFile(
+        'docker',
+        composeRestoreArgs(this.composeFile, name),
+        { timeout: 60_000, maxBuffer: 1024 * 1024 },
+        (error, stdout, stderr) => {
+          if (error) {
+            this.logger.warn(`restore start failed: ${`${stdout}${stderr}`.slice(-600)}`);
+            resolve({ started: false });
+            return;
+          }
+          resolve({ started: true });
+        },
+      );
+    });
   }
 
   /**

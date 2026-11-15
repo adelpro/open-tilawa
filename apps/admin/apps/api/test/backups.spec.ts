@@ -1,4 +1,4 @@
-import { composeRunArgs } from '../src/backups/backups.service';
+import { composeRestoreArgs, composeRunArgs } from '../src/backups/backups.service';
 
 /**
  * The run command is the whole security story of this endpoint: it shells out with the
@@ -31,5 +31,18 @@ describe('composeRunArgs', () => {
     for (const arg of composeRunArgs('/host/docker-compose.yml')) {
       expect(arg).not.toMatch(/[;&|`$()<>]/);
     }
+  });
+});
+
+describe('composeRestoreArgs', () => {
+  it('detaches, because it stops the process that asked for it', () => {
+    expect(composeRestoreArgs('/host/docker-compose.yml', 'tilawa-admin-20260101T000000Z.sqlite'))
+      .toContain('-d');
+  });
+
+  it('names the restore service and the exact snapshot', () => {
+    const name = 'tilawa-admin-20260101T000000Z.sqlite';
+    const args = composeRestoreArgs('/host/docker-compose.yml', name);
+    expect(args.slice(-2)).toEqual(['restore', name]);
   });
 });

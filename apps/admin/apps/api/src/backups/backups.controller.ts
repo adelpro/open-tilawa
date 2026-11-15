@@ -38,6 +38,12 @@ export class BackupsController {
     return this.backups.run();
   }
 
+  @Post(':name/restore')
+  @ApiOperation({ summary: 'Restore one snapshot, detached (it restarts admin-api).' })
+  restore(@Param('name') name: string) {
+    return this.backups.restore(name);
+  }
+
   @Get(':name/download')
   @ApiOperation({ summary: 'Download one catalogue snapshot.' })
   async download(@Param('name') name: string): Promise<StreamableFile> {

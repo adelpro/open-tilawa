@@ -8,7 +8,7 @@
 # turns a timestamp from the file name into an epoch.
 FROM python:3-alpine
 
-RUN apk add --no-cache bash rsync openssh-client coreutils
+RUN apk add --no-cache bash rsync openssh-client coreutils docker-cli docker-cli-compose
 
 # The job runs as the host user (uid 1000) so the snapshots it writes stay readable by
 # the console and by nobody else. ssh looks that uid up in passwd and refuses to run
@@ -19,5 +19,6 @@ ENV HOME=/home/backup
 # The script itself is bind-mounted over this path by Compose, so editing it never
 # needs a rebuild. The copy is a fallback for anyone running the image directly.
 COPY db-backup.sh /usr/local/bin/db-backup.sh
+COPY ops/backup/restore.sh /usr/local/bin/restore.sh
 
 ENTRYPOINT ["bash", "/usr/local/bin/db-backup.sh"]

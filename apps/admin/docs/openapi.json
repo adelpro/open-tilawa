@@ -1429,6 +1429,30 @@
         ]
       }
     },
+    "/api/backups/{name}/restore": {
+      "post": {
+        "operationId": "BackupsController_restore",
+        "parameters": [
+          {
+            "name": "name",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Restore one snapshot, detached (it restarts admin-api).",
+        "tags": [
+          "Backups"
+        ]
+      }
+    },
     "/api/backups/{name}/download": {
       "get": {
         "operationId": "BackupsController_download",

@@ -269,6 +269,32 @@ services:
     extra_hosts:
       - "${BACKUP_REMOTE_HOST:-pharmacyserver}:${BACKUP_REMOTE_IP:-100.68.50.63}"
 
+  # Restore one snapshot. The only thing here that writes the database, and the only
+  # reason it holds the socket: it has to stop and start admin-api, because the request
+  # that asked for it is served by the process it is about to kill.
+  restore:
+    build:
+      context: .
+      dockerfile: ops/backup/Dockerfile
+    image: ${BACKUP_IMAGE:-open-tilawa-backup:local}
+    profiles: ["ops"]
+    user: "${BACKUP_UID:-1000}:${BACKUP_GID:-1000}"
+    group_add: ["${DOCKER_GID:-988}"]
+    networks: [open-tilawa]
+    entrypoint: ["bash", "/usr/local/bin/restore.sh"]
+    environment:
+      DB: /data/tilawa-admin.sqlite
+      LOCAL_DIR: /backups
+      COMPOSE_FILE: /host/docker-compose.yml
+      COMPOSE_DIR: /host
+    volumes:
+      # Read-write, unlike the backup job: this is the one that swaps the file.
+      - admin_data:/data
+      - ${BACKUP_DIR:-/home/adelpro/backups/tilawa}:/backups
+      - ./ops/backup/restore.sh:/usr/local/bin/restore.sh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/host:ro
+
 volumes:
   seed_downloads:
   seed_torrents:

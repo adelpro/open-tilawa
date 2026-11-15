@@ -700,6 +700,14 @@ export const en = {
   'backups.verified': 'Far copy verified',
   'backups.notVerified': 'Not verified',
   'backups.verifiedFailed': 'Verification failed',
+  'backups.restore': 'Restore',
+  'backups.restoreTitle': 'Restore this snapshot?',
+  'backups.restoreBody':
+    'admin-api stops, the catalogue is replaced by this snapshot, and it starts again. A safety copy of the current state is taken first.',
+  'backups.restoreHint':
+    'Anything added after this snapshot disappears from the catalogue. The safety copy stays in the list.',
+  'backups.restoreConfirm': 'Restore',
+  'backups.restoreStarted': 'Restore started. The page returns in a few seconds.',
   'backups.download': 'Download',
   'backups.empty': 'No snapshots yet.',
   'backups.error': 'Last error',

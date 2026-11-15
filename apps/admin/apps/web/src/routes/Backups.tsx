@@ -6,6 +6,7 @@ import { useI18n } from '../lib/i18n';
 import type { MessageKey } from '../lib/i18n';
 import { bytes, relative } from '../lib/format';
 import { Button } from '../components/Button';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { Panel, Row } from '../components/Panel';
 import { Chip, Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
@@ -67,6 +68,7 @@ export function Backups(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [runBusy, setRunBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -103,6 +105,24 @@ export function Backups(): ReactElement {
       setError(caught instanceof Error ? caught.message : t('backups.state.failed'));
     } finally {
       setRunBusy(false);
+    }
+  }
+
+  async function restore(): Promise<void> {
+    const name = restoring;
+    if (!name) return;
+    setRestoring(null);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await api<{ started: boolean }>(
+        '/backups/' + name + '/restore',
+        { method: 'POST' },
+      );
+      if (result.started) setNotice(t('backups.restoreStarted'));
+      else setError(t('backups.verifiedFailed'));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('backups.state.failed'));
     }
   }
 
@@ -210,12 +230,21 @@ export function Backups(): ReactElement {
                         <td>
                           {/* An anchor, not a Button: the download has to be a real
                               navigation so the browser streams it to disk. */}
-                          <a
-                            className="btn btn--secondary btn--sm"
-                            href={'/api/backups/' + file.name + '/download'}
-                          >
-                            {t('backups.download')}
-                          </a>
+                          <span className="cluster">
+                            <a
+                              className="btn btn--secondary btn--sm"
+                              href={'/api/backups/' + file.name + '/download'}
+                            >
+                              {t('backups.download')}
+                            </a>
+                            <Button
+                              variant="tertiary"
+                              small
+                              onClick={() => setRestoring(file.name)}
+                            >
+                              {t('backups.restore')}
+                            </Button>
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -226,6 +255,20 @@ export function Backups(): ReactElement {
           </Panel>
         </>
       )}
+
+      {restoring ? (
+        <ConfirmModal
+          title={t('backups.restoreTitle')}
+          body={t('backups.restoreBody')}
+          hint={t('backups.restoreHint')}
+          confirmLabel={t('backups.restoreConfirm')}
+          destructive
+          onConfirm={() => void restore()}
+          onClose={() => setRestoring(null)}
+        >
+          <p className="body muted">{restoring}</p>
+        </ConfirmModal>
+      ) : null}
     </div>
   );
 }
