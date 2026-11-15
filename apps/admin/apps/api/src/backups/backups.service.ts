@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { execFile } from 'node:child_process';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import type { Stats } from 'node:fs';
 import { join } from 'node:path';
@@ -9,6 +10,27 @@ import { join } from 'node:path';
  * here so a stray file cannot appear on the page or be downloaded.
  */
 const FILE_PATTERN = /^tilawa-admin-\d{8}T\d{6}Z\.sqlite$/;
+
+/**
+ * The argv that runs the backup once, and nothing else.
+ *
+ * Pure and exported so the exact command can be asserted without a Docker daemon, the
+ * same way `composeArgs()` is treated in the seeders module: the project, the file, the
+ * profile and the service are all fixed, and no request field reaches this array.
+ */
+export function composeRunArgs(composeFile: string): string[] {
+  return [
+    'compose',
+    '-f',
+    composeFile,
+    '--profile',
+    'ops',
+    'run',
+    '--rm',
+    '--no-deps',
+    'backup',
+  ];
+}
 
 export interface BackupFile {
   name: string;
@@ -46,7 +68,9 @@ export interface BackupOverview {
  */
 @Injectable()
 export class BackupsService {
+  private readonly logger = new Logger('Backups');
   private readonly directory = process.env.BACKUP_DIR ?? '/backups';
+  private readonly composeFile = process.env.BACKUP_COMPOSE_FILE ?? '/host/docker-compose.yml';
   private readonly staleHours = Number(process.env.BACKUP_STALE_HOURS ?? 26);
 
   async overview(): Promise<BackupOverview> {
@@ -102,6 +126,33 @@ export class BackupsService {
       remote,
       files,
     };
+  }
+
+  /**
+   * Start a run and wait for it.
+   *
+   * Synchronous on purpose: a run takes seconds and the caller wants to know whether it
+   * worked. The job itself refuses to overlap (`flock`), so a second press while one is
+   * in flight returns "already running" rather than starting a second dump.
+   */
+  async run(): Promise<{ started: boolean; output: string }> {
+    const args = composeRunArgs(this.composeFile);
+    return new Promise((resolve) => {
+      execFile(
+        'docker',
+        args,
+        { timeout: 600_000, maxBuffer: 4 * 1024 * 1024 },
+        (error, stdout, stderr) => {
+          const output = `${stdout}${stderr}`.trim();
+          if (error) {
+            this.logger.warn(`backup run failed: ${output.slice(-600)}`);
+            resolve({ started: false, output: output.slice(-2000) });
+            return;
+          }
+          resolve({ started: true, output: output.slice(-2000) });
+        },
+      );
+    });
   }
 
   /**

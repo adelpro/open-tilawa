@@ -5,6 +5,7 @@ import { useSession } from '../lib/session';
 import { useI18n } from '../lib/i18n';
 import type { MessageKey } from '../lib/i18n';
 import { bytes, relative } from '../lib/format';
+import { Button } from '../components/Button';
 import { Panel, Row } from '../components/Panel';
 import { Chip, Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
@@ -29,6 +30,8 @@ interface Overview {
     lastOkAt: string | null;
     lastOkFile: string | null;
     ageHours: number | null;
+    verifiedAt?: string | null;
+    verifiedError?: string | null;
   } | null;
   files: Snapshot[];
 }
@@ -62,6 +65,8 @@ export function Backups(): ReactElement {
   const { t, locale } = useI18n();
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [runBusy, setRunBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -76,6 +81,31 @@ export function Backups(): ReactElement {
     void load();
   }, [load]);
 
+  /**
+   * Start a run and wait for it. The job already refuses to overlap, so pressing twice
+   * is harmless: the second run exits as "already running" rather than dumping twice.
+   */
+  async function runNow(): Promise<void> {
+    setRunBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await api<{ started: boolean; output: string }>('/backups/run', {
+        method: 'POST',
+      });
+      if (result.started) {
+        setNotice(t('backups.runStarted'));
+        await load();
+      } else {
+        setError(t('backups.runFailed', { error: result.output.slice(-300) }));
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('backups.state.failed'));
+    } finally {
+      setRunBusy(false);
+    }
+  }
+
   if (!user) return <p className="body muted">{t('backups.signInRequired')}</p>;
 
   return (
@@ -87,10 +117,14 @@ export function Backups(): ReactElement {
         </div>
         <div className="cluster">
           {data ? <Chip tone={STATE_TONE[data.state]}>{t(STATE_KEY[data.state])}</Chip> : null}
+          <Button busy={runBusy} onClick={() => void runNow()}>
+            {t('backups.runNow')}
+          </Button>
         </div>
       </header>
 
       {error ? <Notice tone="bad">{error}</Notice> : null}
+      {notice ? <Notice tone="ok">{notice}</Notice> : null}
       {data && !data.configured ? <Notice tone="warn">{t('backups.unmounted')}</Notice> : null}
       {data?.configured && data.stale ? <Notice tone="bad">{t('backups.stale')}</Notice> : null}
       {data?.error ? (
@@ -130,7 +164,19 @@ export function Backups(): ReactElement {
                 <Row
                   label={t('backups.lastRun')}
                   identifier={data.remote.lastOkFile ?? '—'}
-                  meta={relative(data.remote.lastOkAt, locale)}
+                  meta={
+                    <>
+                      {relative(data.remote.lastOkAt, locale)}
+                      {' · '}
+                      {data.remote.verifiedError ? (
+                        <Chip tone="bad">{t('backups.verifiedFailed')}</Chip>
+                      ) : data.remote.verifiedAt ? (
+                        <Chip tone="ok">{t('backups.verified')}</Chip>
+                      ) : (
+                        <Chip tone="notice">{t('backups.notVerified')}</Chip>
+                      )}
+                    </>
+                  }
                 />
               ) : (
                 <p className="body muted">{t('backups.never')}</p>

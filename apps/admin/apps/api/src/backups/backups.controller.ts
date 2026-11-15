@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Param,
+  Post,
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
@@ -29,6 +30,12 @@ export class BackupsController {
   @ApiOperation({ summary: 'Catalogue snapshots: the newest here, and the newest on the node.' })
   overview() {
     return this.backups.overview();
+  }
+
+  @Post('run')
+  @ApiOperation({ summary: 'Take a snapshot now and push it to the remote.' })
+  run() {
+    return this.backups.run();
   }
 
   @Get(':name/download')

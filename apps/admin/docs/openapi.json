@@ -1414,6 +1414,21 @@
         ]
       }
     },
+    "/api/backups/run": {
+      "post": {
+        "operationId": "BackupsController_run",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Take a snapshot now and push it to the remote.",
+        "tags": [
+          "Backups"
+        ]
+      }
+    },
     "/api/backups/{name}/download": {
       "get": {
         "operationId": "BackupsController_download",
