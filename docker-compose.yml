@@ -170,6 +170,8 @@ services:
       SITE_SERVICE: web
       PUBLIC_SITE: ${PUBLIC_SITE:-https://tilawah.cc}
       MEDIA_LOG_DIR: /var/log/tilawa
+      # Where db-backup.sh leaves its snapshots and status.json, as mounted below.
+      BACKUP_DIR: /backups
     # The socket is owned by root:988; the container's `node` user only needs
     # to be in that group, not to run as root.
     group_add: ["${DOCKER_GID:-988}"]
@@ -183,6 +185,11 @@ services:
       - ./:/host:ro
       # The web seed's own record of what it served; read, never written.
       - media_logs:/var/log/tilawa:ro
+      # The backup job's output, read-only. The console reports on it and never
+      # writes or triggers it: db-backup.sh owns the database, the lock and the ssh
+      # key, and a console that could also fail silently is worth less than a page
+      # that cannot.
+      - ${BACKUP_DIR:-/home/adelpro/backups/tilawa}:/backups:ro
     ports:
       - "127.0.0.1:${ADMIN_API_PORT:-9410}:${ADMIN_API_PORT:-9410}"
     healthcheck:
@@ -219,6 +226,44 @@ services:
         condition: service_started
     restart: unless-stopped
     networks: [open-tilawa]
+
+  # The catalogue backup, as a service rather than a host script: the console can
+  # start it through the socket it already holds, and the systemd timer starts the
+  # same command, so scheduling never depends on the app being healthy.
+  #
+  # `run --rm` is the interface; this service is never `up`.
+  backup:
+    build:
+      context: .
+      dockerfile: ops/backup/Dockerfile
+    image: ${BACKUP_IMAGE:-open-tilawa-backup:local}
+    container_name: open-tilawa-backup
+    profiles: ["ops"]
+    environment:
+      DB: /data/tilawa-admin.sqlite
+      LOCAL_DIR: /backups
+      # The user matters: the container runs as root, and root@remote is not the
+      # account the key was issued to.
+      REMOTE: ${BACKUP_REMOTE_USER:-adelpro}@${BACKUP_REMOTE_HOST:-pharmacyserver}
+      REMOTE_DIR: ${BACKUP_REMOTE_DIR:-tilawa-backups}
+      SSH_KEY: /ssh/id
+      SSH_KNOWN_HOSTS: /ssh/known_hosts
+      KEEP_RECENT_HOURS: ${KEEP_RECENT_HOURS:-72}
+      KEEP_DAILY_DAYS: ${KEEP_DAILY_DAYS:-30}
+      KEEP_MAX: ${KEEP_MAX:-240}
+    volumes:
+      # Read-only: the job copies the database, it never writes to it.
+      - admin_data:/data:ro
+      - ${BACKUP_DIR:-/home/adelpro/backups/tilawa}:/backups
+      - ${BACKUP_SSH_KEY:-/home/adelpro/.ssh/id_ed25519}:/ssh/id:ro
+      - ${BACKUP_KNOWN_HOSTS:-/home/adelpro/.ssh/known_hosts}:/ssh/known_hosts:ro
+      # Bind-mounted rather than baked in, so editing the script needs no rebuild.
+      - ./db-backup.sh:/usr/local/bin/db-backup.sh:ro
+    # The remote is a Tailscale name. The container's resolver is Docker's, not the
+    # host's MagicDNS stub, so the name is pinned to its address and the ssh host
+    # key still matches the name it was issued for.
+    extra_hosts:
+      - "${BACKUP_REMOTE_HOST:-pharmacyserver}:${BACKUP_REMOTE_IP:-100.68.50.63}"
 
 volumes:
   seed_downloads:
