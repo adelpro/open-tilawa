@@ -284,6 +284,19 @@ input[type='checkbox'] {
   font-weight: 600;
 }
 
+/* A reciter's name opens its tilawah.cc page. It reads as a name first —
+   inherited colour and weight, an underline only when it invites a click. */
+a.name-link {
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+}
+
+a.name-link:hover,
+a.name-link:focus-visible {
+  text-decoration: underline;
+}
+
 .tag {
   display: inline-block;
   margin-inline-start: 0.4rem;

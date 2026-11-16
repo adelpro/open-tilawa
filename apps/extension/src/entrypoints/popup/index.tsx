@@ -15,7 +15,7 @@ import '@/styles.css';
 import './popup.css';
 
 import { formatBytes } from '@/lib/badge';
-import type { HeldReciter } from '@/lib/catalogue';
+import { reciterUrl, type HeldReciter } from '@/lib/catalogue';
 import { copyFor, pickLang } from '@/lib/i18n';
 import type { Counters } from '@/lib/messages';
 import { loadHeld, loadSettings, parseSettings } from '@/lib/settings';
@@ -126,6 +126,7 @@ function Popup() {
               <HeldRow
                 key={reciter.infohash}
                 name={reciter.nameAr || reciter.name}
+                href={reciterUrl(reciter.slug)}
                 size={formatBytes(reciter.sizeBytes ?? 0)}
                 state={state}
                 lang={lang}

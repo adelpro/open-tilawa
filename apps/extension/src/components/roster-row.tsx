@@ -54,18 +54,29 @@ export function stateWord(state: HeldState, lang: Lang): string {
 
 export function HeldRow({
   name,
+  href,
   size,
   state,
   lang,
 }: {
   name: string;
+  /** The reciter's tilawah.cc page when the release has a slug; null keeps today's plain name. */
+  href?: string | null;
   size: string;
   state: HeldState;
   lang: Lang;
 }) {
   return (
     <li>
-      <span className="name">{name}</span>
+      <span className="name">
+        {href ? (
+          <a className="name-link" href={href} target="_blank" rel="noreferrer">
+            {name}
+          </a>
+        ) : (
+          name
+        )}
+      </span>
       <span className="state">
         <span className="meta">{size}</span>
         <span className="meta">{stateWord(state, lang)}</span>
