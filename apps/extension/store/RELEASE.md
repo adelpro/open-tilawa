@@ -57,6 +57,14 @@ Package rules learned the hard way:
 - The follow list is visible in the reciters view («تتابع ما تستمع إليه»), every
   row tagged «متابعة», each removable — removal deletes bytes immediately.
 - Privacy text discloses the playback channel (device-local, never forwarded).
+- **Firefox limitation, said plainly:** Firefox does not let a web page send
+  messages to an extension (`externally_connectable` is not implemented for
+  pages — bugzilla 1319168), so the play notice never arrives there and
+  Follow/Mixed hold nothing beyond what the person ticks by hand. Chromium
+  (Chrome and Edge) is unaffected. The manifest key ships on both builds; if
+  AMO's linter objects to the Chrome-only key at 0.2.1, strip it from the
+  Firefox build. A content-script relay is out by design — the extension must
+  not read pages.
 
 ## After approval — the only steps left
 
