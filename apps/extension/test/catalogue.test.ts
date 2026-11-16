@@ -34,7 +34,7 @@ describe('toReciters', () => {
     const once = toReciters([row({ infohash: 'b'.repeat(40), surahs: [1, 2], fileCount: 16 })]);
 
     expect(toReciters([row({ infohash: 'b'.repeat(40), surahs: [1, 2], fileCount: 16 }), row({ infohash: 'b'.repeat(40) })])).toHaveLength(1);
-    expect(diffCatalogue([{ ...once[0]!, addedAt: '2026-11-15T00:00:00Z' }], once)).toEqual({
+    expect(diffCatalogue([{ ...once[0]!, addedAt: '2026-11-15T00:00:00Z', source: 'manual' }], once)).toEqual({
       added: [],
       replaced: [],
       unpublished: [],

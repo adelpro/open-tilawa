@@ -261,10 +261,14 @@ function Page() {
     try {
       const next: HeldReciter[] = [
         ...unpublished,
-        ...chosen.map((reciter) => ({
-          ...reciter,
-          addedAt: held.find((existing) => existing.infohash === reciter.infohash)?.addedAt ?? new Date().toISOString(),
-        })),
+        ...chosen.map((reciter) => {
+          const prior = held.find((existing) => existing.infohash === reciter.infohash);
+          return {
+            ...reciter,
+            addedAt: prior?.addedAt ?? new Date().toISOString(),
+            source: prior?.source ?? 'manual',
+          };
+        }),
       ];
 
       const nextHashes = new Set(next.map((reciter) => reciter.infohash));

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { toReciters } from '../src/lib/catalogue';
+import { toReciters, type HeldReciter } from '../src/lib/catalogue';
 import { planSync } from '../src/lib/sync';
 
 const row = (over: Record<string, unknown> = {}) => ({
@@ -17,9 +17,10 @@ const row = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const held = (over: Record<string, unknown> = {}) => ({
+const held = (over: Record<string, unknown> = {}): HeldReciter => ({
   ...toReciters([row(over)])[0]!,
   addedAt: '2026-11-15T00:00:00Z',
+  source: 'manual',
 });
 
 describe('planSync', () => {

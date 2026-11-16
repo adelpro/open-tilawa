@@ -12,6 +12,7 @@ const reciter = (over: Partial<HeldReciter> = {}): HeldReciter => ({
   surahs: null,
   complete: true,
   addedAt: '2026-11-15T00:00:00Z',
+  source: 'manual',
   ...over,
 });
 
