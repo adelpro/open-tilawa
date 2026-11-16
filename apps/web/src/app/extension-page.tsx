@@ -16,9 +16,9 @@ export default function ExtensionPage() {
   // Phosphor ships a Chrome mark but no Firefox or Edge one; a mixed set reads
   // worse than one honest install glyph on all three.
   const browsers = [
-    { key: 'chrome', label: copy.browsers.chrome, Mark: ChromeMark },
-    { key: 'firefox', label: copy.browsers.firefox, Mark: FirefoxMark },
-    { key: 'edge', label: copy.browsers.edge, Mark: EdgeMark },
+    { key: 'chrome', label: copy.browsers.chrome, Mark: ChromeMark, href: '' },
+    { key: 'firefox', label: copy.browsers.firefox, Mark: FirefoxMark, href: '' },
+    { key: 'edge', label: copy.browsers.edge, Mark: EdgeMark, href: 'https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom' },
   ];
 
   return (
@@ -40,19 +40,33 @@ export default function ExtensionPage() {
         </ul>
 
         <div className="mt-10 flex flex-wrap gap-3">
-          {browsers.map((browser) => (
-            <button
-              key={browser.key}
-              type="button"
-              disabled
-              aria-disabled="true"
-              className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 border border-line px-5 text-[0.9375rem] font-semibold text-muted"
-            >
-              <browser.Mark size={20} />
-              {browser.label}
-              <span className="text-[0.75rem] font-normal">{copy.coming}</span>
-            </button>
-          ))}
+          {browsers.map((browser) =>
+            browser.href ? (
+              <a
+                key={browser.key}
+                href={browser.href}
+                target="_blank"
+                rel="noreferrer"
+                className="press inline-flex min-h-11 items-center gap-2 border border-ink bg-ink px-5 text-[0.9375rem] font-semibold text-invert"
+              >
+                <browser.Mark size={20} />
+                {browser.label}
+                <Icon name="forward" size={16} className="icon-dir" />
+              </a>
+            ) : (
+              <button
+                key={browser.key}
+                type="button"
+                disabled
+                aria-disabled="true"
+                className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 border border-line px-5 text-[0.9375rem] font-semibold text-muted"
+              >
+                <browser.Mark size={20} />
+                {browser.label}
+                <span className="text-[0.75rem] font-normal">{copy.coming}</span>
+              </button>
+            ),
+          )}
         </div>
 
         <div className="mt-4 space-y-1 text-[0.875rem] leading-relaxed text-muted">
