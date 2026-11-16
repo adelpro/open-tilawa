@@ -128,6 +128,57 @@ test('the picker swatch is the palette the CSS paints', () => {
   }
 });
 
+test('the contrast layer comes after every palette block', () => {
+  // Specificity alone cannot win this: the palette dark blocks are 0,2,0, so the
+  // contrast blocks have to arrive later in the file to stand a chance.
+  const lastPalette = CSS.lastIndexOf("[data-palette='rose'][data-theme='dark']");
+  assert.ok(lastPalette !== -1, 'the rose dark block is missing');
+  assert.ok(
+    CSS.indexOf("[data-contrast='more']") > lastPalette,
+    'the contrast layer must be declared after every palette block',
+  );
+  assert.ok(
+    CSS.indexOf("[data-contrast='more'][data-theme='dark']") > lastPalette,
+    'the dark contrast layer must be declared after every palette block',
+  );
+});
+
+test('the contrast layer overrides only the second-tier tokens', () => {
+  for (const selector of ["[data-contrast='more']", "[data-contrast='more'][data-theme='dark']"]) {
+    const declared = tokens(selector);
+    assert.deepEqual(
+      Object.keys(declared).sort(),
+      ['--line', '--muted', '--wave-back', '--wave-front'],
+      `${selector} declares the wrong token set`,
+    );
+  }
+});
+
+test('the contrast layer meets its bars on every paper', () => {
+  // The bars have to hold over each paper's own page, not just white: sage and
+  // clay are the darkest light stocks, so they are the real floor.
+  const hc = [tokens("[data-contrast='more']"), tokens("[data-contrast='more'][data-theme='dark']")];
+  for (const palette of PALETTES) {
+    const bases =
+      palette.id === 'default'
+        ? [tokens(':root'), tokens("[data-theme='dark']")]
+        : [
+            tokens(`[data-palette='${palette.id}']`),
+            tokens(`[data-palette='${palette.id}'][data-theme='dark']`),
+          ];
+    bases.forEach((base, mode) => {
+      const page = base['--bg'];
+      const set = hc[mode];
+      assert.ok(contrast(set['--muted'], page) >= 7, `${palette.id}: muted under 7:1 on ${page}`);
+      assert.ok(contrast(set['--line'], page) >= 3, `${palette.id}: line under 3:1 on ${page}`);
+      assert.ok(
+        contrast(set['--wave-back'], page) >= 4.5,
+        `${palette.id}: wave-back under 4.5:1 on ${page}`,
+      );
+    });
+  }
+});
+
 test('the list starts with the original and names each stock once', () => {
   assert.equal(PALETTES[0].id, 'default');
   // Seven is the founder's call (2026-11-13): the two ivories stay as a live
