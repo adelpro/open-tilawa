@@ -60,6 +60,8 @@ jobs:
       - run: npm run compile
       - run: npm test
       - run: npm run build
+      # The audit reads both manifests, so both targets have to exist.
+      - run: npm run build:firefox
       # Fails when the manifest asks for more than the extension needs.
       - run: npm run audit
 
