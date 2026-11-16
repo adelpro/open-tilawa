@@ -54,6 +54,21 @@ Privacy text. It now explains the playback notice: one message when a reciter st
 نص الخصوصية. يبيّن الآن رسالة التشغيل: رسالة واحدة عند بدء قارئ، تبقى على جهازك ولا تُمرَّر إلى أي طرف.
 ```
 
+## Verification — staging, 2026-11-16
+
+Playwright Chromium (rev 1234) + the unpacked 0.2.1 build, against
+`https://staging.tilawah.cc` (unpacked id `egjdnohidgpnoghfjnkpmfbjkppjeknp`).
+All observed pass: a play notice from the staging origin → reply `{ok: true}`;
+the follow row stored first with `source: 'follow'`; the manual row untouched
+through cap overflow; a cap of 2 trims the oldest follow row (the C1 guard fix
+holds in a real browser); a re-sent reciter refreshes recency without
+duplicating. Settings were seeded `paused: true` — the proof moved no bytes.
+Users on the store 0.2.0 build cannot follow yet: the sender ships in 0.2.1.
+
+**Closed idea (2026-11-16):** no suggestion mode. Peer-count-driven
+recommendations were considered and dropped — the modes are locked at Manual /
+Follow / Mixed.
+
 ## Submission log
 
 | Store | Package | Version | Submitted | Status |
