@@ -15,13 +15,34 @@
  */
 
 import { formatBytes } from '@/lib/badge';
-import type { HeldReciter, Reciter } from '@/lib/catalogue';
+import { reciterUrl, type HeldReciter, type Reciter } from '@/lib/catalogue';
 import type { Copy } from '@/lib/i18n';
 import type { Sort } from '@/lib/sort';
 import { FreshStrip } from '@/components/fresh-strip';
 import { RiwayaFilter } from '@/components/riwaya-filter';
 import { SortBar } from '@/components/sort-bar';
 import { PlusIcon, TrashIcon } from '@/components/icons';
+
+/**
+ * The name as a door out.
+ *
+ * A release with a slug opens its own page on tilawah.cc in a new tab; a slug-
+ * less release — unpublished, or the catalogue has not named it yet — is a plain
+ * name, because a link that 404s would be a worse neighbour than no link. The
+ * tags beside the name stay outside the anchor: clicking «متابعة» is not a
+ * journey.
+ */
+function ReciterName({ reciter }: { reciter: Pick<Reciter, 'slug' | 'name' | 'nameAr'> }) {
+  const url = reciterUrl(reciter.slug);
+  const label = reciter.nameAr || reciter.name;
+  return url ? (
+    <a className="name-link" href={url} target="_blank" rel="noreferrer">
+      {label}
+    </a>
+  ) : (
+    <>{label}</>
+  );
+}
 
 export function RecitersView({
   copy,
@@ -120,7 +141,7 @@ export function RecitersView({
                 <span className="row">
                   <span>
                     <span className="name">
-                      {reciter.nameAr || reciter.name}
+                      <ReciterName reciter={reciter} />
                       {reciter.complete ? null : <span className="tag">{copy.partial}</span>}
                     </span>
                     <span className="meta">
@@ -151,7 +172,7 @@ export function RecitersView({
                 <span className="row">
                   <span>
                     <span className="name">
-                      {reciter.nameAr || reciter.name}
+                      <ReciterName reciter={reciter} />
                       <span className="tag">{copy.followTag}</span>
                       {reciter.complete ? null : <span className="tag">{copy.partial}</span>}
                     </span>
@@ -222,7 +243,7 @@ export function RecitersView({
               <span className="row">
                 <span>
                   <span className="name">
-                    {reciter.nameAr || reciter.name}
+                    <ReciterName reciter={reciter} />
                     {reciter.complete ? null : <span className="tag">{copy.partial}</span>}
                   </span>
                   <span className="meta">
