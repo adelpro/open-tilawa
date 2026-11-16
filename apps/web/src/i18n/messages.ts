@@ -82,6 +82,7 @@ const ar = {
     createAction: 'إنشاء حلقة',
     ringName: 'اسم الحلقة',
     rename: 'تسمية الحلقة',
+    renameDevice: 'إعادة تسمية هذا الجهاز',
     renameSave: 'حفظ',
     renameCancel: 'إلغاء',
     createNote:
@@ -536,6 +537,7 @@ const en: typeof ar = {
     createAction: 'Create ring',
     ringName: 'Ring name',
     rename: 'Rename the ring',
+    renameDevice: 'Rename this device',
     renameSave: 'Save',
     renameCancel: 'Cancel',
     createNote:

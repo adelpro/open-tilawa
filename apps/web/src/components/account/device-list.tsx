@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Input } from '@/components/field';
+import Icon from '@/components/icons';
 
 import { useAtomValue } from 'jotai';
 import { userDevicesAtom, userDevicesMetaAtom } from '@/jotai/gun';
@@ -98,10 +99,12 @@ export default function DeviceList({ highlightId }: { highlightId?: string | nul
                   <button
                     type="button"
                     onClick={() => startRename(device)}
-                    className="max-w-full truncate text-start text-[0.875rem] font-medium text-ink"
-                    title={copy.rename}
+                    className="group flex max-w-full items-center gap-2 text-[0.875rem] font-medium text-ink"
+                    title={copy.renameDevice}
+                    aria-label={copy.renameDevice}
                   >
-                    {device.name || 'Device'}
+                    <span className="truncate">{device.name || 'Device'}</span>
+                    <Icon name="edit" className="shrink-0 opacity-40 group-hover:opacity-100" />
                   </button>
                 )}
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem] text-muted">
