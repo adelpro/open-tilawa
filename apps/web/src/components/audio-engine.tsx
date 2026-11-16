@@ -28,6 +28,7 @@ import { canSetElementVolume, ensureAnalyser, setOutputGain } from '@/utils/audi
 import { APP_VERSION } from '@/constants/version';
 import { completeEvent, errorEvent, playEvent, type TelemetryEvent } from '@/utils/telemetry';
 import { streamSourceFor } from '@/utils/stream-source';
+import { notifyCompanion } from '@/utils/companion';
 import type { DirectReason } from '@/utils/stream-source';
 import { choosePlaybackSource, mediaUrlForFile, shouldRetryDirect } from '@/utils/webseed';
 import { sameRelease } from '@/utils/release';
@@ -156,6 +157,8 @@ export default function AudioEngine({
   const startedAtRef = useRef(0);
   /** The surah already counted, so a resume or a re-buffer is not a second play. */
   const recordedForRef = useRef<string | null>(null);
+  /** One companion notice per reciter, not per surah: the held set is per reciter. */
+  const companionForRef = useRef<string | null>(null);
 
   /** Mirror the torrent hook into atoms so the page can read it. */
   useEffect(() => {
@@ -431,6 +434,18 @@ export default function AudioEngine({
       onPlaying={(event) => {
         ensureAnalyser(event.currentTarget);
         if (!reciter || typeof surahId !== 'number') return;
+        // The companion follows what this person listens to. One fire-and-forget
+        // notice per reciter — a surah change is the same listen — and the page
+        // feels nothing when no extension is installed to hear it.
+        if (reciter.infohash && companionForRef.current !== reciter.infohash) {
+          companionForRef.current = reciter.infohash;
+          notifyCompanion({
+            infohash: reciter.infohash,
+            slug: reciter.slug || reciter.name,
+            name: reciter.name,
+            nameAr: reciter.nameAr ?? '',
+          });
+        }
         // One play per surah: a resume, a seek or a re-buffer is the same play.
         const key = `${reciter.id}:${surahId}`;
         if (recordedForRef.current === key) return;
