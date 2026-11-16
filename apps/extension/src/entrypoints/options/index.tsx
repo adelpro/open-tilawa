@@ -15,12 +15,13 @@ import { browser } from 'wxt/browser';
 import '@/styles.css';
 
 import { formatBytes } from '@/lib/badge';
-import type { HeldReciter, Reciter } from '@/lib/catalogue';
+import { parseHeld, type HeldReciter, type Reciter } from '@/lib/catalogue';
 import { copyFor, pickLang } from '@/lib/i18n';
 import { NEW_SEEN_KEY, markSeen, pickNew } from '@/lib/new-reciter';
 import { DEFAULT_VIEW, watchView, viewFromHash, type View } from '@/lib/router';
 import { planSelection } from '@/lib/selection';
 import {
+  HELD_KEY,
   SETTINGS_KEY,
   loadHeldReciters,
   loadSettings,
@@ -85,10 +86,20 @@ function Page() {
       changes: Record<string, { newValue?: unknown }>,
       area: string,
     ) => {
-      if (area !== 'local' || !changes[SETTINGS_KEY]) return;
-      const next = parseSettings(changes[SETTINGS_KEY].newValue);
-      setPaused(next.paused);
-      setSettings((current) => (current ? { ...current, paused: next.paused } : current));
+      if (area !== 'local') return;
+      if (changes[SETTINGS_KEY]) {
+        const next = parseSettings(changes[SETTINGS_KEY].newValue);
+        setPaused(next.paused);
+        setSettings((current) => (current ? { ...current, paused: next.paused } : current));
+      }
+      // The background writes the held roster from the site's play notices; a
+      // page holding a stale copy would delete those rows on its next save or
+      // re-wipe a follow row it never saw. The stored list is the truth, so
+      // the whole roster is replaced, parsed — never cast.
+      const heldChange = changes[HELD_KEY];
+      if (heldChange && Array.isArray(heldChange.newValue)) {
+        setHeld(parseHeld(heldChange.newValue));
+      }
     };
     browser.storage.onChanged.addListener(listener);
     return () => browser.storage.onChanged.removeListener(listener);
