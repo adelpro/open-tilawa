@@ -18,7 +18,7 @@ import { formatBytes } from '@/lib/badge';
 import type { HeldReciter } from '@/lib/catalogue';
 import { copyFor, pickLang } from '@/lib/i18n';
 import type { Counters } from '@/lib/messages';
-import { loadHeld, loadSettings } from '@/lib/settings';
+import { loadHeld, loadSettings, parseSettings } from '@/lib/settings';
 import type { HeldState } from '@/lib/state';
 import { ask } from '@/lib/ui-bridge';
 import { HeldRow } from '@/components/roster-row';
@@ -57,6 +57,15 @@ function Popup() {
       live = false;
       clearInterval(timer);
     };
+  }, []);
+
+  useEffect(() => {
+    const listener = (changes: Record<string, { newValue?: unknown }>, area: string) => {
+      if (area !== 'local' || !changes['tilawah-companion.settings.v1']) return;
+      setPaused(parseSettings(changes['tilawah-companion.settings.v1'].newValue).paused);
+    };
+    browser.storage.onChanged.addListener(listener);
+    return () => browser.storage.onChanged.removeListener(listener);
   }, []);
 
   const togglePause = async () => {

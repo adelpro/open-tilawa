@@ -649,3 +649,25 @@ a.button-primary {
 a.button-primary:hover {
   background: var(--wave-front);
 }
+
+.cap-offer {
+  position: fixed;
+  inset-inline: 1rem;
+  inset-block-end: 7.25rem;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--wave-back);
+  border-radius: 8px;
+  box-shadow: 0 16px 32px -20px rgb(0 0 0 / 0.35);
+  font-size: 0.875rem;
+}
+
+.cap-offer > span {
+  flex: 1;
+  min-inline-size: 12rem;
+}

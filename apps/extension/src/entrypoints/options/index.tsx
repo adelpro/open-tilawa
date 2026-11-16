@@ -7,7 +7,7 @@
  * button leaves it.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { StrictMode } from 'react';
 import { browser } from 'wxt/browser';
@@ -67,6 +67,10 @@ function Page() {
   const [saving, setSaving] = useState(false);
   /** The pause lives in the background; this page only renders it. */
   const [paused, setPaused] = useState(false);
+  /** Settings save themselves; the primary button is for the selection. */
+  const hydrated = useRef(false);
+  /** A reciter the person tried to add at the cap — the raise offer. */
+  const [capPrompt, setCapPrompt] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   const canReadBattery = typeof (navigator as { getBattery?: unknown }).getBattery === 'function';
@@ -123,7 +127,7 @@ function Page() {
           setFresh(freshly);
           await browser.storage.local.set({
             [NEW_SEEN_KEY]: markSeen(seen, freshly.map((row) => row.infohash)),
-            [PENDING_KEY]: 0,
+            [PENDING_KEY]: freshly.length,
           });
           if (!live) return;
         }
@@ -189,6 +193,21 @@ function Page() {
     void savePrefs(prefs);
   }, [prefs]);
 
+  useEffect(() => {
+    if (!settings) return;
+    // The first pass is the stored value arriving; saving it back is noise.
+    if (!hydrated.current) {
+      hydrated.current = true;
+      return;
+    }
+    const timer = setTimeout(() => {
+      void saveSettings({ ...settings, uploadMbps: parseUploadMbps(uploadDraft) }).then((saved) => {
+        setSettings((current) => (current ? { ...current, uploadMbps: saved.uploadMbps } : current));
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [settings, uploadDraft]);
+
   const dismissFresh = async () => {
     if (fresh.length === 0) return;
     const nextSeen = markSeen(seen, fresh.map((reciter) => reciter.infohash));
@@ -207,9 +226,26 @@ function Page() {
     setStatus({ text: '', tone: 'idle' });
   };
 
-  const addFromStrip = (infohash: string) => {
+  const addToHeld = (infohash: string) => {
     setSelected((current) => new Set(current).add(infohash));
     setFresh((current) => current.filter((row) => row.infohash !== infohash));
+    setCapPrompt(null);
+  };
+
+  /** A ceiling that dead-ends teaches people to give up; offer the raise instead. */
+  const addWithCap = (infohash: string) => {
+    if (selected.size >= capReciters) {
+      setCapPrompt(infohash);
+      return;
+    }
+    addToHeld(infohash);
+  };
+
+  const raiseCapAndAdd = () => {
+    if (!settings || !capPrompt) return;
+    const next = { ...settings, maxReciters: Math.min(12, settings.maxReciters + 1) };
+    setSettings(next);
+    addToHeld(capPrompt);
   };
 
   const removeUnpublished = async (infohash: string) => {
@@ -292,7 +328,7 @@ function Page() {
           onMineOpen={(open) => setPrefs((current) => ({ ...current, mineOpen: open }))}
           onRosterOpen={(open) => setPrefs((current) => ({ ...current, rosterOpen: open }))}
           onRetry={() => setAttempt((value) => value + 1)}
-          onAdd={addFromStrip}
+          onAdd={addWithCap}
           onDismissFresh={() => void dismissFresh()}
           onRemove={(infohash) =>
             setSelected((current) => {
@@ -330,6 +366,18 @@ function Page() {
             if (!window.location.hash) window.location.hash = '#/reciters';
           }}
         />
+      ) : null}
+
+      {capPrompt ? (
+        <div className="cap-offer" role="alertdialog" aria-live="polite">
+          <span>{copy.raiseCapAsk.replace('{n}', String((settings?.maxReciters ?? 2) + 1))}</span>
+          <button type="button" className="action" onClick={raiseCapAndAdd}>
+            {copy.raiseCapYes}
+          </button>
+          <button type="button" className="quiet" onClick={() => setCapPrompt(null)}>
+            {copy.raiseCapNo}
+          </button>
+        </div>
       ) : null}
 
       {view !== 'about' && view !== 'welcome' ? (
