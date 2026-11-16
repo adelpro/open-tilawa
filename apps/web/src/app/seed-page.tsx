@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import CopyCode from '@/components/copy-code';
+import Link from '@/components/link';
 import Icon from '@/components/icons';
 import SeedMagnets from '@/components/seed-magnets';
 import { SEED_CLIENTS } from '@/constants/seed-clients';
@@ -79,6 +80,31 @@ export default function SeedPage() {
             {copy.anchors.node}
           </a>
         </nav>
+
+        <section id="extension" className="seed-section mt-14 scroll-mt-24 border-t border-line pt-10">
+          <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.extension.title}</h2>
+          <p className="mt-3 text-[1rem] leading-relaxed text-ink">{copy.extension.lede}</p>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {copy.extension.browsers.map((browser) => (
+              <li
+                key={browser}
+                className="inline-flex min-h-9 items-center border border-line px-3 text-[0.875rem] text-muted"
+              >
+                {browser}
+              </li>
+            ))}
+            <li className="inline-flex min-h-9 items-center px-1 text-[0.8125rem] text-muted">
+              {copy.extension.coming}
+            </li>
+          </ul>
+          <Link
+            to={{ name: 'extension' }}
+            className="press mt-5 inline-flex min-h-10 items-center gap-2 text-[0.9375rem] font-semibold text-ink underline underline-offset-4"
+          >
+            {copy.extension.link}
+            <Icon name="forward" size={16} className="icon-dir" />
+          </Link>
+        </section>
 
         <section id="clients" className="seed-section mt-14 scroll-mt-24">
           <h2 className="text-[1.25rem] font-semibold leading-snug text-ink">{copy.clients.title}</h2>

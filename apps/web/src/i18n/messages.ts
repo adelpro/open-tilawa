@@ -372,6 +372,13 @@ const ar = {
     ],
   },
   seedPage: {
+    extension: {
+      title: 'إضافة للمتصفح',
+      lede: 'إن لم ترد تشغيل عقدة، ثبّت الإضافة: تحفظ التلاوات داخل متصفحك وتشاركها مع المستمعين ما دام المتصفح يعمل.',
+      browsers: ['كروم', 'فايرفوكس', 'إيدج'],
+      coming: 'قريبًا',
+      link: 'تعرّف على الإضافة',
+    },
     title: 'شارك نسخة من التلاوات',
     cta: 'ابدأ من هنا',
     lede: 'ثبّت qBittorrent، ثم أضف إليه رابط القارئ الذي تريد الاحتفاظ بتلاواته. ينزل الملف مرة واحدة، ويبقى البرنامج يرفعه للآخرين ما دام مفتوحاً.',
@@ -843,6 +850,13 @@ const en: typeof ar = {
     ],
   },
   seedPage: {
+    extension: {
+      title: 'A browser add-on',
+      lede: 'If you would rather not run a node, install the add-on: it keeps the recitations inside your browser and shares them with listeners while the browser runs.',
+      browsers: ['Chrome', 'Firefox', 'Edge'],
+      coming: 'Coming soon',
+      link: 'About the add-on',
+    },
     title: 'Seed a copy of the recitations',
     cta: 'Start here',
     lede: 'Install qBittorrent, then copy the link for the reciter you want to keep. It downloads once and keeps uploading while the app is open.',
