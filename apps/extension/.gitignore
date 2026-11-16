@@ -24,3 +24,6 @@ web-ext.config.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Store packages are build artifacts, uploaded by hand
+store/*.zip

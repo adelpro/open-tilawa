@@ -15,7 +15,7 @@ export default defineConfig({
     description: '__MSG_extDescription__',
     short_name: 'Tilawah',
     // Manifest versions are integers only; the RC label is for humans and stores.
-    version_name: '0.2.0',
+    version_name: '0.2.1',
     default_locale: 'en',
     permissions: [
       'storage',

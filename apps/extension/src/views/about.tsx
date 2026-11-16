@@ -32,7 +32,7 @@ export function AboutView({ copy, lang, version }: { copy: Copy; lang: 'ar' | 'e
           <ArrowIcon /> {copy.trackerLink}
         </a>
         {hasStoreLinks() ? (
-          <a href={BRAND.chromeStore || BRAND.firefoxAddons} target="_blank" rel="noreferrer">
+          <a href={BRAND.chromeStore || BRAND.edgeStore || BRAND.firefoxAddons} target="_blank" rel="noreferrer">
             <ArrowIcon /> {copy.storeLink}
           </a>
         ) : null}

@@ -1,6 +1,6 @@
 {
   "name": "tilawah-companion",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Holds the recitations you choose and shares them with Tilawa listeners.",
   "type": "module",
