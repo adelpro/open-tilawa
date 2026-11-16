@@ -27,18 +27,26 @@ export type Settings = {
   paused: boolean;
   mode: ListeningMode;
   followCap: number;
+  /** Decimal GB the whole held roster may occupy; 0 means no limit. */
+  maxDiskGb: number;
 };
 
 export const DEFAULTS: Settings = {
-  maxReciters: 2,
+  maxReciters: 3,
   uploadMbps: 1,
   pauseOnBattery: true,
   pauseOnMetered: true,
   schedule: null,
   paused: false,
-  mode: 'manual',
+  // Mixed is the product's shape: what you listen to is what this device helps
+  // serve, under a cap you keep. Manual is one radio card away.
+  mode: 'mixed',
   followCap: 2,
+  maxDiskGb: 10,
 };
+
+/** One decimal gigabyte; the number the settings screen speaks in. */
+export const BYTES_PER_GB = 1_000_000_000;
 
 export const SETTINGS_KEY = 'tilawah-companion.settings.v1';
 export const HELD_KEY = 'tilawah-companion.held.v1';
@@ -48,6 +56,8 @@ const MAX_RECITERS = 12;
 const MAX_MBPS = 1000;
 /** 0 disables following entirely; 6 mirrors the manual cap's UI ceiling. */
 const MAX_FOLLOW_CAP = 6;
+/** Ceiling for the disk budget in GB; 0 keeps its "no limit" meaning. */
+const MAX_DISK_GB = 500;
 
 const MODES: readonly ListeningMode[] = ['manual', 'follow', 'mixed'];
 
@@ -98,6 +108,16 @@ export function parseSettings(raw: unknown): Settings {
       input.followCap <= MAX_FOLLOW_CAP
         ? input.followCap
         : DEFAULTS.followCap,
+    // Garbage here must never become "unlimited": the person asked for a
+    // ceiling, and losing it silently fills their disk while the screen says
+    // otherwise.
+    maxDiskGb:
+      typeof input.maxDiskGb === 'number' &&
+      Number.isInteger(input.maxDiskGb) &&
+      input.maxDiskGb >= 0 &&
+      input.maxDiskGb <= MAX_DISK_GB
+        ? input.maxDiskGb
+        : DEFAULTS.maxDiskGb,
   };
 }
 

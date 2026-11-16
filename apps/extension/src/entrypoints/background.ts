@@ -18,7 +18,7 @@ import { badgeFor, type BadgeColor } from '@/lib/badge';
 import type { HeldReciter, Reciter } from '@/lib/catalogue';
 import { followAdd, parsePlayMessage, playingNow } from '@/lib/follow';
 import type { Counters, EngineReply, UiReply, UiRequest } from '@/lib/messages';
-import { loadHeld, loadHeldReciters, loadSettings, saveHeld, saveSettings } from '@/lib/settings';
+import { loadHeld, loadHeldReciters, loadSettings, saveHeld, saveSettings, BYTES_PER_GB } from '@/lib/settings';
 import type { HeldState } from '@/lib/state';
 import { fetchCatalogue, planSync, type SyncNotice } from '@/lib/sync';
 import { shouldRun } from '@/lib/limits';
@@ -235,6 +235,9 @@ const handleExternalPlay = async (raw: unknown, sender: { url?: string }): Promi
     followCap: settings.followCap,
     now: Date.now(),
     playing,
+    // The person's disk budget trims the follow list like the cap does; a
+    // zero budget is "no limit", exactly as the settings screen says.
+    budgetBytes: settings.maxDiskGb > 0 ? settings.maxDiskGb * BYTES_PER_GB : undefined,
   });
   // A no-op play — a manual choice re-heard, a disabled cap — leaves storage
   // and engine exactly as they were: no write, no prune, no tick.

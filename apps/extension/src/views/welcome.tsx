@@ -20,6 +20,7 @@ export function WelcomeView({ copy, onDone }: { copy: Copy; onDone: () => void }
         <li>{copy.welcomePoint1}</li>
         <li>{copy.welcomePoint2}</li>
         <li>{copy.welcomePoint3}</li>
+        <li>{copy.welcomePoint4}</li>
       </ul>
 
       <div className="welcome-actions">

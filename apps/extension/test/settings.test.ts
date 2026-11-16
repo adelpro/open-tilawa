@@ -22,7 +22,7 @@ describe('parseUploadMbps', () => {
 
 describe('parseSettings', () => {
   test('unknown or partial settings resolve to defaults field by field', () => {
-    expect(parseSettings({ maxReciters: 'many' })).toEqual({ ...DEFAULTS, maxReciters: 2 });
+    expect(parseSettings({ maxReciters: 'many' })).toEqual({ ...DEFAULTS, maxReciters: 3 });
     expect(parseSettings({ uploadMbps: 4 }).uploadMbps).toBe(4);
   });
 
@@ -49,18 +49,21 @@ describe('parseSettings', () => {
 });
 
 describe('listening modes', () => {
-  test('mode defaults to manual and the follow cap to 2', () => {
-    expect(parseSettings({}).mode).toBe('manual');
+  test('a fresh install starts mixed, holding 3 manual picks and 2 followed', () => {
+    expect(parseSettings({}).mode).toBe('mixed');
     expect(parseSettings({}).followCap).toBe(2);
-    expect(DEFAULTS.mode).toBe('manual');
+    expect(parseSettings({}).maxReciters).toBe(3);
+    expect(DEFAULTS.mode).toBe('mixed');
     expect(DEFAULTS.followCap).toBe(2);
+    expect(DEFAULTS.maxReciters).toBe(3);
   });
 
-  test('a known mode survives; an unknown one falls back to manual', () => {
+  test('a known mode survives; an unknown one falls back to the default', () => {
     expect(parseSettings({ mode: 'mixed' }).mode).toBe('mixed');
     expect(parseSettings({ mode: 'follow' }).mode).toBe('follow');
-    expect(parseSettings({ mode: 'auto' }).mode).toBe('manual');
-    expect(parseSettings({ mode: 42 }).mode).toBe('manual');
+    expect(parseSettings({ mode: 'manual' }).mode).toBe('manual');
+    expect(parseSettings({ mode: 'auto' }).mode).toBe('mixed');
+    expect(parseSettings({ mode: 42 }).mode).toBe('mixed');
   });
 
   test('the follow cap accepts 0 (following off) and clamps to 6', () => {
@@ -69,5 +72,21 @@ describe('listening modes', () => {
     expect(parseSettings({ followCap: 9 }).followCap).toBe(2);
     expect(parseSettings({ followCap: -1 }).followCap).toBe(2);
     expect(parseSettings({ followCap: 2.5 }).followCap).toBe(2);
+  });
+});
+
+describe('the disk budget', () => {
+  test('defaults to 10 GB and keeps 0 meaning "no limit"', () => {
+    expect(parseSettings({}).maxDiskGb).toBe(10);
+    expect(DEFAULTS.maxDiskGb).toBe(10);
+    expect(parseSettings({ maxDiskGb: 0 }).maxDiskGb).toBe(0);
+    expect(parseSettings({ maxDiskGb: 25 }).maxDiskGb).toBe(25);
+  });
+
+  test('garbage and out-of-range values fall back to the default, never unlimited', () => {
+    expect(parseSettings({ maxDiskGb: -1 }).maxDiskGb).toBe(10);
+    expect(parseSettings({ maxDiskGb: 1.5 }).maxDiskGb).toBe(10);
+    expect(parseSettings({ maxDiskGb: 9999 }).maxDiskGb).toBe(10);
+    expect(parseSettings({ maxDiskGb: 'lots' }).maxDiskGb).toBe(10);
   });
 });

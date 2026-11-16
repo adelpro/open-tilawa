@@ -29,6 +29,7 @@ import {
   parseUploadMbps,
   saveHeld,
   saveSettings,
+  BYTES_PER_GB,
   type Settings,
 } from '@/lib/settings';
 import { filterByRiwaya } from '@/lib/filter';
@@ -192,19 +193,28 @@ function Page() {
     .filter((reciter) => catalogueHashes.has(reciter.infohash))
     .reduce((sum, reciter) => sum + (reciter.sizeBytes ?? 0), 0);
 
-  const capReciters = settings?.maxReciters ?? 2;
+  const heldBytes = held.reduce((sum, reciter) => sum + (reciter.sizeBytes ?? 0), 0);
+  const budgetBytes = settings && settings.maxDiskGb > 0 ? settings.maxDiskGb * BYTES_PER_GB : Number.POSITIVE_INFINITY;
+
+  const capReciters = settings?.maxReciters ?? 3;
   const plan = planSelection({
     selectedBytes: addBytes,
     selectedCount: chosen.length,
     unknownSize,
     maxReciters: capReciters,
-    capBytes: disk?.quota ?? Number.POSITIVE_INFINITY,
+    capBytes: Math.min(disk?.quota ?? Number.POSITIVE_INFINITY, budgetBytes),
     heldBytes: publishedHeldBytes,
     usageBytes: disk?.usage ?? null,
   });
 
   const refusal =
-    plan.reason === 'count' ? copy.overCount : plan.reason === 'unknown' ? copy.overUnknown : copy.overDisk;
+    plan.reason === 'count'
+      ? copy.overCount
+      : plan.reason === 'unknown'
+        ? copy.overUnknown
+        : budgetBytes <= (disk?.quota ?? Number.POSITIVE_INFINITY)
+          ? copy.overBudget
+          : copy.overDisk;
 
   useEffect(() => {
     void savePrefs(prefs);
@@ -386,6 +396,7 @@ function Page() {
           copy={copy}
           settings={settings}
           uploadDraft={uploadDraft}
+          heldBytes={heldBytes}
           canReadBattery={canReadBattery}
           canReadConnection={canReadConnection}
           onSettings={setSettings}

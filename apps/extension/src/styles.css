@@ -684,3 +684,57 @@ a.button-primary:hover {
   flex: 1;
   min-inline-size: 12rem;
 }
+
+/* The settings page reads in four sections; the mode is a decision, not a
+   dropdown that hides two of its three answers. */
+.settings-section {
+  margin-block-start: 1.75rem;
+}
+
+.section-title {
+  margin-block: 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mode-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+  margin-block-end: 0.9rem;
+}
+
+.mode-card {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.mode-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-card:focus-within {
+  outline: 2px solid var(--wave-front);
+  outline-offset: 2px;
+}
+
+.mode-card.selected {
+  border-color: var(--wave-front);
+  background: color-mix(in srgb, var(--wave-front) 8%, transparent);
+}
+
+.mode-card .meta {
+  line-height: 1.45;
+}
+
+.disk-meter {
+  margin-block-start: 0.35rem;
+}

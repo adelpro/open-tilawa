@@ -25,6 +25,8 @@ export type FollowInput = {
   now: number;
   /** Infohashes the engine currently holds open; eviction walks around these. */
   playing: ReadonlySet<string>;
+  /** Decimal bytes the whole roster may occupy; absent/0 means no budget. */
+  budgetBytes?: number;
 };
 
 export type FollowResult = {
@@ -84,11 +86,17 @@ export function followAdd(input: FollowInput): FollowResult {
   next.unshift({ ...row, addedAt: stamp, source: 'follow' as ReciterSource });
 
   const evicted: string[] = [];
-  // The cap counts every follow entry, protected or not — a playing row
-  // occupies its slot like any other; only the eviction *candidates* walk
-  // around it. The fresh row is never a candidate: it is the intent this
-  // whole call exists to serve.
-  let overflow = next.filter((entry) => entry.source === 'follow').length - followCap;
+  // Two budgets, one walk. The cap counts every follow entry, protected or
+  // not — a playing row occupies its slot like any other; the disk budget
+  // counts every held byte, because that is what the disk measures. Only the
+  // eviction *candidates* walk around playing rows and the fresh row, and
+  // manual choices are never candidates at all.
+  const bytes = (entry: HeldReciter): number => entry.sizeBytes ?? 0;
+  const budget = typeof input.budgetBytes === 'number' && input.budgetBytes > 0 ? input.budgetBytes : Infinity;
+  const followCount = next.filter((entry) => entry.source === 'follow').length;
+  const totalBytes = next.reduce((sum, entry) => sum + bytes(entry), 0);
+  let overCap = followCount - followCap;
+  let overBudget = totalBytes - budget;
   // Oldest by stamp, not by position: the stored order is the picker's, and
   // only the follow entries follow recency. The fresh row is never evicted —
   // it is the intent this whole call exists to serve.
@@ -96,12 +104,13 @@ export function followAdd(input: FollowInput): FollowResult {
     .filter((entry) => entry.source === 'follow' && !playing.has(entry.infohash) && entry.infohash !== row.infohash)
     .sort((a, b) => (a.addedAt < b.addedAt ? -1 : 1));
   for (const entry of evictable) {
-    if (overflow <= 0) break;
+    if (overCap <= 0 && overBudget <= 0) break;
     const at = next.findIndex((candidate) => candidate.infohash === entry.infohash);
     if (at < 0) continue;
     next.splice(at, 1);
     evicted.push(entry.infohash);
-    overflow -= 1;
+    overCap -= 1;
+    overBudget -= bytes(entry);
   }
 
   return { held: next, evicted, added: true };

@@ -69,6 +69,18 @@ Users on the store 0.2.0 build cannot follow yet: the sender ships in 0.2.1.
 recommendations were considered and dropped — the modes are locked at Manual /
 Follow / Mixed.
 
+### Debugging the follow channel locally
+
+An unpacked build's ID is derived from its folder path, so the site — which
+targets known IDs only — could never reach a debug build (found live:
+`Receiving end does not exist` against the Edge ID while the dev build sat on a
+path-derived ID). Build a debug package with `TILAWAH_DEV_KEY=1 npm run zip`;
+the manifest gains a public key and Chrome derives
+`opbhejfgfikjgnckojangiodobblkjfi` on every machine. The site targets that ID
+from `staging.tilawah.cc` only. The key must never ship in a store package —
+the Web Store may reject a manifest carrying its own key, so store builds omit
+it.
+
 ## Submission log
 
 | Store | Package | Version | Submitted | Status |
@@ -89,6 +101,29 @@ Package rules learned the hard way:
 - AMO requires `browser_specific_settings.gecko.data_collection_permissions` (`{"required":["none"]}`)
   and rejects `import(<variable>)` as an unsafe dynamic import.
 - The sources archive is the only separate upload, and it must match the submitted package exactly.
+
+## 0.2.2 — 2026-11-16
+
+**Defaults that serve the product, a disk budget, and a settings page that
+reads.**
+
+- **Mixed is the default mode** for a fresh install: it holds what you listen
+  to on tilawah.cc (newest first, oldest out at the cap) beside your own list.
+  Manual remains one radio card away. Disclosure line added to the welcome
+  screen. Upgrading installs whose settings never stored a mode also fall to
+  mixed — the mode is visible at the top of Settings.
+- **Defaults**: manual cap **3**, follow cap **2**, **disk limit 10 GB**.
+- **Disk limit** (`maxDiskGb`, 0 = no limit): manual adds beyond the budget are
+  refused with their own message; follow adds trim the oldest follow rows until
+  the roster fits. Manual rows are never auto-deleted. The settings page shows
+  a held-bytes meter against the budget.
+- **Settings page restructured** into Holding / Space / Pausing / Sharing, with
+  the three modes as radio cards (one line each) instead of a dropdown.
+- Packages cut (manifest `0.2.2`, no dev key): `tilawah-companion-0.2.2-edge.zip`
+  (same file as chrome), `tilawah-companion-0.2.2-chrome.zip`,
+  `tilawah-companion-0.2.2-firefox.zip`; debug package
+  `tilawah-companion-0.2.2-dev.zip` (keyed, id `opbhejfgfikjgnckojangiodobblkjfi`,
+  staging-only target).
 
 ## 0.2.1 — 2026-11-16
 

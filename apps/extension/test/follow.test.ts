@@ -158,6 +158,36 @@ describe('followAdd', () => {
     expect(next[0]?.infohash).toBe(hash('n'));
     expect(next).toHaveLength(2);
   });
+
+  test('a disk budget trims follow rows until the bytes fit, and never a manual one', () => {
+    // Four rows of 1000 bytes against a 3000-byte budget: the oldest follow
+    // entry gives way; the manual pick and the fresh row stay.
+    const { held: next, evicted } = add({
+      held: [held('m', 'manual', 900_000), held('a', 'follow', 800_000), held('b', 'follow', 700_000)],
+      row: row('n'),
+      followCap: 6,
+      budgetBytes: 3000,
+    });
+    expect(evicted).toEqual([hash('a')]);
+    expect(next.some((entry) => entry.infohash === hash('m'))).toBe(true);
+    expect(next.some((entry) => entry.infohash === hash('n'))).toBe(true);
+    expect(next).toHaveLength(3);
+  });
+
+  test('a budget that only the manual rows exceed leaves them all in place', () => {
+    const { held: next, evicted } = add({
+      held: [held('m', 'manual', 900_000), held('a', 'follow', 800_000)],
+      row: row('n'),
+      followCap: 6,
+      budgetBytes: 500,
+    });
+    // Even emptying the follow list cannot fit the manual bytes; the trim
+    // removes the old follow entry and stops — never the manual row, and never
+    // the row this play just added.
+    expect(evicted).toEqual([hash('a')]);
+    expect(next.some((entry) => entry.infohash === hash('m') && entry.source === 'manual')).toBe(true);
+    expect(next.some((entry) => entry.infohash === hash('n'))).toBe(true);
+  });
 });
 
 describe('parsePlayMessage', () => {
