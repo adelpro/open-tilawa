@@ -441,9 +441,11 @@ export default function AudioEngine({
           companionForRef.current = reciter.infohash;
           notifyCompanion({
             infohash: reciter.infohash,
-            slug: reciter.slug || reciter.name,
-            name: reciter.name,
-            nameAr: reciter.nameAr ?? '',
+            slug: reciter.slug || reciter.nameEn,
+            // This site's `name` is the Arabic name and `nameEn` the Latin one;
+            // the companion's message expects the opposite pairing.
+            name: reciter.nameEn,
+            nameAr: reciter.name,
           });
         }
         // One play per surah: a resume, a seek or a re-buffer is the same play.

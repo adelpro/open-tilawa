@@ -17,6 +17,12 @@ export type Reciter = {
    */
   nameEn: string;
   magnet: string;
+  /**
+   * The torrent identity the site and the companion add-on share by number.
+   * The player only plays; the companion recognises a release by this hash, so
+   * it must survive every transform the roster goes through.
+   */
+  infohash: string;
   riwaya: string;
   complet: boolean;
   /**

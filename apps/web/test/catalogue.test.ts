@@ -39,6 +39,11 @@ test('riwaya is whatever the row says, including unknown', () => {
   assert.equal(toReciters([row({ riwaya: '' })])[0].riwaya, 'unknown');
 });
 
+test('a row keeps its infohash — the companion is told the identity, not a label', () => {
+  const [first] = toReciters([row()]);
+  assert.equal(first.infohash, '5e0becf35d91ea4602f04db90d74621a172aa396');
+});
+
 test('complet follows the file count', () => {
   assert.equal(toReciters([row({ fileCount: 114 })])[0].complet, true);
   assert.equal(toReciters([row({ fileCount: 80 })])[0].complet, false);

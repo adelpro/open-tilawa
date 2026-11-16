@@ -55,6 +55,7 @@ export function toReciters(rows: CatalogueRow[]): Reciter[] {
 
     list.push({
       id: row.id,
+      infohash: hash,
       name: nameAr || nameEn,
       nameEn,
       magnet,
