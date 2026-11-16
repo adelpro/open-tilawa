@@ -18,9 +18,18 @@ export type CompanionRelease = {
   nameAr: string;
 };
 
-/** The live listings only: an empty ID is a store still in review. */
-export function companionTargets(ids: Record<string, string>): string[] {
-  return Object.values(ids).filter((id) => typeof id === 'string' && id.trim() !== '');
+/** Where the unpacked development build is reachable: staging only. */
+const DEV_HOST = 'staging.tilawah.cc';
+
+/**
+ * The live listings only: an empty ID is a store still in review, and the
+ * development build is addressed from staging alone — production must never
+ * probe an extension nobody ships.
+ */
+export function companionTargets(ids: Record<string, string>, hostname = ''): string[] {
+  return Object.entries(ids)
+    .filter(([key, id]) => typeof id === 'string' && id.trim() !== '' && (key !== 'dev' || hostname === DEV_HOST))
+    .map(([, id]) => id);
 }
 
 /** The one message the extension accepts; `null` means "nothing to say". */
@@ -64,5 +73,5 @@ export function notifyCompanion(release: CompanionRelease): void {
   if (typeof window === 'undefined') return;
   const message = playMessage(release);
   if (!message) return;
-  for (const id of companionTargets(COMPANION_IDS)) send(id, message);
+  for (const id of companionTargets(COMPANION_IDS, window.location.hostname)) send(id, message);
 }

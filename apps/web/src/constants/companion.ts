@@ -11,4 +11,11 @@ export const COMPANION_IDS = {
   firefox: 'tilawah-companion@tilawah.cc',
   /** Filled the day the Chrome listing is approved. */
   chrome: '',
+  /**
+   * The repository's unpacked development build. Its ID is pinned by the
+   * public key in wxt.config.ts (TILAWAH_DEV_KEY=1 builds), so a person
+   * debugging live gets the same ID on any machine. Targeted from the staging
+   * origin only — production never probes an ID nobody ships.
+   */
+  dev: 'opbhejfgfikjgnckojangiodobblkjfi',
 } as const satisfies Record<string, string>;

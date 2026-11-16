@@ -19,6 +19,15 @@ test('the target list carries the live listings only, never an empty id', () => 
   assert.deepEqual(companionTargets({ edge: '', chrome: '', firefox: '  ' }), []);
 });
 
+test('the dev build is targeted on staging only, never from production', () => {
+  assert.deepEqual(companionTargets(COMPANION_IDS, 'staging.tilawah.cc'), [
+    COMPANION_IDS.edge,
+    COMPANION_IDS.firefox,
+    COMPANION_IDS.dev,
+  ]);
+  assert.deepEqual(companionTargets(COMPANION_IDS, 'tilawah.cc'), [COMPANION_IDS.edge, COMPANION_IDS.firefox]);
+});
+
 test('a play notice is one type and one lowercase hash', () => {
   assert.deepEqual(playMessage(release), {
     type: 'tilawah:play',
