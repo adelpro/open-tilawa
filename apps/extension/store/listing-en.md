@@ -46,5 +46,7 @@ To hold recitations the user selects and seed them to Tilawa listeners over WebR
 | `host_permissions` `https://console.tilawah.cc/*` | Reads the public reciter list. |
 | `host_permissions` `https://tilawah.cc/*` | Fetches the selected reciter's `.torrent` file and its audio from the site's published web seed. |
 
+Three holding modes, a disk limit you set, and a meter showing what's held.
+
 No content scripts. No `tabs`, no `history`, no `<all_urls>`, no remote code — the WebTorrent bundle
 is shipped inside the extension.

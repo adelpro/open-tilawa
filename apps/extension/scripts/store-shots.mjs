@@ -26,8 +26,8 @@ const WAVE = '#1c4d78';
 
 const FRAMES = [
   { file: 'welcome', hash: '#/welcome', title: 'مرحبًا', sub: 'شاشة أول تشغيل: ماذا تحفظ، وما تكلفته، وكيف تتوقّف' },
-  { file: 'reciters', hash: '#/reciters', title: 'اختر ما تحفظه', sub: 'قائمة كاملة بالقرّاء، وحجم كل تلاوة قبل أن تنزّلها' },
-  { file: 'settings', hash: '#/settings', title: 'تحكّم كامل', sub: 'عدد القرّاء، حدّ الرفع، والمواعيد التي تسمح فيها بالمشاركة' },
+  { file: 'reciters', hash: '#/reciters', title: 'اختر ما تحفظه', sub: 'قائمة كاملة بالقرّاء، وحجم كل تلاوة قبل تنزيلها، وما تتابعه من استماعك' },
+  { file: 'settings', hash: '#/settings', title: 'تحكّم كامل', sub: 'أنماط الحفظ الثلاثة، وحدّ المساحة، والمواعيد التي تسمح فيها بالمشاركة' },
   { file: 'about', hash: '#/about', title: 'خصوصية بلا حساب', sub: 'لا معرّف دائم، ولا إحصاءات، ولا قراءة لصفحاتك' },
 ];
 
@@ -40,6 +40,8 @@ const card = ({ title, sub, shot }) => `<!doctype html>
     <style>
       @font-face { font-family: 'Cairo'; font-weight: 600; src: url(${CAIRO}) format('woff2'); }
       * { box-sizing: border-box; }
+      html { overflow: hidden; }
+      *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
       body {
         margin: 0; width: 1280px; height: 800px; padding: 56px 64px;
         background: ${PAPER};
@@ -121,10 +123,24 @@ const main = async () => {
 
       await page.addStyleTag({
         content:
-          'html{overflow:hidden!important;scrollbar-width:none!important}' +
-          '*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}',
+          'html,body{overflow:hidden!important}' +
+          '*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}' +
+          // The fixed summary bar is chrome of the app, not content: on a store
+          // asset it only appears as a sliced strip at the frame's bottom edge.
+          '.bar{display:none!important}',
       });
-      const shot = await page.screenshot({ type: 'png', animations: 'disabled' });
+
+      // The settings story is the mode cards and the disk budget; scroll past
+      // the masthead so both sit inside the frame.
+      if (frame.file === 'settings') await page.evaluate(() => window.scrollTo(0, 300));
+
+      const shot = await page.screenshot({
+        type: 'png',
+        animations: 'disabled',
+        // 680 of the 720 viewport: the page paints a horizontal scrollbar in
+        // its last ~20px, and a sliced scrollbar is not a store asset.
+        clip: { x: 0, y: 0, width: 1180, height: 680 },
+      });
       await composer.setContent(card({ ...frame, shot: shot.toString('base64') }), { waitUntil: 'load' });
       await composer.evaluate(() => document.fonts.ready);
       const name = `${frame.file}-1280x800.png`;
