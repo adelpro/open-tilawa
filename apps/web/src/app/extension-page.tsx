@@ -13,9 +13,9 @@ export default function ExtensionPage() {
   const copy = t.extensionPage;
 
   const browsers = [
-    { key: 'chrome', label: copy.browsers.chrome },
-    { key: 'firefox', label: copy.browsers.firefox },
-    { key: 'edge', label: copy.browsers.edge },
+    { key: 'chrome' as const, label: copy.browsers.chrome, icon: 'chrome' as const },
+    { key: 'firefox' as const, label: copy.browsers.firefox, icon: 'firefox' as const },
+    { key: 'edge' as const, label: copy.browsers.edge, icon: 'edge' as const },
   ];
 
   return (
@@ -42,13 +42,17 @@ export default function ExtensionPage() {
               aria-disabled="true"
               className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 border border-line px-5 text-[0.9375rem] font-semibold text-muted"
             >
+              <Icon name={browser.icon} size={20} />
               {browser.label}
               <span className="text-[0.75rem] font-normal">{copy.coming}</span>
             </button>
           ))}
         </div>
 
-        <p className="mt-4 text-[0.875rem] leading-relaxed text-muted">{copy.note}</p>
+        <div className="mt-4 space-y-1 text-[0.875rem] leading-relaxed text-muted">
+          <p>{copy.note}</p>
+          <p>{copy.noteLinks}</p>
+        </div>
 
         <nav className="mt-12 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-6 text-[0.9375rem]">
           <a href="/privacy" className="press text-ink underline underline-offset-4">

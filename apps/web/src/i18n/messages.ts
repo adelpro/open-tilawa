@@ -70,7 +70,8 @@ const ar = {
     privacy: 'سياسة الخصوصية',
     terms: 'الشروط',
     support: 'الدعم',
-    note: 'الإضافة تحفظ التلاوات وتشاركها ما دام المتصفح يعمل. تُنشر في المتاجر الثلاثة، وسيظهر الرابط هنا حين تُقبل.',
+    note: 'الإضافة تحفظ التلاوات وتشاركها ما دام المتصفح يعمل.',
+    noteLinks: 'تم نشر الإضافة في المتاجر الثلاثة وسيتم إضافة الروابط عند قبولها.',
   },
   notFound: {
     title: 'هذه الصفحة غير موجودة',
@@ -542,7 +543,8 @@ const en: typeof ar = {
     privacy: 'Privacy policy',
     terms: 'Terms',
     support: 'Support',
-    note: 'The add-on keeps recitations and shares them while the browser runs. It is being published in all three stores; the link appears here once it is accepted.',
+    note: 'The add-on keeps recitations and shares them while the browser runs.',
+    noteLinks: 'The add-on has been published to all three stores; the links will be added once they are accepted.',
   },
   notFound: {
     title: 'This page does not exist',
