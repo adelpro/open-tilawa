@@ -1,0 +1,85 @@
+name: CI
+
+# Nothing runs on a pull request today, so every branch arrives unverified:
+# 55 web test files, 43 admin spec files and 10 extension tests never execute
+# until someone happens to run them by hand.
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+# A second push to the same PR cancels the first run instead of racing it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: web · types, tests, bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm test
+      # `npm run build` is not used here: it ends in scripts/prerender.mjs,
+      # which fetches https://console.tilawah.cc to render the catalogue pages.
+      # A pull request must not depend on production being up.
+      - run: npx vite build
+
+  extension:
+    name: extension · types, tests, build, manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/extension
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/extension/package-lock.json
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
+      - run: npm run build
+      # The audit reads both manifests, so both targets have to exist.
+      - run: npm run build:firefox
+      # Fails when the manifest asks for more than the extension needs.
+      - run: npm run audit
+
+  admin:
+    name: admin · types, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/admin
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: apps/admin/yarn.lock
+      - run: yarn install --immutable
+      - run: yarn typecheck
+      - run: yarn test
