@@ -66,8 +66,8 @@ const main = async () => {
     `<div style="position:relative;width:${width}px;height:${height}px;background:${PAPER};overflow:hidden">
        <div style="position:absolute;inset-block-end:-40%;inset-inline-start:-12%;width:60%;height:130%;
          background:${WAVE};opacity:.06;border-radius:50%"></div>
-       <div style="position:absolute;inset:0;display:flex;align-items:center;gap:${Math.round(size * 0.28)}px;
-         padding:0 ${Math.round(size * 0.5)}px">
+       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+         gap:${Math.round(size * 0.28)}px;padding:0 ${Math.round(size * 0.5)}px">
          <img src="${ICON}" style="width:${size}px;height:${size}px;border-radius:${Math.round(size * 0.22)}px" alt="">
          <div style="min-width:0">
            <div style="font-size:${Math.round(size * 0.36)}px;line-height:1.25;white-space:nowrap">رفيق تلاوة</div>
