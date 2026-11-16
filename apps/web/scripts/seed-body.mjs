@@ -10,7 +10,7 @@ import { escapeHtml } from './html.mjs';
  * It writes no magnet on purpose: the list is the catalogue's, and a static row
  * would go stale the first time a reciter is added.
  */
-export function seedBody(page, { command, peerPortCommand, clients }) {
+export function seedBody(page, { command, peerPortCommand, clients, extensionHref }) {
   const escape = escapeHtml;
 
   /** Summary + body, the same shape the page renders as a `<details>`. */
@@ -23,6 +23,13 @@ export function seedBody(page, { command, peerPortCommand, clients }) {
     `<a href="#clients">${escape(page.anchors.app)}</a>` +
     `<a href="#magnets">${escape(page.anchors.list)}</a>` +
     `<a href="#operators">${escape(page.anchors.node)}</a></nav>` +
+    // The add-on comes before the node manual, as the app renders it: the
+    // person who will not run a node stops reading here.
+    `<section id="extension"><h2>${escape(page.extension.title)}</h2>` +
+    `<p>${escape(page.extension.lede)}</p><ul>` +
+    page.extension.browsers.map((browser) => `<li>${escape(browser)}</li>`).join('') +
+    `<li>${escape(page.extension.coming)}</li></ul>` +
+    `<p><a href="${escape(extensionHref)}">${escape(page.extension.link)}</a></p></section>` +
     `<h2>${escape(page.clients.title)}</h2><ul>` +
     clients.map((client) => `<li><a href="${escape(client.url)}">${escape(client.name)}</a></li>`).join('') +
     `</ul><p>${escape(page.clients.lede)}</p>` +

@@ -32,6 +32,7 @@ import { SURAH_NAMES_EN } from '../src/i18n/surah-names-en.ts';
 import { MESSAGES } from '../src/i18n/messages.ts';
 import { PEER_PORT_COMMAND, installCommand } from '../src/constants/seeder.ts';
 import { SEED_CLIENTS } from '../src/constants/seed-clients.ts';
+import { STORE_URLS } from '../src/constants/stores.ts';
 import { siteManifest } from '../src/utils/site-version.ts';
 import { shellHeadTags } from './head.mjs';
 import { escapeHtml as escape } from './html.mjs';
@@ -260,16 +261,34 @@ addPage('/privacy', (_locale, copy) => ({
 
 addPage('/extension', (_locale, copy) => {
   const page = copy.extensionPage;
+  // The rows read the one table: a live listing is a link, a pending one is
+  // text with the word the page uses, so the crawler never sees a store the
+  // rendered page does not carry.
+  const rows = [
+    { href: STORE_URLS.chrome, label: page.browsers.chrome },
+    { href: STORE_URLS.firefox, label: page.browsers.firefox },
+    { href: STORE_URLS.edge, label: page.browsers.edge },
+  ];
+  const stores =
+    `<ul>` +
+    rows
+      .map((row) =>
+        row.href
+          ? `<li><a href="${escape(row.href)}" rel="noreferrer" target="_blank">${escape(row.label)}</a></li>`
+          : `<li>${escape(row.label)} — ${escape(page.coming)}</li>`,
+      )
+      .join('') +
+    `</ul>`;
   return {
     title: `${page.title} - Tilawah`,
     description: page.lede,
     body: `<h1>${escape(page.title)}</h1><p>${escape(page.lede)}</p><ul>${page.points
       .map((point) => `<li>${escape(point)}</li>`)
-      .join('')}</ul><p>${escape(page.note)}</p>`,
+      .join('')}</ul>${stores}<p>${escape(page.note)}</p>`,
   };
 });
 
-addPage('/seed', (_locale, copy) => {
+addPage('/seed', (locale, copy) => {
   const page = copy.seedPage;
   return {
     title: pageTitle({ name: 'seed' }, copy) ?? `${copy.routes.seed} - Tilawah`,
@@ -279,6 +298,7 @@ addPage('/seed', (_locale, copy) => {
       command: installCommand({ diskGb: 50, uploadKbps: 20000 }),
       peerPortCommand: PEER_PORT_COMMAND,
       clients: SEED_CLIENTS,
+      extensionHref: urlFor('/extension', locale),
     }),
   };
 });

@@ -1,5 +1,6 @@
 import Icon from '@/components/icons';
 import { ChromeMark, EdgeMark, FirefoxMark } from '@/components/store-marks';
+import { STORE_URLS } from '@/constants/stores';
 import { useLocale } from '@/hooks/use-locale';
 
 /**
@@ -18,7 +19,7 @@ export default function ExtensionPage() {
   const browsers = [
     { key: 'chrome', label: copy.browsers.chrome, Mark: ChromeMark, href: '' },
     { key: 'firefox', label: copy.browsers.firefox, Mark: FirefoxMark, href: '' },
-    { key: 'edge', label: copy.browsers.edge, Mark: EdgeMark, href: 'https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom' },
+    { key: 'edge', label: copy.browsers.edge, Mark: EdgeMark, href: STORE_URLS.edge },
   ];
 
   return (

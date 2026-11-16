@@ -32,6 +32,19 @@ function code(path: string): string {
     .replace(/\/\/.*$/gm, '');
 }
 
+/**
+ * Markup without geometry: a drawn glyph is data, not styling, and its path
+ * legitimately carries `m-15.5` as a relative moveto. The spacing and size
+ * rules read this, so a logo cannot trip a class-name lint. Geometry is
+ * recognisable on its own — one long string of command letters and numbers,
+ * which no class list is.
+ */
+function markup(path: string): string {
+  return read(path)
+    .replace(/\bd="[^"]*"/g, '')
+    .replace(/'([MmZzLlHhVvCcSsQqTtAa0-9eE\s.,+-]{40,})'/g, "''");
+}
+
 test('Phosphor is imported in exactly one place', () => {
   const importers = sources.filter(
     (path) =>
@@ -68,14 +81,13 @@ test('no icon is drawn with a character', () => {
 
 test('type is sized in rem, never px', () => {
   for (const path of sources) {
-    assert.ok(!/text-\[\d+(\.\d+)?px\]/.test(read(path)), `${path} sizes text in px`);
+    assert.ok(!/text-\[\d+(\.\d+)?px\]/.test(markup(path)), `${path} sizes text in px`);
   }
 });
 
 test('spacing never uses a half step', () => {
   for (const path of sources) {
-    const source = read(path);
-    const half = source.match(/(?:gap|p|px|py|pt|pb|ps|pe|m|mx|my|mt|mb|ms|me)-\d+\.5\b/g);
+    const half = markup(path).match(/(?:gap|p|px|py|pt|pb|ps|pe|m|mx|my|mt|mb|ms|me)-\d+\.5\b/g);
     assert.equal(half, null, `${path} uses a half-step spacing value: ${half?.join(', ')}`);
   }
 });

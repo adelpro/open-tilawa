@@ -192,12 +192,25 @@ test('the seeder page is prerendered from the route table', () => {  assert.matc
   assert.match(SOURCE, /index: indexable\('seed'\)/);
 });
 
+test('the add-on page is prerendered with the stores it actually links', () => {
+  // One table holds the listing URLs; the page and the static build read it,
+  // so neither can promise a store the other does not link.
+  assert.match(SOURCE, /import \{ STORE_URLS \} from '\.\.\/src\/constants\/stores\.ts'/);
+  assert.match(SOURCE, /addPage\('\/extension'/);
+  assert.match(SOURCE, /STORE_URLS\.edge/, 'the live listing must reach the static HTML');
+  assert.match(SOURCE, /STORE_URLS\.chrome/);
+  assert.match(SOURCE, /STORE_URLS\.firefox/);
+  // The seeder page links the add-on page by its URL, not a literal path.
+  assert.match(SOURCE, /extensionHref/);
+});
+
 test('the static /seed body carries the clients and the list, not just the node manual', () => {
   const page = MESSAGES.ar.seedPage;
   const html = seedBody(page, {
     command: installCommand({ diskGb: 50, uploadKbps: 20000 }),
     peerPortCommand: PEER_PORT_COMMAND,
     clients: SEED_CLIENTS,
+    extensionHref: '/extension',
   });
 
   assert.match(html, /qBittorrent/);
@@ -216,6 +229,14 @@ test('the static /seed body carries the clients and the list, not just the node 
   assert.match(html, /href="#magnets"/);
   assert.match(html, /href="#operators"/);
   assert.ok(html.includes(page.anchors.label));
+  // The add-on section rides in the same document: a crawler sees the browser
+  // chips and the door to the add-on page, not only the node manual.
+  assert.ok(html.includes(page.extension.title));
+  assert.ok(html.includes(page.extension.lede));
+  assert.ok(html.includes(page.extension.browsers[0]));
+  assert.ok(html.includes(page.extension.coming));
+  assert.match(html, /href="\/extension"/);
+  assert.doesNotMatch(html, /id="extension"[\s\S]*magnet:\?/);
   assert.ok((html.match(/<details>/g) ?? []).length >= 6, 'the operator half is not folded');
   // The port command carries `&&`, which has to be escaped.
   assert.ok(html.includes('&amp;&amp;'));

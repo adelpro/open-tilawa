@@ -28,7 +28,7 @@ npm run build:firefox && npm run zip:firefox   # Firefox
 | Store | Package | Version | Submitted | Status |
 | --- | --- | --- | --- | --- |
 | Chrome Web Store | `tilawah-companion-0.2.0-chrome.zip` | 0.2.0 | 2026-11-16 | **in review** |
-| Microsoft Edge Add-ons | `UPLOAD-THIS-tilawah-companion-0.2.0-edge.zip` | 0.2.0 | 2026-11-16 | **in review** |
+| Microsoft Edge Add-ons | `UPLOAD-THIS-tilawah-companion-0.2.0-edge.zip` | 0.2.0 | 2026-11-16 | **live** — https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom |
 | Firefox AMO | `tilawah-companion-0.2.0-firefox.zip` | 0.2.0 | 2026-11-16 | **in review** |
 
 Version 0.2.0 is locked for all three: the manifest version is `0.2.0` in every package, and none of
