@@ -478,9 +478,19 @@ export default function AudioEngine({
       persist();
     };
 
-    navigator.mediaSession.setActionHandler('play', () => setIsPlaying(true));
-    navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));
-    navigator.mediaSession.setActionHandler('stop', () => {
+    // Each handler is registered defensively: Edge/Windows may throw on an
+    // action it does not support (e.g. 'seekto', 'stop'), and one failure must
+    // not prevent the rest (play/pause/next/prev) from being wired.
+    const tryHandle = (action: string, handler: ((d?: any) => void) | null) => {
+      try {
+        navigator.mediaSession.setActionHandler(action as any, handler as any);
+      } catch {
+        // unsupported action on this browser/OS — skip it
+      }
+    };
+    tryHandle('play', () => setIsPlaying(true));
+    tryHandle('pause', () => setIsPlaying(false));
+    tryHandle('stop', () => {
       setIsPlaying(false);
       const audio = audioRef.current;
       if (audio) {
@@ -492,19 +502,19 @@ export default function AudioEngine({
         setPositionAtom(0);
       }
     });
-    navigator.mediaSession.setActionHandler('nexttrack', () => next());
-    navigator.mediaSession.setActionHandler('previoustrack', () => previous());
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+    tryHandle('nexttrack', () => next());
+    tryHandle('previoustrack', () => previous());
+    tryHandle('seekbackward', (details) => {
       seekBy(-(details?.seekOffset ?? 10));
     });
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+    tryHandle('seekforward', (details) => {
       seekBy(details?.seekOffset ?? 10);
     });
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
+    tryHandle('seekto', (details) => {
       if (details?.seekTime == null) return;
       const audio = audioRef.current;
       if (!audio) return;
-      const target = details.fastSeek ? details.seekTime : details.seekTime;
+      const target = details.seekTime;
       try {
         audio.currentTime = target;
       } catch {
@@ -529,16 +539,84 @@ export default function AudioEngine({
     }
 
     return () => {
-      navigator.mediaSession.setActionHandler('play', null);
-      navigator.mediaSession.setActionHandler('pause', null);
-      navigator.mediaSession.setActionHandler('stop', null);
-      navigator.mediaSession.setActionHandler('nexttrack', null);
-      navigator.mediaSession.setActionHandler('previoustrack', null);
-      navigator.mediaSession.setActionHandler('seekbackward', null);
-      navigator.mediaSession.setActionHandler('seekforward', null);
-      navigator.mediaSession.setActionHandler('seekto', null);
+      for (const action of ['play', 'pause', 'stop', 'nexttrack', 'previoustrack', 'seekbackward', 'seekforward', 'seekto']) {
+        try {
+          navigator.mediaSession.setActionHandler(action as any, null);
+        } catch {
+          // ignore
+        }
+      }
     };
   }, [surahId, reciter, next, previous, setIsPlaying, locale, t]);
+
+  /** Windows (Store-packaged PWA only): UWP System Media Transport Controls.
+   *  `window.Windows` exists only in an MSIX/Store build, so this is inert for a
+   *  web-installed PWA (Edge bridges MediaSession to SMTC there instead). Kept
+   *  behind the guard so a Store build gets guaranteed background playback +
+   *  lock-screen controls per the Microsoft guidance. */
+  useEffect(() => {
+    const w = window as any;
+    if (typeof w.Windows === 'undefined') return;
+    try {
+      const smtc = w.Windows.Media.SystemMediaTransportControls.getForCurrentView();
+      smtc.isPlayEnabled = true;
+      smtc.isPauseEnabled = true;
+      smtc.isStopEnabled = true;
+      smtc.isNextEnabled = true;
+      smtc.isPreviousEnabled = true;
+      smtc.playbackStatus = w.Windows.Media.MediaPlaybackStatus.closed;
+
+      const onButton = (args: any) => {
+        const btn = w.Windows.Media.SystemMediaTransportControlsButton;
+        if (args.button === btn.play) setIsPlaying(true);
+        else if (args.button === btn.pause) setIsPlaying(false);
+        else if (args.button === btn.stop) {
+          setIsPlaying(false);
+          const a = audioRef.current;
+          if (a) {
+            try { a.currentTime = 0; } catch { /* ignore */ }
+            setPositionAtom(0);
+          }
+        } else if (args.button === btn.next) next();
+        else if (args.button === btn.previous) previous();
+      };
+      smtc.addEventListener('buttonpressed', onButton);
+
+      // Push metadata to the Windows flyout whenever the track changes.
+      const pushMeta = () => {
+        if (!surahId) return;
+        const surah = surahById(surahId);
+        const title = surah
+          ? locale === 'ar'
+            ? `سورة ${surah.name}`
+            : SURAH_NAMES_EN[surah.id] ?? surah.name
+          : t.player.surah(surahId);
+        try {
+          const updater = smtc.displayUpdater;
+          updater.type = w.Windows.Media.MediaPlaybackType.music;
+          updater.musicProperties.title = title;
+          updater.musicProperties.artist = reciter ? reciterName(reciter, locale) : 'Tilawah';
+          updater.thumbnail = w.Windows.Storage.Streams.RandomAccessStreamReference.createFromUri(
+            new w.Windows.Foundation.Uri(`${window.location.origin}/icons/icon-512.png`),
+          );
+          updater.update();
+        } catch {
+          // ignore
+        }
+      };
+      pushMeta();
+
+      return () => {
+        try {
+          smtc.removeEventListener('buttonpressed', onButton);
+        } catch {
+          // ignore
+        }
+      };
+    } catch {
+      // UWP API unavailable — fall back to MediaSession (already wired above)
+    }
+  }, [surahId, reciter, locale, t, setIsPlaying, next, previous]);
 
   /** The tab title is the one place a listener sees the surah while elsewhere. A page
    *  that is not the player keeps its own title, so the name a crawler read in the
