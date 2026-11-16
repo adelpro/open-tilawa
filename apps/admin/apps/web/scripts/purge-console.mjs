@@ -34,6 +34,7 @@ export const SCREENS = [
   '/console',
   '/console/account',
   '/console/admin',
+  '/console/backups',
   '/console/profiles',
   '/console/reciters',
   '/console/seeders',
