@@ -238,16 +238,25 @@ const tokens = strip(read('styles/tokens.css'));
 
 describe('console audit — elevation and type, in tokens', () => {
   it('never paints a card darker than the page under it', () => {
-    // The darkest page surface in either theme; a card may be lighter, never darker.
-    const page = '#1c1c1e';
-    const canvases = [...tokens.matchAll(/--canvas:\s*(#[0-9a-f]{6})/gi)].map((m) => m[1]);
-    assert.ok(canvases.length >= 2, 'expected a light and a dark --canvas');
-    for (const value of canvases) {
+    // Per block, not against one fixed page: each palette brings its own page,
+    // and a slate card (#171c22) is lighter than the slate page (#0d1116) while
+    // still being darker than the default dark page (#1c1c1e). Comparing every
+    // canvas to a single reference marked a correct card as a defect.
+    const blocks = tokens.split('}');
+    let checked = 0;
+    for (const block of blocks) {
+      const canvas = /--canvas:\s*(#[0-9a-f]{6})/i.exec(block)?.[1];
+      const page = /--canvas-parchment:\s*(#[0-9a-f]{6})/i.exec(block)?.[1];
+      if (!canvas || !page) continue;
+      checked += 1;
       assert.ok(
-        luminance(value) > luminance(page),
-        `--canvas ${value} is not lighter than the page ${page}`,
+        luminance(canvas) > luminance(page),
+        `--canvas ${canvas} is not lighter than its page ${page}`,
       );
     }
+    // Seven palettes, two themes: at least two blocks must have been compared,
+    // or the split stopped working and this test would pass on nothing.
+    assert.ok(checked >= 2, `expected a light and a dark pair, compared ${checked}`);
   });
 
   it('sets Arabic display type at least as large as Latin, with heading leading', () => {

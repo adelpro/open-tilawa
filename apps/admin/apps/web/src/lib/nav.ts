@@ -41,6 +41,17 @@ export function navItemsFor(role: AppRole | null): NavEntry[] {
     });
   }
 
+  // Backups sit with Settings: a snapshot holds every account and audit row, so the
+  // entry is admin-only for the same reason the endpoint is.
+  if (role === 'admin' || role === 'super_admin') {
+    items.push({
+      to: '/console/backups',
+      labelKey: 'nav.backups',
+      icon: 'down',
+      group: 'admin',
+    });
+  }
+
   // Usage sits with Settings, not the workspace: the numbers are the operator's
   // picture of the fleet, and the ingest endpoint they come from is public.
   if (role === 'admin' || role === 'super_admin') {

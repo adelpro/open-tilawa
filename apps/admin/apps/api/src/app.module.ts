@@ -20,6 +20,7 @@ import { AvatarModule } from './avatar/avatar.module';
 import { SeedersModule } from './seeders/seeders.module';
 import { ToolsModule } from './tools/tools.module';
 import { StatusModule } from './status/status.module';
+import { BackupsModule } from './backups/backups.module';
 import { TurnsModule } from './turns/turns.module';
 import { TelemetryModule } from './telemetry/telemetry.module';
 import { RecitersModule } from './reciters/reciters.module';
@@ -47,6 +48,7 @@ import { envValidate } from './config/env/env.validate';
     SeedersModule,
     ToolsModule,
     StatusModule,
+    BackupsModule,
     TurnsModule,
     RecitersModule,
     TelemetryModule,

@@ -4,7 +4,8 @@ import App from './App';
 import './app/globals.css';
 import { registerAppWorker } from './utils/sw-registration';
 import { alignUrlWithLocale, applyLocale, resolveInitialLocale } from './hooks/use-locale';
-import { applyTheme, applyPalette, resolveInitialPalette, resolveInitialTheme } from './hooks/use-theme';
+import { applyTheme, applyPalette, applyContrast, prefersMoreContrast, resolveInitialContrast, resolveInitialPalette, resolveInitialTheme } from './hooks/use-theme';
+import { resolveContrast } from './utils/contrast';
 import { migrateStorageNamespace } from './utils/storage-keys';
 
 // The namespace moved from `open-tilawa` to `tilawah`. Copy the old keys before
@@ -23,6 +24,7 @@ applyLocale(startLocale);
 alignUrlWithLocale(startLocale);
 applyTheme(resolveInitialTheme());
 applyPalette(resolveInitialPalette());
+applyContrast(resolveContrast(resolveInitialContrast(), prefersMoreContrast()));
 
 // Install the shell (and the streaming origin) immediately, not on first play.
 void registerAppWorker();

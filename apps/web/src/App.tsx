@@ -144,7 +144,17 @@ export default function App() {
   }, [params, openRecitersAt]);
 
   const { locale, setLocale, adoptLocale } = useLocale();
-  const { theme, setTheme, adoptTheme, palette, setPalette, adoptPalette } = useTheme();
+  const {
+    theme,
+    setTheme,
+    adoptTheme,
+    palette,
+    setPalette,
+    adoptPalette,
+    contrast,
+    setContrast,
+    adoptContrast,
+  } = useTheme();
   const [rate, setRate] = useAtom(rateAtom);
   const [visualiser, setVisualiser] = useAtom(visualiserAtom);
   const [accountOpen, setAccountOpen] = useAtom(accountSheetOpenAtom);
@@ -274,6 +284,7 @@ export default function App() {
       if (applied.locale) adoptLocale(applied.locale);
       if (applied.theme) adoptTheme(applied.theme);
       if (applied.palette) adoptPalette(applied.palette);
+      if (applied.contrast) adoptContrast(applied.contrast);
       return;
     }
 
@@ -343,6 +354,8 @@ export default function App() {
             onTheme={setTheme}
             palette={palette}
             onPalette={setPalette}
+            contrast={contrast}
+            onContrast={setContrast}
             locale={locale}
             onLocale={setLocale}
             rate={rate}

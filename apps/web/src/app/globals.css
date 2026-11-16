@@ -203,6 +203,30 @@
   --wave-back: #6f4056;
 }
 
+/* High contrast: the second-tier ink, and only that. A paper is a stock and the
+   ink it is printed with; this is a correction laid over whichever paper is on,
+   never an eighth paper. The stock and `--ink` stay, so the page keeps its
+   character and the picker's swatch keeps telling the truth.
+
+   Both waves move together: the unplayed one has to clear the page, and the
+   played/unplayed pair has to stay far enough apart to read as two tones. */
+[data-contrast='more'] {
+  --muted: #4a4a4a;
+  --line: #767676;
+  --wave-front: #0f3352;
+  --wave-back: #3d6d97;
+}
+
+/* The dark twin has to name the theme. The palette dark blocks are 0,2,0 and
+   would otherwise outrank this 0,1,0 block on the very tokens it declares —
+   the mode would work in light and silently do nothing in dark. */
+[data-contrast='more'][data-theme='dark'] {
+  --muted: #c8c8c8;
+  --line: #6b6b6b;
+  --wave-front: #b9d6f2;
+  --wave-back: #5c8bb8;
+}
+
 html {
   background: var(--bg);
   -webkit-text-size-adjust: 100%;
