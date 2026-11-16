@@ -189,7 +189,7 @@ services:
       # writes or triggers it: db-backup.sh owns the database, the lock and the ssh
       # key, and a console that could also fail silently is worth less than a page
       # that cannot.
-      - ${BACKUP_DIR:-/home/adelpro/backups/tilawa}:/backups:ro
+      - ${BACKUP_HOST_DIR:-/home/adelpro/backups/tilawa}:/backups:ro
     ports:
       - "127.0.0.1:${ADMIN_API_PORT:-9410}:${ADMIN_API_PORT:-9410}"
     healthcheck:
@@ -234,7 +234,7 @@ services:
   # `run --rm` is the interface; this service is never `up`.
   backup:
     build:
-      context: .
+      context: ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}
       dockerfile: ops/backup/Dockerfile
     image: ${BACKUP_IMAGE:-open-tilawa-backup:local}
     container_name: open-tilawa-backup
@@ -258,11 +258,11 @@ services:
     volumes:
       # Read-only: the job copies the database, it never writes to it.
       - admin_data:/data:ro
-      - ${BACKUP_DIR:-/home/adelpro/backups/tilawa}:/backups
+      - ${BACKUP_HOST_DIR:-/home/adelpro/backups/tilawa}:/backups
       - ${BACKUP_SSH_KEY:-/home/adelpro/.ssh/id_ed25519}:/ssh/id:ro
       - ${BACKUP_KNOWN_HOSTS:-/home/adelpro/.ssh/known_hosts}:/ssh/known_hosts:ro
       # Bind-mounted rather than baked in, so editing the script needs no rebuild.
-      - ./db-backup.sh:/usr/local/bin/db-backup.sh:ro
+      - ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}/db-backup.sh:/usr/local/bin/db-backup.sh:ro
     # The remote is a Tailscale name. The container's resolver is Docker's, not the
     # host's MagicDNS stub, so the name is pinned to its address and the ssh host
     # key still matches the name it was issued for.
@@ -274,7 +274,7 @@ services:
   # that asked for it is served by the process it is about to kill.
   restore:
     build:
-      context: .
+      context: ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}
       dockerfile: ops/backup/Dockerfile
     image: ${BACKUP_IMAGE:-open-tilawa-backup:local}
     profiles: ["ops"]
@@ -290,10 +290,10 @@ services:
     volumes:
       # Read-write, unlike the backup job: this is the one that swaps the file.
       - admin_data:/data
-      - ${BACKUP_DIR:-/home/adelpro/backups/tilawa}:/backups
-      - ./ops/backup/restore.sh:/usr/local/bin/restore.sh:ro
+      - ${BACKUP_HOST_DIR:-/home/adelpro/backups/tilawa}:/backups
+      - ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}/ops/backup/restore.sh:/usr/local/bin/restore.sh:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/host:ro
+      - ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}:/host:ro
 
 volumes:
   seed_downloads:
