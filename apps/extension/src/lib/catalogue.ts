@@ -97,6 +97,18 @@ export function toReciters(rows: unknown): Reciter[] {
  * the picker. A row without a valid hash is dropped, not repaired; a row
  * without a source is a pre-modes row and is a manual choice.
  */
+/**
+ * The reciter's page on tilawah.cc, written the way the site writes its own
+ * paths: the raw slug, no encoding (`apps/web/src/routes.ts` `toPath`), and the
+ * production origin — staging is for proving the follow flow, not a place to
+ * send anyone. A release without a slug has no page; sending a person to a
+ * 404 would be worse than a plain name.
+ */
+export function reciterUrl(slug: string): string | null {
+  const path = slug.trim();
+  return path ? `https://tilawah.cc/reciters/${path}` : null;
+}
+
 export function parseHeld(raw: unknown): HeldReciter[] {
   if (!Array.isArray(raw)) return [];
   const out: HeldReciter[] = [];

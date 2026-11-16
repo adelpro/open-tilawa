@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { diffCatalogue, parseHeld, toReciters, type HeldReciter } from '../src/lib/catalogue';
+import { diffCatalogue, parseHeld, reciterUrl, toReciters, type HeldReciter } from '../src/lib/catalogue';
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: 1,
@@ -84,6 +84,18 @@ describe('diffCatalogue', () => {
     expect(result.added.map((r) => r.slug)).toEqual(['two']);
     expect(result.replaced).toHaveLength(0);
     expect(result.unpublished).toHaveLength(0);
+  });
+});
+
+describe('reciterUrl', () => {
+  test('is the canonical page on tilawah.cc, exactly as the site writes it', () => {
+    expect(reciterUrl('maher-al-muaiqly')).toBe('https://tilawah.cc/reciters/maher-al-muaiqly');
+    expect(reciterUrl('  spaced  ')).toBe('https://tilawah.cc/reciters/spaced');
+  });
+
+  test('a slug-less release has no page to send anyone to', () => {
+    expect(reciterUrl('')).toBeNull();
+    expect(reciterUrl('   ')).toBeNull();
   });
 });
 
