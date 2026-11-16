@@ -47,3 +47,27 @@ describe('parseSettings', () => {
     expect(parseSettings({ paused: 'yes' }).paused).toBe(false);
   });
 });
+
+describe('listening modes', () => {
+  test('mode defaults to manual and the follow cap to 2', () => {
+    expect(parseSettings({}).mode).toBe('manual');
+    expect(parseSettings({}).followCap).toBe(2);
+    expect(DEFAULTS.mode).toBe('manual');
+    expect(DEFAULTS.followCap).toBe(2);
+  });
+
+  test('a known mode survives; an unknown one falls back to manual', () => {
+    expect(parseSettings({ mode: 'mixed' }).mode).toBe('mixed');
+    expect(parseSettings({ mode: 'follow' }).mode).toBe('follow');
+    expect(parseSettings({ mode: 'auto' }).mode).toBe('manual');
+    expect(parseSettings({ mode: 42 }).mode).toBe('manual');
+  });
+
+  test('the follow cap accepts 0 (following off) and clamps to 6', () => {
+    expect(parseSettings({ followCap: 0 }).followCap).toBe(0);
+    expect(parseSettings({ followCap: 4 }).followCap).toBe(4);
+    expect(parseSettings({ followCap: 9 }).followCap).toBe(2);
+    expect(parseSettings({ followCap: -1 }).followCap).toBe(2);
+    expect(parseSettings({ followCap: 2.5 }).followCap).toBe(2);
+  });
+});

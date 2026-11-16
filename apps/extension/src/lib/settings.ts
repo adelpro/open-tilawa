@@ -14,6 +14,10 @@
 
 import { browser } from 'wxt/browser';
 
+import { parseHeld, type HeldReciter } from '@/lib/catalogue';
+
+export type ListeningMode = 'manual' | 'follow' | 'mixed';
+
 export type Settings = {
   maxReciters: number;
   uploadMbps: number;
@@ -21,6 +25,8 @@ export type Settings = {
   pauseOnMetered: boolean;
   schedule: { from: number; to: number } | null;
   paused: boolean;
+  mode: ListeningMode;
+  followCap: number;
 };
 
 export const DEFAULTS: Settings = {
@@ -30,6 +36,8 @@ export const DEFAULTS: Settings = {
   pauseOnMetered: true,
   schedule: null,
   paused: false,
+  mode: 'manual',
+  followCap: 2,
 };
 
 export const SETTINGS_KEY = 'tilawah-companion.settings.v1';
@@ -38,6 +46,10 @@ export const HELD_KEY = 'tilawah-companion.held.v1';
 const MIN_RECITERS = 1;
 const MAX_RECITERS = 12;
 const MAX_MBPS = 1000;
+/** 0 disables following entirely; 6 mirrors the manual cap's UI ceiling. */
+const MAX_FOLLOW_CAP = 6;
+
+const MODES: readonly ListeningMode[] = ['manual', 'follow', 'mixed'];
 
 const clamp = (value: number, low: number, high: number): number => Math.min(high, Math.max(low, value));
 
@@ -78,6 +90,14 @@ export function parseSettings(raw: unknown): Settings {
       typeof input.pauseOnMetered === 'boolean' ? input.pauseOnMetered : DEFAULTS.pauseOnMetered,
     schedule: input.schedule === undefined ? DEFAULTS.schedule : parseSchedule(input.schedule),
     paused: typeof input.paused === 'boolean' ? input.paused : DEFAULTS.paused,
+    mode: MODES.includes(input.mode as ListeningMode) ? (input.mode as ListeningMode) : DEFAULTS.mode,
+    followCap:
+      typeof input.followCap === 'number' &&
+      Number.isInteger(input.followCap) &&
+      input.followCap >= 0 &&
+      input.followCap <= MAX_FOLLOW_CAP
+        ? input.followCap
+        : DEFAULTS.followCap,
   };
 }
 
@@ -96,6 +116,16 @@ export async function loadHeld<T>(): Promise<T[]> {
   const stored = await browser.storage.local.get(HELD_KEY);
   const list = stored[HELD_KEY];
   return Array.isArray(list) ? (list as T[]) : [];
+}
+
+/**
+ * The held roster, parsed — not cast. `loadHeld` predates the source tag; this
+ * is the one new code should use, because the follow list's recency lives in
+ * the order and a `source` tag must survive every read.
+ */
+export async function loadHeldReciters(): Promise<HeldReciter[]> {
+  const stored = await browser.storage.local.get(HELD_KEY);
+  return parseHeld(stored[HELD_KEY]);
 }
 
 export async function saveHeld<T>(list: T[]): Promise<void> {

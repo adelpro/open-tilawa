@@ -25,13 +25,22 @@ export type Reciter = {
   complete: boolean;
 };
 
-export type HeldReciter = Reciter & { addedAt: string };
+export type ReciterSource = 'manual' | 'follow';
+
+export type HeldReciter = Reciter & { addedAt: string; source: ReciterSource };
 
 export const FULL_QURAN = 114;
 
 const INFO_HASH = /^[0-9a-f]{40}$/i;
 
 const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
+
+/** `null` means "unknown, the whole book"; a list outside the mushaf is not a list. */
+function manifestOf(value: unknown): number[] | null {
+  if (!Array.isArray(value)) return null;
+  const list = value.filter((id): id is number => Number.isInteger(id) && (id as number) >= 1 && (id as number) <= FULL_QURAN);
+  return list.length > 0 ? list : null;
+}
 
 /** Catalogue rows → the roster this extension can hold. */
 export function toReciters(rows: unknown): Reciter[] {
@@ -60,9 +69,7 @@ export function toReciters(rows: unknown): Reciter[] {
 
     // The manifest is an index into the 114. An id outside the mushaf can never
     // name a file, and an empty list is "unknown", not "an empty book".
-    const manifest = Array.isArray(row.surahs)
-      ? row.surahs.filter((id): id is number => Number.isInteger(id) && (id as number) >= 1 && (id as number) <= FULL_QURAN)
-      : [];
+    const manifest = manifestOf(row.surahs) ?? [];
 
     list.push({
       id: typeof row.id === 'number' && Number.isFinite(row.id) ? row.id : undefined,
@@ -80,6 +87,46 @@ export function toReciters(rows: unknown): Reciter[] {
 
   // Arabic collation so the picker reads in an order a reader expects.
   return list.sort((a, b) => (a.nameAr || a.name).localeCompare(b.nameAr || b.name, 'ar'));
+}
+
+/**
+ * The stored roster, read back in the order it was written.
+ *
+ * Order is information here — the follow list's recency is the held list's
+ * order — so this deliberately does not reuse `toReciters`, whose sort is for
+ * the picker. A row without a valid hash is dropped, not repaired; a row
+ * without a source is a pre-modes row and is a manual choice.
+ */
+export function parseHeld(raw: unknown): HeldReciter[] {
+  if (!Array.isArray(raw)) return [];
+  const out: HeldReciter[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const row = entry as Record<string, unknown>;
+    const infohash = text(row.infohash).toLowerCase();
+    if (!INFO_HASH.test(infohash)) continue;
+    const nameAr = text(row.nameAr);
+    const name = text(row.name);
+    const addedAt =
+      typeof row.addedAt === 'string' && !Number.isNaN(Date.parse(row.addedAt))
+        ? row.addedAt
+        : new Date().toISOString();
+    out.push({
+      id: typeof row.id === 'number' && Number.isFinite(row.id) ? row.id : undefined,
+      infohash,
+      slug: text(row.slug),
+      name: name || nameAr || infohash.slice(0, 8),
+      nameAr,
+      riwaya: text(row.riwaya) || 'unknown',
+      sizeBytes:
+        typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) ? row.sizeBytes : null,
+      surahs: manifestOf(row.surahs),
+      complete: row.complete === true,
+      addedAt,
+      source: row.source === 'follow' ? 'follow' : 'manual',
+    });
+  }
+  return out;
 }
 
 /**

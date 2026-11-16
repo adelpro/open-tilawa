@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { diffCatalogue, toReciters, type HeldReciter } from '../src/lib/catalogue';
+import { diffCatalogue, parseHeld, toReciters, type HeldReciter } from '../src/lib/catalogue';
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: 1,
@@ -19,6 +19,7 @@ const row = (over: Record<string, unknown> = {}) => ({
 const held = (over: Record<string, unknown> = {}): HeldReciter => ({
   ...toReciters([row(over)])[0]!,
   addedAt: '2026-11-15T00:00:00Z',
+  source: 'manual',
 });
 
 describe('toReciters', () => {
@@ -83,5 +84,36 @@ describe('diffCatalogue', () => {
     expect(result.added.map((r) => r.slug)).toEqual(['two']);
     expect(result.replaced).toHaveLength(0);
     expect(result.unpublished).toHaveLength(0);
+  });
+});
+
+describe('parseHeld', () => {
+  test('an empty or non-list answer is an empty roster', () => {
+    expect(parseHeld([])).toEqual([]);
+    expect(parseHeld(null)).toEqual([]);
+    expect(parseHeld('held')).toEqual([]);
+  });
+
+  test('a stored row without a source migrates to manual', () => {
+    const migrated = parseHeld([held()]);
+    expect(migrated).toHaveLength(1);
+    expect(migrated[0]?.source).toBe('manual');
+    expect(migrated[0]?.addedAt).toBe('2026-11-15T00:00:00Z');
+  });
+
+  test('a follow-source row keeps its source and its stamp', () => {
+    const row = { ...held(), source: 'follow' };
+    expect(parseHeld([row])[0]?.source).toBe('follow');
+  });
+
+  test('a row without a valid infohash is dropped, not repaired', () => {
+    expect(parseHeld([{ ...held(), infohash: 'short' }])).toEqual([]);
+  });
+
+  test('a row without addedAt gains the current time', () => {
+    const { addedAt, ...rest } = held();
+    const parsed = parseHeld([rest])[0];
+    expect(parsed?.addedAt).toBeTruthy();
+    expect(Number.isNaN(Date.parse(parsed!.addedAt))).toBe(false);
   });
 });
