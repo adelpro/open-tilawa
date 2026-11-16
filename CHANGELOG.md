@@ -1,5 +1,39 @@
 # Changelog
 
+## web 1.13.41 — 2026-11-16
+
+Web release. App version: **web 1.13.41**.
+
+### Added
+
+- **High contrast, by default from the OS.** `prefers-contrast: more` now raises the second-tier ink
+  across all seven papers: muted text to 8.9:1, card edges from **1.23:1 to 4.5:1** (the line a card
+  relied on was under WCAG 1.4.11's 3:1), and the unplayed wave from 3.1:1 to 4.6:1 on its worst paper.
+  Paper and ink do not move, so each stock keeps its voice; on sage, clay and rose the *secondary* text
+  goes neutral instead of tinted. Settings offers three states — follow the device, always, off — and
+  the choice travels with the rest of the account settings. The dark block names the theme on purpose:
+  without it the palette dark rules would quietly outrank it.
+- **Backups from the console.** A compose service takes the catalogue snapshot; the console starts it,
+  reports the job, reads the far copy back to prove it is a database, restores a snapshot, and
+  `ops/backup/install.sh` sets a deployment up in one command.
+- **Media Session on the lock screen.** Seek and position state, playback state, multi-size artwork,
+  Save-Data and battery-aware preload, with a defensive registration and a UWP/SMTC fallback for the
+  Store build.
+
+### Changed
+
+- **CI runs on every pull request.** Three jobs — web, extension, admin — with no deploy dependency and
+  no network access to production.
+
+### Fixed
+
+- The console's purge list did not name `/console/backups`, so a deploy could leave that screen stale at
+  the edge for an hour.
+- The card-elevation audit compared every card against one hardcoded page; each palette now compares
+  against its own page.
+- `apps/web/node_modules` and `apps/admin/node_modules` were committed as symlinks pointing at
+  themselves, which broke every install. Removed from the tree.
+
 ## extension 0.2.0 — 2026-11-16
 
 New app. Version: **extension 0.2.0**. Not deployed by the compose stack; it ships
