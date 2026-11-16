@@ -45,6 +45,19 @@ export function parsePlayMessage(raw: unknown): { infohash: string } | null {
   return INFO_HASH.test(infohash) ? { infohash } : null;
 }
 
+/**
+ * Who is audible right now — the set the eviction walk goes around.
+ *
+ * The one thing this helper pins: **only the play message is evidence of
+ * playing.** The engine's snapshot lists every torrent it holds — seeding,
+ * queued, paused, error, all of it — and a warm engine holds the whole roster,
+ * so building the guard from the snapshot protects everyone and the cap stops
+ * trimming. The site said who is playing; that is who is protected.
+ */
+export function playingNow(played: string): ReadonlySet<string> {
+  return new Set([played]);
+}
+
 export function followAdd(input: FollowInput): FollowResult {
   const { held, row, mode, followCap, now, playing } = input;
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { followAdd, parsePlayMessage, type FollowInput } from '../src/lib/follow';
+import { followAdd, parsePlayMessage, playingNow, type FollowInput } from '../src/lib/follow';
 import type { HeldReciter } from '../src/lib/catalogue';
 
 const NOW = 1_800_000_000_000;
@@ -173,5 +173,21 @@ describe('parsePlayMessage', () => {
     expect(parsePlayMessage({ type: 'tilawah:play', infohash: 'short' })).toBeNull();
     expect(parsePlayMessage({ type: 'tilawah:play', infohash: 'g'.repeat(40) })).toBeNull();
     expect(parsePlayMessage({ type: 'tilawah:play', infohash: 42 })).toBeNull();
+  });
+});
+
+describe('playingNow', () => {
+  test('protects exactly the reciter the play message named', () => {
+    const guard = playingNow(hash('n'));
+    expect(guard.size).toBe(1);
+    expect(guard.has(hash('n'))).toBe(true);
+  });
+
+  test('the engine merely holding a torrent is never proof it is playing', () => {
+    // The C1 lesson, pinned: a warm engine holds the whole roster, so a guard
+    // grown from the engine snapshot protects everyone and the cap never trims.
+    const guard = playingNow(hash('n'));
+    expect(guard.has(hash('a'))).toBe(false);
+    expect(guard.has(hash('b'))).toBe(false);
   });
 });

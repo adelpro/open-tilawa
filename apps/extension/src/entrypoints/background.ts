@@ -16,7 +16,7 @@ import { browser } from 'wxt/browser';
 import { callEngine, ensureHost } from '@/hosts';
 import { badgeFor, type BadgeColor } from '@/lib/badge';
 import type { HeldReciter, Reciter } from '@/lib/catalogue';
-import { followAdd, parsePlayMessage } from '@/lib/follow';
+import { followAdd, parsePlayMessage, playingNow } from '@/lib/follow';
 import type { Counters, EngineReply, UiReply, UiRequest } from '@/lib/messages';
 import { loadHeld, loadHeldReciters, loadSettings, saveHeld, saveSettings } from '@/lib/settings';
 import type { HeldState } from '@/lib/state';
@@ -222,8 +222,11 @@ const handleExternalPlay = async (raw: unknown, sender: { url?: string }): Promi
   if (!row) return { ok: true };
 
   const held = await loadHeldReciters();
-  const current = await snapshot();
-  const playing = new Set((current.states ?? []).map((state) => state.infohash));
+  // The engine snapshot lists everything it holds — seeding, queued, paused —
+  // and none of that is "playing". A warm engine holds the whole roster, so
+  // reading the guard out of the snapshot counted every row as protected and
+  // the follow cap never trimmed (review finding C1).
+  const playing = playingNow(parsed.infohash);
 
   const result = followAdd({
     held,
@@ -233,6 +236,9 @@ const handleExternalPlay = async (raw: unknown, sender: { url?: string }): Promi
     now: Date.now(),
     playing,
   });
+  // A no-op play — a manual choice re-heard, a disabled cap — leaves storage
+  // and engine exactly as they were: no write, no prune, no tick.
+  if (!result.added && result.evicted.length === 0) return { ok: true };
   await saveHeld(result.held);
 
   // Eviction deletes bytes, as the manual remove does; the engine remove is
