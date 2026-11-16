@@ -15,9 +15,10 @@ import { browser } from 'wxt/browser';
 
 import { callEngine, ensureHost } from '@/hosts';
 import { badgeFor, type BadgeColor } from '@/lib/badge';
-import type { HeldReciter } from '@/lib/catalogue';
+import type { HeldReciter, Reciter } from '@/lib/catalogue';
+import { followAdd, parsePlayMessage } from '@/lib/follow';
 import type { Counters, EngineReply, UiReply, UiRequest } from '@/lib/messages';
-import { loadHeld, loadSettings, saveSettings } from '@/lib/settings';
+import { loadHeld, loadHeldReciters, loadSettings, saveHeld, saveSettings } from '@/lib/settings';
 import type { HeldState } from '@/lib/state';
 import { fetchCatalogue, planSync, type SyncNotice } from '@/lib/sync';
 import { shouldRun } from '@/lib/limits';
@@ -168,6 +169,90 @@ const pendingNotices = async (): Promise<number> => {
 const snapshot = async (): Promise<EngineReply> => callEngine({ type: 'engine:snapshot' });
 
 /**
+ * The catalogue, cached for a few minutes.
+ *
+ * One song change is one message, and an hour of listening may cross several
+ * reciters; a fetch per message is a request per song. A stale cache only
+ * delays a follow add until the next play — the send is fire-and-forget, so
+ * nobody is waiting on it.
+ */
+let catalogueCache: { rows: Reciter[]; at: number } | null = null;
+const CATALOGUE_TTL_MS = 10 * 60 * 1000;
+
+const catalogueForFollow = async (): Promise<Reciter[]> => {
+  if (catalogueCache && Date.now() - catalogueCache.at < CATALOGUE_TTL_MS) return catalogueCache.rows;
+  const rows = await fetchCatalogue();
+  catalogueCache = { rows, at: Date.now() };
+  return rows;
+};
+
+/**
+ * The site said what is playing. This is the whole follow conversation.
+ *
+ * The sender is already constrained by `externally_connectable.matches`; the
+ * origin check here is the belt for browsers that relay the message anyway.
+ * An unknown hash — a stale tab, an unpublished release — is silence, never an
+ * error the page could see: the site's send is fire-and-forget and must stay
+ * that way.
+ */
+const EXTERNAL_ORIGINS = ['https://tilawah.cc', 'https://staging.tilawah.cc'];
+
+const handleExternalPlay = async (raw: unknown, sender: { url?: string }): Promise<{ ok: boolean }> => {
+  try {
+    if (!sender.url || !EXTERNAL_ORIGINS.includes(new URL(sender.url).origin)) return { ok: false };
+  } catch {
+    return { ok: false };
+  }
+  const parsed = parsePlayMessage(raw);
+  if (!parsed) return { ok: false };
+
+  const settings = await loadSettings();
+  // Manual mode holds exactly what the person ticked; the site changes nothing.
+  if (settings.mode === 'manual') return { ok: true };
+
+  let rows: Reciter[];
+  try {
+    rows = await catalogueForFollow();
+  } catch (error) {
+    // A failed fetch is not an empty catalogue, and not the person's problem.
+    console.warn('catalogue unavailable for follow', error);
+    return { ok: false };
+  }
+  const row = rows.find((candidate) => candidate.infohash === parsed.infohash);
+  if (!row) return { ok: true };
+
+  const held = await loadHeldReciters();
+  const current = await snapshot();
+  const playing = new Set((current.states ?? []).map((state) => state.infohash));
+
+  const result = followAdd({
+    held,
+    row,
+    mode: settings.mode,
+    followCap: settings.followCap,
+    now: Date.now(),
+    playing,
+  });
+  await saveHeld(result.held);
+
+  // Eviction deletes bytes, as the manual remove does; the engine remove is
+  // the delete, the storage write above is the record.
+  for (const infohash of result.evicted) {
+    try {
+      await callEngine({ type: 'engine:remove', infohash });
+    } catch (error) {
+      console.warn('follow eviction did not reach the engine', error);
+    }
+  }
+
+  // tick() reconciles and applies the gate: on a metered connection the new
+  // row waits, on a healthy one the engine starts it. The gate is inherited,
+  // never re-implemented here.
+  await tick();
+  return { ok: true };
+};
+
+/**
  * Ask the host for its torrents, and give it anything stored but missing.
  *
  * A Chrome offscreen document, a restarted browser and a failed torrent all look
@@ -300,6 +385,26 @@ export default defineBackground({
 
     browser.runtime.onInstalled.addListener(() => void serial(tick));
     browser.runtime.onStartup.addListener(() => void serial(tick));
+
+    // The site's one channel: a play notice, nothing else. `matches` in the
+    // manifest constrains the sender; this listener constrains the shape. WXT's
+    // polyfill typings do not carry the external surface, hence the local type.
+    type ExternalMessage = (
+      message: unknown,
+      sender: { url?: string },
+      sendResponse: (reply?: unknown) => void,
+    ) => boolean | void;
+    const onMessageExternal = (
+      browser.runtime as {
+        onMessageExternal?: { addListener: (listener: ExternalMessage) => void };
+      }
+    ).onMessageExternal;
+    onMessageExternal?.addListener((message, sender, sendResponse) => {
+      void serial(() => handleExternalPlay(message, sender))
+        .then((reply) => sendResponse(reply))
+        .catch(() => sendResponse({ ok: false }));
+      return true;
+    });
 
     browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       // The engine's own channel belongs to the host; the background relaying it

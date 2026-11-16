@@ -27,6 +27,14 @@ export default defineConfig({
       ...(manifestVersion === 3 ? ['offscreen' as const] : []),
     ],
     host_permissions: ['https://console.tilawah.cc/*', 'https://tilawah.cc/*'],
+    // The site may tell the companion which reciter is playing — one message,
+    // no page access, no reply that carries anything. This is not a permission:
+    // it grants tilawah.cc the right to *send*, and the background accepts
+    // exactly one message shape (`tilawah:play` + a 40-hex infohash). Staging
+    // is listed so the follow flow can be proved before it ships.
+    externally_connectable: {
+      matches: ['https://tilawah.cc/*', 'https://staging.tilawah.cc/*'],
+    },
     // The picker is twelve rows tall; a 400px embedded panel is not a place to
     // choose what to keep for years.
     options_ui: { page: 'options.html', open_in_tab: true },
