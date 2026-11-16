@@ -5,6 +5,7 @@ import {
   CaretLeft,
   CaretRight,
   Check,
+  CircleHalf,
   CornersIn,
   CornersOut,
   DownloadSimple,
@@ -111,6 +112,7 @@ export type IconName =
   | 'sun'
   | 'moon'
   | 'palette'
+  | 'contrast'
   | 'globe'
   | 'gauge'
   | 'sleep'
@@ -162,6 +164,8 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting' | 'order' | 'repeat-one'>,
   sun: Sun,
   moon: Moon,
   palette: Palette,
+  // A circle half filled: the conventional mark for contrast.
+  contrast: CircleHalf,
   globe: GlobeHemisphereWest,
   puzzle: PuzzlePiece,
   gauge: Gauge,

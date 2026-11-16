@@ -13,6 +13,7 @@
 
 import { LOCALES, type Locale } from '@/i18n/messages';
 import { PALETTES, type PaletteId } from '@/utils/palettes';
+import { CONTRASTS, type Contrast } from '@/utils/contrast';
 import { VISUALISERS, type Visualiser } from '@/utils/visualiser-models';
 import { STORAGE_EVENT, STORAGE_KEYS } from '@/utils/storage-keys';
 
@@ -37,6 +38,8 @@ export type StoredSettings = {
   theme?: string;
   /** The paper. Absent on every device that never chose one: that is `default`. */
   palette?: string;
+  /** Follow the OS, force it on, force it off. Absent means `system`. */
+  contrast?: string;
   /**
    * When this device last changed a setting, in ms. Cross-device sync compares
    * it so a late relay echo cannot undo a newer local choice. Absent in states
@@ -64,6 +67,7 @@ export type ResolvedSettings = {
   locale?: Locale;
   theme?: (typeof THEMES)[number];
   palette?: PaletteId;
+  contrast?: Contrast;
   updatedAt: number;
 };
 
@@ -135,6 +139,7 @@ function settingsOf(source: {
   locale?: unknown;
   theme?: unknown;
   palette?: unknown;
+  contrast?: unknown;
 }): StoredSettings {
   const settings: StoredSettings = {
     rate: numberOrUndefined(source.rate),
@@ -142,6 +147,7 @@ function settingsOf(source: {
     locale: stringOrUndefined(source.locale),
     theme: stringOrUndefined(source.theme),
     palette: stringOrUndefined(source.palette),
+    contrast: stringOrUndefined(source.contrast),
   };
   // Drop absent keys so the blob stays readable in devtools.
   (Object.keys(settings) as (keyof StoredSettings)[]).forEach((key) => {
@@ -346,6 +352,9 @@ export function resolveRemoteSettings(
   }
   if (typeof source.palette === 'string' && (PALETTE_IDS as readonly string[]).includes(source.palette)) {
     resolved.palette = source.palette as PaletteId;
+  }
+  if (typeof source.contrast === 'string' && (CONTRASTS as readonly string[]).includes(source.contrast)) {
+    resolved.contrast = source.contrast as Contrast;
   }
 
   // A stamp with no usable field is not worth a re-render.

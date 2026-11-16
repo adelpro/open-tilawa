@@ -6,6 +6,7 @@ import ThemeSelect from '@/components/theme-select';
 import { PLAYBACK_RATES } from '@/hooks/use-persistence';
 import { useLocale } from '@/hooks/use-locale';
 import type { Theme } from '@/hooks/use-theme';
+import type { Contrast } from '@/utils/contrast';
 import { LOCALES, type Locale } from '@/i18n/messages';
 import { cn } from '@/utils/cn';
 import type { PaletteId } from '@/utils/palettes';
@@ -47,6 +48,8 @@ export default function SettingsPage({
   onTheme,
   palette,
   onPalette,
+  contrast,
+  onContrast,
   locale,
   onLocale,
   rate,
@@ -63,6 +66,8 @@ export default function SettingsPage({
   onTheme: (theme: Theme) => void;
   palette: PaletteId;
   onPalette: (palette: PaletteId) => void;
+  contrast: Contrast;
+  onContrast: (contrast: Contrast) => void;
   locale: Locale;
   onLocale: (locale: Locale) => void;
   rate: number;
@@ -132,6 +137,28 @@ export default function SettingsPage({
               onChange={onPalette}
               label={t.settings.theme}
             />
+          </Group>
+
+          <Group
+            icon={<Icon name="contrast" size={20} />}
+            title={t.settings.contrast}
+            hint={t.settings.contrastHint}
+          >
+            {(['system', 'more', 'off'] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onContrast(value)}
+                aria-pressed={contrast === value}
+                className={cn(chip, contrast === value ? chipOn : chipOff)}
+              >
+                {value === 'system'
+                  ? t.settings.contrastSystem
+                  : value === 'more'
+                    ? t.settings.contrastOn
+                    : t.settings.contrastOff}
+              </button>
+            ))}
           </Group>
 
           <Group

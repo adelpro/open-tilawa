@@ -123,3 +123,30 @@ test('a local stamp from a broken clock is not pushed', () => {
   assert.equal(shouldPushLocalSettings({ updatedAt: NOW + 61_000 }, {}, NOW), false);
 });
 
+
+test('a contrast preference travels with the rest of settings', () => {
+  const resolved = resolveRemoteSettings(
+    { contrast: 'system', updatedAt: NOW - 10 },
+    { contrast: 'more', updatedAt: NOW - 5 },
+    NOW,
+  );
+  assert.equal(resolved?.contrast, 'more');
+
+  const off = resolveRemoteSettings(
+    { contrast: 'more', updatedAt: NOW - 10 },
+    { contrast: 'off', updatedAt: NOW - 5 },
+    NOW,
+  );
+  assert.equal(off?.contrast, 'off');
+});
+
+test('a contrast value that is not one of the three literals is ignored', () => {
+  // A newer build's vocabulary is not a reason to show a listener something
+  // nobody designed: it falls back to `system`, which is what absence means.
+  const resolved = resolveRemoteSettings(
+    { contrast: 'more', updatedAt: NOW - 10 },
+    { contrast: 'sometimes', updatedAt: NOW - 5 },
+    NOW,
+  );
+  assert.equal(resolved, null);
+});

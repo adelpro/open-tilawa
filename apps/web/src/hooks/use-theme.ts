@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom';
 
 import { loadState, patchSettings } from '@/hooks/use-persistence';
 import { isPalette, type PaletteId } from '@/utils/palettes';
+import { type Contrast, isContrast, resolveContrast } from '@/utils/contrast';
 
 export type Theme = 'light' | 'dark';
 
@@ -11,6 +12,7 @@ export type Theme = 'light' | 'dark';
 // and an atom default would undo it on mount.
 export const themeAtom = atom<Theme>(resolveInitialTheme());
 export const paletteAtom = atom<PaletteId>(resolveInitialPalette());
+export const contrastAtom = atom<Contrast>(resolveInitialContrast());
 
 export function resolveTheme(stored: Theme | undefined, prefersDark: boolean): Theme {
   if (stored === 'light' || stored === 'dark') return stored;
@@ -35,6 +37,34 @@ export function resolveInitialTheme(): Theme {
 export function resolveInitialPalette(): PaletteId {
   const raw = typeof window === 'undefined' ? undefined : loadState().settings.palette;
   return isPalette(raw) ? raw : 'default';
+}
+
+/** The OS switch, read once at paint time and watched while it is in charge. */
+export function prefersMoreContrast(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-contrast: more)').matches;
+}
+
+/**
+ * A device that never chose follows the operating system. That is why the value
+ * is absent on most installs, and why an unrecognised one reads as `system`
+ * rather than falling back to normal contrast behind the listener's back.
+ */
+export function resolveInitialContrast(): Contrast {
+  const raw = typeof window === 'undefined' ? undefined : loadState().settings.contrast;
+  return isContrast(raw) ? raw : 'system';
+}
+
+/**
+ * One attribute on <html>; the CSS layer does the rest. `off` removes it rather
+ * than writing a second value, so the absence of the attribute is the only
+ * spelling of "normal contrast" the stylesheet has to know.
+ */
+export function applyContrast(effective: 'more' | 'off'): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  if (effective === 'more') root.dataset.contrast = 'more';
+  else delete root.dataset.contrast;
 }
 
 /**
@@ -94,13 +124,17 @@ function crossfade(commit: () => void): void {
 export function useTheme(): {
   theme: Theme;
   palette: PaletteId;
+  contrast: Contrast;
   setTheme: (next: Theme) => void;
   setPalette: (next: PaletteId) => void;
+  setContrast: (next: Contrast) => void;
   adoptTheme: (next: Theme) => void;
   adoptPalette: (next: PaletteId) => void;
+  adoptContrast: (next: Contrast) => void;
 } {
   const [theme, setThemeAtom] = useAtom(themeAtom);
   const [palette, setPaletteAtom] = useAtom(paletteAtom);
+  const [contrast, setContrastAtom] = useAtom(contrastAtom);
 
   useEffect(() => {
     applyTheme(theme);
@@ -109,6 +143,24 @@ export function useTheme(): {
   useEffect(() => {
     applyPalette(palette);
   }, [palette]);
+
+  /**
+   * `system` means the OS is in charge, including while the page is open: a
+   * listener who flips *Increase contrast* in their system settings should see
+   * this page follow. Nothing is written to storage here — that would turn a
+   * system change into a local choice and stop it following the next one.
+   */
+  useEffect(() => {
+    applyContrast(resolveContrast(contrast, prefersMoreContrast()));
+    if (contrast !== 'system') return;
+
+    const query = window.matchMedia?.('(prefers-contrast: more)');
+    if (!query?.addEventListener) return;
+
+    const follow = (event: MediaQueryListEvent) => applyContrast(resolveContrast('system', event.matches));
+    query.addEventListener('change', follow);
+    return () => query.removeEventListener('change', follow);
+  }, [contrast]);
 
   const setTheme = (next: Theme) => {
     crossfade(() => {
@@ -130,6 +182,19 @@ export function useTheme(): {
     patchSettings({ palette: next });
   };
 
+  /**
+   * The one setting whose effect can arrive from outside the page, so the
+   * commit and the attribute stay in the same crossfade as the papers.
+   */
+  const setContrast = (next: Contrast) => {
+    crossfade(() => {
+      flushSync(() => setContrastAtom(next));
+      applyContrast(resolveContrast(next, prefersMoreContrast()));
+    });
+
+    patchSettings({ contrast: next });
+  };
+
   /** Same contract as `adoptLocale`: apply without writing back to the ring. */
   const adoptTheme = useCallback(
     (next: Theme) => {
@@ -147,5 +212,23 @@ export function useTheme(): {
     [setPaletteAtom],
   );
 
-  return { theme, palette, setTheme, setPalette, adoptTheme, adoptPalette };
+  const adoptContrast = useCallback(
+    (next: Contrast) => {
+      setContrastAtom(next);
+      applyContrast(resolveContrast(next, prefersMoreContrast()));
+    },
+    [setContrastAtom],
+  );
+
+  return {
+    theme,
+    palette,
+    contrast,
+    setTheme,
+    setPalette,
+    setContrast,
+    adoptTheme,
+    adoptPalette,
+    adoptContrast,
+  };
 }
