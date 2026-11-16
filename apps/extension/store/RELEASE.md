@@ -42,6 +42,22 @@ Package rules learned the hard way:
   and rejects `import(<variable>)` as an unsafe dynamic import.
 - The sources archive is the only separate upload, and it must match the submitted package exactly.
 
+## Unreleased (0.2.1 — cut only when the human locks the version)
+
+**Listening modes** — the companion can follow what the person listens to.
+
+- Three modes in settings: **Manual** (today's behaviour, the default), **Follow**
+  (holds what the person plays on tilawah.cc, newest first, capped), and **Mixed**
+  (the manual list untouched, plus a rotating follow list under its own cap).
+- The site sends one fire-and-forget message when a reciter starts playing
+  (`externally_connectable` matches tilawah.cc + staging). **No new permission.**
+- Follow cap defaults to 2, 0 disables following; manual rows are never
+  auto-evicted; a row playing right now is never evicted; the cap counts every
+  follow entry and the trim walks around protected rows.
+- The follow list is visible in the reciters view («تتابع ما تستمع إليه»), every
+  row tagged «متابعة», each removable — removal deletes bytes immediately.
+- Privacy text discloses the playback channel (device-local, never forwarded).
+
 ## After approval — the only steps left
 
 1. Send the three listing URLs. `src/constants/brand.ts` has `chromeStore` and `firefoxAddons`

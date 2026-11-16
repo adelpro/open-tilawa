@@ -26,7 +26,8 @@ export const PRIVACY: Legal = {
       {
         heading: 'ما يحتفظ به على جهازك',
         body: [
-          'التلاوات التي تختارها، وإعداداتك: عدد القرّاء، وحدّ الرفع، ومواعيد التوقّف. لا شيء غير ذلك.',
+          'التلاوات التي تختارها أو تتابعها، وإعداداتك: نمط الحفظ، وعدد القرّاء، وحدّ الرفع، ومواعيد التوقّف. لا شيء غير ذلك.',
+          'في نمطَي المتابعة والمختلط، يخبر تلاوةُ الإضافةَ بما تستمع إليه: رسالة واحدة عند بدء تشغيل قارئ، تبقى على جهازك ولا تمرّ من الإضافة إلى أيّ طرف ثالث.',
           'إزالة قارئ تحذف نسخته من هذا الجهاز. وإزالة الإضافة تحذف كل ما حفظته.',
         ],
       },
@@ -66,7 +67,8 @@ export const PRIVACY: Legal = {
       {
         heading: 'What it keeps on your device',
         body: [
-          'The recitations you choose, and your settings: how many reciters, the upload limit, the hours you allow. Nothing else.',
+          'The recitations you choose or follow, and your settings: the holding mode, how many reciters, the upload limit, the hours you allow. Nothing else.',
+          'In Follow and Mixed modes, tilawah.cc tells the add-on what you play — one message when a reciter starts. It stays on your device; the add-on never passes it to anyone.',
           'Removing a reciter deletes its copy from this device. Uninstalling the extension deletes everything it kept.',
         ],
       },
