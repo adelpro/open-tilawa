@@ -130,15 +130,6 @@ export default function TopBar({
               className="absolute end-0 top-full mt-1 w-40 overflow-hidden rounded-lg border border-line bg-canvas shadow-lg"
             >
               <Link
-                to={{ name: 'extension' }}
-                role="menuitem"
-                onClick={() => setMoreOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
-              >
-                <Icon name="puzzle" />
-                {t.routes.extension}
-              </Link>
-              <Link
                 to={{ name: 'about' }}
                 role="menuitem"
                 onClick={() => setMoreOpen(false)}
