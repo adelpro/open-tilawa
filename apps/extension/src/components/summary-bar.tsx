@@ -12,6 +12,7 @@ export function SummaryBar({
   selectedCount,
   selectedBytes,
   capReciters,
+  followCount,
   allowed,
   running,
   refusal,
@@ -23,13 +24,15 @@ export function SummaryBar({
   selectedCount: number;
   selectedBytes: number;
   capReciters: number;
+  /** Held by following; a second budget, shown beside the manual one. */
+  followCount: number;
   allowed: boolean;
   /** Held reciters exist and the background is not paused. */
   running: boolean;
   refusal: string;
   status: { text: string; tone: 'idle' | 'error' };
   busy: boolean;
-  labels: { selected: string; cap: string; start: string; pause: string };
+  labels: { selected: string; cap: string; follow?: string; start: string; pause: string };
   onPrimary: () => void;
 }) {
   return (
@@ -37,6 +40,12 @@ export function SummaryBar({
       <span className="totals">
         {labels.selected}: <bdi>{selectedCount}</bdi> · <bdi>{formatBytes(selectedBytes)}</bdi> /{' '}
         {labels.cap}: <bdi>{capReciters}</bdi>
+        {labels.follow && followCount > 0 ? (
+          <>
+            {' · '}
+            {labels.follow}: <bdi>{followCount}</bdi>
+          </>
+        ) : null}
       </span>
       <button
         type="button"

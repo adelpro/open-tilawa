@@ -22,7 +22,7 @@ import { DEFAULT_VIEW, watchView, viewFromHash, type View } from '@/lib/router';
 import { planSelection } from '@/lib/selection';
 import {
   SETTINGS_KEY,
-  loadHeld,
+  loadHeldReciters,
   loadSettings,
   parseSettings,
   parseUploadMbps,
@@ -101,7 +101,7 @@ function Page() {
 
     void Promise.all([
       fetchCatalogue(),
-      loadHeld<HeldReciter>(),
+      loadHeldReciters(),
       loadSettings(),
       loadPrefs(),
       browser.storage.local.get(NEW_SEEN_KEY),
@@ -140,7 +140,9 @@ function Page() {
         setSettings(storedSettings);
         setPaused(storedSettings.paused);
         setUploadDraft(String(storedSettings.uploadMbps));
-        setSelected(new Set(storedHeld.map((reciter) => reciter.infohash)));
+        // The picker is the manual surface only: a follow row is held but not
+        // chosen, and treating it as chosen would let the next save delete it.
+        setSelected(new Set(storedHeld.filter((reciter) => reciter.source === 'manual').map((reciter) => reciter.infohash)));
         if (estimate?.quota) setDisk({ quota: estimate.quota, usage: estimate.usage ?? 0 });
         setLoading(false);
       },
@@ -162,6 +164,10 @@ function Page() {
   const chosen = rows.filter((reciter) => selected.has(reciter.infohash));
   const ordered = sortReciters(filterByRiwaya(rows, prefs.riwayat), prefs.sort, lang);
   const mine = rows.filter((reciter) => selected.has(reciter.infohash));
+  /** Held because the site said so; hidden from the picker's selection. */
+  const follow = held.filter(
+    (reciter) => reciter.source === 'follow' && !selected.has(reciter.infohash),
+  );
 
   const unknownSize =
     chosen.some((reciter) => typeof reciter.sizeBytes !== 'number' || reciter.sizeBytes <= 0) ||
@@ -253,12 +259,25 @@ function Page() {
     await ask({ type: 'state:remove', infohash });
   };
 
+  /** A follow row is removed for real, immediately — not at the next save. */
+  const removeFollow = async (infohash: string) => {
+    const next = held.filter((reciter) => reciter.infohash !== infohash);
+    setHeld(next);
+    await saveHeld(next);
+    await ask({ type: 'state:remove', infohash });
+  };
+
   const save = async () => {
     if (!settings || !plan.allowed) return;
     setSaving(true);
     setStatus({ text: copy.saving, tone: 'idle' });
 
     try {
+      // The follow list passes through untouched: it is not the picker's to
+      // rebuild, and the removal loop below must never see it as "dropped".
+      const followKept = held.filter(
+        (reciter) => reciter.source === 'follow' && !chosen.some((pick) => pick.infohash === reciter.infohash),
+      );
       const next: HeldReciter[] = [
         ...unpublished,
         ...chosen.map((reciter) => {
@@ -266,9 +285,11 @@ function Page() {
           return {
             ...reciter,
             addedAt: prior?.addedAt ?? new Date().toISOString(),
-            source: prior?.source ?? 'manual',
+            // Ticking a row is a manual decision, even if follow had it first.
+            source: 'manual' as const,
           };
         }),
+        ...followKept,
       ];
 
       const nextHashes = new Set(next.map((reciter) => reciter.infohash));
@@ -325,6 +346,7 @@ function Page() {
           fresh={fresh}
           unpublished={unpublished}
           mine={mine}
+          follow={follow}
           mineOpen={prefs.mineOpen}
           rosterOpen={prefs.rosterOpen}
           sort={prefs.sort}
@@ -344,6 +366,7 @@ function Page() {
           onSort={(next) => setPrefs((current) => ({ ...current, sort: next }))}
           onRiwayat={(next) => setPrefs((current) => ({ ...current, riwayat: next }))}
           onRemoveUnpublished={(infohash) => void removeUnpublished(infohash)}
+          onRemoveFollow={(infohash) => void removeFollow(infohash)}
         />
       ) : null}
 
@@ -389,12 +412,13 @@ function Page() {
           selectedCount={chosen.length}
           selectedBytes={selectedBytes}
           capReciters={capReciters}
+          followCount={follow.length}
           allowed={plan.allowed}
           running={!paused && held.length > 0}
           refusal={refusal}
           status={status}
           busy={saving}
-          labels={{ selected: copy.selectedLabel, cap: copy.capLabel, start: copy.start, pause: copy.pauseCta }}
+          labels={{ selected: copy.selectedLabel, cap: copy.capLabel, follow: copy.followCount, start: copy.start, pause: copy.pauseCta }}
           onPrimary={() => {
             if (!paused && held.length > 0) {
               setPaused(true);

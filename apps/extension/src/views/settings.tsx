@@ -33,6 +33,20 @@ export function SettingsView({
 
       <div className="grid">
         <div className="field">
+          <label htmlFor="mode">{copy.modeLabel}</label>
+          <select
+            id="mode"
+            value={settings.mode}
+            onChange={(event) => onSettings({ ...settings, mode: event.target.value as Settings['mode'] })}
+          >
+            <option value="manual">{copy.modeManual}</option>
+            <option value="follow">{copy.modeFollow}</option>
+            <option value="mixed">{copy.modeMixed}</option>
+          </select>
+          <small>{copy.modeHint}</small>
+        </div>
+
+        <div className="field">
           <label htmlFor="max-reciters">{copy.maxReciters}</label>
           <select
             id="max-reciters"
@@ -47,6 +61,24 @@ export function SettingsView({
           </select>
           <small>{copy.maxRecitersHint}</small>
         </div>
+
+        {settings.mode !== 'manual' ? (
+          <div className="field">
+            <label htmlFor="follow-cap">{copy.followCapLabel}</label>
+            <select
+              id="follow-cap"
+              value={settings.followCap}
+              onChange={(event) => onSettings({ ...settings, followCap: Number(event.target.value) })}
+            >
+              {[0, 1, 2, 3, 4, 5, 6].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+            <small>{copy.followCapHint}</small>
+          </div>
+        ) : null}
 
         <div className="field">
           <label htmlFor="upload">{copy.upload}</label>

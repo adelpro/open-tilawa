@@ -2,10 +2,13 @@
  * The reciters view as two lists, not one.
  *
  * **My reciters** is what this device will hold — the reciters that used to be
- * ticked rows now live here, with a count and their total size. **The rest** is
- * everyone else, and adding one moves it up. Each list has its own accordion and
- * remembers whether it was open, because a person who collapsed the catalogue to
- * look at their own three reciters should not find it expanded on the next visit.
+ * ticked rows now live here, with a count and their total size. **The follow
+ * list** is what the site says the person listens to; it rotates on its own and
+ * shows its source on every row, so an automatic addition can never pose as a
+ * choice. **The rest** is everyone else, and adding one moves it up. Each list
+ * has its own accordion and remembers whether it was open, because a person who
+ * collapsed the catalogue to look at their own three reciters should not find it
+ * expanded on the next visit.
  *
  * A filter narrows "the rest" only: hiding the reciters you already hold behind a
  * riwaya filter would make the top list look empty for no reason.
@@ -29,6 +32,7 @@ export function RecitersView({
   fresh,
   unpublished,
   mine,
+  follow,
   mineOpen,
   rosterOpen,
   sort,
@@ -39,6 +43,7 @@ export function RecitersView({
   onAdd,
   onDismissFresh,
   onRemove,
+  onRemoveFollow,
   onSort,
   onRiwayat,
   onRemoveUnpublished,
@@ -52,6 +57,8 @@ export function RecitersView({
   unpublished: HeldReciter[];
   /** Selected rows, in roster order. */
   mine: Reciter[];
+  /** Rows the site's play notices added; they rotate and show their source. */
+  follow: HeldReciter[];
   mineOpen: boolean;
   rosterOpen: boolean;
   sort: Sort;
@@ -62,12 +69,19 @@ export function RecitersView({
   onAdd: (infohash: string) => void;
   onDismissFresh: () => void;
   onRemove: (infohash: string) => void;
+  onRemoveFollow: (infohash: string) => void;
   onSort: (next: Sort) => void;
   onRiwayat: (next: string[]) => void;
   onRemoveUnpublished: (infohash: string) => void;
 }) {
   const mineBytes = mine.reduce((sum, reciter) => sum + (reciter.sizeBytes ?? 0), 0);
-  const available = ordered.filter((reciter) => !mine.some((held) => held.infohash === reciter.infohash));
+  // The roster offers only what nobody holds: a follow row is already on the
+  // device, and an «أضف» button on it would promise a download that exists.
+  const available = ordered.filter(
+    (reciter) =>
+      !mine.some((held) => held.infohash === reciter.infohash) &&
+      !follow.some((held) => held.infohash === reciter.infohash),
+  );
 
   return (
     <section id="reciters" className="screen" aria-labelledby="reciters-title">
@@ -123,6 +137,38 @@ export function RecitersView({
           </ul>
         )}
       </details>
+
+      {follow.length > 0 ? (
+        <details className="group" open>
+          <summary>
+            <span className="name">{copy.followTitle}</span>
+            <span className="meta">{follow.length}</span>
+          </summary>
+          <p className="meta">{copy.followHint}</p>
+          <ul className="roster">
+            {follow.map((reciter) => (
+              <li key={reciter.infohash} data-infohash={reciter.infohash}>
+                <span className="row">
+                  <span>
+                    <span className="name">
+                      {reciter.nameAr || reciter.name}
+                      <span className="tag">{copy.followTag}</span>
+                      {reciter.complete ? null : <span className="tag">{copy.partial}</span>}
+                    </span>
+                    <span className="meta">
+                      {reciter.riwaya} ·{' '}
+                      {reciter.sizeBytes ? formatBytes(reciter.sizeBytes) : copy.unknownSize}
+                    </span>
+                  </span>
+                </span>
+                <button type="button" className="action" onClick={() => onRemoveFollow(reciter.infohash)}>
+                  <TrashIcon /> {copy.remove}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
 
       <details
         className="group"
