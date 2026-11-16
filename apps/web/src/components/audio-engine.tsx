@@ -316,6 +316,24 @@ export default function AudioEngine({
       if ('mediaSession' in navigator) {
         try {
           navigator.mediaSession.playbackState = 'playing';
+          // Re-publish metadata at play time: guarantees the OS has it even if
+          // the surahId effect ran before the element was ready (Edge/Windows
+          // sometimes drops an entry whose metadata arrived too early).
+          const surah = surahById(surahId);
+          const title = surah
+            ? locale === 'ar'
+              ? `سورة ${surah.name}`
+              : SURAH_NAMES_EN[surah.id] ?? surah.name
+            : t.player.surah(surahId);
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title,
+            artist: reciter ? reciterName(reciter, locale) : 'Tilawah',
+            album: 'Tilawah',
+            artwork: [
+              { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+              { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+            ],
+          });
         } catch {
           // ignore
         }
