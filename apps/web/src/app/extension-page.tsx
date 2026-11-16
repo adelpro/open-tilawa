@@ -1,4 +1,5 @@
 import Icon from '@/components/icons';
+import { ChromeMark, EdgeMark, FirefoxMark } from '@/components/store-marks';
 import { useLocale } from '@/hooks/use-locale';
 
 /**
@@ -15,9 +16,9 @@ export default function ExtensionPage() {
   // Phosphor ships a Chrome mark but no Firefox or Edge one; a mixed set reads
   // worse than one honest install glyph on all three.
   const browsers = [
-    { key: 'chrome', label: copy.browsers.chrome },
-    { key: 'firefox', label: copy.browsers.firefox },
-    { key: 'edge', label: copy.browsers.edge },
+    { key: 'chrome', label: copy.browsers.chrome, Mark: ChromeMark },
+    { key: 'firefox', label: copy.browsers.firefox, Mark: FirefoxMark },
+    { key: 'edge', label: copy.browsers.edge, Mark: EdgeMark },
   ];
 
   return (
@@ -47,7 +48,7 @@ export default function ExtensionPage() {
               aria-disabled="true"
               className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 border border-line px-5 text-[0.9375rem] font-semibold text-muted"
             >
-              <Icon name="download" size={20} />
+              <browser.Mark size={20} />
               {browser.label}
               <span className="text-[0.75rem] font-normal">{copy.coming}</span>
             </button>
