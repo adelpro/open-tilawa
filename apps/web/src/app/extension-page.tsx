@@ -12,16 +12,21 @@ export default function ExtensionPage() {
   const { t } = useLocale();
   const copy = t.extensionPage;
 
+  // Phosphor ships a Chrome mark but no Firefox or Edge one; a mixed set reads
+  // worse than one honest install glyph on all three.
   const browsers = [
-    { key: 'chrome' as const, label: copy.browsers.chrome, icon: 'chrome' as const },
-    { key: 'firefox' as const, label: copy.browsers.firefox, icon: 'firefox' as const },
-    { key: 'edge' as const, label: copy.browsers.edge, icon: 'edge' as const },
+    { key: 'chrome', label: copy.browsers.chrome },
+    { key: 'firefox', label: copy.browsers.firefox },
+    { key: 'edge', label: copy.browsers.edge },
   ];
 
   return (
     <main className="page-screen">
       <div className="w-full max-w-[520px] lg:max-w-[700px]">
-        <h1 className="text-[3rem] font-semibold leading-[1.05] text-ink lg:text-[5rem]">{copy.title}</h1>
+        <div className="flex items-start gap-4">
+          <Icon name="puzzle" size={24} className="mt-2 shrink-0 text-muted lg:mt-4" />
+          <h1 className="text-[3rem] font-semibold leading-[1.05] text-ink lg:text-[5rem]">{copy.title}</h1>
+        </div>
         <p className="mt-5 text-[1.125rem] leading-relaxed text-ink lg:text-[1.25rem]">{copy.lede}</p>
 
         <ul className="mt-8 space-y-2 text-[1rem] leading-relaxed text-ink">
@@ -42,7 +47,7 @@ export default function ExtensionPage() {
               aria-disabled="true"
               className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 border border-line px-5 text-[0.9375rem] font-semibold text-muted"
             >
-              <Icon name={browser.icon} size={20} />
+              <Icon name="download" size={20} />
               {browser.label}
               <span className="text-[0.75rem] font-normal">{copy.coming}</span>
             </button>

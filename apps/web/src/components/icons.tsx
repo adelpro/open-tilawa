@@ -37,9 +37,6 @@ import {
   SpeakerSlash,
   Sun,
   UploadSimple,
-  GoogleChromeLogo,
-  FirefoxLogo,
-  MicrosoftEdgeLogo,
   PuzzlePiece,
   User,
   Users,
@@ -76,9 +73,6 @@ import { cn } from '@/utils/cn';
  * the rest without a seam.
  */
 export type IconName =
-  | 'chrome'
-  | 'firefox'
-  | 'edge'
   | 'puzzle'
   | 'back'
   | 'forward'
@@ -169,9 +163,6 @@ const GLYPHS: Record<Exclude<IconName, 'wifi-waiting' | 'order' | 'repeat-one'>,
   moon: Moon,
   palette: Palette,
   globe: GlobeHemisphereWest,
-  chrome: GoogleChromeLogo,
-  firefox: FirefoxLogo,
-  edge: MicrosoftEdgeLogo,
   puzzle: PuzzlePiece,
   gauge: Gauge,
   sleep: MoonStars,
