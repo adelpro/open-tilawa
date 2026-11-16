@@ -103,6 +103,14 @@ export default function AudioEngine({
   const volume = useAtomValue(volumeAtom);
   /** Null until the first effect: the probe needs a document. */
   const volumeSettable = useRef<boolean | null>(null);
+  const [lowBattery, setLowBattery] = useState(false);
+
+  // Honour Save-Data / slow networks: fetch only what we must. On a metered or
+  // data-saver connection we skip even metadata preloading.
+  const connection = (navigator as any)?.connection;
+  const saveData = Boolean(connection?.saveData);
+  const slowNetwork = connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g';
+  const audioPreload: 'metadata' | 'none' = saveData || slowNetwork || lowBattery ? 'none' : 'metadata';
   const [isPlaying, setIsPlaying] = useAtom(isPlayingAtom);
   const setPositionAtom = useSetAtom(positionAtom);
   const setDuration = useSetAtom(durationAtom);
@@ -173,6 +181,31 @@ export default function AudioEngine({
   useEffect(() => {
     setTorrentError(error);
   }, [error, setTorrentError]);
+
+  /** Battery awareness: skip preloading on a dying battery (web.dev preload guidance). */
+  useEffect(() => {
+    const nav = navigator as any;
+    if (typeof nav.getBattery !== 'function') return;
+    let battery: any;
+    const update = () => {
+      if (!battery) return;
+      setLowBattery(!battery.charging && battery.level < 0.15);
+    };
+    nav.getBattery().then((b: any) => {
+      battery = b;
+      update();
+      b.addEventListener?.('levelchange', update);
+      b.addEventListener?.('chargingchange', update);
+    }).catch(() => {
+      // ignore: battery API unavailable or denied
+    });
+    return () => {
+      if (battery) {
+        battery.removeEventListener?.('levelchange', update);
+        battery.removeEventListener?.('chargingchange', update);
+      }
+    };
+  }, []);
 
   /** Load WebTorrent from the static bundle once. */
   useEffect(() => {
@@ -280,6 +313,13 @@ export default function AudioEngine({
       // The graph needs a gesture; this is one. If it fails, audio still plays.
       ensureAnalyser(audio);
       startedAtRef.current = Date.now();
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.playbackState = 'playing';
+        } catch {
+          // ignore
+        }
+      }
       // A new source interrupts a pending play(); that rejection is the switch,
       // not a pause. Flipping `isPlaying` off here is what left the next reciter
       // loaded and paused.
@@ -288,6 +328,13 @@ export default function AudioEngine({
         setIsPlaying(false);
       });
     } else {
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.playbackState = 'paused';
+        } catch {
+          // ignore
+        }
+      }
       audio.pause();
       persist();
       flushPosition();
@@ -365,6 +412,19 @@ export default function AudioEngine({
     if (!audio) return;
     if (!Number.isNaN(audio.duration)) setDuration(audio.duration);
     if (!Number.isNaN(audio.currentTime)) setPositionAtom(audio.currentTime);
+
+    // Keep the OS scrubber in sync with the real playhead.
+    if ('mediaSession' in navigator && Number.isFinite(audio.duration) && audio.duration > 0) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: audio.duration,
+          playbackRate: audio.playbackRate || 1,
+          position: Math.min(Math.max(0, audio.currentTime), audio.duration),
+        });
+      } catch {
+        // ignore unsupported browsers
+      }
+    }
   };
 
   const restorePosition = () => {
@@ -386,27 +446,97 @@ export default function AudioEngine({
   useEffect(() => {
     if (!('mediaSession' in navigator) || !surahId) return;
     const surah = surahById(surahId);
+    const surahTitle = surah
+      ? locale === 'ar'
+        ? `سورة ${surah.name}`
+        : SURAH_NAMES_EN[surah.id] ?? surah.name
+      : t.player.surah(surahId);
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: surah
-        ? locale === 'ar'
-          ? `سورة ${surah.name}`
-          : SURAH_NAMES_EN[surah.id] ?? surah.name
-        : t.player.surah(surahId),
+      title: surahTitle,
       artist: reciter ? reciterName(reciter, locale) : 'Tilawah',
       album: 'Tilawah',
       // The lock screen and the media notification use the square mark, not the
-      // wide wordmark raster: at thumbnail size the wordmark is a smudge.
-      artwork: [{ src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
+      // wide wordmark raster: at thumbnail size the wordmark is a smudge. List
+      // every size we ship so the OS picks the crisp one for its surface.
+      artwork: [
+        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png' },
+      ],
     });
+
+    const seekBy = (delta: number) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      const nextTime = Math.min(Math.max(0, audio.currentTime + delta), audio.duration || audio.currentTime + delta);
+      try {
+        audio.currentTime = nextTime;
+      } catch {
+        // source may not be seekable yet
+      }
+      setPositionAtom(nextTime);
+      persist();
+    };
+
     navigator.mediaSession.setActionHandler('play', () => setIsPlaying(true));
     navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));
+    navigator.mediaSession.setActionHandler('stop', () => {
+      setIsPlaying(false);
+      const audio = audioRef.current;
+      if (audio) {
+        try {
+          audio.currentTime = 0;
+        } catch {
+          // ignore
+        }
+        setPositionAtom(0);
+      }
+    });
     navigator.mediaSession.setActionHandler('nexttrack', () => next());
     navigator.mediaSession.setActionHandler('previoustrack', () => previous());
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      seekBy(-(details?.seekOffset ?? 10));
+    });
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      seekBy(details?.seekOffset ?? 10);
+    });
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details?.seekTime == null) return;
+      const audio = audioRef.current;
+      if (!audio) return;
+      const target = details.fastSeek ? details.seekTime : details.seekTime;
+      try {
+        audio.currentTime = target;
+      } catch {
+        // ignore
+      }
+      setPositionAtom(target);
+      persist();
+    });
+
+    // Publish the real duration/position so the OS scrubber is live, not dead.
+    try {
+      const audio = audioRef.current;
+      if (audio && Number.isFinite(audio.duration)) {
+        navigator.mediaSession.setPositionState({
+          duration: audio.duration,
+          playbackRate: audio.playbackRate || 1,
+          position: Math.min(audio.currentTime, audio.duration),
+        });
+      }
+    } catch {
+      // setPositionState is optional; ignore unsupported browsers
+    }
+
     return () => {
       navigator.mediaSession.setActionHandler('play', null);
       navigator.mediaSession.setActionHandler('pause', null);
+      navigator.mediaSession.setActionHandler('stop', null);
       navigator.mediaSession.setActionHandler('nexttrack', null);
       navigator.mediaSession.setActionHandler('previoustrack', null);
+      navigator.mediaSession.setActionHandler('seekbackward', null);
+      navigator.mediaSession.setActionHandler('seekforward', null);
+      navigator.mediaSession.setActionHandler('seekto', null);
     };
   }, [surahId, reciter, next, previous, setIsPlaying, locale, t]);
 
@@ -556,7 +686,7 @@ export default function AudioEngine({
         );
       }}
       className="hidden"
-      preload="metadata"
+      preload={audioPreload}
     />
   );
 }
