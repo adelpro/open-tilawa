@@ -1,5 +1,7 @@
 import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { RecitersService } from './reciters.service';
+import { SwarmService } from '../swarm/swarm.service';
+import { UNKNOWN_SWARM } from '../swarm/swarm-health';
 
 /**
  * The catalogue, for the public site.
@@ -11,7 +13,10 @@ import { RecitersService } from './reciters.service';
  */
 @Controller('public')
 export class PublicRecitersController {
-  constructor(private readonly reciters: RecitersService) {}
+  constructor(
+    private readonly reciters: RecitersService,
+    private readonly swarm: SwarmService,
+  ) {}
 
   /**
    * Where an old link should go now. A slug that was renamed away still resolves, so a
@@ -35,6 +40,9 @@ export class PublicRecitersController {
     const offset = (pageNum - 1) * limitNum;
 
     const { reciters, total } = this.reciters.listPublishedPaginated(offset, limitNum);
+    // One table read for the page, not one per row: every surface asks the same
+    // question in the same words ("can a listener get this now?").
+    const swarm = this.swarm.snapshot();
 
     return {
       reciters: reciters.map((reciter) => ({
@@ -48,6 +56,7 @@ export class PublicRecitersController {
         sizeBytes: reciter.sizeBytes,
         fileCount: reciter.fileCount,
         surahs: reciter.surahs,
+        swarm: swarm.get(reciter.infohash.trim().toLowerCase()) ?? UNKNOWN_SWARM,
       })),
       total,
       page: pageNum,

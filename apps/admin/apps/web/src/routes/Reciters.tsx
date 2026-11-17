@@ -86,6 +86,13 @@ interface Reciter {
   /** What we asked of each node, and what came of it. */
   placements: ReciterPlacement[];
   state: 'healthy' | 'unseeded' | 'stale' | 'dormant';
+  /** What the swarm says right now: one scrape an hour, from the tracker. */
+  swarm: {
+    health: 'thin' | 'ok' | 'healthy' | 'unknown';
+    seeders: number | null;
+    leechers: number | null;
+    sampledAt: string | null;
+  };
 }
 
 interface ProviderOption {
@@ -1567,6 +1574,7 @@ export function Reciters(): ReactElement {
                   <th scope="col">{t('reciters.fileCount')}</th>
                   {sortHeader(t('reciters.size'), 'size')}
                   {sortHeader(t('reciters.coverage'), 'nodes')}
+                  <th scope="col">{t('reciters.swarm')}</th>
                   <th scope="col">{t('reciters.actions')}</th>
                 </tr>
               </thead>
@@ -1658,6 +1666,31 @@ export function Reciters(): ReactElement {
                       {reciter.placements.some((p) => p.state === 'pending') ? (
                         <Chip tone="notice">{t('reciters.pending')}</Chip>
                       ) : null}
+                    </td>
+                    <td>
+                      {/* Defensive: the SPA can outlive an older API for a deploy. */}
+                      <Chip
+                        tone={
+                          reciter.swarm?.health === 'thin'
+                            ? 'notice'
+                            : reciter.swarm?.health === 'healthy'
+                              ? 'ok'
+                              : 'info'
+                        }
+                      >
+                        {reciter.swarm?.health === 'thin'
+                          ? t('reciters.swarmThin')
+                          : reciter.swarm?.health === 'ok'
+                            ? t('reciters.swarmOk')
+                            : reciter.swarm?.health === 'healthy'
+                              ? t('reciters.swarmHealthy')
+                              : '—'}
+                      </Chip>
+                      {reciter.swarm?.seeders == null ? null : (
+                        <span className="row__meta" dir="ltr">
+                          {reciter.swarm.seeders} / {reciter.swarm.leechers ?? 0}
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span className="row__actions">
