@@ -119,6 +119,22 @@ Package rules learned the hard way:
 - Adding while paused stores the row and says "Saved. Sharing is paused"; the
   next resume starts it.
 
+**Packages (manifest 0.2.5, no dev key), cut 2026-11-17:**
+
+| File | Store | Notes |
+| --- | --- | --- |
+| `tilawah-companion-0.2.5-edge.zip` | Microsoft Edge Add-ons | MV3; the same bytes serve any Chromium store |
+| `tilawah-companion-0.2.5-chrome.zip` | Chrome Web Store | identical to the Edge file (separate name for the upload form) |
+| `tilawah-companion-0.2.5-firefox.zip` | Firefox AMO | MV2, `tilawah-companion@tilawah.cc`, data collection `none` |
+| `tilawah-companion-0.2.5-sources.zip` | AMO source upload | readable bundle, if the reviewer asks |
+| `tilawah-companion-0.2.5-dev.zip` | none | keyed to `opbhejfg…`, staging-only; never upload |
+
+All are attached to GitHub release `extension-v0.2.5`. Firefox pages cannot send
+messages to an extension, so Follow/Mixed hold only manual picks there — the AMO
+listing must say so. Chrome's listing still has no ID in
+`apps/web/src/constants/companion.ts`; fill it the day it publishes and ship a web
+patch, or the store build stays deaf on production.
+
 ## 0.2.4 — 2026-11-17
 
 **First run asks two questions, and the default budget stops fighting the follow
