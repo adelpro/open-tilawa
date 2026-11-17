@@ -18,6 +18,7 @@ export function SummaryBar({
   refusal,
   status,
   busy,
+  disabled = false,
   labels,
   onPrimary,
 }: {
@@ -32,6 +33,8 @@ export function SummaryBar({
   refusal: string;
   status: { text: string; tone: 'idle' | 'error' };
   busy: boolean;
+  /** Nothing to start: a bar that toggles an empty seeder is a lie. */
+  disabled?: boolean;
   labels: { selected: string; cap: string; follow?: string; start: string; pause: string };
   onPrimary: () => void;
 }) {
@@ -51,7 +54,7 @@ export function SummaryBar({
         type="button"
         className="primary"
         onClick={onPrimary}
-        disabled={busy || (!running && !allowed)}
+        disabled={busy || disabled || (!running && !allowed)}
       >
         {running ? labels.pause : labels.start}
       </button>

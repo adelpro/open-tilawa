@@ -102,6 +102,23 @@ Package rules learned the hard way:
   and rejects `import(<variable>)` as an unsafe dynamic import.
 - The sources archive is the only separate upload, and it must match the submitted package exactly.
 
+## 0.2.5 — 2026-11-17
+
+**Adding a reciter is the decision; the button is only pause.**
+
+- Adding, unticking or removing a row now writes the roster and starts it in the
+  same move. The old commit step made the page lie twice: a ticked row appeared
+  under "My reciters" before it was held, and with something already running the
+  only button left was "Pause" — so a new row could not be committed at all
+  without pausing first.
+- Pause/Resume is one control on both surfaces and reads `settings.paused`, which
+  both write through the background. The old options-page "start" wrote the stale
+  `paused: true` back and stayed stopped while the button said Start.
+- The disk and count gates run **before** a row is promised, so an over-budget add
+  is refused with its sentence instead of starting a download that cannot fit.
+- Adding while paused stores the row and says "Saved. Sharing is paused"; the
+  next resume starts it.
+
 ## 0.2.4 — 2026-11-17
 
 **First run asks two questions, and the default budget stops fighting the follow
