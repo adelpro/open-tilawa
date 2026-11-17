@@ -53,7 +53,7 @@ interface PushPlan {
   applied?: { seederId: number; added: number; error: string | null }[];
 }
 
-type SortKey = 'name' | 'riwaya' | 'size' | 'nodes' | 'published';
+type SortKey = 'name' | 'riwaya' | 'size' | 'nodes' | 'swarm' | 'published';
 
 interface ReciterPlacement {
   seederId: number;
@@ -477,6 +477,17 @@ export function Reciters(): ReactElement {
           return ((a.sizeBytes ?? 0) - (b.sizeBytes ?? 0)) * dir;
         case 'nodes':
           return (a.heldBy.length - b.heldBy.length) * dir;
+        case 'swarm': {
+          // Ascending puts "nobody seeds it" first, which is the point of the
+          // column. An unsampled row is not a zero: it sorts last either way, so
+          // the eye never lands on "unknown" as if it were an alarm.
+          const left = a.swarm?.seeders ?? null;
+          const right = b.swarm?.seeders ?? null;
+          if (left === right) return 0;
+          if (left === null) return 1;
+          if (right === null) return -1;
+          return (left - right) * dir;
+        }
         case 'published':
           return (Number(a.published) - Number(b.published)) * dir;
         default:
@@ -1574,7 +1585,7 @@ export function Reciters(): ReactElement {
                   <th scope="col">{t('reciters.fileCount')}</th>
                   {sortHeader(t('reciters.size'), 'size')}
                   {sortHeader(t('reciters.coverage'), 'nodes')}
-                  <th scope="col">{t('reciters.swarm')}</th>
+                  {sortHeader(t('reciters.swarm'), 'swarm')}
                   <th scope="col">{t('reciters.actions')}</th>
                 </tr>
               </thead>
@@ -1668,29 +1679,33 @@ export function Reciters(): ReactElement {
                       ) : null}
                     </td>
                     <td>
-                      {/* Defensive: the SPA can outlive an older API for a deploy. */}
-                      <Chip
-                        tone={
-                          reciter.swarm?.health === 'thin'
-                            ? 'notice'
-                            : reciter.swarm?.health === 'healthy'
-                              ? 'ok'
-                              : 'info'
-                        }
-                      >
-                        {reciter.swarm?.health === 'thin'
-                          ? t('reciters.swarmThin')
-                          : reciter.swarm?.health === 'ok'
-                            ? t('reciters.swarmOk')
-                            : reciter.swarm?.health === 'healthy'
-                              ? t('reciters.swarmHealthy')
-                              : '—'}
-                      </Chip>
-                      {reciter.swarm?.seeders == null ? null : (
-                        <span className="row__meta" dir="ltr">
-                          {reciter.swarm.seeders} / {reciter.swarm.leechers ?? 0}
-                        </span>
-                      )}
+                      {/* One line, always: a chip that wraps onto the counts reads
+                          as "Few2 / 0". The raw pair stays beside the word, and the
+                          sample time is one hover away. */}
+                      <span className="row__line" title={reciter.swarm?.sampledAt ?? undefined}>
+                        <Chip
+                          tone={
+                            reciter.swarm?.health === 'thin'
+                              ? 'notice'
+                              : reciter.swarm?.health === 'healthy'
+                                ? 'ok'
+                                : 'info'
+                          }
+                        >
+                          {reciter.swarm?.health === 'thin'
+                            ? t('reciters.swarmThin')
+                            : reciter.swarm?.health === 'ok'
+                              ? t('reciters.swarmOk')
+                              : reciter.swarm?.health === 'healthy'
+                                ? t('reciters.swarmHealthy')
+                                : '—'}
+                        </Chip>
+                        {reciter.swarm?.seeders == null ? null : (
+                          <span className="row__meta" dir="ltr">
+                            {reciter.swarm.seeders} / {reciter.swarm.leechers ?? 0}
+                          </span>
+                        )}
+                      </span>
                     </td>
                     <td>
                       <span className="row__actions">
