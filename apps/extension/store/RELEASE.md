@@ -133,6 +133,9 @@ cap.**
   cap now stack instead of quietly evicting each other. A stored 10 GB is kept —
   a default change does not rewrite someone's choice — and the picker gains 3 and
   6 GB.
+- **P5 passes** (2026-11-17, `docs/PROBES.md`): the offscreen document exposes
+  `navigator.getBattery`, a 5% unplugged reading pauses seeding, and a 5% charging
+  reading does not.
 - Carries 0.2.3: the `state:device` fix (battery and metered pauses act), a
   silent first catalogue (no install-day notification), a popup count that
   clears, Arabic notifications, and the «بحاجة إلى مشاركة» strip fed by the
