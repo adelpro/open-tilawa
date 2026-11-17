@@ -116,7 +116,7 @@ export function SettingsView({
               value={settings.maxDiskGb}
               onChange={(event) => onSettings({ ...settings, maxDiskGb: Number(event.target.value) })}
             >
-              {[0, 5, 10, 20, 30, 50, 100].map((value) => (
+              {[0, 3, 6, 10, 20, 30, 50, 100].map((value) => (
                 <option key={value} value={value}>
                   {value === 0 ? copy.diskUnlimited : `${value} GB`}
                 </option>

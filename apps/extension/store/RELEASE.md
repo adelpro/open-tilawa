@@ -102,6 +102,25 @@ Package rules learned the hard way:
   and rejects `import(<variable>)` as an unsafe dynamic import.
 - The sources archive is the only separate upload, and it must match the submitted package exactly.
 
+## 0.2.4 — 2026-11-17
+
+**First run asks two questions, and the default budget stops fighting the follow
+cap.**
+
+- The empty popup is a setup card: mode (manual / follow / mixed) and disk
+  budget, written to the same `settings.v1` the options page edits, with one door
+  to the picker. The welcome screen stays for the options tab, so the store
+  screenshots remain valid.
+- Default disk budget **10 GB → 6 GB**. The largest two-reciter pair in the
+  catalogue under the default follow cap of 2 is 5.08 GB, so the budget and the
+  cap now stack instead of quietly evicting each other. A stored 10 GB is kept —
+  a default change does not rewrite someone's choice — and the picker gains 3 and
+  6 GB.
+- Carries 0.2.3: the `state:device` fix (battery and metered pauses act), a
+  silent first catalogue (no install-day notification), a popup count that
+  clears, Arabic notifications, and the «بحاجة إلى مشاركة» strip fed by the
+  catalogue's `swarm` block.
+
 ## 0.2.3 — 2026-11-17
 
 **A fresh install is silent, the count clears, and the pauses work.**

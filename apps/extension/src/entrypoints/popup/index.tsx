@@ -5,6 +5,12 @@
  * that order. Everything comes from the background, which owns the gate and the
  * counters — a popup that asked the engine directly would be a second source of
  * truth for "is it running".
+ *
+ * An empty first run is the one exception. Nobody installs an add-on to see a
+ * grey dot and a sentence, so the empty state asks the two questions that decide
+ * what this device will hold (mode and budget) and hands over one door. The
+ * answers live in `settings.v1` like every other switch, so the options page
+ * shows them already answered.
  */
 
 import { StrictMode, useEffect, useMemo, useState } from 'react';
@@ -18,10 +24,13 @@ import { formatBytes } from '@/lib/badge';
 import { reciterUrl, type HeldReciter } from '@/lib/catalogue';
 import { copyFor, pickLang } from '@/lib/i18n';
 import type { Counters } from '@/lib/messages';
-import { loadHeld, loadSettings, parseSettings } from '@/lib/settings';
+import { loadHeld, loadSettings, parseSettings, saveSettings, type Settings } from '@/lib/settings';
 import type { HeldState } from '@/lib/state';
 import { ask } from '@/lib/ui-bridge';
 import { HeldRow } from '@/components/roster-row';
+
+const MODES: Settings['mode'][] = ['manual', 'follow', 'mixed'];
+const DISK_CHOICES = [0, 3, 6, 10, 20, 30, 50, 100];
 
 function Popup() {
   const copy = useMemo(() => copyFor(pickLang(browser.i18n.getUILanguage())), []);
@@ -33,6 +42,8 @@ function Popup() {
   const [counters, setCounters] = useState<Counters>({ today: 0, total: 0 });
   const [pending, setPending] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [mode, setMode] = useState<Settings['mode']>('mixed');
+  const [maxDiskGb, setMaxDiskGb] = useState(6);
 
   useEffect(() => {
     let live = true;
@@ -49,6 +60,8 @@ function Popup() {
       setCounters(reply.counters ?? { today: 0, total: 0 });
       setPending(reply.pending ?? 0);
       setPaused(settings.paused);
+      setMode(settings.mode);
+      setMaxDiskGb(settings.maxDiskGb);
     };
 
     void read();
@@ -62,7 +75,10 @@ function Popup() {
   useEffect(() => {
     const listener = (changes: Record<string, { newValue?: unknown }>, area: string) => {
       if (area !== 'local' || !changes['tilawah-companion.settings.v1']) return;
-      setPaused(parseSettings(changes['tilawah-companion.settings.v1'].newValue).paused);
+      const next = parseSettings(changes['tilawah-companion.settings.v1'].newValue);
+      setPaused(next.paused);
+      setMode(next.mode);
+      setMaxDiskGb(next.maxDiskGb);
     };
     browser.storage.onChanged.addListener(listener);
     return () => browser.storage.onChanged.removeListener(listener);
@@ -72,6 +88,20 @@ function Popup() {
     const next = !paused;
     setPaused(next);
     await ask({ type: next ? 'state:pause' : 'state:resume' });
+  };
+
+  /**
+   * The two first-run answers. Both write the same settings record the options
+   * page edits, so there is one truth and no "which screen wins" question.
+   */
+  const chooseMode = async (next: Settings['mode']) => {
+    setMode(next);
+    await saveSettings({ mode: next });
+  };
+
+  const chooseQuota = async (next: number) => {
+    setMaxDiskGb(next);
+    await saveSettings({ maxDiskGb: next });
   };
 
   const byHash = new Map(states.map((state) => [state.infohash, state]));
@@ -90,6 +120,12 @@ function Popup() {
     void browser.tabs.create({ url: browser.runtime.getURL(`/options.html${hash}`) });
     window.close();
   };
+
+  const modeLabel = (value: Settings['mode']) =>
+    value === 'manual' ? copy.modeManual : value === 'follow' ? copy.modeFollow : copy.modeMixed;
+
+  const modeHint = (value: Settings['mode']) =>
+    value === 'manual' ? copy.modeManualHint : value === 'follow' ? copy.modeFollowHint : copy.modeMixedHint;
 
   return (
     <main className="popup" dir={copy.dir}>
@@ -111,7 +147,50 @@ function Popup() {
       </p>
 
       {held.length === 0 ? (
-        <p className="empty">{copy.lede}</p>
+        <section className="setup" aria-labelledby="setup-title">
+          <h2 id="setup-title">{copy.setupTitle}</h2>
+          <p className="empty">{copy.lede}</p>
+
+          <div className="setup-row">
+            <span className="setup-label" id="setup-mode-label">
+              {copy.modeLabel}
+            </span>
+            <div className="seg" role="radiogroup" aria-labelledby="setup-mode-label">
+              {MODES.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={mode === value}
+                  onClick={() => void chooseMode(value)}
+                >
+                  {modeLabel(value)}
+                </button>
+              ))}
+            </div>
+            <p className="setup-hint">{modeHint(mode)}</p>
+          </div>
+
+          <div className="setup-row">
+            <label className="setup-label" htmlFor="setup-disk">
+              {copy.maxDiskLabel}
+            </label>
+            <select
+              id="setup-disk"
+              value={maxDiskGb}
+              onChange={(event) => void chooseQuota(Number(event.target.value))}
+            >
+              {DISK_CHOICES.map((value) => (
+                <option key={value} value={value}>
+                  {value === 0 ? copy.diskUnlimited : `${value} GB`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button type="button" className="primary setup-cta" onClick={() => open('#/reciters')}>
+            {copy.welcomeCta}
+          </button>
+        </section>
       ) : (
         <ul className="held">
           {held.map((reciter) => {

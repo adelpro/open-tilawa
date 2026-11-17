@@ -42,7 +42,11 @@ export const DEFAULTS: Settings = {
   // serve, under a cap you keep. Manual is one radio card away.
   mode: 'mixed',
   followCap: 2,
-  maxDiskGb: 10,
+  // 6 GB is the smallest round budget that still fits any two-reciter pair under
+  // the default follow cap (the largest pair in the catalogue is 5.08 GB). A
+  // tighter number would make the budget quietly evict the second of two large
+  // reciters, so the two limits would fight instead of stacking.
+  maxDiskGb: 6,
 };
 
 /** One decimal gigabyte; the number the settings screen speaks in. */
