@@ -15,6 +15,7 @@ const held = (letter: string, source: HeldReciter['source'] = 'manual', ageMs = 
   riwaya: 'Hafs',
   sizeBytes: 1_000,
   surahs: null,
+  swarm: null,
   complete: true,
   addedAt: new Date(NOW - 100_000 - ageMs).toISOString(),
   source,
@@ -28,6 +29,7 @@ const row = (letter: string) => ({
   riwaya: 'Hafs',
   sizeBytes: 1_000,
   surahs: null,
+  swarm: null,
   complete: true,
 });
 

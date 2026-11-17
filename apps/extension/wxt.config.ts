@@ -32,7 +32,7 @@ export default defineConfig({
     description: '__MSG_extDescription__',
     short_name: 'Tilawah',
     // Manifest versions are integers only; the RC label is for humans and stores.
-    version_name: '0.2.2',
+    version_name: '0.2.3',
     ...(DEV_KEY && browser === 'chrome' ? { key: DEV_KEY } : {}),
     default_locale: 'en',
     permissions: [

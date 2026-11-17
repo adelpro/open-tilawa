@@ -1,6 +1,6 @@
 # Probes
 
-The unit suite covers decisions. These four cover the things only a browser can
+The unit suite covers decisions. These five cover the things only a browser can
 answer — and their results are recorded with dates, because a probe that is not
 written down gets re-guessed.
 
@@ -13,6 +13,7 @@ bundled Chromium because Chrome 137+ ignores `--load-extension`).
 | **P3** persistence | a held reciter survives a **browser restart** without downloading again | probe: seed the smallest reciter, close the browser, relaunch with the same profile, wait for `progress === 1` | **PASS** 2026-11-15 — complete again immediately after relaunch (OPFS store, 118 MB torrent) |
 | **P4** tracker | the extension is a seeder the tracker counts, and it is attributable to us | probe: read `peersSeederOnly` before, while seeding, and after the browser closes | **PASS** 2026-11-15 — 2 → 3 while seeding → 2 after close |
 | **P1** Firefox idle | a persistent MV2 background keeps seeding with the browser untouched | load `firefox-mv2` via `about:debugging`, seed one reciter, leave it idle 10 minutes, read `peersSeederOnly` | **NOT RUN** — no Firefox on this machine (2026-11-15) |
+| **P5** device | the offscreen document can answer `state:device`, so the battery and metered pauses act on real numbers | load `chrome-mv3`, ask the background to tick from the popup, then read the badge title on an unplugged laptop below 20% (`paused on battery`), and with `--force-fieldtrials`/DevTools throttling set to a metered connection (`paused on a metered connection`) | **NOT RUN** — the message guard is fixed and unit-tested (0.2.3), but whether Chromium exposes `navigator.getBattery` to an offscreen document is unverified. A browser that cannot answer reads as `null`, which means "run" |
 
 ## P1 method and decision rule
 

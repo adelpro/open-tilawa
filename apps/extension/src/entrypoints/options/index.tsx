@@ -17,7 +17,7 @@ import '@/styles.css';
 import { formatBytes } from '@/lib/badge';
 import { parseHeld, type HeldReciter, type Reciter } from '@/lib/catalogue';
 import { copyFor, pickLang } from '@/lib/i18n';
-import { NEW_SEEN_KEY, markSeen, pickNew } from '@/lib/new-reciter';
+import { NEW_SEEN_KEY, PENDING_KEY, markSeen, pickNew } from '@/lib/new-reciter';
 import { DEFAULT_VIEW, watchView, viewFromHash, type View } from '@/lib/router';
 import { planSelection } from '@/lib/selection';
 import {
@@ -44,7 +44,6 @@ import { WelcomeView } from '@/views/welcome';
 import { RecitersView } from '@/views/reciters';
 import { SettingsView } from '@/views/settings';
 
-const PENDING_KEY = 'tilawah-companion.pending.v1';
 type Disk = { quota: number; usage: number };
 
 function Page() {
@@ -139,7 +138,9 @@ function Page() {
           setFresh(freshly);
           await browser.storage.local.set({
             [NEW_SEEN_KEY]: markSeen(seen, freshly.map((row) => row.infohash)),
-            [PENDING_KEY]: freshly.length,
+            // The strip is on screen from here: the person has seen the notice,
+            // so the popup's count goes back to zero.
+            [PENDING_KEY]: 0,
           });
           if (!live) return;
         }

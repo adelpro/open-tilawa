@@ -22,10 +22,24 @@ export type Reciter = {
   sizeBytes: number | null;
   /** The surahs the release carries; `null` means unknown, which is the whole book. */
   surahs: number[] | null;
+  /** What the swarm looks like right now; `null` when the catalogue did not say. */
+  swarm: ReciterSwarm | null;
   complete: boolean;
 };
 
 export type ReciterSource = 'manual' | 'follow';
+
+/**
+ * What the swarm said about one release, as the catalogue reports it.
+ *
+ * `thin` is the only state that asks anything of the person; the rest are context.
+ * `unknown` means the catalogue could not measure it (never sampled, or the last
+ * sample is stale) and is never shown as "nobody seeds it".
+ */
+export type ReciterSwarm = {
+  health: 'thin' | 'ok' | 'healthy' | 'unknown';
+  seeders: number | null;
+};
 
 export type HeldReciter = Reciter & { addedAt: string; source: ReciterSource };
 
@@ -40,6 +54,29 @@ function manifestOf(value: unknown): number[] | null {
   if (!Array.isArray(value)) return null;
   const list = value.filter((id): id is number => Number.isInteger(id) && (id as number) >= 1 && (id as number) <= FULL_QURAN);
   return list.length > 0 ? list : null;
+}
+
+const SWARM_STATES: readonly ReciterSwarm['health'][] = ['thin', 'ok', 'healthy', 'unknown'];
+
+/**
+ * The health block, read rather than trusted.
+ *
+ * It arrived after this extension's storage was already written, so an old row has
+ * no block and a hand-edited one can hold anything. A missing or unreadable block
+ * is `null` — "the catalogue did not say" — and no surface may read that as
+ * "nobody seeds it".
+ */
+function parseSwarm(value: unknown): ReciterSwarm | null {
+  if (!value || typeof value !== 'object') return null;
+  const row = value as { health?: unknown; seeders?: unknown };
+  const health = SWARM_STATES.includes(row.health as ReciterSwarm['health'])
+    ? (row.health as ReciterSwarm['health'])
+    : 'unknown';
+  const seeders =
+    typeof row.seeders === 'number' && Number.isFinite(row.seeders)
+      ? Math.max(0, Math.trunc(row.seeders))
+      : null;
+  return { health, seeders };
 }
 
 /** Catalogue rows → the roster this extension can hold. */
@@ -81,6 +118,7 @@ export function toReciters(rows: unknown): Reciter[] {
       sizeBytes:
         typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) ? row.sizeBytes : null,
       surahs: manifest.length > 0 ? manifest : null,
+      swarm: parseSwarm(row.swarm),
       complete: (typeof row.fileCount === 'number' ? row.fileCount : 0) >= FULL_QURAN,
     });
   }
@@ -133,6 +171,9 @@ export function parseHeld(raw: unknown): HeldReciter[] {
       sizeBytes:
         typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) ? row.sizeBytes : null,
       surahs: manifestOf(row.surahs),
+      // A measurement, not a choice: the stored row is what the person decided to
+      // keep, and a health number frozen at save time would be a lie on the shelf.
+      swarm: null,
       complete: row.complete === true,
       addedAt,
       source: row.source === 'follow' ? 'follow' : 'manual',

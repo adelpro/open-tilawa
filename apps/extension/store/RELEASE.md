@@ -102,6 +102,39 @@ Package rules learned the hard way:
   and rejects `import(<variable>)` as an unsafe dynamic import.
 - The sources archive is the only separate upload, and it must match the submitted package exactly.
 
+## 0.2.3 — 2026-11-17
+
+**A fresh install is silent, the count clears, and the pauses work.**
+
+- **No install-day notification.** The first catalogue a device fetches is its
+  baseline, not news: notices begin with the second sync, so a new install is not
+  told that twelve reciters "just arrived".
+- **The popup count clears.** `pending` now counts notices the background has
+  actually produced, and the picker resets it when it renders them. The old
+  counter subtracted `notices-opened.v1`, which nothing ever wrote, so it could
+  never fall to zero.
+- **Notifications speak the browser's language.** The sentences and the batch
+  title moved into `lib/i18n.ts` and follow the UI language; the Arabic strings
+  passed uslub (fasaha + avoid-ai-writing). `planSync` now names the rows instead
+  of writing English text.
+- **Pause on battery and pause on metered reach the engine.** `state:device` was
+  rejected by the message guard (`isEngineRequest` accepted only `engine:*`), so
+  both defaults were rendered checked and ignored at runtime. Fixed in
+  `lib/messages.ts`, covered by `test/messages.test.ts`.
+- **A reciter worth seeding.** The catalogue now carries a `swarm` block
+  (health, seeders) sampled from the tracker once an hour, and the Reciters view
+  opens with a short «needs a seeder» strip — releases nobody is announcing,
+  minus what this device already holds. `unknown` (never sampled, or a stale
+  answer) is never rendered as "nobody seeds it".
+- Version 0.2.3 in `package.json`, the lockfile and `version_name`.
+
+**Packages, when approved:** `npm run build && npm run zip` (Edge + Chrome, same
+file), `npm run build:firefox && npm run zip:firefox`. Chrome's listing still has
+no ID in `apps/web/src/constants/companion.ts`, so nothing follows there yet.
+
+**Open probe:** P5 (below) — whether the offscreen document exposes
+`navigator.getBattery`.
+
 ## 0.2.2 — 2026-11-16
 
 **Defaults that serve the product, a disk budget, and a settings page that

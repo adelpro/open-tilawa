@@ -19,6 +19,7 @@ import { reciterUrl, type HeldReciter, type Reciter } from '@/lib/catalogue';
 import type { Copy } from '@/lib/i18n';
 import type { Sort } from '@/lib/sort';
 import { FreshStrip } from '@/components/fresh-strip';
+import { THIN_LIMIT, ThinStrip } from '@/components/thin-strip';
 import { RiwayaFilter } from '@/components/riwaya-filter';
 import { SortBar } from '@/components/sort-bar';
 import { PlusIcon, TrashIcon } from '@/components/icons';
@@ -104,6 +105,10 @@ export function RecitersView({
       !follow.some((held) => held.infohash === reciter.infohash),
   );
 
+  // The swarm's ask, excluding what this device already holds: suggesting a copy
+  // of something on the disk is a suggestion to do nothing.
+  const thin = available.filter((reciter) => reciter.swarm?.health === 'thin');
+
   return (
     <section id="reciters" className="screen" aria-labelledby="reciters-title">
       <FreshStrip
@@ -111,6 +116,17 @@ export function RecitersView({
         labels={{ title: copy.freshTitle, add: copy.add, unknown: copy.unknownSize, dismiss: copy.dismiss }}
         onAdd={onAdd}
         onDismiss={onDismissFresh}
+      />
+
+      <ThinStrip
+        rows={thin.slice(0, THIN_LIMIT)}
+        labels={{
+          title: copy.thinTitle.replace('{n}', String(thin.length)),
+          hint: copy.thinHint,
+          add: copy.add,
+          unknown: copy.unknownSize,
+        }}
+        onAdd={onAdd}
       />
 
       <details

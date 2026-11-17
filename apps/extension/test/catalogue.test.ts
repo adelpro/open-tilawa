@@ -51,6 +51,23 @@ describe('toReciters', () => {
     expect(reciter!.surahs).toEqual([1, 3]);
     expect(toReciters([row({ surahs: [] })])[0]!.surahs).toBeNull();
   });
+
+  test('the swarm block is read, and its unknowns stay unknown', () => {
+    const [thin] = toReciters([row({ swarm: { health: 'thin', seeders: 0 } })]);
+    expect(thin!.swarm).toEqual({ health: 'thin', seeders: 0 });
+
+    // A catalogue that does not answer, a health word this build does not know,
+    // and a negative count all land on something a surface can render.
+    expect(toReciters([row()])[0]!.swarm).toBeNull();
+    expect(toReciters([row({ swarm: { health: 'degraded', seeders: 2 } })])[0]!.swarm).toEqual({
+      health: 'unknown',
+      seeders: 2,
+    });
+    expect(toReciters([row({ swarm: { health: 'ok', seeders: -4 } })])[0]!.swarm).toEqual({
+      health: 'ok',
+      seeders: 0,
+    });
+  });
 });
 
 describe('diffCatalogue', () => {
@@ -127,5 +144,11 @@ describe('parseHeld', () => {
     const parsed = parseHeld([rest])[0];
     expect(parsed?.addedAt).toBeTruthy();
     expect(Number.isNaN(Date.parse(parsed!.addedAt))).toBe(false);
+  });
+
+  test('a stored row carries no swarm sample', () => {
+    // A health number frozen at save time would be yesterday's answer on the shelf.
+    const parsed = parseHeld([{ ...held(), swarm: { health: 'thin', seeders: 0 } }])[0];
+    expect(parsed?.swarm).toBeNull();
   });
 });

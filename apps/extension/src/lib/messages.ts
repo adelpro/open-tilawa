@@ -48,9 +48,18 @@ export type UiReply = {
   error?: string;
 };
 
-/** Engine-side messages only. `state:*` belongs to the background. */
-export const isEngineRequest = (value: unknown): value is EngineRequest =>
-  !!value &&
-  typeof value === 'object' &&
-  typeof (value as { type?: unknown }).type === 'string' &&
-  (value as { type: string }).type.startsWith('engine:');
+/**
+ * What the host answers: the engine's own verbs, plus the one device question.
+ *
+ * `state:device` is the exception that earns its place. The background needs the
+ * battery and the connection to apply the pauses, and a worker cannot read
+ * either — only the page that hosts the engine can. Every other `state:*`
+ * message belongs to the background, and a wrong answer here is a pause that
+ * silently never happens.
+ */
+export const isEngineRequest = (value: unknown): value is EngineRequest => {
+  if (!value || typeof value !== 'object') return false;
+  const type = (value as { type?: unknown }).type;
+  if (typeof type !== 'string') return false;
+  return type.startsWith('engine:') || type === 'state:device';
+};

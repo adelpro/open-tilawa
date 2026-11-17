@@ -11,6 +11,7 @@ const reciter = (riwaya: string, nameAr: string): Reciter => ({
   riwaya,
   sizeBytes: 1e9,
   surahs: null,
+  swarm: null,
   complete: true,
 });
 

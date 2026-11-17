@@ -17,7 +17,9 @@ import { callEngine, ensureHost } from '@/hosts';
 import { badgeFor, type BadgeColor } from '@/lib/badge';
 import type { HeldReciter, Reciter } from '@/lib/catalogue';
 import { followAdd, parsePlayMessage, playingNow } from '@/lib/follow';
-import type { Counters, EngineReply, UiReply, UiRequest } from '@/lib/messages';
+import { copyFor, pickLang, type Copy } from '@/lib/i18n';
+import { isEngineRequest, type Counters, type EngineReply, type UiReply, type UiRequest } from '@/lib/messages';
+import { PENDING_KEY } from '@/lib/new-reciter';
 import { loadHeld, loadHeldReciters, loadSettings, saveHeld, saveSettings, BYTES_PER_GB } from '@/lib/settings';
 import type { HeldState } from '@/lib/state';
 import { fetchCatalogue, planSync, type SyncNotice } from '@/lib/sync';
@@ -110,8 +112,22 @@ const readCounterState = async (): Promise<CounterState> => {
   return value.dayKey === todayKey() ? value : { ...value, today: 0, dayKey: todayKey() };
 };
 
+/** The one key a notice is remembered by: one notice per hash per kind. */
+const noticeKey = (notice: SyncNotice): string => `${notice.kind}:${notice.infohash}`;
+
+/** The sentence, in the language the browser is set to. */
+const noticeText = (copy: Copy, notice: SyncNotice): string => {
+  const template =
+    notice.kind === 'added'
+      ? copy.notifNew
+      : notice.kind === 'replaced'
+        ? copy.notifReplaced
+        : copy.notifUnpublished;
+  return template.replace('{name}', notice.name);
+};
+
 const syncRoster = async (): Promise<void> => {
-  const stored = await browser.storage.local.get([SYNC_KEY, SEEN_KEY]);
+  const stored = await browser.storage.local.get([SYNC_KEY, SEEN_KEY, PENDING_KEY]);
   const state = (stored[SYNC_KEY] ?? { lastAt: 0 }) as SyncState;
   if (Date.now() - state.lastAt < SYNC_EVERY_MS) return;
 
@@ -126,44 +142,69 @@ const syncRoster = async (): Promise<void> => {
     return;
   }
 
-  const seen = new Set<string>(Array.isArray(stored[SEEN_KEY]) ? (stored[SEEN_KEY] as string[]) : []);
-  const unseen = notices.filter((notice) => !seen.has(`${notice.kind}:${notice.infohash}`));
-  for (const notice of unseen) seen.add(`${notice.kind}:${notice.infohash}`);
+  // The first catalogue this device ever sees is its starting point, not news:
+  // a fresh install must not announce twelve reciters that were there before it
+  // arrived. That baseline is also what the popup's count is built on, so a
+  // missing one is a count that can never fall back to zero.
+  const seenStored = stored[SEEN_KEY];
+  const baseline = !Array.isArray(seenStored);
+  const seen = new Set<string>(baseline ? [] : (seenStored as string[]));
+
+  if (baseline) {
+    for (const notice of notices) seen.add(noticeKey(notice));
+    await browser.storage.local.set({
+      [SYNC_KEY]: { lastAt: Date.now() },
+      [SEEN_KEY]: [...seen].slice(-50),
+      [PENDING_KEY]: 0,
+    });
+    return;
+  }
+
+  const unseen = notices.filter((notice) => !seen.has(noticeKey(notice)));
+  for (const notice of unseen) seen.add(noticeKey(notice));
+
+  const copy = copyFor(pickLang(browser.i18n.getUILanguage()));
 
   // One notification for the batch. Twelve notifications for twelve reciters is
   // how a helpful extension gets muted.
   if (unseen.length === 1) {
-    const only = unseen[0];
-    await browser.notifications.create(`batch:${only!.kind}:${only!.infohash}`, {
+    const only = unseen[0]!;
+    await browser.notifications.create(`batch:${only.kind}:${only.infohash}`, {
       type: 'basic',
       iconUrl: '/icon/128.png',
-      title: 'Tilawah Companion',
-      message: only!.text,
+      title: copy.title,
+      message: noticeText(copy, only),
     });
   } else if (unseen.length > 1) {
     const added = unseen.filter((notice) => notice.kind === 'added');
-    const names = added.slice(0, 3).map((notice) => notice.text.replace(/^New reciter: /, ''));
-    const more = added.length > names.length ? ` +${added.length - names.length}` : '';
+    const names = added.slice(0, 3).map((notice) => notice.name);
+    const more =
+      added.length > names.length ? copy.notifMore.replace('{n}', String(added.length - names.length)) : '';
     await browser.notifications.create(`batch:${Date.now()}`, {
       type: 'basic',
       iconUrl: '/icon/128.png',
-      title: `${unseen.length} updates in the roster`,
-      message: added.length > 0 ? `New reciters: ${names.join(' · ')}${more}` : unseen.map((notice) => notice.text).join(' · '),
+      title: copy.notifBatchTitle.replace('{n}', String(unseen.length)),
+      message:
+        added.length > 0
+          ? copy.notifBatchNew.replace('{names}', names.join(' · ') + more)
+          : unseen.map((notice) => noticeText(copy, notice)).join(' · '),
     });
   }
+
+  const pending = Math.max(0, Number(stored[PENDING_KEY]) || 0) + unseen.length;
 
   await browser.storage.local.set({
     [SYNC_KEY]: { lastAt: Date.now() },
     [SEEN_KEY]: [...seen].slice(-50),
+    [PENDING_KEY]: pending,
   });
 };
 
 /** Notices the person has not opened the picker for yet. */
 const pendingNotices = async (): Promise<number> => {
-  const stored = await browser.storage.local.get(SEEN_KEY);
-  const seen = Array.isArray(stored[SEEN_KEY]) ? (stored[SEEN_KEY] as string[]) : [];
-  const unopened = Number((await browser.storage.local.get('tilawah-companion.notices-opened.v1'))['tilawah-companion.notices-opened.v1'] ?? 0);
-  return Math.max(0, seen.length - unopened);
+  const stored = await browser.storage.local.get(PENDING_KEY);
+  const value = Number(stored[PENDING_KEY] ?? 0);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 };
 
 const snapshot = async (): Promise<EngineReply> => callEngine({ type: 'engine:snapshot' });
@@ -416,9 +457,9 @@ export default defineBackground({
     });
 
     browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      // The engine's own channel belongs to the host; the background relaying it
-      // would race the real answer.
-      if (isEngineRequestMessage(message)) return false;
+      // The host's own channel belongs to the offscreen document; the background
+      // relaying it would race the real answer.
+      if (isEngineRequest(message)) return false;
 
       const type = (message as { type?: unknown } | null)?.type;
       if (typeof type !== 'string' || !type.startsWith('state:')) return false;
@@ -432,12 +473,3 @@ export default defineBackground({
     });
   },
 });
-
-function isEngineRequestMessage(value: unknown): boolean {
-  return (
-    !!value &&
-    typeof value === 'object' &&
-    typeof (value as { type?: unknown }).type === 'string' &&
-    (value as { type: string }).type.startsWith('engine:')
-  );
-}

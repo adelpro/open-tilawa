@@ -10,6 +10,7 @@ const reciter = (over: Partial<HeldReciter> = {}): HeldReciter => ({
   riwaya: 'Hafs',
   sizeBytes: 1_303_630_233,
   surahs: null,
+  swarm: null,
   complete: true,
   addedAt: '2026-11-15T00:00:00Z',
   source: 'manual',
