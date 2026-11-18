@@ -724,6 +724,7 @@ export const en = {
   'backups.addSource': 'Add source',
   'backups.editSource': 'Edit',
   'backups.removeSource': 'Remove',
+  'backups.more': 'More',
   'backups.saveSource': 'Save source',
   'backups.cancel': 'Cancel',
   'backups.label': 'Label',
