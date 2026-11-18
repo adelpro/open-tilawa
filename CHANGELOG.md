@@ -1,5 +1,68 @@
 # Changelog
 
+## admin 1.35.0 — 2026-11-18
+
+Console release. All four admin workspaces carry **1.35.0**.
+
+### Added
+
+- A "Today" label above the Usage tiles, so their period is stated on screen.
+- Usage table sort order is remembered per browser: reopening the screen restores the last column and direction.
+- "Recent alerts" in Settings folds, and the fold survives a reload.
+- The Restore confirmation shows row counts for the snapshot against the current catalogue, read from a private copy so WAL snapshots in the read-only backup mount can be inspected.
+
+### Fixed
+
+- The stale-backup notice now fills in the hour threshold instead of printing the raw placeholder.
+- The far-copy verification chip reads the verified state the backup job already records; older status files report "Not verified" honestly.
+- A late counts reply can no longer label a different snapshot's rows in the Restore dialog.
+
+## extension 0.2.5 — 2026-11-17
+
+Extension release. App version: **extension 0.2.5**. Not deployed by the compose
+stack; the store package is uploaded by hand, and the keyed development package is
+built with `TILAWAH_DEV_KEY=1 npm run zip`.
+
+### Added
+
+- **A first run that asks two questions.** The empty popup holds the mode
+  (manual / follow / mixed), the disk budget and one door to the picker, writing
+  the same `settings.v1` the options page edits. The welcome screen stays for the
+  options tab.
+- **A reciter worth seeding.** The catalogue's `swarm` block drives a capped
+  «بحاجة إلى مشاركة» strip of releases nobody announces, minus what this device
+  already holds. `unknown` (never sampled, or older than six hours) is never
+  rendered as "nobody seeds it".
+
+### Changed
+
+- **Adding a reciter is the decision.** Adding, unticking and removing write the
+  roster and start it in the same move; the separate commit button is gone, and
+  the disk and count gates run before a row is promised.
+- **Pause/Resume is one control**, in the popup and on the Reciters page, both
+  written through the background.
+- Default disk budget **10 GB → 6 GB**, the smallest round number that fits any
+  two-reciter pair under the default follow cap, so the budget and the cap stack
+  instead of one evicting the other. A stored 10 GB is kept.
+
+### Fixed
+
+- `state:device` never reached the engine host (`isEngineRequest` accepted only
+  `engine:*`), so *pause on battery* and *pause on metered* were rendered checked
+  and ignored. Both defaults now act on real readings.
+- A fresh install announced the whole roster as new: the first catalogue a device
+  fetches is now its baseline.
+- The popup's notice count could never fall to zero — it read a key nothing wrote;
+  the background writes it now and the picker clears it.
+- The options page's start button wrote the stale `paused: true` back to settings,
+  so it said Start and stayed stopped while the popup said paused.
+- Notification sentences and the batch title now follow the browser's language
+  (Arabic added).
+- **Tracker (infra):** the announce interval is 45 s. Cloudflare closes an idle
+  WebSocket at ~100 s and the tracker drops a peer when its socket closes, so the
+  600 s default made every seeder visible two minutes in every ten — `/stats`
+  read zero peers and the swarm column called fully-seeded recitations unseeded.
+
 ## web 1.13.41 — 2026-11-16
 
 Web release. App version: **web 1.13.41**.

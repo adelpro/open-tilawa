@@ -1,8 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { execFile } from 'node:child_process';
 import { readFile, readdir, stat } from 'node:fs/promises';
+import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import type { Stats } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import Database from 'better-sqlite3';
 
 /**
  * The host job (`db-backup.sh`) writes `tilawa-admin-YYYYMMDDTHHMMSSZ.sqlite` and a
@@ -10,6 +13,13 @@ import { join } from 'node:path';
  * here so a stray file cannot appear on the page or be downloaded.
  */
 const FILE_PATTERN = /^tilawa-admin-\d{8}T\d{6}Z\.sqlite$/;
+
+/** Counts, never rows: a restore preview must not put account data on the page. */
+const SUMMARY_TABLES = ['reciters', 'torrents', 'users', 'seeders'] as const;
+
+export interface BackupSummary {
+  tables: { name: string; snapshot: number; current: number }[];
+}
 
 /**
  * The argv that runs the backup once, and nothing else.
@@ -70,6 +80,8 @@ export interface BackupOverview {
     lastOkAt: string | null;
     lastOkFile: string | null;
     ageHours: number | null;
+    verifiedAt: string | null;
+    verifiedError: string | null;
   } | null;
   files: BackupFile[];
 }
@@ -118,6 +130,8 @@ export class BackupsService {
           lastOkAt: remoteAt,
           lastOkFile: status.remote.last_ok_file ?? null,
           ageHours: remoteAt ? ageHours(remoteAt) : null,
+          verifiedAt: status.remote.verified_at ?? null,
+          verifiedError: status.remote.verified_error ?? null,
         }
       : null;
 
@@ -215,6 +229,57 @@ export class BackupsService {
     return path;
   }
 
+  /**
+   * What a restore would change, as counts only.
+   *
+   * The snapshot is opened read-only and never writable from this request: the name
+   * is the one `pathFor` allows, and the SQL is a fixed list of table names. A table
+   * missing from either database counts as zero rather than failing the preview.
+   *
+   * The snapshots are WAL-mode files, and SQLite needs a writable directory for the
+   * `-shm` file even on a read-only open. `/backups` is mounted `:ro`, so the preview
+   * works on a private copy instead. The job checkpoints before it closes, so the
+   * single file is complete.
+   */
+  async summary(name: string): Promise<BackupSummary> {
+    const snapshotPath = await this.pathFor(name);
+    const currentPath = process.env.DB_PATH ?? join('/data', 'tilawa-admin.sqlite');
+    const count = (path: string): Record<string, number> => {
+      const db = new Database(path, { readonly: true, fileMustExist: true });
+      try {
+        return Object.fromEntries(
+          SUMMARY_TABLES.map((table) => {
+            const exists = db
+              .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?")
+              .get(table);
+            if (!exists) return [table, 0];
+            const row = db.prepare(`SELECT COUNT(*) AS n FROM "${table}"`).get() as { n: number };
+            return [table, row.n];
+          }),
+        );
+      } finally {
+        db.close();
+      }
+    };
+
+    const scratch = mkdtempSync(join(tmpdir(), 'tilawa-backup-preview-'));
+    try {
+      const copy = join(scratch, 'snapshot.sqlite');
+      copyFileSync(snapshotPath, copy);
+      const snapshot = count(copy);
+      const current = count(currentPath);
+      return {
+        tables: SUMMARY_TABLES.map((table) => ({
+          name: table,
+          snapshot: snapshot[table],
+          current: current[table],
+        })),
+      };
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }
+
   /** `null` means "the directory is not there", which is not the same as "empty". */
   private async list(): Promise<BackupFile[] | null> {
     let entries: string[];
@@ -259,6 +324,8 @@ interface StatusFile {
     state?: string | null;
     last_ok_at?: string | null;
     last_ok_file?: string | null;
+    verified_at?: string | null;
+    verified_error?: string | null;
   };
 }
 

@@ -10,6 +10,7 @@ import { ReciterImportService } from './reciter-import.service';
 import { CataloguePushService } from './catalogue-push.service';
 import { SiteRebuildService } from './site-rebuild.service';
 import { SettingsController } from '../settings/settings.controller';
+import { SwarmModule } from '../swarm/swarm.module';
 import { PublicRecitersController } from './public-reciters.controller';
 
 /**
@@ -18,7 +19,7 @@ import { PublicRecitersController } from './public-reciters.controller';
  * and a second provider instance would be a second thing to keep in step.
  */
 @Module({
-  imports: [UsersModule, SeedersModule, SettingsModule, ProvidersModule],
+  imports: [UsersModule, SeedersModule, SettingsModule, ProvidersModule, SwarmModule],
   controllers: [RecitersController, SettingsController, PublicRecitersController],
   providers: [
     RecitersService,

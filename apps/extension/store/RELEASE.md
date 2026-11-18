@@ -102,6 +102,94 @@ Package rules learned the hard way:
   and rejects `import(<variable>)` as an unsafe dynamic import.
 - The sources archive is the only separate upload, and it must match the submitted package exactly.
 
+## 0.2.5 — 2026-11-17
+
+**Adding a reciter is the decision; the button is only pause.**
+
+- Adding, unticking or removing a row now writes the roster and starts it in the
+  same move. The old commit step made the page lie twice: a ticked row appeared
+  under "My reciters" before it was held, and with something already running the
+  only button left was "Pause" — so a new row could not be committed at all
+  without pausing first.
+- Pause/Resume is one control on both surfaces and reads `settings.paused`, which
+  both write through the background. The old options-page "start" wrote the stale
+  `paused: true` back and stayed stopped while the button said Start.
+- The disk and count gates run **before** a row is promised, so an over-budget add
+  is refused with its sentence instead of starting a download that cannot fit.
+- Adding while paused stores the row and says "Saved. Sharing is paused"; the
+  next resume starts it.
+
+**Packages (manifest 0.2.5, no dev key), cut 2026-11-17:**
+
+| File | Store | Notes |
+| --- | --- | --- |
+| `tilawah-companion-0.2.5-edge.zip` | Microsoft Edge Add-ons | MV3; the same bytes serve any Chromium store |
+| `tilawah-companion-0.2.5-chrome.zip` | Chrome Web Store | identical to the Edge file (separate name for the upload form) |
+| `tilawah-companion-0.2.5-firefox.zip` | Firefox AMO | MV2, `tilawah-companion@tilawah.cc`, data collection `none` |
+| `tilawah-companion-0.2.5-sources.zip` | AMO source upload | readable bundle, if the reviewer asks |
+| `tilawah-companion-0.2.5-dev.zip` | none | keyed to `opbhejfg…`, staging-only; never upload |
+
+All are attached to GitHub release `extension-v0.2.5`. Firefox pages cannot send
+messages to an extension, so Follow/Mixed hold only manual picks there — the AMO
+listing must say so. Chrome's listing still has no ID in
+`apps/web/src/constants/companion.ts`; fill it the day it publishes and ship a web
+patch, or the store build stays deaf on production.
+
+## 0.2.4 — 2026-11-17
+
+**First run asks two questions, and the default budget stops fighting the follow
+cap.**
+
+- The empty popup is a setup card: mode (manual / follow / mixed) and disk
+  budget, written to the same `settings.v1` the options page edits, with one door
+  to the picker. The welcome screen stays for the options tab, so the store
+  screenshots remain valid.
+- Default disk budget **10 GB → 6 GB**. The largest two-reciter pair in the
+  catalogue under the default follow cap of 2 is 5.08 GB, so the budget and the
+  cap now stack instead of quietly evicting each other. A stored 10 GB is kept —
+  a default change does not rewrite someone's choice — and the picker gains 3 and
+  6 GB.
+- **P5 passes** (2026-11-17, `docs/PROBES.md`): the offscreen document exposes
+  `navigator.getBattery`, a 5% unplugged reading pauses seeding, and a 5% charging
+  reading does not.
+- Carries 0.2.3: the `state:device` fix (battery and metered pauses act), a
+  silent first catalogue (no install-day notification), a popup count that
+  clears, Arabic notifications, and the «بحاجة إلى مشاركة» strip fed by the
+  catalogue's `swarm` block.
+
+## 0.2.3 — 2026-11-17
+
+**A fresh install is silent, the count clears, and the pauses work.**
+
+- **No install-day notification.** The first catalogue a device fetches is its
+  baseline, not news: notices begin with the second sync, so a new install is not
+  told that twelve reciters "just arrived".
+- **The popup count clears.** `pending` now counts notices the background has
+  actually produced, and the picker resets it when it renders them. The old
+  counter subtracted `notices-opened.v1`, which nothing ever wrote, so it could
+  never fall to zero.
+- **Notifications speak the browser's language.** The sentences and the batch
+  title moved into `lib/i18n.ts` and follow the UI language; the Arabic strings
+  passed uslub (fasaha + avoid-ai-writing). `planSync` now names the rows instead
+  of writing English text.
+- **Pause on battery and pause on metered reach the engine.** `state:device` was
+  rejected by the message guard (`isEngineRequest` accepted only `engine:*`), so
+  both defaults were rendered checked and ignored at runtime. Fixed in
+  `lib/messages.ts`, covered by `test/messages.test.ts`.
+- **A reciter worth seeding.** The catalogue now carries a `swarm` block
+  (health, seeders) sampled from the tracker once an hour, and the Reciters view
+  opens with a short «needs a seeder» strip — releases nobody is announcing,
+  minus what this device already holds. `unknown` (never sampled, or a stale
+  answer) is never rendered as "nobody seeds it".
+- Version 0.2.3 in `package.json`, the lockfile and `version_name`.
+
+**Packages, when approved:** `npm run build && npm run zip` (Edge + Chrome, same
+file), `npm run build:firefox && npm run zip:firefox`. Chrome's listing still has
+no ID in `apps/web/src/constants/companion.ts`, so nothing follows there yet.
+
+**Open probe:** P5 (below) — whether the offscreen document exposes
+`navigator.getBattery`.
+
 ## 0.2.2 — 2026-11-16
 
 **Defaults that serve the product, a disk budget, and a settings page that

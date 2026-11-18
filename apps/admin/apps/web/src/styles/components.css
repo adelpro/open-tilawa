@@ -639,6 +639,12 @@
 .row__line .chip {
   flex: 0 0 auto;
 }
+/* The swarm pair is one token: "2 / 0" must never break into "2 /" and "0" when
+   the column is squeezed. Same reason the chip never wraps. */
+.row__line .row__meta {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 /* A URL is one token: it never breaks after "//", and a narrow column truncates
    it instead of paying for a full-width endpoint with the actions column. */
 .row__line .row__id {
@@ -3608,6 +3614,13 @@ select:focus {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+.usage-today__label {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-secondary);
+  font: var(--caption);
 }
 
 .usage-today__tile {

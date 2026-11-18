@@ -17,7 +17,7 @@ import '@/styles.css';
 import { formatBytes } from '@/lib/badge';
 import { parseHeld, type HeldReciter, type Reciter } from '@/lib/catalogue';
 import { copyFor, pickLang } from '@/lib/i18n';
-import { NEW_SEEN_KEY, markSeen, pickNew } from '@/lib/new-reciter';
+import { NEW_SEEN_KEY, PENDING_KEY, markSeen, pickNew } from '@/lib/new-reciter';
 import { DEFAULT_VIEW, watchView, viewFromHash, type View } from '@/lib/router';
 import { planSelection } from '@/lib/selection';
 import {
@@ -44,7 +44,6 @@ import { WelcomeView } from '@/views/welcome';
 import { RecitersView } from '@/views/reciters';
 import { SettingsView } from '@/views/settings';
 
-const PENDING_KEY = 'tilawah-companion.pending.v1';
 type Disk = { quota: number; usage: number };
 
 function Page() {
@@ -139,7 +138,9 @@ function Page() {
           setFresh(freshly);
           await browser.storage.local.set({
             [NEW_SEEN_KEY]: markSeen(seen, freshly.map((row) => row.infohash)),
-            [PENDING_KEY]: freshly.length,
+            // The strip is on screen from here: the person has seen the notice,
+            // so the popup's count goes back to zero.
+            [PENDING_KEY]: 0,
           });
           if (!live) return;
         }
@@ -181,13 +182,6 @@ function Page() {
     (reciter) => reciter.source === 'follow' && !selected.has(reciter.infohash),
   );
 
-  const unknownSize =
-    chosen.some((reciter) => typeof reciter.sizeBytes !== 'number' || reciter.sizeBytes <= 0) ||
-    unpublished.some((reciter) => typeof reciter.sizeBytes !== 'number' || reciter.sizeBytes <= 0);
-
-  const addBytes = chosen
-    .filter((reciter) => !heldHashes.has(reciter.infohash))
-    .reduce((sum, reciter) => sum + (reciter.sizeBytes ?? 0), 0);
   const selectedBytes = chosen.reduce((sum, reciter) => sum + (reciter.sizeBytes ?? 0), 0);
   const publishedHeldBytes = held
     .filter((reciter) => catalogueHashes.has(reciter.infohash))
@@ -197,20 +191,13 @@ function Page() {
   const budgetBytes = settings && settings.maxDiskGb > 0 ? settings.maxDiskGb * BYTES_PER_GB : Number.POSITIVE_INFINITY;
 
   const capReciters = settings?.maxReciters ?? 3;
-  const plan = planSelection({
-    selectedBytes: addBytes,
-    selectedCount: chosen.length,
-    unknownSize,
-    maxReciters: capReciters,
-    capBytes: Math.min(disk?.quota ?? Number.POSITIVE_INFINITY, budgetBytes),
-    heldBytes: publishedHeldBytes,
-    usageBytes: disk?.usage ?? null,
-  });
+  const capBytes = Math.min(disk?.quota ?? Number.POSITIVE_INFINITY, budgetBytes);
 
-  const refusal =
-    plan.reason === 'count'
+  /** One sentence per refusal, in the order the plan checks them. */
+  const refusalText = (reason: 'count' | 'disk' | 'unknown' | null): string =>
+    reason === 'count'
       ? copy.overCount
-      : plan.reason === 'unknown'
+      : reason === 'unknown'
         ? copy.overUnknown
         : budgetBytes <= (disk?.quota ?? Number.POSITIVE_INFINITY)
           ? copy.overBudget
@@ -243,20 +230,97 @@ function Page() {
     await browser.storage.local.set({ [NEW_SEEN_KEY]: nextSeen, [PENDING_KEY]: 0 });
   };
 
-  const toggle = (infohash: string) => {
-    setSelected((current) => {
-      const next = new Set(current);
-      if (next.has(infohash)) next.delete(infohash);
-      else next.add(infohash);
-      return next;
-    });
-    setStatus({ text: '', tone: 'idle' });
+  /**
+   * Every selection change is the decision.
+   *
+   * There used to be a commit step — tick rows, then press "Start sharing" — and
+   * it made the page lie twice: the row appeared under "My reciters" before it was
+   * held, and with something already running the only button left was "Pause", so
+   * a new row could not be committed at all without pausing first. So adding,
+   * unticking and removing all write the roster and tell the engine in one move.
+   */
+  const applySelection = async (nextSelected: Set<string>, removed: string[]): Promise<void> => {
+    const followKept = held.filter(
+      (entry) => entry.source === 'follow' && !nextSelected.has(entry.infohash),
+    );
+    const next: HeldReciter[] = [
+      ...unpublished,
+      ...rows
+        .filter((reciter) => nextSelected.has(reciter.infohash))
+        .map((reciter) => {
+          const prior = held.find((entry) => entry.infohash === reciter.infohash);
+          return {
+            ...reciter,
+            addedAt: prior?.addedAt ?? new Date().toISOString(),
+            // Ticking a row is a manual decision, even if follow had it first.
+            source: 'manual' as const,
+          };
+        }),
+      ...followKept,
+    ];
+
+    setSaving(true);
+    setStatus({ text: copy.saving, tone: 'idle' });
+    try {
+      await saveHeld(next);
+      setHeld(next);
+      setSelected(nextSelected);
+      for (const infohash of removed) await ask({ type: 'state:remove', infohash });
+      // `state:start` reconciles: rows that are new start, the rest keep running,
+      // and a paused person stays paused because the gate is read from settings.
+      const reply = await ask({ type: 'state:start' });
+      setStatus(
+        reply.ok
+          ? { text: paused ? copy.savedPaused : copy.saved, tone: 'idle' }
+          : { text: reply.error ?? copy.failed, tone: 'error' },
+      );
+    } catch (error) {
+      setStatus({ text: error instanceof Error ? error.message : String(error), tone: 'error' });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const addToHeld = (infohash: string) => {
-    setSelected((current) => new Set(current).add(infohash));
+  const toggle = (infohash: string) => {
+    setStatus({ text: '', tone: 'idle' });
+    if (selected.has(infohash)) {
+      const nextSelected = new Set(selected);
+      nextSelected.delete(infohash);
+      void applySelection(nextSelected, [infohash]);
+      return;
+    }
+    addWithCap(infohash);
+  };
+
+  /** Both gates before a byte is promised: the person's count, then the disk. */
+  const addToHeld = (infohash: string, capOverride?: number) => {
+    if (!rows.some((reciter) => reciter.infohash === infohash)) return;
+
+    const nextSelected = new Set(selected).add(infohash);
+    const nextChosen = rows.filter((reciter) => nextSelected.has(reciter.infohash));
+    const unknown = nextChosen.some((reciter) => typeof reciter.sizeBytes !== 'number' || reciter.sizeBytes <= 0)
+      || unpublished.some((reciter) => typeof reciter.sizeBytes !== 'number' || reciter.sizeBytes <= 0);
+    const toAdd = nextChosen
+      .filter((reciter) => !heldHashes.has(reciter.infohash))
+      .reduce((sum, reciter) => sum + (reciter.sizeBytes ?? 0), 0);
+
+    const gate = planSelection({
+      selectedBytes: toAdd,
+      selectedCount: nextSelected.size,
+      unknownSize: unknown,
+      maxReciters: capOverride ?? capReciters,
+      capBytes,
+      heldBytes: publishedHeldBytes,
+      usageBytes: disk?.usage ?? null,
+    });
+    if (!gate.allowed) {
+      setStatus({ text: refusalText(gate.reason), tone: 'error' });
+      return;
+    }
+
     setFresh((current) => current.filter((row) => row.infohash !== infohash));
     setCapPrompt(null);
+    void applySelection(nextSelected, []);
   };
 
   /** A ceiling that dead-ends teaches people to give up; offer the raise instead. */
@@ -272,7 +336,7 @@ function Page() {
     if (!settings || !capPrompt) return;
     const next = { ...settings, maxReciters: Math.min(12, settings.maxReciters + 1) };
     setSettings(next);
-    addToHeld(capPrompt);
+    addToHeld(capPrompt, next.maxReciters);
   };
 
   const removeUnpublished = async (infohash: string) => {
@@ -286,54 +350,6 @@ function Page() {
     setHeld(next);
     await saveHeld(next);
     await ask({ type: 'state:remove', infohash });
-  };
-
-  const save = async () => {
-    if (!settings || !plan.allowed) return;
-    setSaving(true);
-    setStatus({ text: copy.saving, tone: 'idle' });
-
-    try {
-      // The follow list passes through untouched: it is not the picker's to
-      // rebuild, and the removal loop below must never see it as "dropped".
-      const followKept = held.filter(
-        (reciter) => reciter.source === 'follow' && !chosen.some((pick) => pick.infohash === reciter.infohash),
-      );
-      const next: HeldReciter[] = [
-        ...unpublished,
-        ...chosen.map((reciter) => {
-          const prior = held.find((existing) => existing.infohash === reciter.infohash);
-          return {
-            ...reciter,
-            addedAt: prior?.addedAt ?? new Date().toISOString(),
-            // Ticking a row is a manual decision, even if follow had it first.
-            source: 'manual' as const,
-          };
-        }),
-        ...followKept,
-      ];
-
-      const nextHashes = new Set(next.map((reciter) => reciter.infohash));
-      for (const reciter of held) {
-        if (nextHashes.has(reciter.infohash)) continue;
-        await ask({ type: 'state:remove', infohash: reciter.infohash });
-      }
-
-      const uploadMbps = parseUploadMbps(uploadDraft);
-      await saveHeld(next);
-      const saved = await saveSettings({ ...settings, uploadMbps });
-      setSettings(saved);
-      setUploadDraft(String(saved.uploadMbps));
-      setHeld(next);
-
-      setPaused(false);
-      const reply = await ask({ type: 'state:start' });
-      setStatus(reply.ok ? { text: copy.saved, tone: 'idle' } : { text: reply.error ?? copy.failed, tone: 'error' });
-    } catch (error) {
-      setStatus({ text: error instanceof Error ? error.message : String(error), tone: 'error' });
-    } finally {
-      setSaving(false);
-    }
   };
 
   return (
@@ -377,13 +393,7 @@ function Page() {
           onRetry={() => setAttempt((value) => value + 1)}
           onAdd={addWithCap}
           onDismissFresh={() => void dismissFresh()}
-          onRemove={(infohash) =>
-            setSelected((current) => {
-              const next = new Set(current);
-              next.delete(infohash);
-              return next;
-            })
-          }
+          onRemove={toggle}
           onSort={(next) => setPrefs((current) => ({ ...current, sort: next }))}
           onRiwayat={(next) => setPrefs((current) => ({ ...current, riwayat: next }))}
           onRemoveUnpublished={(infohash) => void removeUnpublished(infohash)}
@@ -435,19 +445,20 @@ function Page() {
           selectedBytes={selectedBytes}
           capReciters={capReciters}
           followCount={follow.length}
-          allowed={plan.allowed}
+          allowed
           running={!paused && held.length > 0}
-          refusal={refusal}
+          refusal=""
           status={status}
           busy={saving}
+          disabled={saving || (held.length === 0 && !paused)}
           labels={{ selected: copy.selectedLabel, cap: copy.capLabel, follow: copy.followCount, start: copy.start, pause: copy.pauseCta }}
           onPrimary={() => {
-            if (!paused && held.length > 0) {
-              setPaused(true);
-              void ask({ type: 'state:pause' });
-              return;
-            }
-            void save();
+            // One control, two states — and never a commit, because adding a row
+            // already committed it. A stale copy of "is it running" here was the
+            // button that said Pause in one window and Start in the other.
+            const next = !paused;
+            setPaused(next);
+            void ask({ type: next ? 'state:pause' : 'state:resume' });
           }}
         />
       ) : null}

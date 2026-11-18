@@ -16,6 +16,16 @@ import type { Reciter } from './catalogue';
 
 export const NEW_SEEN_KEY = 'tilawah-companion.seen.v1';
 
+/**
+ * Catalogue notices this device has produced and the person has not opened the
+ * picker for yet.
+ *
+ * The background counts them; the picker sets this to zero the moment it renders
+ * them, because the strip on screen *is* the notice. Reading a key nobody writes
+ * is how the popup grew a count that never went away.
+ */
+export const PENDING_KEY = 'tilawah-companion.pending.v1';
+
 /** Rows this device has never displayed, newest first. */
 export function pickNew(rows: Reciter[], seenHashes: string[]): Reciter[] {
   // No baseline yet: the first visit learns the roster rather than announcing it.

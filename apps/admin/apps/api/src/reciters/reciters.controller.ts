@@ -24,6 +24,8 @@ import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import type { ProviderId } from '../providers/provider.types';
 import { LinkSuggestionsService } from '../providers/link-suggestions.service';
 import { ReciterImportService } from './reciter-import.service';
+import { SwarmService } from '../swarm/swarm.service';
+import { UNKNOWN_SWARM } from '../swarm/swarm-health';
 
 @UseGuards(JWTAuthGuard, RoleGuard)
 @Roles('admin')
@@ -36,6 +38,7 @@ export class RecitersController {
     private readonly links: LinkSuggestionsService,
     private readonly imports: ReciterImportService,
     private readonly site: SiteRebuildService,
+    private readonly swarm: SwarmService,
   ) {}
 
   /**
@@ -60,8 +63,15 @@ export class RecitersController {
   @Get()
   list() {
     // Coverage, not just the rows: which nodes report each reciter, what was
-    // asked of them, and the state that follows.
-    return this.service.listWithPlacement();
+    // asked of them, and the state that follows. `swarm` is the other half of
+    // that question — our disk is not the same thing as a listener's download.
+    const swarm = this.swarm.snapshot();
+    return this.service
+      .listWithPlacement()
+      .map((reciter) => ({
+        ...reciter,
+        swarm: swarm.get(reciter.infohash.trim().toLowerCase()) ?? UNKNOWN_SWARM,
+      }));
   }
 
   /** Proposals for linking rows that have no provider yet; never writes. */

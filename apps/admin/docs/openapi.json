@@ -1453,6 +1453,30 @@
         ]
       }
     },
+    "/api/backups/{name}/summary": {
+      "get": {
+        "operationId": "BackupsController_summary",
+        "parameters": [
+          {
+            "name": "name",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Row counts in one snapshot and in the live catalogue, for a restore preview.",
+        "tags": [
+          "Backups"
+        ]
+      }
+    },
     "/api/backups/{name}/download": {
       "get": {
         "operationId": "BackupsController_download",

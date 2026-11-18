@@ -9,7 +9,9 @@ import { Chip, Notice } from '../components/Chip';
 import { Panel } from '../components/Panel';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Tabs } from '../components/Tabs';
+import { FoldPanel } from '../components/FoldPanel';
 import { readTab, writeTab } from '../lib/tab-memory';
+import { readFolds, writeFolds } from '../lib/settings-fold';
 
 type Tls = 'ssl' | 'starttls' | 'none';
 type SettingsTab = 'mail' | 'alerts';
@@ -103,6 +105,12 @@ export function Settings(): ReactElement {
   const setTab = (id: SettingsTab): void => {
     setTabState(id);
     writeTab('settings', id);
+  };
+  const [folds, setFolds] = useState(readFolds);
+  const toggleRecentAlerts = (): void => {
+    const next = { recentAlerts: !folds.recentAlerts };
+    setFolds(next);
+    writeFolds(next);
   };
 
   const load = useCallback(async () => {
@@ -496,8 +504,11 @@ export function Settings(): ReactElement {
                 </>
               ) : null}
 
-              <div className="stack stack--tight">
-                <h3 className="h3">{t('settings.alerts.history')}</h3>
+              <FoldPanel
+                title={t('settings.alerts.history')}
+                open={!folds.recentAlerts}
+                onToggle={toggleRecentAlerts}
+              >
                 {history.length === 0 ? (
                   <p className="muted">{t('settings.alerts.empty')}</p>
                 ) : (
@@ -527,7 +538,7 @@ export function Settings(): ReactElement {
                     ))}
                   </ul>
                 )}
-              </div>
+              </FoldPanel>
             </div>
           </Panel>
         ) : null}

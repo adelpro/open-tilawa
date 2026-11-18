@@ -11,6 +11,7 @@ const reciter = (over: Partial<Reciter> & { id?: number }): Reciter & { id?: num
   riwaya: 'Hafs',
   sizeBytes: 1e9,
   surahs: null,
+  swarm: null,
   complete: true,
   ...over,
 });

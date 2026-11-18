@@ -76,17 +76,20 @@ describe('listening modes', () => {
 });
 
 describe('the disk budget', () => {
-  test('defaults to 10 GB and keeps 0 meaning "no limit"', () => {
-    expect(parseSettings({}).maxDiskGb).toBe(10);
-    expect(DEFAULTS.maxDiskGb).toBe(10);
+  test('defaults to 6 GB and keeps 0 meaning "no limit"', () => {
+    expect(parseSettings({}).maxDiskGb).toBe(6);
+    expect(DEFAULTS.maxDiskGb).toBe(6);
     expect(parseSettings({ maxDiskGb: 0 }).maxDiskGb).toBe(0);
     expect(parseSettings({ maxDiskGb: 25 }).maxDiskGb).toBe(25);
+    // An install that stored the old 10 GB default keeps it: a default change is
+    // not a reason to rewrite someone's budget.
+    expect(parseSettings({ maxDiskGb: 10 }).maxDiskGb).toBe(10);
   });
 
   test('garbage and out-of-range values fall back to the default, never unlimited', () => {
-    expect(parseSettings({ maxDiskGb: -1 }).maxDiskGb).toBe(10);
-    expect(parseSettings({ maxDiskGb: 1.5 }).maxDiskGb).toBe(10);
-    expect(parseSettings({ maxDiskGb: 9999 }).maxDiskGb).toBe(10);
-    expect(parseSettings({ maxDiskGb: 'lots' }).maxDiskGb).toBe(10);
+    expect(parseSettings({ maxDiskGb: -1 }).maxDiskGb).toBe(6);
+    expect(parseSettings({ maxDiskGb: 1.5 }).maxDiskGb).toBe(6);
+    expect(parseSettings({ maxDiskGb: 9999 }).maxDiskGb).toBe(6);
+    expect(parseSettings({ maxDiskGb: 'lots' }).maxDiskGb).toBe(6);
   });
 });

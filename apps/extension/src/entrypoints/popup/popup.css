@@ -129,3 +129,79 @@ button.link:hover {
   line-height: 1.15rem;
   text-align: center;
 }
+
+/* ---------- first run ---------- */
+/* The two answers that decide what this device will hold. No modal, no second
+   page: the popup already is the place a person looks right after installing. */
+.setup {
+  display: grid;
+  gap: 0.6rem;
+  margin-block: 0.35rem 0.75rem;
+}
+
+.setup h2 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.setup .empty {
+  margin: 0;
+}
+
+.setup-row {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.setup-label {
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.setup-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.seg {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.seg button {
+  flex: 1;
+  min-height: 32px;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seg button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--ink);
+}
+
+.setup select {
+  min-height: 32px;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.setup-cta {
+  inline-size: 100%;
+}

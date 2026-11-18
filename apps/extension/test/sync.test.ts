@@ -30,7 +30,7 @@ describe('planSync', () => {
     expect(plan.hold).toEqual([]);
     expect(plan.notices).toHaveLength(1);
     expect(plan.notices[0]).toMatchObject({ kind: 'added', infohash: 'a'.repeat(40) });
-    expect(plan.notices[0]!.text).toMatch(/^New reciter/);
+    expect(plan.notices[0]!.name).toBe('ماهر المعيقلي');
   });
 
   test('an unpublished held reciter is reported but kept', () => {
@@ -40,7 +40,7 @@ describe('planSync', () => {
     expect(plan.hold).toHaveLength(1);
     expect(plan.hold[0]!.infohash).toBe('b'.repeat(40));
     expect(plan.notices[0]).toMatchObject({ kind: 'unpublished' });
-    expect(plan.notices[0]!.text).toMatch(/no longer published/i);
+    expect(plan.notices[0]!.name).toBe('ماهر المعيقلي');
   });
 
   test('a re-imported reciter is a replacement notice, not a new one', () => {
@@ -49,7 +49,7 @@ describe('planSync', () => {
 
     expect(plan.notices).toHaveLength(1);
     expect(plan.notices[0]).toMatchObject({ kind: 'replaced' });
-    expect(plan.notices[0]!.text).toMatch(/re-imported/i);
+    expect(plan.notices[0]!.name).toBe('ماهر المعيقلي');
   });
 
   test('an unchanged catalogue says nothing and keeps everything', () => {
