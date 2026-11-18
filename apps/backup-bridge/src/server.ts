@@ -130,7 +130,13 @@ export function createBridgeServer(deps: BridgeDeps): Server {
           fail(res, 429, 'too many requests');
           return;
         }
-        json(res, 200, await deps.check(target, credential));
+        try {
+          json(res, 200, await deps.check(target, credential));
+        } catch (failure) {
+          json(res, 502, {
+            error: failure instanceof Error ? failure.message : 'check failed',
+          });
+        }
         return;
       }
 
@@ -139,12 +145,18 @@ export function createBridgeServer(deps: BridgeDeps): Server {
           fail(res, 429, 'too many requests');
           return;
         }
-        const result = await deps.check(target, credential);
-        if (!result.ok) {
-          json(res, 502, { error: result.error ?? 'check failed' });
-          return;
+        try {
+          const result = await deps.check(target, credential);
+          if (!result.ok) {
+            json(res, 502, { error: result.error ?? 'check failed' });
+            return;
+          }
+          json(res, 200, { files: result.files.filter((file) => isSnapshotName(file.name)) });
+        } catch (failure) {
+          json(res, 502, {
+            error: failure instanceof Error ? failure.message : 'check failed',
+          });
         }
-        json(res, 200, { files: result.files.filter((file) => isSnapshotName(file.name)) });
         return;
       }
 

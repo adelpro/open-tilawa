@@ -122,6 +122,29 @@ describe('bridge routes', () => {
     assert.deepEqual(body.files.map((row: { name: string }) => row.name), [NAME]);
   });
 
+  it('reports an unreachable target as a failed check, not a crashed request', async () => {
+    const failing = createBridgeServer({
+      secretsDir: dir,
+      token: 'test-token',
+      allowedHosts: ['pharmacyserver'],
+      version: '1.36.0',
+      check: async () => {
+        throw new Error('connect timeout');
+      },
+      download: async () => Buffer.from(''),
+    });
+    await new Promise<void>((resolve) => failing.listen(0, '127.0.0.1', resolve));
+    const address = failing.address();
+    if (!address || typeof address === 'string') throw new Error('no port');
+    writeCredential('t1', { password: 'p' }, dir);
+    const res = await fetch(`http://127.0.0.1:${address.port}/targets/t1/health?${query}`, {
+      headers: { 'x-bridge-token': 'test-token' },
+    });
+    assert.equal(res.status, 502);
+    failing.closeAllConnections();
+    await new Promise<void>((resolve) => failing.close(() => resolve()));
+  });
+
   it('downloads a known snapshot and refuses an unknown name', async () => {
     writeCredential('t1', { password: 'p' }, dir);
     const ok = await fetch(`${base}/targets/t1/files/${NAME}?${query}`, {
