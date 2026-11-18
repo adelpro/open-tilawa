@@ -20,6 +20,12 @@ import {
   type UsageRange,
 } from '../lib/usage-period';
 import { readFolded, writeFolded, type Folded, type UsagePanel } from '../lib/usage-fold';
+import {
+  readSorts,
+  writeSort,
+  type UsageSortTable,
+  type UsageSorts,
+} from '../lib/usage-sort';
 import { readTab, writeTab } from '../lib/tab-memory';
 import {
   nextSort,
@@ -126,16 +132,27 @@ export function Usage(): ReactElement {
     writeFolded(next);
   };
 
-  const [surahSort, setSurahSort] = useState<Sort>({ key: 'plays', dir: 'desc' });
-  const [reciterSort, setReciterSort] = useState<Sort>({ key: 'plays', dir: 'desc' });
-  const [versionSort, setVersionSort] = useState<Sort>({ key: 'version', dir: 'desc' });
-  const [errorSort, setErrorSort] = useState<Sort>({ key: 'at', dir: 'desc' });
+  const [sorts, setSorts] = useState<UsageSorts>(readSorts);
+  /** A header click changes the order now and writes it for the next visit. */
+  const setTableSort = (table: UsageSortTable, next: Sort): void => {
+    setSorts((current) => ({ ...current, [table]: next }));
+    writeSort(table, next);
+  };
+  const surahSort = sorts.surahs;
+  const reciterSort = sorts.reciters;
+  const versionSort = sorts.versions;
+  const errorSort = sorts.errors;
   /**
    * The volume table opens on "most served", which is the order the API ranks by:
    * both figures combined. That key is never drawn — the panel shows the two
    * measurements apart — so no column claims the sort until one is clicked.
    */
-  const [volumeSort, setVolumeSort] = useState<Sort>({ key: 'served', dir: 'desc' });
+  const volumeSort = sorts.volume;
+  const setSurahSort = (next: Sort): void => setTableSort('surahs', next);
+  const setReciterSort = (next: Sort): void => setTableSort('reciters', next);
+  const setVersionSort = (next: Sort): void => setTableSort('versions', next);
+  const setErrorSort = (next: Sort): void => setTableSort('errors', next);
+  const setVolumeSort = (next: Sort): void => setTableSort('volume', next);
 
   /**
    * The catalogue, read for one reason: telemetry stores the slug the player
