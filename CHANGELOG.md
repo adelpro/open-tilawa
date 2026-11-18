@@ -1,5 +1,26 @@
 # Changelog
 
+## repo 1.13.43 — 2026-11-18
+
+Repository release. Web **1.13.42**, admin **1.37.3**, seeder **1.5.7**.
+
+### Fixed
+
+- Narrow sheets open at rest, so the first tap reaches the row instead of the
+  backdrop; top-bar panels no longer overlap each other.
+- The rename button on every device row carries the device name in its
+  accessible name.
+
+## web 1.13.42 — 2026-11-18
+
+### Fixed
+
+- Sheets open without the entrance offset and react to backdrop presses only when
+  the press began outside the panel; top-bar panels are coordinated so one closes
+  before another opens.
+- The rename affordance is visible on every device row and its accessible name
+  includes the device name.
+
 ## repo 1.13.42 — 2026-11-18
 
 Repository release. Web **1.13.41**, admin **1.37.3**, seeder **1.5.7**.
