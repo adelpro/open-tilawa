@@ -1,5 +1,22 @@
 # Changelog
 
+## admin 1.35.0 — 2026-11-18
+
+Console release. All four admin workspaces carry **1.35.0**.
+
+### Added
+
+- A "Today" label above the Usage tiles, so their period is stated on screen.
+- Usage table sort order is remembered per browser: reopening the screen restores the last column and direction.
+- "Recent alerts" in Settings folds, and the fold survives a reload.
+- The Restore confirmation shows row counts for the snapshot against the current catalogue, read from a private copy so WAL snapshots in the read-only backup mount can be inspected.
+
+### Fixed
+
+- The stale-backup notice now fills in the hour threshold instead of printing the raw placeholder.
+- The far-copy verification chip reads the verified state the backup job already records; older status files report "Not verified" honestly.
+- A late counts reply can no longer label a different snapshot's rows in the Restore dialog.
+
 ## extension 0.2.5 — 2026-11-17
 
 Extension release. App version: **extension 0.2.5**. Not deployed by the compose
