@@ -17,6 +17,10 @@ interface Snapshot {
   mtime: string;
 }
 
+interface RestoreSummary {
+  tables: { name: string; snapshot: number; current: number }[];
+}
+
 interface Overview {
   configured: boolean;
   directory: string;
@@ -69,6 +73,16 @@ export function Backups(): ReactElement {
   const [runBusy, setRunBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [restoreSummary, setRestoreSummary] = useState<RestoreSummary | 'failed' | null>(null);
+
+  /** Read-only preview: the confirm dialog says what the snapshot would replace. */
+  const beginRestore = (name: string): void => {
+    setRestoring(name);
+    setRestoreSummary(null);
+    void api<RestoreSummary>(`/backups/${name}/summary`)
+      .then(setRestoreSummary)
+      .catch(() => setRestoreSummary('failed'));
+  };
 
   const load = useCallback(async () => {
     setError(null);
@@ -112,6 +126,7 @@ export function Backups(): ReactElement {
     const name = restoring;
     if (!name) return;
     setRestoring(null);
+    setRestoreSummary(null);
     setError(null);
     setNotice(null);
     try {
@@ -242,7 +257,7 @@ export function Backups(): ReactElement {
                             <Button
                               variant="tertiary"
                               small
-                              onClick={() => setRestoring(file.name)}
+                              onClick={() => beginRestore(file.name)}
                             >
                               {t('backups.restore')}
                             </Button>
@@ -266,9 +281,39 @@ export function Backups(): ReactElement {
           confirmLabel={t('backups.restoreConfirm')}
           destructive
           onConfirm={() => void restore()}
-          onClose={() => setRestoring(null)}
+          onClose={() => {
+            setRestoring(null);
+            setRestoreSummary(null);
+          }}
         >
           <p className="body muted">{restoring}</p>
+          {restoreSummary === 'failed' ? (
+            <p className="body muted">{t('backups.compareUnavailable')}</p>
+          ) : restoreSummary ? (
+            <div className="stack stack--tight">
+              <h3 className="h3">{t('backups.compareTitle')}</h3>
+              <div className="table-scroll">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>{t('backups.compareTable')}</th>
+                      <th>{t('backups.compareSnapshot')}</th>
+                      <th>{t('backups.compareCurrent')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {restoreSummary.tables.map((row) => (
+                      <tr key={row.name}>
+                        <td className="mono">{row.name}</td>
+                        <td className="num">{row.snapshot}</td>
+                        <td className="num">{row.current}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
         </ConfirmModal>
       ) : null}
     </div>
