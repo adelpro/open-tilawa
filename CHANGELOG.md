@@ -1,5 +1,13 @@
 # Changelog
 
+## admin 1.37.3 — 2026-11-18
+
+### Changed
+
+- The source row's More control is a real anchored popup: portalled to the page,
+  fixed to the button, closes on outside click, Escape, scroll or resize, and focuses
+  the first item.
+
 ## admin 1.37.2 — 2026-11-18
 
 ### Fixed
