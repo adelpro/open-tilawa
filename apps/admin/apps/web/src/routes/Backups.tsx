@@ -146,7 +146,9 @@ export function Backups(): ReactElement {
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {notice ? <Notice tone="ok">{notice}</Notice> : null}
       {data && !data.configured ? <Notice tone="warn">{t('backups.unmounted')}</Notice> : null}
-      {data?.configured && data.stale ? <Notice tone="bad">{t('backups.stale')}</Notice> : null}
+      {data?.configured && data.stale ? (
+        <Notice tone="bad">{t('backups.stale', { hours: String(data.staleHours) })}</Notice>
+      ) : null}
       {data?.error ? (
         <Notice tone="warn">
           {t('backups.error')}: {data.error}

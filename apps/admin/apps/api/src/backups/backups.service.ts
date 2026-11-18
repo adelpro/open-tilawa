@@ -70,6 +70,8 @@ export interface BackupOverview {
     lastOkAt: string | null;
     lastOkFile: string | null;
     ageHours: number | null;
+    verifiedAt: string | null;
+    verifiedError: string | null;
   } | null;
   files: BackupFile[];
 }
@@ -118,6 +120,8 @@ export class BackupsService {
           lastOkAt: remoteAt,
           lastOkFile: status.remote.last_ok_file ?? null,
           ageHours: remoteAt ? ageHours(remoteAt) : null,
+          verifiedAt: status.remote.verified_at ?? null,
+          verifiedError: status.remote.verified_error ?? null,
         }
       : null;
 
@@ -259,6 +263,8 @@ interface StatusFile {
     state?: string | null;
     last_ok_at?: string | null;
     last_ok_file?: string | null;
+    verified_at?: string | null;
+    verified_error?: string | null;
   };
 }
 

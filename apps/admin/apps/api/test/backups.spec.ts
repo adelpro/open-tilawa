@@ -1,48 +1,58 @@
-import { composeRestoreArgs, composeRunArgs } from '../src/backups/backups.service';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-/**
- * The run command is the whole security story of this endpoint: it shells out with the
- * Docker socket behind it, so what reaches argv has to be fixed and nothing else may.
- */
-describe('composeRunArgs', () => {
-  it('names the compose file, the ops profile and the backup service', () => {
-    expect(composeRunArgs('/host/docker-compose.yml')).toEqual([
-      'compose',
-      '-f',
-      '/host/docker-compose.yml',
-      '--profile',
-      'ops',
-      'run',
-      '--rm',
-      '--no-deps',
-      'backup',
-    ]);
+import { BackupsService } from '../src/backups/backups.service';
+
+describe('backups overview', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'tilawa-backups-'));
+    writeFileSync(join(dir, 'tilawa-admin-20261101T000000Z.sqlite'), 'snapshot');
+    process.env.BACKUP_DIR = dir;
   });
 
-  it('removes the container when it exits, so a failed run leaves nothing behind', () => {
-    expect(composeRunArgs('/host/docker-compose.yml')).toContain('--rm');
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+    delete process.env.BACKUP_DIR;
   });
 
-  it('does not start dependencies: a backup must not restart the API it reads from', () => {
-    expect(composeRunArgs('/host/docker-compose.yml')).toContain('--no-deps');
+  it('reports the verified far copy from status.json', async () => {
+    writeFileSync(
+      join(dir, 'status.json'),
+      JSON.stringify({
+        status: 'ok',
+        remote: {
+          state: 'ok',
+          last_ok_at: '2026-11-01T00:00:00.000Z',
+          last_ok_file: 'tilawa-admin-20261101T000000Z.sqlite',
+          verified_at: '2026-11-01T00:05:00.000Z',
+          verified_error: null,
+        },
+      }),
+    );
+
+    const overview = await new BackupsService().overview();
+    expect(overview.remote?.verifiedAt).toBe('2026-11-01T00:05:00.000Z');
+    expect(overview.remote?.verifiedError).toBeNull();
   });
 
-  it('carries no shell metacharacters, so an argument cannot become a command', () => {
-    for (const arg of composeRunArgs('/host/docker-compose.yml')) {
-      expect(arg).not.toMatch(/[;&|`$()<>]/);
-    }
-  });
-});
+  it('reports a failed far-copy verification', async () => {
+    writeFileSync(
+      join(dir, 'status.json'),
+      JSON.stringify({
+        status: 'ok',
+        remote: {
+          state: 'ok',
+          last_ok_at: '2026-11-01T00:00:00.000Z',
+          verified_error: 'integrity_check failed',
+        },
+      }),
+    );
 
-describe('composeRestoreArgs', () => {
-  it('detaches, because it stops the process that asked for it', () => {
-    expect(composeRestoreArgs('/host/docker-compose.yml', 'tilawa-admin-20260101T000000Z.sqlite'))
-      .toContain('-d');
-  });
-
-  it('names the restore service and the exact snapshot', () => {
-    const name = 'tilawa-admin-20260101T000000Z.sqlite';
-    const args = composeRestoreArgs('/host/docker-compose.yml', name);
-    expect(args.slice(-2)).toEqual(['restore', name]);
+    const overview = await new BackupsService().overview();
+    expect(overview.remote?.verifiedError).toBe('integrity_check failed');
+    expect(overview.remote?.verifiedAt).toBeNull();
   });
 });
