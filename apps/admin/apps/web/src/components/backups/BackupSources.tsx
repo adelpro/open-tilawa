@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { api } from '../../lib/api';
@@ -12,6 +12,8 @@ import { ConfirmModal } from '../ConfirmModal';
 import { Field, Input, TextArea } from '../Field';
 import { FormModal } from '../FormModal';
 import { Panel } from '../Panel';
+import { SnapshotFilterBar, type SnapshotFilterState } from './SnapshotFilterBar';
+import { filterSnapshots, sortSnapshots } from '../../lib/snapshot-filters';
 
 type Target = {
   id: string;
@@ -66,6 +68,22 @@ export function BackupSources(): ReactElement {
   const [removing, setRemoving] = useState<Target | null>(null);
   const [filesFor, setFilesFor] = useState<Target | null>(null);
   const [files, setFiles] = useState<Snapshot[]>([]);
+  const [filters, setFilters] = useState<SnapshotFilterState>({
+    query: '',
+    sort: 'newest',
+    olderThanDays: null,
+  });
+  const visibleFiles = useMemo(
+    () =>
+      sortSnapshots(
+        filterSnapshots(files, {
+          query: filters.query,
+          olderThanDays: filters.olderThanDays,
+        }),
+        filters.sort,
+      ),
+    [files, filters],
+  );
 
   const load = useCallback(async () => {
     try {
@@ -293,6 +311,11 @@ export function BackupSources(): ReactElement {
           {files.length === 0 ? (
             <p className="body muted">{t('backups.filesEmpty')}</p>
           ) : (
+            <>
+              <SnapshotFilterBar value={filters} onChange={setFilters} />
+              {visibleFiles.length === 0 ? (
+                <p className="body muted">{t('backups.noMatch')}</p>
+              ) : (
             <div className="table-scroll">
               <table className="table">
                 <thead>
@@ -304,7 +327,7 @@ export function BackupSources(): ReactElement {
                   </tr>
                 </thead>
                 <tbody>
-                  {files.map((file) => (
+                  {visibleFiles.map((file) => (
                     <tr key={file.name}>
                       <td className="mono">{file.name}</td>
                       <td>{file.size}</td>
@@ -322,6 +345,8 @@ export function BackupSources(): ReactElement {
                 </tbody>
               </table>
             </div>
+              )}
+            </>
           )}
         </div>
       ) : (
