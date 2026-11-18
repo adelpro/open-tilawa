@@ -21,6 +21,7 @@ import { SeedersModule } from './seeders/seeders.module';
 import { ToolsModule } from './tools/tools.module';
 import { StatusModule } from './status/status.module';
 import { BackupsModule } from './backups/backups.module';
+import { BackupTargetsModule } from './backup-targets/backup-targets.module';
 import { TurnsModule } from './turns/turns.module';
 import { TelemetryModule } from './telemetry/telemetry.module';
 import { RecitersModule } from './reciters/reciters.module';
@@ -49,6 +50,7 @@ import { envValidate } from './config/env/env.validate';
     ToolsModule,
     StatusModule,
     BackupsModule,
+    BackupTargetsModule,
     TurnsModule,
     RecitersModule,
     TelemetryModule,
