@@ -99,12 +99,15 @@ export default function DeviceList({ highlightId }: { highlightId?: string | nul
                   <button
                     type="button"
                     onClick={() => startRename(device)}
-                    className="group flex max-w-full items-center gap-2 text-[0.875rem] font-medium text-ink"
+                    className="group flex max-w-full items-center gap-2 text-start text-[0.875rem] font-medium text-ink"
                     title={copy.renameDevice}
-                    aria-label={copy.renameDevice}
+                    aria-label={`${copy.renameDevice}: ${device.name || 'Device'}`}
                   >
-                    <span className="truncate">{device.name || 'Device'}</span>
-                    <Icon name="edit" className="shrink-0 opacity-40 group-hover:opacity-100" />
+                    <span className="min-w-0 flex-1 truncate">{device.name || 'Device'}</span>
+                    <Icon
+                      name="edit"
+                      className="shrink-0 opacity-40 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"
+                    />
                   </button>
                 )}
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem] text-muted">
