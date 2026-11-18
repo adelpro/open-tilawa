@@ -144,6 +144,7 @@ export default function Sheet({
   const releaseVelocity = useRef(0);
   const frame = useRef(0);
   const generation = useRef(0);
+  const panelPress = useRef(false);
   const dragState = useRef<{
     id: number;
     startY: number;
@@ -181,9 +182,9 @@ export default function Sheet({
   };
 
   /**
-   * The entrance spring: from the presentation value, carrying the finger's
-   * velocity, so re-grabbing the sheet mid-rise has no seam. A CSS transition
-   * cannot be grabbed halfway.
+   * The settle spring: returns an interrupted exit or a cancelled drag back to
+   * rest, carrying the finger's velocity so re-grabbing mid-move has no seam. A
+   * CSS transition cannot be grabbed halfway.
    */
   const animate = (target: number, velocity: number) => {
     stop();
@@ -267,14 +268,16 @@ export default function Sheet({
         stop();
         dialog.showModal();
         measure();
-        // A rise, not a pop: enough travel to read as arriving, short enough to
-        // stay out of the way. Measured after showModal — a closed dialog is 0px.
-        offset.current = reduceMotion() ? 0 : Math.min(72, height() * 0.15);
-      } else {
-        // Re-opened while the exit was running: keep the panel where it is and
-        // bring it back, instead of letting the pending close finish.
-        stop();
+        // Open directly at rest: starting 72px below with a spring leaves rows
+        // sliding under the pointer and exposes bare <dialog> above the panel,
+        // causing an immediate first click to dismiss or hit the wrong row.
+        offset.current = 0;
+        apply(0);
+        return;
       }
+      // Re-opened while the exit was running: keep the panel where it is and
+      // bring it back, instead of letting the pending close finish.
+      stop();
       apply(offset.current);
       animate(0, 0);
       return;
@@ -290,6 +293,7 @@ export default function Sheet({
       dialog.close();
       offset.current = 0;
       panelHeight.current = 0;
+      panelPress.current = false;
       apply(0);
     });
   }, [open]);
@@ -470,22 +474,26 @@ export default function Sheet({
         event.stopPropagation();
         onClose();
       }}
+      onPointerDown={(event) => {
+        panelPress.current = event.target !== dialogRef.current;
+      }}
       onClick={(event) => {
         // A click that lands on the <dialog> itself is a click on the backdrop;
-        // everything inside sits in the panel below.
-        if (event.target === dialogRef.current) onClose();
+        // ignore releases whose press began inside the panel.
+        const fromPanel = panelPress.current;
+        panelPress.current = false;
+        if (!fromPanel && event.target === dialogRef.current) onClose();
       }}
-      className="sheet fixed inset-x-0 bottom-0 top-auto m-0 mx-auto w-full max-w-[520px] rounded-t-2xl border-t border-line bg-surface p-0 text-ink"
+      className="sheet fixed inset-x-0 bottom-0 top-auto m-0 mx-auto w-full max-w-[520px] overflow-hidden rounded-t-2xl bg-transparent p-0 text-ink"
     >
       {/* The handle is the affordance: a sheet you can see you can grab. It sits
-          inside the panel so it leaves with it instead of hanging in mid-air. */}
+          inside the panel with the surface so dragging leaves no ghost frame. */}
       <div
         ref={panelRef}
-        className={
-          size === 'full'
-            ? 'relative flex h-[90dvh] flex-col'
-            : 'relative flex max-h-[90dvh] flex-col'
-        }
+        className={cn(
+          'relative flex flex-col rounded-t-2xl border-t border-line bg-surface text-ink',
+          size === 'full' ? 'h-[90dvh]' : 'max-h-[90dvh]',
+        )}
       >
         <span
           aria-hidden="true"
