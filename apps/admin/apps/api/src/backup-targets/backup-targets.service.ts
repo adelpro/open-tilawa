@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   BadRequestException,
   ForbiddenException,
   Injectable,
@@ -103,7 +104,7 @@ export class BackupTargetsService {
 
   async check(id: string, actorId: number): Promise<BackupTarget> {
     const target = this.require(id);
-    const result = await this.bridge.check(target);
+    const result = await this.bridgeCall(() => this.bridge.check(target));
     this.repo.setHealth(
       id,
       result.ok ? 'ok' : 'failed',
@@ -115,12 +116,24 @@ export class BackupTargetsService {
   }
 
   files(id: string): Promise<BridgeFile[]> {
-    return this.bridge.files(this.require(id));
+    const target = this.require(id);
+    return this.bridgeCall(() => this.bridge.files(target));
   }
 
   async download(id: string, name: string): Promise<Buffer> {
     if (!SNAPSHOT_PATTERN.test(name)) throw new BadRequestException('snapshot name is invalid');
-    return this.bridge.download(this.require(id), name);
+    const target = this.require(id);
+    return this.bridgeCall(() => this.bridge.download(target, name));
+  }
+
+  private async bridgeCall<T>(run: () => Promise<T>): Promise<T> {
+    try {
+      return await run();
+    } catch (error) {
+      throw new BadGatewayException(
+        error instanceof Error ? error.message : 'the backup bridge is unavailable',
+      );
+    }
   }
 
   private require(id: string): BackupTarget {

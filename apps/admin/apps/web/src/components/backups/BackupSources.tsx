@@ -273,26 +273,37 @@ export function BackupSources(): ReactElement {
                         >
                           {t('backups.snapshots')}
                         </Button>
-                        <Button small variant="tertiary" onClick={() => openEditor(target)}>
-                          {t('backups.editSource')}
-                        </Button>
-                        {owner ? (
-                          <>
-                            <Button
-                              small
-                              variant="tertiary"
-                              onClick={() => {
-                                setCredential({ password: '', privateKey: '' });
-                                setCredentialFor(target);
-                              }}
-                            >
-                              {t('backups.credential')}
+                        <details>
+                          <summary className="btn btn--tertiary btn--sm">
+                            {t('backups.more')}
+                          </summary>
+                          <span className="cluster" style={{ marginTop: '0.5rem' }}>
+                            <Button small variant="tertiary" onClick={() => openEditor(target)}>
+                              {t('backups.editSource')}
                             </Button>
-                            <Button small variant="tertiary" onClick={() => setRemoving(target)}>
-                              {t('backups.removeSource')}
-                            </Button>
-                          </>
-                        ) : null}
+                            {owner ? (
+                              <>
+                                <Button
+                                  small
+                                  variant="tertiary"
+                                  onClick={() => {
+                                    setCredential({ password: '', privateKey: '' });
+                                    setCredentialFor(target);
+                                  }}
+                                >
+                                  {t('backups.credential')}
+                                </Button>
+                                <Button
+                                  small
+                                  variant="tertiary"
+                                  onClick={() => setRemoving(target)}
+                                >
+                                  {t('backups.removeSource')}
+                                </Button>
+                              </>
+                            ) : null}
+                          </span>
+                        </details>
                       </span>
                     </td>
                   </tr>

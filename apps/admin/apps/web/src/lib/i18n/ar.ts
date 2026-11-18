@@ -718,6 +718,7 @@ export const ar: Catalogue = {
   'backups.addSource': 'إضافة مصدر',
   'backups.editSource': 'تعديل',
   'backups.removeSource': 'إزالة',
+  'backups.more': 'المزيد',
   'backups.saveSource': 'حفظ المصدر',
   'backups.cancel': 'إلغاء',
   'backups.label': 'التسمية',

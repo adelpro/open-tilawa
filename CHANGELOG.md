@@ -1,5 +1,14 @@
 # Changelog
 
+## admin 1.37.1 — 2026-11-18
+
+### Fixed
+
+- Snapshots on a slow SFTP host no longer return a 500: the bridge connect deadline
+  is 30 s, the API waits 45 s, and a bridge failure is reported as 502 with its reason.
+- The source row keeps two primary actions (Check, Snapshots); Edit, Credential and
+  Remove moved under a More disclosure.
+
 ## admin 1.37.0 — 2026-11-18
 
 ### Added
