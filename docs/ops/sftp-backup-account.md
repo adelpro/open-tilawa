@@ -4,8 +4,13 @@ The console's Sources screen should not use `adelpro`'s personal key. This runbo
 creates a key-only account that can only reach the snapshot folder, then moves the
 host job onto it.
 
-Run the `sudo` steps on **pharmacyserver**. Nothing here installs FTP: OpenSSH already
-provides SFTP.
+Nothing here installs FTP: OpenSSH already provides SFTP.
+
+> **Current state (2026-11-18):** the host has no passwordless `sudo`, so the
+> `tilawa-backup` account was not created. A dedicated restricted key was added to
+> `adelpro` instead — see “No-sudo fallback” below. The console target uses
+> username `adelpro`, folder `tilawa-backups`, key `~/.ssh/tilawa-console_ed25519`.
+> Finish the account migration when `sudo` is available.
 
 ## 1. Create the account
 
@@ -98,6 +103,29 @@ Backups → Sources → Add source:
 
 Save the **private** key (`~/.ssh/tilawa-backup_ed25519`) in the credential form, then
 press Check.
+
+## No-sudo fallback (used on 2026-11-18)
+
+Without `sudo`, a dedicated key can still be restricted on the existing account. It is
+not a separate home, but it is key-only, shell-less and forwarding-less:
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/tilawa-console_ed25519 -C "tilawa-console-backup" -N ""
+LINE="command=\"internal-sftp\",restrict $(cat ~/.ssh/tilawa-console_ed25519.pub) tilawa-console"
+printf '%s\n' "$LINE" | ssh pharmacyserver \
+  'grep -qF "tilawa-console" ~/.ssh/authorized_keys || cat >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys'
+```
+
+Verify:
+
+```bash
+ssh -i ~/.ssh/tilawa-console_ed25519 adelpro@pharmacyserver true   # refused: sftp only
+sftp -i ~/.ssh/tilawa-console_ed25519 adelpro@pharmacyserver        # lists tilawa-backups
+```
+
+Limitation: SFTP can still read other files under `adelpro`'s home. The console only
+asks for `tilawa-backups`, but a compromised bridge could traverse. The separate
+account above removes that risk.
 
 ## 7. Rollback
 
