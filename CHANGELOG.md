@@ -1,5 +1,27 @@
 # Changelog
 
+## admin 1.36.0 — 2026-11-18
+
+Console release. All four admin workspaces and the backup bridge carry **1.36.0**.
+
+### Added
+
+- **SFTP backup sources in the console.** Add a destination, save its credential once,
+  check it with a real connection, browse its snapshots and download one. The credential
+  lives in a dedicated `backup-bridge` service, never in `admin-api`.
+- The Status screen now carries the bridge as a required service with a 24-hour timeline.
+
+### Security
+
+- Host allow-list (`SFTP_ALLOWED_HOSTS`) is enforced before any connection.
+- Only `tilawa-admin-YYYYMMDDTHHMMSSZ.sqlite` names can be listed or downloaded.
+- Credentials are write-only; no API returns one. Only the owner can replace a
+  credential or remove a target.
+
+### Fixed
+
+- An unreachable target reports a failed check (502), not a crashed request.
+
 ## admin 1.35.0 — 2026-11-18
 
 Console release. All four admin workspaces carry **1.35.0**.
