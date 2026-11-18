@@ -769,6 +769,8 @@ export const en = {
   'backups.age30': 'Older than 30 days',
   'backups.noMatch': 'No snapshots match these filters.',
   'backups.clearFilters': 'Clear filters',
+  'backups.retention':
+    'Keeps every snapshot for {hours} h, then one a day for {days} days, up to {max} files.',
   'backups.download': 'Download',
   'backups.empty': 'No snapshots yet.',
   'backups.error': 'Last error',

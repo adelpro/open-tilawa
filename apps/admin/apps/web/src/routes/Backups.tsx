@@ -33,6 +33,7 @@ interface Overview {
   state: 'unmounted' | 'missing' | 'ok' | 'pending' | 'failed';
   generatedAt: string | null;
   error: string | null;
+  retention: { recentHours: number; dailyDays: number; maxFiles: number } | null;
   local: (Snapshot & { ageHours: number }) | null;
   remote: {
     state: string | null;
@@ -308,6 +309,15 @@ export function Backups(): ReactElement {
                 )}
               </>
             )}
+            {data.retention ? (
+              <p className="fine-print muted">
+                {t('backups.retention', {
+                  hours: String(data.retention.recentHours),
+                  days: String(data.retention.dailyDays),
+                  max: String(data.retention.maxFiles),
+                })}
+              </p>
+            ) : null}
           </Panel>
         </>
       )}

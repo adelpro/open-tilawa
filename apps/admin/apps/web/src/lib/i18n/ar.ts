@@ -763,6 +763,8 @@ export const ar: Catalogue = {
   'backups.age30': 'أقدم من 30 يومًا',
   'backups.noMatch': 'لا لقطات تطابق هذه التصفية.',
   'backups.clearFilters': 'مسح التصفية',
+  'backups.retention':
+    'يحتفظ بكل لقطة لمدة {hours} ساعة، ثم لقطة واحدة يوميًا لمدة {days} يومًا، بحد أقصى {max} ملفًا.',
   'backups.download': 'تنزيل',
   'backups.empty': 'لا لقطات بعد.',
   'backups.error': 'آخر خطأ',
