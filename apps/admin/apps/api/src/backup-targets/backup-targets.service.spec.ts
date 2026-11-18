@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 
 import { BackupTargetsService } from './backup-targets.service';
 import type { BackupTarget } from '@tilawa-admin/core';
@@ -94,6 +98,15 @@ describe('BackupTargetsService', () => {
       BadRequestException,
     );
     expect(bridge.calls.some((call) => call.startsWith('download:'))).toBe(false);
+  });
+
+  it('maps a bridge failure to 502 instead of 500', async () => {
+    const { service, bridge } = serviceWith();
+    const created = await service.create(input, 1);
+    bridge.files = async () => {
+      throw new Error('timed out');
+    };
+    await expect(service.files(created.id)).rejects.toBeInstanceOf(BadGatewayException);
   });
 
   it('lets only the owner replace a credential or remove a target', async () => {

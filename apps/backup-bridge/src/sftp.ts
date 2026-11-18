@@ -3,7 +3,9 @@ import { Client, type SFTPWrapper } from 'ssh2';
 import type { CheckResult, SnapshotFile, TargetConfig } from './server.ts';
 import type { Credential } from './secrets.ts';
 
-const TIMEOUT_MS = 10_000;
+// Pharmacyserver's SSH handshake measures 14-21 s over Tailscale, so the connect
+// deadline has to be above that or every check fails before the server answers.
+const TIMEOUT_MS = 30_000;
 
 function joinRemote(dir: string, name: string): string {
   return `${dir.replace(/\/+$/, '')}/${name}`;
