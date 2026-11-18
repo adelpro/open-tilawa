@@ -38,6 +38,15 @@ describe('status services', () => {
     expect(relay?.kind).toBe('ws');
   });
 
+  it('seeds the backup bridge as an HTTP service', async () => {
+    const res = await agent.get('/api/status').expect(200);
+    const bridge = (
+      res.body.services as { url: string; kind: string }[]
+    ).find((service) => service.url === 'http://backup-bridge:9401/health');
+    expect(bridge).toBeDefined();
+    expect(bridge?.kind).toBe('http');
+  });
+
   it('stores a wss:// service as kind ws', async () => {
     const { header, token } = await csrf();
     const res = await agent

@@ -29,6 +29,10 @@ export {
   type UserIdentity,
 } from './store/user-identities.repo';
 export { SessionsRepository } from './store/sessions.repo';
+export {
+  BackupTargetsRepository,
+  type BackupTarget,
+} from './store/backup-targets.repo';
 export { EmailOtpRepository, type EmailOtpRecord } from './store/email-otp.repo';
 export { TrustedDevicesRepository } from './store/trusted-devices.repo';
 export { RecoveryCodesRepository, type RecoveryCodeRecord } from './store/recovery-codes.repo';

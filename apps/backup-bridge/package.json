@@ -1,0 +1,24 @@
+{
+  "name": "tilawa-backup-bridge",
+  "version": "1.36.0",
+  "private": true,
+  "description": "Holds SFTP backup credentials and exposes a fixed verb set to the admin API",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "dependencies": {
+    "ssh2": "^1.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/ssh2": "^1.15.1",
+    "typescript": "^5.7.3"
+  }
+}

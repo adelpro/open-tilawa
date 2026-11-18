@@ -150,6 +150,9 @@ services:
       BUILD_SHA: ${GIT_SHA:-dev}
       PORT: ${ADMIN_API_PORT:-9410}
       DB_PATH: /data/tilawa-admin.sqlite
+      BRIDGE_URL: http://backup-bridge:9401
+      BRIDGE_TOKEN: ${BRIDGE_TOKEN:-}
+      SFTP_ALLOWED_HOSTS: ${SFTP_ALLOWED_HOSTS:-pharmacyserver}
       CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-https://console.tilawah.cc,https://tilawah.cc}
       # Absolute origin used in activation and reset mail. Overridden here so a
       # developer's .env (`http://localhost:9400`) cannot leak into emails sent
@@ -232,6 +235,36 @@ services:
   # same command, so scheduling never depends on the app being healthy.
   #
   # `run --rm` is the interface; this service is never `up`.
+  # The only service that holds SFTP credentials. It has no Docker socket, no
+  # database and no host port: admin-api reaches it over the internal network.
+  backup-bridge:
+    build:
+      context: ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}
+      dockerfile: apps/backup-bridge/Dockerfile
+    image: ${BACKUP_BRIDGE_IMAGE:-open-tilawa-backup-bridge:local}
+    container_name: open-tilawa-backup-bridge
+    restart: unless-stopped
+    environment:
+      PORT: 9401
+      BRIDGE_TOKEN: ${BRIDGE_TOKEN:-}
+      SFTP_ALLOWED_HOSTS: ${SFTP_ALLOWED_HOSTS:-pharmacyserver}
+      BRIDGE_SECRETS_DIR: /secrets
+    volumes:
+      - backup_bridge_secrets:/secrets
+    networks: [open-tilawa]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:9401/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   backup:
     build:
       context: ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}
@@ -300,6 +333,7 @@ volumes:
   seed_torrents:
   admin_data:
   media_logs:
+  backup_bridge_secrets:
 
 networks:
   open-tilawa:
