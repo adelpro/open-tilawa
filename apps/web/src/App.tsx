@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import AboutPage from './app/about-page';
 import ExtensionPage from './app/extension-page';
@@ -20,6 +20,14 @@ import { useReciters } from './hooks/use-reciters';
 import { planDeepLink } from './utils/deep-link';
 import { useMediaQuery } from './hooks/use-media-query';
 import { useSheet } from './hooks/use-sheet';
+import {
+  isPlayerScreen,
+  planLeaveOverlays,
+  planOpenAccountPanel,
+  planOpenPlayerSheet,
+  routeIdentity,
+  type SheetKind,
+} from './utils/panel-coordinator';
 import { useTheatre } from './hooks/use-theatre';
 import { useSleepTimer } from './hooks/use-sleep-timer';
 import { useLocale } from './hooks/use-locale';
@@ -102,7 +110,11 @@ export default function App() {
   const appliedLink = useRef('');
 
   useEffect(() => {
-    if (route.name !== 'listen' || reciters.length === 0) return;
+    if (route.name !== 'listen') {
+      setDeepLinkMissing(false);
+      return;
+    }
+    if (reciters.length === 0) return;
     const plan = planDeepLink(route, reciters, appliedLink.current);
     if (plan.kind === 'skip') return;
 
@@ -304,9 +316,73 @@ export default function App() {
     return () => window.removeEventListener(STORAGE_EVENT, handler);
   }, [updateSettings]);
 
-  const go = (next: Parameters<typeof navigate>[0]) => {
-    navigate(next);
+  const playerScreen = isPlayerScreen(route, deepLinkMissing);
+  const routeStateRef = useRef({ route, deepLinkMissing });
+  routeStateRef.current = { route, deepLinkMissing };
+
+  const routeKey = routeIdentity(route);
+  const prevRouteKey = useRef(routeKey);
+  useEffect(() => {
+    if (prevRouteKey.current === routeKey) return;
+    prevRouteKey.current = routeKey;
+    setAccountOpen(false);
     setMenuOpen(false);
+    if (!isPlayerScreen(routeStateRef.current.route, routeStateRef.current.deepLinkMissing)) {
+      close();
+    }
+  }, [routeKey, setAccountOpen, close]);
+
+  const openSheetKind = useCallback(
+    (kind: SheetKind) => {
+      const { route: currentRoute, deepLinkMissing: missing } = routeStateRef.current;
+      const plan = planOpenPlayerSheet(kind, currentRoute, missing);
+      setAccountOpen(plan.accountOpen);
+      setMenuOpen(plan.menuOpen);
+      const openers: Record<SheetKind, () => void> = {
+        surahs: openSurahs,
+        reciters: openReciters,
+        stream: openStream,
+        keys: openKeys,
+      };
+      openers[kind]();
+      if (plan.navigateTo) navigate(plan.navigateTo);
+    },
+    [setAccountOpen, openSurahs, openReciters, openStream, openKeys, navigate],
+  );
+
+  const showSurahs = useCallback(() => openSheetKind('surahs'), [openSheetKind]);
+  const showReciters = useCallback(() => openSheetKind('reciters'), [openSheetKind]);
+  const showStream = useCallback(() => openSheetKind('stream'), [openSheetKind]);
+  const showKeys = useCallback(() => openSheetKind('keys'), [openSheetKind]);
+
+  const openAccount = useCallback(() => {
+    const plan = planOpenAccountPanel();
+    if (plan.sheet === null) close();
+    setMenuOpen(plan.menuOpen);
+    setAccountOpen(plan.accountOpen);
+  }, [close, setAccountOpen]);
+
+  const openMenu = useCallback(() => {
+    setAccountOpen(false);
+    close();
+    setMenuOpen(true);
+  }, [close, setAccountOpen]);
+
+  const toggleMenu = useCallback(() => {
+    if (menuOpen) setMenuOpen(false);
+    else openMenu();
+  }, [menuOpen, openMenu]);
+
+  const clearOverlays = useCallback(() => {
+    const plan = planLeaveOverlays(sheet, pinned);
+    setAccountOpen(plan.accountOpen);
+    setMenuOpen(plan.menuOpen);
+    if (plan.sheet === null) close();
+  }, [sheet, pinned, setAccountOpen, close]);
+
+  const go = (next: Parameters<typeof navigate>[0]) => {
+    clearOverlays();
+    navigate(next);
   };
 
   /**
@@ -320,18 +396,19 @@ export default function App() {
     <ErrorBoundary>
       <div
         className="app-shell"
-        data-panel={sheet ? 'open' : 'closed'}
+        data-panel={sheet || (accountOpen && playerScreen) ? 'open' : 'closed'}
         data-theatre={theatre.active ? 'on' : 'off'}
       >
         {theatre.active ? null : (
           <TopBar
             isHome={route.name === 'home'}
             menuOpen={menuOpen}
-            onToggleMenu={() => setMenuOpen((open) => !open)}
-            onOpenSurahs={openSurahs}
-            onOpenReciters={openReciters}
-            onOpenKeys={openKeys}
-            onOpenAccount={() => setAccountOpen(true)}
+            onToggleMenu={toggleMenu}
+            onOpenSurahs={showSurahs}
+            onOpenReciters={showReciters}
+            onOpenKeys={showKeys}
+            onOpenAccount={openAccount}
+            onNavigate={clearOverlays}
           />
         )}
         {route.name === 'reciters' ? (
@@ -374,12 +451,12 @@ export default function App() {
             pinned={pinned}
             togglePin={togglePin}
             reciterScope={reciterScope}
-            openSurahs={openSurahs}
-            openReciters={openReciters}
-            openStream={openStream}
-            openKeys={openKeys}
+            openSurahs={showSurahs}
+            openReciters={showReciters}
+            openStream={showStream}
+            openKeys={showKeys}
             close={close}
-            onOpenMenu={() => setMenuOpen(true)}
+            onOpenMenu={openMenu}
             route={route}
             theatre={theatre.active}
             onToggleTheatre={theatre.toggle}
@@ -392,7 +469,7 @@ export default function App() {
           route={route}
           onClose={() => setMenuOpen(false)}
           onNavigate={go}
-          onOpenAccount={() => setAccountOpen(true)}
+          onOpenAccount={openAccount}
         />
         <AccountSheet open={accountOpen} onClose={() => setAccountOpen(false)} />
         {shouldPrompt(consent, heardSound) && (

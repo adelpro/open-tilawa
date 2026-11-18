@@ -3,7 +3,7 @@ import { useLocale } from '@/hooks/use-locale';
 import Icon from '@/components/icons';
 import Link from '@/components/link';
 import { cn } from '@/utils/cn';
-import { useEffect, useRef, useState } from 'react';
+import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from 'react';
 
 /**
  * The mark sits at the reading edge (right), the menu at the other. The button
@@ -18,6 +18,7 @@ export default function TopBar({
   onOpenReciters,
   onOpenKeys,
   onOpenAccount,
+  onNavigate,
   isHome,
 }: {
   menuOpen: boolean;
@@ -26,6 +27,7 @@ export default function TopBar({
   onOpenReciters: () => void;
   onOpenKeys: () => void;
   onOpenAccount?: () => void;
+  onNavigate?: () => void;
   /** The player route — the only one where the home mark is filled. */
   isHome: boolean;
 }) {
@@ -33,6 +35,17 @@ export default function TopBar({
 
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+
+  const handleNavClick = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    setMoreOpen(false);
+    onNavigate?.();
+  };
+
+  const trigger = (action?: () => void) => () => {
+    setMoreOpen(false);
+    action?.();
+  };
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
@@ -56,7 +69,7 @@ export default function TopBar({
     <header className="top-bar flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
       {/* The wordmark is the link's name, so the version sits outside it: an
           aria-label that left the visible "1.8.3" out failed WCAG 2.5.3. */}
-      <Link to={{ name: 'home' }} className="flex items-center gap-2">
+      <Link to={{ name: 'home' }} onClick={handleNavClick} className="flex items-center gap-2">
         <img src="/images/icon.png" alt={t.brand} className="brand-mark h-6 w-auto" />
         <span aria-hidden="true" className="tnum text-[0.8125rem] leading-none text-muted">
           {APP_VERSION}
@@ -68,6 +81,7 @@ export default function TopBar({
       <nav className="hidden items-center gap-1 text-[0.875rem] text-muted lg:flex" aria-label={t.brand}>
         <Link
           to={{ name: 'home' }}
+          onClick={handleNavClick}
           className={cn(
             'flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink',
             isHome && 'text-ink',
@@ -78,7 +92,7 @@ export default function TopBar({
         </Link>
         <button
           type="button"
-          onClick={onOpenReciters}
+          onClick={trigger(onOpenReciters)}
           className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
         >
           <Icon name="mic" />
@@ -86,7 +100,7 @@ export default function TopBar({
         </button>
         <button
           type="button"
-          onClick={onOpenSurahs}
+          onClick={trigger(onOpenSurahs)}
           className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
         >
           <Icon name="book" />
@@ -95,7 +109,7 @@ export default function TopBar({
         {onOpenAccount && (
           <button
             type="button"
-            onClick={onOpenAccount}
+            onClick={trigger(onOpenAccount)}
             className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
           >
             <Icon name="user" />
@@ -104,6 +118,7 @@ export default function TopBar({
         )}
         <Link
           to={{ name: 'settings' }}
+          onClick={handleNavClick}
           className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-line/50 hover:text-ink"
         >
           <Icon name="gear" />
@@ -132,7 +147,7 @@ export default function TopBar({
               <Link
                 to={{ name: 'about' }}
                 role="menuitem"
-                onClick={() => setMoreOpen(false)}
+                onClick={handleNavClick}
                 className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
               >
                 <Icon name="info" />
@@ -141,7 +156,7 @@ export default function TopBar({
               <Link
                 to={{ name: 'privacy' }}
                 role="menuitem"
-                onClick={() => setMoreOpen(false)}
+                onClick={handleNavClick}
                 className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
               >
                 <Icon name="shield" />
@@ -150,7 +165,7 @@ export default function TopBar({
               <Link
                 to={{ name: 'seed' }}
                 role="menuitem"
-                onClick={() => setMoreOpen(false)}
+                onClick={handleNavClick}
                 className="flex items-center gap-2 px-3 py-2 text-[0.875rem] text-ink transition-colors hover:bg-line/50"
               >
                 <Icon name="server" />
@@ -161,7 +176,7 @@ export default function TopBar({
         </div>
         <button
           type="button"
-          onClick={onOpenKeys}
+          onClick={trigger(onOpenKeys)}
           aria-label={t.keys.title}
           title={t.keys.title}
           className="ml-1 flex h-7 w-7 items-center justify-center rounded-full border border-line text-muted transition-colors hover:bg-line/50 hover:text-ink"
@@ -172,7 +187,7 @@ export default function TopBar({
 
       <button
         type="button"
-        onClick={onToggleMenu}
+        onClick={trigger(onToggleMenu)}
         aria-label={menuOpen ? t.menu.close : t.menu.open}
         aria-expanded={menuOpen}
         aria-haspopup="dialog"

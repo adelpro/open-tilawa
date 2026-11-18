@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
 
 import type { ReciterScope } from '@/components/sheet';
+import type { SheetKind } from '@/utils/panel-coordinator';
 
-export type SheetKind = 'surahs' | 'reciters' | 'stream' | 'keys';
+export type { SheetKind };
 
 const PIN_KEY = 'tilawa.pinned.v1';
 
