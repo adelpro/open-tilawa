@@ -1,5 +1,18 @@
 # Changelog
 
+## admin 1.37.0 — 2026-11-18
+
+### Added
+
+- Snapshot tables now filter by file name and age, and sort by newest, oldest,
+  largest, smallest or name. Both the local snapshots and every SFTP source use it.
+- The Backups screen prints the host job's retention rule from `status.json`.
+
+### Ops
+
+- Runbook for a dedicated SFTP account, with the no-sudo restricted-key fallback
+  used on 2026-11-18.
+
 ## admin 1.36.0 — 2026-11-18
 
 Console release. All four admin workspaces and the backup bridge carry **1.36.0**.

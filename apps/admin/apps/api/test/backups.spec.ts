@@ -85,6 +85,24 @@ describe('backups overview', () => {
     expect(overview.remote?.verifiedError).toBeNull();
   });
 
+  it('reports the retention rule recorded by the job', async () => {
+    writeFileSync(
+      join(dir, 'status.json'),
+      JSON.stringify({
+        status: 'ok',
+        retention: { recentHours: 72, dailyDays: 30, maxFiles: 240 },
+      }),
+    );
+    const overview = await new BackupsService().overview();
+    expect(overview.retention).toEqual({ recentHours: 72, dailyDays: 30, maxFiles: 240 });
+  });
+
+  it('reports no retention when the status file predates the field', async () => {
+    writeFileSync(join(dir, 'status.json'), JSON.stringify({ status: 'ok' }));
+    const overview = await new BackupsService().overview();
+    expect(overview.retention).toBeNull();
+  });
+
   it('reports a failed far-copy verification', async () => {
     writeFileSync(
       join(dir, 'status.json'),
