@@ -1,6 +1,6 @@
 {
   "name": "tilawa-backup-bridge",
-  "version": "1.37.1",
+  "version": "1.37.2",
   "private": true,
   "description": "Holds SFTP backup credentials and exposes a fixed verb set to the admin API",
   "license": "MIT",

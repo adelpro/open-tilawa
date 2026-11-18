@@ -1,5 +1,13 @@
 # Changelog
 
+## admin 1.37.2 — 2026-11-18
+
+### Fixed
+
+- Snapshots no longer returns 502 on a slow host: the bridge connect deadline is 90 s
+  and the API waits 120 s.
+- The source row's More control is now a vertical list instead of an inline cluster.
+
 ## admin 1.37.1 — 2026-11-18
 
 ### Fixed
