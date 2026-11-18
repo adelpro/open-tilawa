@@ -12,6 +12,7 @@ import { ConfirmModal } from '../ConfirmModal';
 import { Field, Input, TextArea } from '../Field';
 import { FormModal } from '../FormModal';
 import { Panel } from '../Panel';
+import { RowMenu } from '../RowMenu';
 import { SnapshotFilterBar, type SnapshotFilterState } from './SnapshotFilterBar';
 import { filterSnapshots, sortSnapshots } from '../../lib/snapshot-filters';
 
@@ -273,44 +274,31 @@ export function BackupSources(): ReactElement {
                         >
                           {t('backups.snapshots')}
                         </Button>
-                        <details className="row-menu">
-                          <summary className="btn btn--tertiary btn--sm">
-                            {t('backups.more')}
-                          </summary>
-                          <div className="row-menu__list">
-                            <Button
-                              small
-                              variant="tertiary"
-                              className="row-menu__item"
-                              onClick={() => openEditor(target)}
-                            >
-                              {t('backups.editSource')}
-                            </Button>
-                            {owner ? (
-                              <>
-                                <Button
-                                  small
-                                  variant="tertiary"
-                                  className="row-menu__item"
-                                  onClick={() => {
-                                    setCredential({ password: '', privateKey: '' });
-                                    setCredentialFor(target);
-                                  }}
-                                >
-                                  {t('backups.credential')}
-                                </Button>
-                                <Button
-                                  small
-                                  variant="tertiary"
-                                  className="row-menu__item"
-                                  onClick={() => setRemoving(target)}
-                                >
-                                  {t('backups.removeSource')}
-                                </Button>
-                              </>
-                            ) : null}
-                          </div>
-                        </details>
+                        <RowMenu
+                          label={t('backups.more')}
+                          items={[
+                            {
+                              label: t('backups.editSource'),
+                              onSelect: () => openEditor(target),
+                            },
+                            ...(owner
+                              ? [
+                                  {
+                                    label: t('backups.credential'),
+                                    onSelect: () => {
+                                      setCredential({ password: '', privateKey: '' });
+                                      setCredentialFor(target);
+                                    },
+                                  },
+                                  {
+                                    label: t('backups.removeSource'),
+                                    onSelect: () => setRemoving(target),
+                                    destructive: true,
+                                  },
+                                ]
+                              : []),
+                          ]}
+                        />
                       </span>
                     </td>
                   </tr>

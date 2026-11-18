@@ -640,30 +640,22 @@
   flex: 0 0 auto;
 }
 
-/* The secondary row actions: one disclosure, one vertical list. The list is in
-   normal flow rather than absolutely positioned so a table's scroll container
-   cannot clip it. */
-.row-menu {
-  display: inline-block;
-}
-.row-menu > summary {
-  list-style: none;
-}
-.row-menu > summary::-webkit-details-marker {
-  display: none;
-}
-.row-menu__list {
+/* A row menu is portalled to body: a table's overflow container would clip an
+   absolutely positioned child, so the panel is fixed to the button's rect. */
+.menu-popover {
+  position: fixed;
+  z-index: 90;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-inline-size: 10rem;
-  margin-block-start: var(--space-2);
+  gap: 2px;
+  min-inline-size: 12rem;
   padding: var(--space-2);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
-  background: var(--surface-pearl);
+  background: var(--canvas);
+  box-shadow: var(--shadow-premium);
 }
-.row-menu__item {
+.menu-popover__item {
   inline-size: 100%;
   justify-content: flex-start;
 }
