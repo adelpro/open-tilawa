@@ -1,5 +1,20 @@
 # Changelog
 
+## repo 1.13.42 — 2026-11-18
+
+Repository release. Web **1.13.41**, admin **1.37.3**, seeder **1.5.7**.
+
+### Added
+
+- Console-managed SFTP backup sources with a dedicated bridge, health checks,
+  snapshot browsing, downloads and retention display.
+- Snapshot filters and sorting; a real anchored More menu.
+
+### Ops
+
+- Dedicated restricted SFTP key on pharmacyserver; runbook in
+  `docs/ops/sftp-backup-account.md`.
+
 ## admin 1.37.3 — 2026-11-18
 
 ### Changed
