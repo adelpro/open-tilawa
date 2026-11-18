@@ -34,9 +34,9 @@ export class BridgeClient {
     const response = await fetch(`${this.base}${path}`, {
       ...init,
       headers: { 'x-bridge-token': this.token, ...(init.headers ?? {}) },
-      // The Tailscale path to pharmacyserver takes 14-21 s per SSH handshake; the
-      // bridge has its own 30 s connect deadline, so this is the outer ceiling.
-      signal: AbortSignal.timeout(45_000),
+      // Pharmacyserver's SSH handshake has measured 9-59 s; the bridge owns the
+      // 90 s connect deadline, so this is only the outer ceiling.
+      signal: AbortSignal.timeout(120_000),
     });
     if (!response.ok) {
       const body = (await response.json().catch(() => ({}))) as { error?: string };
