@@ -5,6 +5,7 @@ import { useSession } from '../lib/session';
 import { useI18n } from '../lib/i18n';
 import type { MessageKey } from '../lib/i18n';
 import { bytes, relative } from '../lib/format';
+import { createPreviewGuard } from '../lib/restore-preview';
 import { Button } from '../components/Button';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Panel, Row } from '../components/Panel';
@@ -15,6 +16,10 @@ interface Snapshot {
   name: string;
   bytes: number;
   mtime: string;
+}
+
+interface RestoreSummary {
+  tables: { name: string; snapshot: number; current: number }[];
 }
 
 interface Overview {
@@ -69,6 +74,25 @@ export function Backups(): ReactElement {
   const [runBusy, setRunBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [restoreSummary, setRestoreSummary] = useState<RestoreSummary | 'failed' | null>(null);
+  const [previewGuard] = useState(() =>
+    createPreviewGuard<RestoreSummary | 'failed'>(),
+  );
+
+  /** Read-only preview: the confirm dialog says what the snapshot would replace. */
+  const beginRestore = (name: string): void => {
+    previewGuard.begin(name);
+    setRestoring(name);
+    setRestoreSummary(null);
+    void api<RestoreSummary>(`/backups/${name}/summary`)
+      .then((summary) => {
+        const current = previewGuard.apply(name, summary);
+        if (current) setRestoreSummary(current);
+      })
+      .catch(() => {
+        if (previewGuard.apply(name, 'failed')) setRestoreSummary('failed');
+      });
+  };
 
   const load = useCallback(async () => {
     setError(null);
@@ -111,7 +135,9 @@ export function Backups(): ReactElement {
   async function restore(): Promise<void> {
     const name = restoring;
     if (!name) return;
+    previewGuard.clear();
     setRestoring(null);
+    setRestoreSummary(null);
     setError(null);
     setNotice(null);
     try {
@@ -146,7 +172,9 @@ export function Backups(): ReactElement {
       {error ? <Notice tone="bad">{error}</Notice> : null}
       {notice ? <Notice tone="ok">{notice}</Notice> : null}
       {data && !data.configured ? <Notice tone="warn">{t('backups.unmounted')}</Notice> : null}
-      {data?.configured && data.stale ? <Notice tone="bad">{t('backups.stale')}</Notice> : null}
+      {data?.configured && data.stale ? (
+        <Notice tone="bad">{t('backups.stale', { hours: String(data.staleHours) })}</Notice>
+      ) : null}
       {data?.error ? (
         <Notice tone="warn">
           {t('backups.error')}: {data.error}
@@ -240,7 +268,7 @@ export function Backups(): ReactElement {
                             <Button
                               variant="tertiary"
                               small
-                              onClick={() => setRestoring(file.name)}
+                              onClick={() => beginRestore(file.name)}
                             >
                               {t('backups.restore')}
                             </Button>
@@ -264,9 +292,40 @@ export function Backups(): ReactElement {
           confirmLabel={t('backups.restoreConfirm')}
           destructive
           onConfirm={() => void restore()}
-          onClose={() => setRestoring(null)}
+          onClose={() => {
+            previewGuard.clear();
+            setRestoring(null);
+            setRestoreSummary(null);
+          }}
         >
           <p className="body muted">{restoring}</p>
+          {restoreSummary === 'failed' ? (
+            <p className="body muted">{t('backups.compareUnavailable')}</p>
+          ) : restoreSummary ? (
+            <div className="stack stack--tight">
+              <h3 className="h3">{t('backups.compareTitle')}</h3>
+              <div className="table-scroll">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>{t('backups.compareTable')}</th>
+                      <th>{t('backups.compareSnapshot')}</th>
+                      <th>{t('backups.compareCurrent')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {restoreSummary.tables.map((row) => (
+                      <tr key={row.name}>
+                        <td className="mono">{row.name}</td>
+                        <td className="num">{row.snapshot}</td>
+                        <td className="num">{row.current}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
         </ConfirmModal>
       ) : null}
     </div>

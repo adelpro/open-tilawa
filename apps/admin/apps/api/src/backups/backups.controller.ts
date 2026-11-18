@@ -44,6 +44,14 @@ export class BackupsController {
     return this.backups.restore(name);
   }
 
+  @Get(':name/summary')
+  @ApiOperation({
+    summary: 'Row counts in one snapshot and in the live catalogue, for a restore preview.',
+  })
+  summary(@Param('name') name: string) {
+    return this.backups.summary(name);
+  }
+
   @Get(':name/download')
   @ApiOperation({ summary: 'Download one catalogue snapshot.' })
   async download(@Param('name') name: string): Promise<StreamableFile> {

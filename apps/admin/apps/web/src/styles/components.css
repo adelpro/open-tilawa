@@ -3616,6 +3616,13 @@ select:focus {
   gap: var(--space-3);
 }
 
+.usage-today__label {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-secondary);
+  font: var(--caption);
+}
+
 .usage-today__tile {
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--hairline);
