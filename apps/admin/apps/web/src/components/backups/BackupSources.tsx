@@ -273,12 +273,17 @@ export function BackupSources(): ReactElement {
                         >
                           {t('backups.snapshots')}
                         </Button>
-                        <details>
+                        <details className="row-menu">
                           <summary className="btn btn--tertiary btn--sm">
                             {t('backups.more')}
                           </summary>
-                          <span className="cluster" style={{ marginTop: '0.5rem' }}>
-                            <Button small variant="tertiary" onClick={() => openEditor(target)}>
+                          <div className="row-menu__list">
+                            <Button
+                              small
+                              variant="tertiary"
+                              className="row-menu__item"
+                              onClick={() => openEditor(target)}
+                            >
                               {t('backups.editSource')}
                             </Button>
                             {owner ? (
@@ -286,6 +291,7 @@ export function BackupSources(): ReactElement {
                                 <Button
                                   small
                                   variant="tertiary"
+                                  className="row-menu__item"
                                   onClick={() => {
                                     setCredential({ password: '', privateKey: '' });
                                     setCredentialFor(target);
@@ -296,13 +302,14 @@ export function BackupSources(): ReactElement {
                                 <Button
                                   small
                                   variant="tertiary"
+                                  className="row-menu__item"
                                   onClick={() => setRemoving(target)}
                                 >
                                   {t('backups.removeSource')}
                                 </Button>
                               </>
                             ) : null}
-                          </span>
+                          </div>
                         </details>
                       </span>
                     </td>
