@@ -11,6 +11,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { Panel, Row } from '../components/Panel';
 import { Chip, Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
+import { BackupSources } from '../components/backups/BackupSources';
 
 interface Snapshot {
   name: string;
@@ -231,6 +232,8 @@ export function Backups(): ReactElement {
               )}
             </Panel>
           </div>
+
+          <BackupSources />
 
           <Panel>
             <div className="panel-head">

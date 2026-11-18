@@ -2,6 +2,7 @@ import { Global, Inject, Module, OnApplicationShutdown } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   AuditRepository,
+  BackupTargetsRepository,
   EmailOtpRepository,
   RecoveryCodesRepository,
   SessionsRepository,
@@ -79,6 +80,11 @@ class DatabaseLifecycle implements OnApplicationShutdown {
       inject: [SQLITE_DB],
       useFactory: (db: Db) => new RecoveryCodesRepository(db),
     },
+    {
+      provide: BackupTargetsRepository,
+      inject: [SQLITE_DB],
+      useFactory: (db: Db) => new BackupTargetsRepository(db),
+    },
     DatabaseLifecycle,
   ],
   exports: [
@@ -90,6 +96,7 @@ class DatabaseLifecycle implements OnApplicationShutdown {
     AuditRepository,
     EmailOtpRepository,
     RecoveryCodesRepository,
+    BackupTargetsRepository,
   ],
 })
 export class StoreModule {}

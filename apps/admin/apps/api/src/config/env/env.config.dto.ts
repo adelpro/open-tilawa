@@ -67,6 +67,20 @@ export class EnvConfigDTO {
   @IsOptional()
   TILAWA_PEPPER?: string;
 
+  /** The bridge that holds SFTP credentials; admin-api never stores one. */
+  @IsString()
+  @IsOptional()
+  BRIDGE_URL = 'http://backup-bridge:9401';
+
+  @IsString()
+  @IsOptional()
+  BRIDGE_TOKEN?: string;
+
+  /** The same allow-list the bridge enforces, checked before a target is saved. */
+  @IsString()
+  @IsOptional()
+  SFTP_ALLOWED_HOSTS?: string;
+
   /**
    * A provider is offered only when both halves exist. Optional here on purpose:
    * an instance with no OAuth app must still boot and sign people in by password.

@@ -152,20 +152,26 @@ export class StatusService {
    */
   private seedDefaults(): void {
     const port = process.env.PORT ?? '9410';
-    const defaults: { name: string; url: string; kind: ServiceKind }[] = [
+    const defaults: { name: string; url: string; kind: ServiceKind; required?: boolean }[] = [
       { name: 'Public site', url: 'https://tilawah.cc/', kind: 'http' },
       { name: 'Tracker', url: 'https://tracker.tilawah.cc/stats', kind: 'http' },
       { name: 'Admin API', url: `http://127.0.0.1:${port}/api/health`, kind: 'http' },
       { name: 'Admin console', url: 'http://admin-web:80/', kind: 'http' },
-      { name: 'GunDB relay', url: 'wss://gun.tilawah.cc/gun', kind: 'ws' },
+      { name: 'GunDB relay', url: 'wss://gun.tilawah.cc/gun', kind: 'ws', required: true },
+      {
+        name: 'Backup bridge',
+        url: 'http://backup-bridge:9401/health',
+        kind: 'http',
+        required: true,
+      },
     ];
     const insert = this.db.prepare(
       'INSERT OR IGNORE INTO services (name, url, kind) VALUES (?, ?, ?)',
     );
     const count = (this.db.prepare('SELECT COUNT(*) AS n FROM services').get() as { n: number }).n;
     for (const service of defaults) {
-      // On a populated table only the relay is enforced; the other four stay choices.
-      if (count > 0 && service.kind !== 'ws') continue;
+      // On a populated table only the required backends are enforced; the rest stay choices.
+      if (count > 0 && !service.required) continue;
       insert.run(service.name, service.url, service.kind);
     }
   }
