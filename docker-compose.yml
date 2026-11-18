@@ -252,6 +252,10 @@ services:
     volumes:
       - backup_bridge_secrets:/secrets
     networks: [open-tilawa]
+    # Docker's resolver is not the host's MagicDNS stub; pin the Tailscale name the
+    # same way the backup job does.
+    extra_hosts:
+      - "${BACKUP_REMOTE_HOST:-pharmacyserver}:${BACKUP_REMOTE_IP:-100.68.50.63}"
     healthcheck:
       test:
         [
