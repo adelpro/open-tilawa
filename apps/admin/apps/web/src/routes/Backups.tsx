@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -12,6 +12,8 @@ import { Panel, Row } from '../components/Panel';
 import { Chip, Notice } from '../components/Chip';
 import { SkeletonRows } from '../components/Skeleton';
 import { BackupSources } from '../components/backups/BackupSources';
+import { SnapshotFilterBar, type SnapshotFilterState } from '../components/backups/SnapshotFilterBar';
+import { filterSnapshots, sortSnapshots } from '../lib/snapshot-filters';
 
 interface Snapshot {
   name: string;
@@ -31,6 +33,7 @@ interface Overview {
   state: 'unmounted' | 'missing' | 'ok' | 'pending' | 'failed';
   generatedAt: string | null;
   error: string | null;
+  retention: { recentHours: number; dailyDays: number; maxFiles: number } | null;
   local: (Snapshot & { ageHours: number }) | null;
   remote: {
     state: string | null;
@@ -76,6 +79,22 @@ export function Backups(): ReactElement {
   const [notice, setNotice] = useState<string | null>(null);
   const [restoring, setRestoring] = useState<string | null>(null);
   const [restoreSummary, setRestoreSummary] = useState<RestoreSummary | 'failed' | null>(null);
+  const [filters, setFilters] = useState<SnapshotFilterState>({
+    query: '',
+    sort: 'newest',
+    olderThanDays: null,
+  });
+  const visibleFiles = useMemo(() => {
+    const rows = (data?.files ?? []).map((file) => ({
+      name: file.name,
+      size: file.bytes,
+      mtime: file.mtime,
+    }));
+    return sortSnapshots(
+      filterSnapshots(rows, { query: filters.query, olderThanDays: filters.olderThanDays }),
+      filters.sort,
+    );
+  }, [data, filters]);
   const [previewGuard] = useState(() =>
     createPreviewGuard<RestoreSummary | 'failed'>(),
   );
@@ -242,21 +261,26 @@ export function Backups(): ReactElement {
             {data.files.length === 0 ? (
               <p className="body muted">{t('backups.empty')}</p>
             ) : (
+              <>
+                <SnapshotFilterBar value={filters} onChange={setFilters} />
+                {visibleFiles.length === 0 ? (
+                  <p className="body muted">{t('backups.noMatch')}</p>
+                ) : (
               <div className="table-scroll">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>{t('backups.file')}</th>
-                      <th>{t('backups.size')}</th>
-                      <th>{t('backups.when')}</th>
-                      <th />
+                      <th scope="col">{t('backups.file')}</th>
+                      <th scope="col">{t('backups.size')}</th>
+                      <th scope="col">{t('backups.when')}</th>
+                      <th scope="col" aria-label={t('backups.download')} />
                     </tr>
                   </thead>
                   <tbody>
-                    {data.files.map((file) => (
+                    {visibleFiles.map((file) => (
                       <tr key={file.name}>
                         <td className="mono">{file.name}</td>
-                        <td>{bytes(file.bytes, locale)}</td>
+                        <td>{bytes(file.size, locale)}</td>
                         <td>{relative(file.mtime, locale)}</td>
                         <td>
                           {/* An anchor, not a Button: the download has to be a real
@@ -282,7 +306,18 @@ export function Backups(): ReactElement {
                   </tbody>
                 </table>
               </div>
+                )}
+              </>
             )}
+            {data.retention ? (
+              <p className="fine-print muted">
+                {t('backups.retention', {
+                  hours: String(data.retention.recentHours),
+                  days: String(data.retention.dailyDays),
+                  max: String(data.retention.maxFiles),
+                })}
+              </p>
+            ) : null}
           </Panel>
         </>
       )}

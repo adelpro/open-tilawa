@@ -74,6 +74,8 @@ export interface BackupOverview {
   state: 'unmounted' | 'missing' | 'ok' | 'pending' | 'failed';
   generatedAt: string | null;
   error: string | null;
+  /** The rule the host job applied on its last run; null on an older status file. */
+  retention: { recentHours: number; dailyDays: number; maxFiles: number } | null;
   local: (BackupFile & { ageHours: number }) | null;
   remote: {
     state: string | null;
@@ -114,6 +116,7 @@ export class BackupsService {
         state: 'unmounted',
         generatedAt: null,
         error: null,
+        retention: null,
         local: null,
         remote: null,
         files: [],
@@ -152,6 +155,7 @@ export class BackupsService {
       state: stateOf(files, status),
       generatedAt: status?.generated_at ?? null,
       error: status?.error ?? null,
+      retention: status?.retention ?? null,
       local,
       remote,
       files,
@@ -320,6 +324,7 @@ interface StatusFile {
   generated_at?: string;
   status?: 'ok' | 'pending' | 'failed';
   error?: string | null;
+  retention?: { recentHours: number; dailyDays: number; maxFiles: number } | null;
   remote?: {
     state?: string | null;
     last_ok_at?: string | null;

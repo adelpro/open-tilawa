@@ -32,6 +32,9 @@ REMOTES=${REMOTES:-}
 KEEP_RECENT_HOURS=${KEEP_RECENT_HOURS:-72}
 KEEP_DAILY_DAYS=${KEEP_DAILY_DAYS:-30}
 KEEP_MAX=${KEEP_MAX:-240}
+# The status file carries the rule it applied, so the console can print it without
+# reading the host's env file.
+export KEEP_RECENT_HOURS KEEP_DAILY_DAYS KEEP_MAX
 STATUS=$LOCAL_DIR/status.json
 
 # How to reach the remote. Bash array so the same options reach rsync and plain ssh;
@@ -129,6 +132,11 @@ doc = {
                "verified_at": os.environ.get("VERIFIED_AT") or None,
                "verified_error": os.environ.get("VERIFIED_ERROR") or None},
     "error": error or None,
+    "retention": {
+        "recentHours": int(os.environ.get("KEEP_RECENT_HOURS", "72")),
+        "dailyDays": int(os.environ.get("KEEP_DAILY_DAYS", "30")),
+        "maxFiles": int(os.environ.get("KEEP_MAX", "240")),
+    },
     "targets": json.loads("[" + (os.environ.get("TARGETS_JSON") or "") + "]"),
 }
 tmp = status_path + ".tmp"
