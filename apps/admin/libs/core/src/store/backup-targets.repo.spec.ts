@@ -19,7 +19,6 @@ const target: BackupTarget = {
 describe('backup targets repository', () => {
   it('stores metadata and never a secret column', () => {
     const db = openDatabase(':memory:');
-    const repo = new BackupTargetsRepository(db);
     const columns = (db.prepare('PRAGMA table_info(backup_targets)').all() as { name: string }[]).map(
       (column) => column.name,
     );

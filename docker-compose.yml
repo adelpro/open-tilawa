@@ -239,8 +239,8 @@ services:
   # database and no host port: admin-api reaches it over the internal network.
   backup-bridge:
     build:
-      context: ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}
-      dockerfile: apps/backup-bridge/Dockerfile
+      context: ${PROJECT_DIR:-/home/adelpro/code/open-tilawa}/apps/backup-bridge
+      dockerfile: Dockerfile
     image: ${BACKUP_BRIDGE_IMAGE:-open-tilawa-backup-bridge:local}
     container_name: open-tilawa-backup-bridge
     restart: unless-stopped
