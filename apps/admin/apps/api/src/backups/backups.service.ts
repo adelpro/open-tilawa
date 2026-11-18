@@ -1,7 +1,9 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { execFile } from 'node:child_process';
 import { readFile, readdir, stat } from 'node:fs/promises';
+import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import type { Stats } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 
@@ -233,6 +235,11 @@ export class BackupsService {
    * The snapshot is opened read-only and never writable from this request: the name
    * is the one `pathFor` allows, and the SQL is a fixed list of table names. A table
    * missing from either database counts as zero rather than failing the preview.
+   *
+   * The snapshots are WAL-mode files, and SQLite needs a writable directory for the
+   * `-shm` file even on a read-only open. `/backups` is mounted `:ro`, so the preview
+   * works on a private copy instead. The job checkpoints before it closes, so the
+   * single file is complete.
    */
   async summary(name: string): Promise<BackupSummary> {
     const snapshotPath = await this.pathFor(name);
@@ -255,15 +262,22 @@ export class BackupsService {
       }
     };
 
-    const snapshot = count(snapshotPath);
-    const current = count(currentPath);
-    return {
-      tables: SUMMARY_TABLES.map((table) => ({
-        name: table,
-        snapshot: snapshot[table],
-        current: current[table],
-      })),
-    };
+    const scratch = mkdtempSync(join(tmpdir(), 'tilawa-backup-preview-'));
+    try {
+      const copy = join(scratch, 'snapshot.sqlite');
+      copyFileSync(snapshotPath, copy);
+      const snapshot = count(copy);
+      const current = count(currentPath);
+      return {
+        tables: SUMMARY_TABLES.map((table) => ({
+          name: table,
+          snapshot: snapshot[table],
+          current: current[table],
+        })),
+      };
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
   }
 
   /** `null` means "the directory is not there", which is not the same as "empty". */

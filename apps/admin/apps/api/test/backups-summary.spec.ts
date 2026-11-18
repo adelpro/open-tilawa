@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { chmodSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { NotFoundException } from '@nestjs/common';
@@ -41,6 +41,22 @@ describe('backups restore summary', () => {
       { name: 'users', snapshot: 0, current: 0 },
       { name: 'seeders', snapshot: 0, current: 0 },
     ]);
+  });
+
+  it('reads a WAL snapshot from a non-writable backup directory', async () => {
+    const name = 'tilawa-admin-20261201T000000Z.sqlite';
+    const db = new Database(join(dir, name));
+    db.pragma('journal_mode = WAL');
+    db.exec('CREATE TABLE reciters (id INTEGER); INSERT INTO reciters VALUES (1);');
+    db.close();
+
+    chmodSync(dir, 0o555);
+    try {
+      const summary = await new BackupsService().summary(name);
+      expect(summary.tables.find((row) => row.name === 'reciters')?.snapshot).toBe(1);
+    } finally {
+      chmodSync(dir, 0o755);
+    }
   });
 
   it('refuses a name that is not one of our snapshots', async () => {

@@ -5,6 +5,7 @@ import { useSession } from '../lib/session';
 import { useI18n } from '../lib/i18n';
 import type { MessageKey } from '../lib/i18n';
 import { bytes, relative } from '../lib/format';
+import { createPreviewGuard } from '../lib/restore-preview';
 import { Button } from '../components/Button';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Panel, Row } from '../components/Panel';
@@ -74,14 +75,23 @@ export function Backups(): ReactElement {
   const [notice, setNotice] = useState<string | null>(null);
   const [restoring, setRestoring] = useState<string | null>(null);
   const [restoreSummary, setRestoreSummary] = useState<RestoreSummary | 'failed' | null>(null);
+  const [previewGuard] = useState(() =>
+    createPreviewGuard<RestoreSummary | 'failed'>(),
+  );
 
   /** Read-only preview: the confirm dialog says what the snapshot would replace. */
   const beginRestore = (name: string): void => {
+    previewGuard.begin(name);
     setRestoring(name);
     setRestoreSummary(null);
     void api<RestoreSummary>(`/backups/${name}/summary`)
-      .then(setRestoreSummary)
-      .catch(() => setRestoreSummary('failed'));
+      .then((summary) => {
+        const current = previewGuard.apply(name, summary);
+        if (current) setRestoreSummary(current);
+      })
+      .catch(() => {
+        if (previewGuard.apply(name, 'failed')) setRestoreSummary('failed');
+      });
   };
 
   const load = useCallback(async () => {
@@ -125,6 +135,7 @@ export function Backups(): ReactElement {
   async function restore(): Promise<void> {
     const name = restoring;
     if (!name) return;
+    previewGuard.clear();
     setRestoring(null);
     setRestoreSummary(null);
     setError(null);
@@ -282,6 +293,7 @@ export function Backups(): ReactElement {
           destructive
           onConfirm={() => void restore()}
           onClose={() => {
+            previewGuard.clear();
             setRestoring(null);
             setRestoreSummary(null);
           }}
