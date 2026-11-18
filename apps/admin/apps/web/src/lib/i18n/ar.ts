@@ -26,6 +26,7 @@ export const ar: Catalogue = {
   'usage.loading': 'جارٍ التحميل',
   'usage.range': 'المدى',
   'usage.window': 'آخر {days} يومًا، منذ {date}',
+  'usage.today': 'اليوم',
   'usage.filters': 'المرشّحات',
   'usage.allSources': 'كل المصادر',
   'usage.allVersions': 'كل الإصدارات',

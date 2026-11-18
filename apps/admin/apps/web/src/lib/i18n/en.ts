@@ -20,6 +20,7 @@ export const en = {
   'usage.loading': 'Loading',
   'usage.range': 'Window',
   'usage.window': 'Last {days} days, from {date}',
+  'usage.today': 'Today',
   'usage.filters': 'Filters',
   'usage.allSources': 'All sources',
   'usage.allVersions': 'All versions',

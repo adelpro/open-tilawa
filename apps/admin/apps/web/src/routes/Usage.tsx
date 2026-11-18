@@ -501,6 +501,7 @@ export function Usage(): ReactElement {
               the date is dropped when it is today, kept when it is not, so the word
               "today" beside it is never a lie. */}
           <section className="usage-today">
+            <p className="usage-today__label">{t('usage.today')}</p>
             <div className="usage-today__tile">
               <span className="usage-today__n">{reportedToday}</span>
               <span className="usage-today__l">{t('usage.devicesCount')}</span>
