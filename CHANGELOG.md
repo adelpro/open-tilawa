@@ -1,5 +1,26 @@
 # Changelog
 
+## repo 1.13.44 — 2026-11-19
+
+Repository release. Web **1.13.43**, admin **1.37.3**, seeder **1.5.7**.
+
+### Changed
+
+- The add-on page links all three store listings, now that Chrome joined Edge and
+  Firefox; the seed page lists the three browsers without a "coming soon" chip.
+- The companion's 0.2.7 packages ship in `apps/extension/store/`: the options page
+  no longer echoes another screen's settings write, and the Firefox mode picker
+  names the platform limit.
+
+## web 1.13.43 — 2026-11-19
+
+### Changed
+
+- `/extension` takes the Chrome, Edge and Firefox links from the one store table,
+  and the prerendered HTML agrees with the rendered buttons.
+- `/seed` names the three browsers and promises nothing that is not live.
+- The play notice reaches the Chrome listing's ID, so Follow works on Chrome.
+
 ## repo 1.13.43 — 2026-11-18
 
 Repository release. Web **1.13.42**, admin **1.37.3**, seeder **1.5.7**.
