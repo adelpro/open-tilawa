@@ -17,7 +17,8 @@ first unticked line is the work.
 - [ ] `npm test` — 46 tests green.
 - [ ] `npm run probe` — P2/P3/P4 recorded in `docs/PROBES.md` with a date.
 - [ ] **P1 (Firefox idle) run on a real Firefox** and recorded. Open since 2026-11-15: no Firefox
-      on the build machine. This gates the AMO submission, not the Chrome one.
+      on the build machine. AMO went live on 2026-11-19 without it, so this is now a reliability
+      check rather than a submission gate.
 
 ## Store paperwork
 

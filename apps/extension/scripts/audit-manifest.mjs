@@ -26,6 +26,10 @@ const TARGETS = [
 
 const failures = [];
 
+// `version_name` in wxt.config.ts is written by hand, so a bump can leave the
+// built package claiming the old version — a store would reject the upload.
+const packageVersion = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')).version;
+
 const sorted = (list) => [...list].sort();
 
 for (const target of TARGETS) {
@@ -36,6 +40,12 @@ for (const target of TARGETS) {
   }
 
   const manifest = JSON.parse(readFileSync(file, 'utf8'));
+
+  if (manifest.version !== packageVersion) {
+    failures.push(
+      `${target.name}: manifest version ${manifest.version} != package.json ${packageVersion} — update version_name in wxt.config.ts`,
+    );
+  }
 
   // MV3 keeps host permissions in `host_permissions`; MV2 puts match patterns in
   // `permissions` beside the API names. The audit reads both shapes as one list,

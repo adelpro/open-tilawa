@@ -7,6 +7,7 @@
 import { BRAND, hasStoreLinks } from '@/constants/brand';
 import type { Copy } from '@/lib/i18n';
 import { SUGGEST_BODY, SUGGEST_SUBJECT } from '@/lib/legal';
+import { aboutStoreHref } from '@/lib/store-link';
 import { ArrowIcon, PlusIcon } from '@/components/icons';
 import { LegalBlock } from '@/components/legal-block';
 
@@ -32,7 +33,7 @@ export function AboutView({ copy, lang, version }: { copy: Copy; lang: 'ar' | 'e
           <ArrowIcon /> {copy.trackerLink}
         </a>
         {hasStoreLinks() ? (
-          <a href={BRAND.chromeStore || BRAND.edgeStore || BRAND.firefoxAddons} target="_blank" rel="noreferrer">
+          <a href={aboutStoreHref(import.meta.env.MANIFEST_VERSION)} target="_blank" rel="noreferrer">
             <ArrowIcon /> {copy.storeLink}
           </a>
         ) : null}

@@ -17,8 +17,9 @@ Nothing is pre-ticked, and a new reciter is a notification, not a download.
 reading of pages, tabs or history. It contacts two hosts: the public catalogue
 once a day, and the site's torrent files and audio when you download a reciter.
 
-**Status.** 0.2.0, tested by probe on Chrome; Firefox builds and audits but has
-not been run on hardware. Store listings are prepared, not submitted.
+**Status.** 0.2.5. Live on Edge and on Firefox AMO since 2026-11-19; Chrome is
+still in review. P1 (a ten-minute idle session in Firefox) remains unrun on the
+build machine.
 
 ---
 

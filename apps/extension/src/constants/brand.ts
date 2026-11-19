@@ -2,8 +2,8 @@
  * Everything the interface says about the product in one place: who to write to,
  * where the stats live, and which store links exist.
  *
- * A link is rendered only when it is real. Edge is live; Chrome and Firefox are
- * still in review, and their keys stay empty until their listings exist — a
+ * A link is rendered only when it is real. Edge and Firefox are live; Chrome is
+ * still in review, and its key stays empty until the listing exists — a
  * placeholder that 404s is worse than a line that is not there.
  */
 
@@ -16,7 +16,8 @@ export const BRAND = {
   chromeStore: '',
   /** Live since 2026-11-16 — the About link points here until Chrome clears review. */
   edgeStore: 'https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom',
-  firefoxAddons: '',
+  /** Live since 2026-11-19 — Firefox approved 0.2.5. */
+  firefoxAddons: 'https://addons.mozilla.org/firefox/addon/tilawah-companion/',
 } as const;
 
 export const hasStoreLinks = (): boolean =>

@@ -8,6 +8,7 @@
  */
 export const STORE_URLS = {
   chrome: '',
-  firefox: '',
+  /** Live since 2026-11-19 — Firefox approved 0.2.5. */
+  firefox: 'https://addons.mozilla.org/firefox/addon/tilawah-companion/',
   edge: 'https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom',
 };

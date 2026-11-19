@@ -71,7 +71,7 @@ const ar = {
     terms: 'الشروط',
     support: 'الدعم',
     note: 'الإضافة تحفظ التلاوات وتشاركها ما دام المتصفح يعمل.',
-    noteLinks: 'الإضافة متاحة الآن في إيدج، وتنتظر المراجعة في كروم وفايرفوكس.',
+    noteLinks: 'الإضافة متاحة الآن في إيدج وفايرفوكس، وكروم لا يزال قيد المراجعة.',
   },
   notFound: {
     title: 'هذه الصفحة غير موجودة',
@@ -557,7 +557,7 @@ const en: typeof ar = {
     terms: 'Terms',
     support: 'Support',
     note: 'The add-on keeps recitations and shares them while the browser runs.',
-    noteLinks: 'The add-on is available in Edge now, and is in review for Chrome and Firefox.',
+    noteLinks: 'The add-on is available in Edge and Firefox now; Chrome is still in review.',
   },
   notFound: {
     title: 'This page does not exist',

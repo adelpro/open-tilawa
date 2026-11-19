@@ -87,12 +87,13 @@ it.
 | --- | --- | --- | --- | --- |
 | Chrome Web Store | `tilawah-companion-0.2.0-chrome.zip` | 0.2.0 | 2026-11-16 | **in review** |
 | Microsoft Edge Add-ons | `UPLOAD-THIS-tilawah-companion-0.2.0-edge.zip` | 0.2.0 | 2026-11-16 | **live** — https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom |
-| Firefox AMO | `tilawah-companion-0.2.0-firefox.zip` | 0.2.0 | 2026-11-16 | **in review** |
+| Firefox AMO | `tilawah-companion-0.2.0-firefox.zip` | 0.2.0 | 2026-11-16 | approved 2026-11-19, superseded by 0.2.5 |
+| Firefox AMO | `tilawah-companion-0.2.5-firefox.zip` | 0.2.5 | 2026-11-19 | **live** — https://addons.mozilla.org/firefox/addon/tilawah-companion/ |
 | Microsoft Edge Add-ons | `store/tilawah-companion-0.2.1-edge.zip` | 0.2.1 | 2026-11-16 | **ready to upload** |
 
-The manifest version is `0.2.1` in every package cut for this release; 0.2.0 stays live on Edge and
-in review elsewhere until 0.2.1 replaces it. A store package cannot be replaced once accepted — a
-change after approval ships as a further patch.
+The manifest version is `0.2.1` in every package cut for this release; 0.2.0 stayed on AMO until
+0.2.5 replaced it. A store package cannot be replaced once accepted — a change after approval ships
+as a further patch.
 
 Package rules learned the hard way:
 
@@ -240,17 +241,17 @@ reads.**
   Firefox build. A content-script relay is out by design — the extension must
   not read pages.
 
-## After approval — the only steps left
+## After approval — the steps left
 
-1. Send the two remaining listing URLs (Chrome, Firefox) when they clear. `src/constants/brand.ts`
-   `edgeStore` is already filled; the other two keys stay empty until their listings exist.
-2. Fill those keys, rebuild, and ship the follow-up patch.
-3. Add the two links to the site's `/seed` page, alongside the greyed buttons, and to
+1. Chrome is the only listing still in review. When its URL clears, fill `chromeStore` in
+   `src/constants/brand.ts` and `chrome` in `apps/web/src/constants/stores.ts`, rebuild and ship
+   the follow-up patch. Edge and Firefox links are already in place.
+2. Add the Chrome link to the site's `/seed` page, alongside the greyed buttons, and to
    `apps/extension/README.md`.
-4. Run `P1` (ten idle minutes in Firefox) on a real Firefox and record it in `docs/PROBES.md` — it
-   was never run, and the AMO listing is live without it.
+3. Run `P1` (ten idle minutes in Firefox) on a real Firefox and record it in `docs/PROBES.md` — it
+   was never run, and the AMO listing went live on 2026-11-19 without it.
 
 ## Reminder
 
-**When Chrome and Firefox are approved, send me the two URLs** — I will update `brand.ts`, the site's
-`/seed` page and the READMEs, then cut the follow-up release. The Edge link is already in place.
+**When Chrome is approved, send me its URL** — I will update `brand.ts`, the site's `/seed` page and
+the READMEs, then cut the follow-up release. The Edge and Firefox links are already in place.

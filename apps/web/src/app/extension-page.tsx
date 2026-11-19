@@ -6,9 +6,9 @@ import { useLocale } from '@/hooks/use-locale';
 /**
  * The add-on's home: what it is, what it costs, and where it will be.
  *
- * The three store buttons are inert on purpose. A disabled control that looks
- * like a link teaches people that the site lies; until a listing exists there is
- * nothing to open, and the note under them says so.
+ * A store button is inert only while its listing is pending. A disabled control
+ * that looks like a link teaches people the site lies; the table decides which
+ * buttons are real, and the note under them says which stores are still pending.
  */
 export default function ExtensionPage() {
   const { t } = useLocale();
@@ -18,7 +18,7 @@ export default function ExtensionPage() {
   // worse than one honest install glyph on all three.
   const browsers = [
     { key: 'chrome', label: copy.browsers.chrome, Mark: ChromeMark, href: '' },
-    { key: 'firefox', label: copy.browsers.firefox, Mark: FirefoxMark, href: '' },
+    { key: 'firefox', label: copy.browsers.firefox, Mark: FirefoxMark, href: STORE_URLS.firefox },
     { key: 'edge', label: copy.browsers.edge, Mark: EdgeMark, href: STORE_URLS.edge },
   ];
 
