@@ -2,9 +2,9 @@
  * Everything the interface says about the product in one place: who to write to,
  * where the stats live, and which store links exist.
  *
- * A link is rendered only when it is real. Edge and Firefox are live; Chrome is
- * still in review, and its key stays empty until the listing exists — a
- * placeholder that 404s is worse than a line that is not there.
+ * A link is rendered only when it is real. All three listings are live, and each
+ * one fills its key — a placeholder that 404s is worse than a line that is not
+ * there.
  */
 
 export const BRAND = {
@@ -13,8 +13,8 @@ export const BRAND = {
   trackerStats: 'https://tracker.tilawah.cc/stats',
   catalogue: 'https://console.tilawah.cc/api/public/reciters?page=1&range=200',
   /** Rendered only once a listing exists; empty means "not yet". */
-  chromeStore: '',
-  /** Live since 2026-11-16 — the About link points here until Chrome clears review. */
+  chromeStore: 'https://chromewebstore.google.com/detail/tilawah-companion/jfbadgomkkhmemefgckcadjfoldojekk',
+  /** Live since 2026-11-16. */
   edgeStore: 'https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom',
   /** Live since 2026-11-19 — Firefox approved 0.2.5. */
   firefoxAddons: 'https://addons.mozilla.org/firefox/addon/tilawah-companion/',

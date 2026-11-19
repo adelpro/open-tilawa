@@ -168,6 +168,12 @@ function Popup() {
               ))}
             </div>
             <p className="setup-hint">{modeHint(mode)}</p>
+            {/* Firefox never delivers a page's message to an add-on, so the two
+                follow modes can only hold what the person ticks. Say it here,
+                where the choice is made, not in a release note. */}
+            {import.meta.env.MANIFEST_VERSION === 2 ? (
+              <p className="setup-hint">{copy.modeFirefoxNote}</p>
+            ) : null}
           </div>
 
           <div className="setup-row">

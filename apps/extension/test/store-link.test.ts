@@ -12,9 +12,9 @@ describe('aboutStoreHref', () => {
     expect(aboutStoreHref(2)).toBe('https://addons.mozilla.org/firefox/addon/tilawah-companion/');
   });
 
-  test('a Chromium build keeps the Edge listing while Chrome is pending', () => {
+  test('a Chromium build links the Chrome listing', () => {
     expect(aboutStoreHref(3)).toBe(
-      'https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom',
+      'https://chromewebstore.google.com/detail/tilawah-companion/jfbadgomkkhmemefgckcadjfoldojekk',
     );
   });
 });

@@ -63,6 +63,7 @@ const ar = {
   modeManualHint: 'تحتفظ بما تختاره وحدك، ولا ينزّل شيئًا تلقائيًا.',
   modeFollowHint: 'تحتفظ بكل ما تشغّله على تلاوة، الأحدث أولًا.',
   modeMixedHint: 'قائمتك ثابتة، ومعها ما تستمع إليه يدور ضمن حدّه.',
+  modeFirefoxNote: 'فايرفوكس لا يسمح للصفحة بمراسلة الإضافة، فالمتابعة والمختلط لا يستقبلان ما تشغّله على تلاوة، ويحفظان ما تختاره فقط.',
   maxDiskLabel: 'حدّ المساحة',
   maxDiskHint: 'أقصى ما تشغله التلاوات المحفوظة على القرص. الصفر يعني بلا حدّ.',
   diskUsed: 'المحفوظ',
@@ -182,6 +183,8 @@ const en: Record<keyof typeof ar, string> = {
   modeManualHint: 'Keeps exactly what you tick, and downloads nothing on its own.',
   modeFollowHint: 'Keeps whatever you play on tilawah.cc, newest first.',
   modeMixedHint: 'Your own list stays put; what you listen to rotates under its cap.',
+  modeFirefoxNote:
+    'Firefox does not let a page message an add-on, so Follow and Mixed never see what you play on tilawah.cc; they keep only what you tick.',
   maxDiskLabel: 'Disk limit',
   maxDiskHint: 'The most the held recitations may occupy on disk. Zero means no limit.',
   diskUsed: 'Held',

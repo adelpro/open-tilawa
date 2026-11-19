@@ -8,6 +8,12 @@ over WebRTC — no account, no daemon, no tab left open.
 - Probe results: `docs/PROBES.md`
 - Store listing + checklist: `store/`
 
+## Install
+
+- Chrome — https://chromewebstore.google.com/detail/tilawah-companion/jfbadgomkkhmemefgckcadjfoldojekk
+- Edge — https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom
+- Firefox — https://addons.mozilla.org/firefox/addon/tilawah-companion/
+
 ## How it works
 
 One engine (`src/lib/engine.ts`) and two hosts. On Chrome MV3 the engine lives in an **offscreen

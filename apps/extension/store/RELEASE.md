@@ -5,7 +5,7 @@
 | Store | File | What it is |
 | --- | --- | --- |
 | Microsoft Edge Add-ons | `store/tilawah-companion-0.2.1-edge.zip` | the built MV3 extension, `npm run zip` — Edge takes the Chrome package unchanged |
-| Chrome Web Store | `tilawah-companion-0.2.1-chrome.zip` | the same MV3 build (`.output/`), for when the 0.2.0 review clears |
+| Chrome Web Store | `tilawah-companion-0.2.1-chrome.zip` | the same MV3 build (`.output/`); the live listing is still 0.2.0, so this is the update |
 | Firefox AMO | `tilawah-companion-0.2.1-firefox.zip` | the built MV2 extension, `npm run zip:firefox` |
 
 Regenerate any time with:
@@ -24,9 +24,9 @@ cp .output/tilawah-companion-0.2.1-chrome.zip store/tilawah-companion-0.2.1-edge
    screenshots and forms carry over from 0.2.0.
 1. **Firefox first — when its 0.2.0 review clears.** AMO is free, review is human, and a signed build can be installed in release Firefox. Upload the zip at `addons.mozilla.org/developers/`, choose **On this site** (listed) only after P1 passes; for testing use **On your own** (unlisted).
 2. **P1 gate.** Ten minutes with Firefox seeding, then read `tracker.tilawah.cc/stats`. Still recorded as NOT RUN in `docs/PROBES.md`. Do not publish on AMO before it passes.
-3. **Chrome — when its 0.2.0 review clears.** Upload the zip, category **Productivity**, visibility **Public**, fill the privacy practices form from `store/store-fields.md`, add the five screenshots.
+3. **Chrome — live since 2026-11-19 at 0.2.0.** Upload `store/tilawah-companion-0.2.1-chrome.zip` as an update and paste the same release notes; the listing, privacy form and screenshots carry over.
 4. **Source archive (AMO).** The bundle is minified, so AMO will ask for readable source: upload a zip of `apps/extension` (without `node_modules`, `.output`) plus a line saying `npm install && npm run build:firefox`.
-5. **After all three clear — set the links.** `src/constants/brand.ts` `edgeStore` is filled (0.2.1); `chromeStore` and `firefoxAddons` stay empty until their listings exist. Fill them, rebuild, and ship the next patch. The same day, add the missing links to the site's `/seed` page and to `apps/extension/README.md`.
+5. **Links are set (2026-11-19).** `chromeStore`, `edgeStore` and `firefoxAddons` are filled in `src/constants/brand.ts`, and the site's store table carries all three listings. Rebuild and ship the next patch when the Chrome update is accepted.
 
 ## Release notes — 0.2.1 (paste into Partner Center → "What's new")
 
@@ -85,15 +85,19 @@ it.
 
 | Store | Package | Version | Submitted | Status |
 | --- | --- | --- | --- | --- |
-| Chrome Web Store | `tilawah-companion-0.2.0-chrome.zip` | 0.2.0 | 2026-11-16 | **in review** |
-| Microsoft Edge Add-ons | `UPLOAD-THIS-tilawah-companion-0.2.0-edge.zip` | 0.2.0 | 2026-11-16 | **live** — https://microsoftedge.microsoft.com/addons/detail/tilawah-companion/nolphcjcahcbkkiohdkdmkkcdableoom |
-| Firefox AMO | `tilawah-companion-0.2.0-firefox.zip` | 0.2.0 | 2026-11-16 | approved 2026-11-19, superseded by 0.2.5 |
-| Firefox AMO | `tilawah-companion-0.2.5-firefox.zip` | 0.2.5 | 2026-11-19 | **live** — https://addons.mozilla.org/firefox/addon/tilawah-companion/ |
-| Microsoft Edge Add-ons | `store/tilawah-companion-0.2.1-edge.zip` | 0.2.1 | 2026-11-16 | **ready to upload** |
+| Chrome Web Store | `tilawah-companion-0.2.0-chrome.zip` | 0.2.0 | 2026-11-16 | superseded by 0.2.6 |
 
-The manifest version is `0.2.1` in every package cut for this release; 0.2.0 stayed on AMO until
-0.2.5 replaced it. A store package cannot be replaced once accepted — a change after approval ships
-as a further patch.
+| Microsoft Edge Add-ons | `UPLOAD-THIS-tilawah-companion-0.2.0-edge.zip` | 0.2.0 | 2026-11-16 | superseded by 0.2.5 |
+| Microsoft Edge Add-ons | `store/tilawah-companion-0.2.5-edge.zip` | 0.2.5 | 2026-11-17 | superseded by 0.2.6 |
+| Firefox AMO | `tilawah-companion-0.2.0-firefox.zip` | 0.2.0 | 2026-11-16 | superseded by 0.2.5 |
+| Firefox AMO | `tilawah-companion-0.2.5-firefox.zip` | 0.2.5 | 2026-11-19 | superseded by 0.2.6 |
+| Firefox AMO | `store/tilawah-companion-0.2.6-firefox.zip` | 0.2.6 | 2026-11-19 | **live** — https://addons.mozilla.org/firefox/addon/tilawah-companion/ (public 15:05 UTC) |
+| Chrome Web Store | `store/tilawah-companion-0.2.6-chrome.zip` | 0.2.6 | 2026-11-19 | **live** — https://chromewebstore.google.com/detail/tilawah-companion/jfbadgomkkhmemefgckcadjfoldojekk (updated 2026-11-19) |
+| Microsoft Edge Add-ons | `store/tilawah-companion-0.2.6-edge.zip` | 0.2.6 | 2026-11-19 | accepted; the product API still serves 0.2.5 while the update publishes |
+| Chrome / Edge / Firefox | `store/tilawah-companion-0.2.7-*.zip` | 0.2.7 | — | built 2026-11-19, **not submitted** |
+
+One package per store, one version behind the repo at most: all three accepted 0.2.6 on 2026-11-19.
+A store package cannot be replaced once accepted — a change after approval ships as a further patch.
 
 Package rules learned the hard way:
 
@@ -102,6 +106,23 @@ Package rules learned the hard way:
 - AMO requires `browser_specific_settings.gecko.data_collection_permissions` (`{"required":["none"]}`)
   and rejects `import(<variable>)` as an unsafe dynamic import.
 - The sources archive is the only separate upload, and it must match the submitted package exactly.
+
+## 0.2.7 — 2026-11-19
+
+**Two screens stop overwriting each other, and Firefox says what it cannot do.**
+
+- The options page adopted every external settings change as a new record, then
+  saved its own copy back after 400 ms. That undid a mode or pause set from the
+  popup, and the echo kept the cycle running while the tab stayed open. It now
+  writes only the record it changed, and adopts the popup's mode and disk choice
+  instead of sending it back.
+- On Firefox the mode picker carries the line that explains the platform: a page
+  cannot message an add-on there, so Follow and Mixed keep only what you tick.
+
+**العربية**
+
+- كانت صفحة الإعدادات تتبنّى كل تغيير خارجي كسجلٍّ جديد، ثم تكتب نسختها القديمة بعد ٤٠٠ ملّي ثانية، فتلغي النمط أو الإيقاف المضبوط من النافذة، وتظلّ تكتب ما دام التبويب مفتوحًا. صارت تكتب ما غيّرته هي فقط، وتتبنّى نمط النافذة وحدّ المساحة بدل أن تردّهما.
+- في فايرفوكس يحمل منتقي النمط سطرًا واحدًا يشرح حدّ المنصّة: الصفحة لا تستطيع مراسلة الإضافة، فالمتابعة والمختلط يحفظان ما تختاره فقط.
 
 ## 0.2.5 — 2026-11-17
 
@@ -243,15 +264,15 @@ reads.**
 
 ## After approval — the steps left
 
-1. Chrome is the only listing still in review. When its URL clears, fill `chromeStore` in
-   `src/constants/brand.ts` and `chrome` in `apps/web/src/constants/stores.ts`, rebuild and ship
-   the follow-up patch. Edge and Firefox links are already in place.
-2. Add the Chrome link to the site's `/seed` page, alongside the greyed buttons, and to
-   `apps/extension/README.md`.
-3. Run `P1` (ten idle minutes in Firefox) on a real Firefox and record it in `docs/PROBES.md` — it
+1. **Links are in (2026-11-19).** `chromeStore` in `src/constants/brand.ts`, `chrome` in
+   `apps/web/src/constants/stores.ts` and the site's store table now carry all three listings;
+   `apps/extension/README.md` lists them too.
+2. Run `P1` (ten idle minutes in Firefox) on a real Firefox and record it in `docs/PROBES.md` — it
    was never run, and the AMO listing went live on 2026-11-19 without it.
+3. All three stores serve 0.2.6 (Chrome and AMO verified; Edge accepted and publishing). Next patch
+   should carry the options-page settings fix, not another store-link change.
 
 ## Reminder
 
-**When Chrome is approved, send me its URL** — I will update `brand.ts`, the site's `/seed` page and
-the READMEs, then cut the follow-up release. The Edge and Firefox links are already in place.
+**Chrome went live on 2026-11-19** at 0.2.0 — approved, not yet updated to the 0.2.1+ package. The
+site and the extension now link all three listings, so nothing waits on the store.

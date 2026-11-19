@@ -33,6 +33,7 @@ import {
   type Settings,
 } from '@/lib/settings';
 import { filterByRiwaya } from '@/lib/filter';
+import { planSettingsWrite, settingsFingerprint } from '@/lib/settings-sync';
 import { loadPrefs, savePrefs, DEFAULTS as PREFS_DEFAULTS, type Prefs } from '@/lib/prefs';
 import { sortReciters, type Sort, DEFAULT_SORT } from '@/lib/sort';
 import { fetchCatalogue } from '@/lib/sync';
@@ -68,8 +69,11 @@ function Page() {
   const [saving, setSaving] = useState(false);
   /** The pause lives in the background; this page only renders it. */
   const [paused, setPaused] = useState(false);
-  /** Settings save themselves; the primary button is for the selection. */
-  const hydrated = useRef(false);
+  // Settings save themselves; the primary button is for the selection. The ref
+  // holds the record this page last saw in storage, so an external write is
+  // adopted and never echoed back.
+  const lastWritten = useRef<string | null>(null);
+
   /** A reciter the person tried to add at the cap — the raise offer. */
   const [capPrompt, setCapPrompt] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -89,8 +93,12 @@ function Page() {
       if (area !== 'local') return;
       if (changes[SETTINGS_KEY]) {
         const next = parseSettings(changes[SETTINGS_KEY].newValue);
+        // Adopt the whole external record: the popup sets the mode and the disk
+        // budget, the background sets the pause. Taking its fingerprint first
+        // is what stops this page saving the same record straight back.
+        lastWritten.current = settingsFingerprint(next, String(next.uploadMbps));
         setPaused(next.paused);
-        setSettings((current) => (current ? { ...current, paused: next.paused } : current));
+        setSettings(next);
       }
       // The background writes the held roster from the site's play notices; a
       // page holding a stale copy would delete those rows on its next save or
@@ -150,6 +158,7 @@ function Page() {
         if (!window.location.hash) setView(storedPrefs.welcomeSeen ? 'reciters' : 'welcome');
         setRows(roster);
         setHeld(storedHeld);
+        lastWritten.current = settingsFingerprint(storedSettings, String(storedSettings.uploadMbps));
         setSettings(storedSettings);
         setPaused(storedSettings.paused);
         setUploadDraft(String(storedSettings.uploadMbps));
@@ -209,12 +218,13 @@ function Page() {
 
   useEffect(() => {
     if (!settings) return;
-    // The first pass is the stored value arriving; saving it back is noise.
-    if (!hydrated.current) {
-      hydrated.current = true;
-      return;
-    }
+    // Only a record this page changed is written. An unchanged one — the
+    // arrival after hydration, or a change the popup or background made —
+    // leaves storage alone, which is what keeps the two screens from fighting.
+    const planned = planSettingsWrite(settings, uploadDraft, lastWritten.current);
+    if (!planned.write) return;
     const timer = setTimeout(() => {
+      lastWritten.current = planned.fingerprint;
       void saveSettings({ ...settings, uploadMbps: parseUploadMbps(uploadDraft) }).then((saved) => {
         setSettings((current) => (current ? { ...current, uploadMbps: saved.uploadMbps } : current));
       });
