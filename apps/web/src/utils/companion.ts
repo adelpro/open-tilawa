@@ -22,9 +22,9 @@ export type CompanionRelease = {
 const DEV_HOST = 'staging.tilawah.cc';
 
 /**
- * The live listings only: an empty ID is a store still in review, and the
- * development build is addressed from staging alone — production must never
- * probe an extension nobody ships.
+ * The live listings only: an empty ID is a store that does not publish the
+ * add-on yet, and the development build is addressed from staging alone —
+ * production must never probe an extension nobody ships.
  */
 export function companionTargets(ids: Record<string, string>, hostname = ''): string[] {
   return Object.entries(ids)

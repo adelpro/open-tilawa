@@ -71,7 +71,7 @@ const ar = {
     terms: 'الشروط',
     support: 'الدعم',
     note: 'الإضافة تحفظ التلاوات وتشاركها ما دام المتصفح يعمل.',
-    noteLinks: 'الإضافة متاحة الآن في إيدج وفايرفوكس، وكروم لا يزال قيد المراجعة.',
+    noteLinks: 'الإضافة متاحة الآن في كروم وإيدج وفايرفوكس.',
   },
   notFound: {
     title: 'هذه الصفحة غير موجودة',
@@ -382,7 +382,6 @@ const ar = {
       title: 'إضافة للمتصفح',
       lede: 'إن لم ترد تشغيل عقدة، ثبّت الإضافة: تحفظ التلاوات داخل متصفحك وتشاركها مع المستمعين ما دام المتصفح يعمل.',
       browsers: ['كروم', 'فايرفوكس', 'إيدج'],
-      coming: 'قريبًا',
       link: 'تعرّف على الإضافة',
     },
     title: 'شارك نسخة من التلاوات',
@@ -557,7 +556,7 @@ const en: typeof ar = {
     terms: 'Terms',
     support: 'Support',
     note: 'The add-on keeps recitations and shares them while the browser runs.',
-    noteLinks: 'The add-on is available in Edge and Firefox now; Chrome is still in review.',
+    noteLinks: 'The add-on is available in Chrome, Edge and Firefox.',
   },
   notFound: {
     title: 'This page does not exist',
@@ -867,7 +866,6 @@ const en: typeof ar = {
       title: 'A browser add-on',
       lede: 'If you would rather not run a node, install the add-on: it keeps the recitations inside your browser and shares them with listeners while the browser runs.',
       browsers: ['Chrome', 'Firefox', 'Edge'],
-      coming: 'Coming soon',
       link: 'About the add-on',
     },
     title: 'Seed a copy of the recitations',

@@ -17,7 +17,7 @@ export default function ExtensionPage() {
   // Phosphor ships a Chrome mark but no Firefox or Edge one; a mixed set reads
   // worse than one honest install glyph on all three.
   const browsers = [
-    { key: 'chrome', label: copy.browsers.chrome, Mark: ChromeMark, href: '' },
+    { key: 'chrome', label: copy.browsers.chrome, Mark: ChromeMark, href: STORE_URLS.chrome },
     { key: 'firefox', label: copy.browsers.firefox, Mark: FirefoxMark, href: STORE_URLS.firefox },
     { key: 'edge', label: copy.browsers.edge, Mark: EdgeMark, href: STORE_URLS.edge },
   ];

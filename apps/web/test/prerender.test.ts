@@ -233,8 +233,8 @@ test('the static /seed body carries the clients and the list, not just the node 
   // chips and the door to the add-on page, not only the node manual.
   assert.ok(html.includes(page.extension.title));
   assert.ok(html.includes(page.extension.lede));
-  assert.ok(html.includes(page.extension.browsers[0]));
-  assert.ok(html.includes(page.extension.coming));
+  assert.ok(page.extension.browsers.every((browser) => html.includes(browser)));
+  assert.doesNotMatch(html, /قريبًا/, 'all three listings are live; the page promises nothing');
   assert.match(html, /href="\/extension"/);
   assert.doesNotMatch(html, /id="extension"[\s\S]*magnet:\?/);
   assert.ok((html.match(/<details>/g) ?? []).length >= 6, 'the operator half is not folded');

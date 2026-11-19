@@ -9,10 +9,12 @@ import { test } from 'node:test';
  */
 const PAGE = readFileSync(new URL('../src/app/extension-page.tsx', import.meta.url), 'utf-8');
 
-test('the rendered Firefox button takes its link from the store table', () => {
-  assert.match(
-    PAGE,
-    /href: STORE_URLS\.firefox/,
-    'a live listing must reach the rendered page, not only the prerendered HTML',
-  );
+test('the rendered browser buttons take their links from the store table', () => {
+  for (const browser of ['chrome', 'firefox', 'edge']) {
+    assert.match(
+      PAGE,
+      new RegExp(`href: STORE_URLS\\.${browser}`),
+      `the ${browser} listing must reach the rendered page, not only the prerendered HTML`,
+    );
+  }
 });

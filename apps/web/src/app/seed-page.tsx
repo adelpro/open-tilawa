@@ -93,9 +93,6 @@ export default function SeedPage() {
                 {browser}
               </li>
             ))}
-            <li className="inline-flex min-h-9 items-center px-1 text-[0.8125rem] text-muted">
-              {copy.extension.coming}
-            </li>
           </ul>
           <Link
             to={{ name: 'extension' }}

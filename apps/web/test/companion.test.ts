@@ -23,9 +23,14 @@ test('the dev build is targeted on staging only, never from production', () => {
   assert.deepEqual(companionTargets(COMPANION_IDS, 'staging.tilawah.cc'), [
     COMPANION_IDS.edge,
     COMPANION_IDS.firefox,
+    COMPANION_IDS.chrome,
     COMPANION_IDS.dev,
   ]);
-  assert.deepEqual(companionTargets(COMPANION_IDS, 'tilawah.cc'), [COMPANION_IDS.edge, COMPANION_IDS.firefox]);
+  assert.deepEqual(companionTargets(COMPANION_IDS, 'tilawah.cc'), [
+    COMPANION_IDS.edge,
+    COMPANION_IDS.firefox,
+    COMPANION_IDS.chrome,
+  ]);
 });
 
 test('a play notice is one type and one lowercase hash', () => {

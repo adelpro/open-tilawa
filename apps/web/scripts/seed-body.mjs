@@ -28,7 +28,7 @@ export function seedBody(page, { command, peerPortCommand, clients, extensionHre
     `<section id="extension"><h2>${escape(page.extension.title)}</h2>` +
     `<p>${escape(page.extension.lede)}</p><ul>` +
     page.extension.browsers.map((browser) => `<li>${escape(browser)}</li>`).join('') +
-    `<li>${escape(page.extension.coming)}</li></ul>` +
+    `</ul>` +
     `<p><a href="${escape(extensionHref)}">${escape(page.extension.link)}</a></p></section>` +
     `<h2>${escape(page.clients.title)}</h2><ul>` +
     clients.map((client) => `<li><a href="${escape(client.url)}">${escape(client.name)}</a></li>`).join('') +
